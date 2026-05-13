@@ -71,6 +71,16 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link className="hover:underline" href="/sulphur-springs">
+                Sulphur Springs services
+              </Link>
+            </li>
+            <li>
+              <Link className="hover:underline" href="/sulphur-springs/staff">
+                Sulphur Springs staff
+              </Link>
+            </li>
+            <li>
               <Link className="hover:underline" href="/about">
                 About us
               </Link>

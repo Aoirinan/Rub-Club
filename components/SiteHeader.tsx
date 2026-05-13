@@ -3,12 +3,50 @@ import Link from "next/link";
 import { IMAGES } from "@/lib/home-images";
 import { telHref } from "@/lib/constants";
 import { MobileNav } from "@/components/MobileNav";
+import { DesktopNav, type NavItem } from "@/components/DesktopNav";
 
-const NAV_LINKS: { href: string; label: string }[] = [
+const NAV_ITEMS: NavItem[] = [
   { href: "/services/massage", label: "Massage" },
   { href: "/services/chiropractic", label: "Chiropractic" },
-  { href: "/locations/paris", label: "Locations" },
-  { href: "/about", label: "About" },
+  {
+    href: "/sulphur-springs",
+    label: "Sulphur Springs",
+    mega: true,
+    children: [
+      { href: "/sulphur-springs/staff", label: "Meet the Staff", group: "About" },
+      { href: "/sulphur-springs/patient-resources", label: "Patient Resources", group: "About" },
+      { href: "/sulphur-springs/q-and-a", label: "Q & A", group: "About" },
+      { href: "/sulphur-springs/acupuncture", label: "Acupuncture", group: "Services" },
+      { href: "/sulphur-springs/adjustments-and-manipulation", label: "Adjustments", group: "Services" },
+      { href: "/sulphur-springs/common-chiropractic-conditions", label: "Common Conditions", group: "Services" },
+      { href: "/sulphur-springs/degenerative-disc-disease", label: "Degenerative Disc", group: "Services" },
+      { href: "/sulphur-springs/electrical-muscle-stimulation", label: "Electrical Muscle Stim", group: "Services" },
+      { href: "/sulphur-springs/ice-pack-cryotherapy", label: "Ice Pack Cryotherapy", group: "Services" },
+      { href: "/sulphur-springs/postural-rehabilitation", label: "Postural Rehab", group: "Services" },
+      { href: "/sulphur-springs/spinal-decompression", label: "Spinal Decompression", group: "Services" },
+      { href: "/sulphur-springs/therapeutic-exercise", label: "Therapeutic Exercise", group: "Services" },
+      { href: "/sulphur-springs/therapeutic-ultrasound", label: "Therapeutic Ultrasound", group: "Services" },
+      { href: "/sulphur-springs/auto-injury", label: "Auto Injury", group: "Injuries" },
+      { href: "/sulphur-springs/personal-injury", label: "Personal Injury", group: "Injuries" },
+      { href: "/sulphur-springs/sports-injury", label: "Sports Injury", group: "Injuries" },
+    ],
+  },
+  {
+    href: "/locations/paris",
+    label: "Locations",
+    children: [
+      { href: "/locations/paris", label: "Paris, TX" },
+      { href: "/locations/sulphur-springs", label: "Sulphur Springs, TX" },
+    ],
+  },
+  {
+    href: "/about",
+    label: "About",
+    children: [
+      { href: "/about", label: "About Us" },
+      { href: "/sulphur-springs/staff", label: "Sulphur Springs Staff" },
+    ],
+  },
   { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
 ];
@@ -59,24 +97,9 @@ export function SiteHeader() {
           />
         </Link>
 
-        <nav
-          aria-label="Primary"
-          className="hidden flex-wrap items-center justify-end gap-x-5 gap-y-2 text-xs font-bold uppercase tracking-wide text-[#17433f] md:flex sm:text-sm"
-        >
-          {NAV_LINKS.map((l) => (
-            <Link key={l.href} className="focus-ring hover:text-[#0f817b]" href={l.href}>
-              {l.label}
-            </Link>
-          ))}
-          <Link
-            className="focus-ring bg-[#f2d25d] px-4 py-2 text-[#17433f] shadow-sm hover:bg-[#e6c13d]"
-            href="/book"
-          >
-            Book
-          </Link>
-        </nav>
+        <DesktopNav items={NAV_ITEMS} />
 
-        <MobileNav links={NAV_LINKS} />
+        <MobileNav items={NAV_ITEMS} />
       </div>
     </header>
   );

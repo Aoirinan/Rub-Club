@@ -32,7 +32,8 @@ export type BookingRow = {
 
 export type BookingEvent = {
   id: string;
-  type: "created" | "accepted" | "declined" | "cancelled" | "note";
+  type: "created" | "accepted" | "declined" | "cancelled" | "note"
+    | "reminder_sent" | "payment_requested" | "payment_completed" | "custom_email";
   atIso: string | null;
   byUid: string | null;
   byEmail: string | null;

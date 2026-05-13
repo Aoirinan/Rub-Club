@@ -485,6 +485,241 @@ export function officeNotificationEmail(ctx: BookingEmailContext): {
   return { subject, text, html };
 }
 
+/**
+ * Patient reminder email for an upcoming confirmed appointment.
+ */
+export function patientReminderEmail(ctx: BookingEmailContext): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const loc = LOCATIONS[ctx.locationId];
+  const subject = `Reminder — ${formatChicagoDateTimeShort(ctx.start)}`;
+
+  const text = [
+    `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
+    "",
+    "Just a friendly reminder about your upcoming appointment.",
+    "",
+    `When: ${formatChicagoDateTimeLong(ctx.start)}`,
+    `Service: ${ctx.serviceLine === "massage" ? "Massage therapy" : "Chiropractic"} (${ctx.durationMin} min)`,
+    `Provider: ${ctx.providerDisplayName || "First available"}`,
+    `Location: ${loc.name} — ${loc.addressLines.join(", ")}`,
+    "",
+    "Before your visit:",
+    "• Arrive 10–15 minutes early for paperwork on a first visit (5 minutes for returning patients).",
+    "• Bring photo ID and your insurance card if you have one.",
+    "• Comfortable clothing is fine for both massage and chiropractic.",
+    "",
+    `To reschedule or cancel: call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
+    "",
+    `Reference: ${ctx.bookingId}`,
+  ].join("\n");
+
+  const body = `
+    <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
+    <p style="margin:12px 0 0 0;">Just a friendly reminder about your upcoming appointment.</p>
+    ${detailsTable(ctx)}
+    <h2 style="margin:20px 0 6px 0;font-size:16px;color:${TEXT};">Before your visit</h2>
+    <ul style="margin:0;padding-left:18px;color:${TEXT};font-size:14px;line-height:1.6;">
+      <li>Arrive 10–15 minutes early for paperwork on a first visit (5 minutes for returning patients).</li>
+      <li>Bring photo ID and your insurance card if you have one.</li>
+      <li>Comfortable clothing is fine for massage and chiropractic appointments.</li>
+    </ul>
+    <p style="margin:16px 0 0 0;font-size:14px;">
+      Need to reschedule or cancel? Call
+      <a href="tel:+1${loc.phonePrimary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phonePrimary)}</a>${
+        loc.phoneSecondary
+          ? ` (massage desk <a href="tel:+1${loc.phoneSecondary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phoneSecondary)}</a>)`
+          : ""
+      }.
+    </p>
+    <p style="margin:16px 0 0 0;font-size:12px;color:${MUTED};">Reference: ${escapeHtml(ctx.bookingId)}</p>
+  `;
+
+  const html = brandedShell({
+    preheader: `Reminder: ${ctx.durationMin}-minute ${ctx.serviceLine} on ${formatChicagoDateTimeShort(ctx.start)}.`,
+    heading: "Appointment reminder",
+    body,
+    ctaText: "View location and map",
+    ctaHref: loc.mapsUrl,
+  });
+
+  return { subject, text, html };
+}
+
+/**
+ * Patient email with a Square payment link to pay for their appointment.
+ */
+export function patientPaymentRequestEmail(
+  ctx: BookingEmailContext,
+  params: { amountCents: number; paymentUrl: string; description?: string },
+): { subject: string; text: string; html: string } {
+  const loc = LOCATIONS[ctx.locationId];
+  const dollars = (params.amountCents / 100).toFixed(2);
+  const subject = `Payment request — $${dollars}`;
+
+  const text = [
+    `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
+    "",
+    `The office has sent you a payment request for $${dollars}.`,
+    params.description ? `Note: ${params.description}` : "",
+    "",
+    `Pay online: ${params.paymentUrl}`,
+    "",
+    `Appointment: ${formatChicagoDateTimeLong(ctx.start)}`,
+    `Service: ${ctx.serviceLine === "massage" ? "Massage therapy" : "Chiropractic"} (${ctx.durationMin} min)`,
+    `Location: ${loc.name}`,
+    "",
+    `Questions? Call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
+    "",
+    `Reference: ${ctx.bookingId}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const descBlock = params.description
+    ? `<p style="margin:8px 0 0 0;font-size:14px;color:${MUTED};">${escapeHtml(params.description)}</p>`
+    : "";
+
+  const body = `
+    <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
+    <p style="margin:12px 0 0 0;">The office has sent you a payment request.</p>
+    <p style="margin:12px 0 0 0;padding:14px 16px;background:#fdf6e0;border:1px solid #f2d25d;border-radius:6px;font-size:20px;font-weight:900;color:${TEXT};text-align:center;">
+      $${escapeHtml(dollars)}
+    </p>
+    ${descBlock}
+    ${detailsTable(ctx)}
+    <p style="margin:16px 0 0 0;font-size:14px;">
+      Questions? Call
+      <a href="tel:+1${loc.phonePrimary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phonePrimary)}</a>${
+        loc.phoneSecondary
+          ? ` (massage desk <a href="tel:+1${loc.phoneSecondary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phoneSecondary)}</a>)`
+          : ""
+      }.
+    </p>
+    <p style="margin:16px 0 0 0;font-size:12px;color:${MUTED};">Reference: ${escapeHtml(ctx.bookingId)}</p>
+  `;
+
+  const html = brandedShell({
+    preheader: `Payment request: $${dollars} for your ${ctx.serviceLine} appointment.`,
+    heading: "Payment request",
+    body,
+    ctaText: "Pay now",
+    ctaHref: params.paymentUrl,
+  });
+
+  return { subject, text, html };
+}
+
+/**
+ * Patient email receipt after payment is completed.
+ */
+export function patientPaymentReceiptEmail(
+  ctx: BookingEmailContext,
+  params: { amountCents: number; squarePaymentId?: string },
+): { subject: string; text: string; html: string } {
+  const loc = LOCATIONS[ctx.locationId];
+  const dollars = (params.amountCents / 100).toFixed(2);
+  const subject = `Payment received — $${dollars}`;
+
+  const text = [
+    `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
+    "",
+    `We received your payment of $${dollars}. Thank you!`,
+    "",
+    `Appointment: ${formatChicagoDateTimeLong(ctx.start)}`,
+    `Service: ${ctx.serviceLine === "massage" ? "Massage therapy" : "Chiropractic"} (${ctx.durationMin} min)`,
+    `Location: ${loc.name}`,
+    "",
+    params.squarePaymentId ? `Transaction ID: ${params.squarePaymentId}` : "",
+    `Reference: ${ctx.bookingId}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const txnBlock = params.squarePaymentId
+    ? `<p style="margin:8px 0 0 0;font-size:12px;color:${MUTED};">Transaction: ${escapeHtml(params.squarePaymentId)}</p>`
+    : "";
+
+  const body = `
+    <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
+    <p style="margin:12px 0 0 0;">We received your payment. Thank you!</p>
+    <p style="margin:12px 0 0 0;padding:14px 16px;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:6px;font-size:20px;font-weight:900;color:${TEXT};text-align:center;">
+      $${escapeHtml(dollars)} — Paid
+    </p>
+    ${detailsTable(ctx)}
+    ${txnBlock}
+    <p style="margin:16px 0 0 0;font-size:14px;">
+      Questions? Call
+      <a href="tel:+1${loc.phonePrimary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phonePrimary)}</a>${
+        loc.phoneSecondary
+          ? ` (massage desk <a href="tel:+1${loc.phoneSecondary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phoneSecondary)}</a>)`
+          : ""
+      }.
+    </p>
+    <p style="margin:16px 0 0 0;font-size:12px;color:${MUTED};">Reference: ${escapeHtml(ctx.bookingId)}</p>
+  `;
+
+  const html = brandedShell({
+    preheader: `Payment of $${dollars} received for your ${ctx.serviceLine} appointment.`,
+    heading: "Payment received",
+    body,
+  });
+
+  return { subject, text, html };
+}
+
+/**
+ * Custom message from the office to a patient, wrapped in the branded shell.
+ */
+export function patientCustomEmail(
+  ctx: BookingEmailContext,
+  params: { subject: string; message: string },
+): { subject: string; text: string; html: string } {
+  const loc = LOCATIONS[ctx.locationId];
+  const subject = params.subject;
+
+  const text = [
+    `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
+    "",
+    params.message,
+    "",
+    `Regarding your appointment: ${formatChicagoDateTimeLong(ctx.start)}`,
+    `Service: ${ctx.serviceLine === "massage" ? "Massage therapy" : "Chiropractic"} (${ctx.durationMin} min)`,
+    `Location: ${loc.name}`,
+    "",
+    `Questions? Call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
+    "",
+    `Reference: ${ctx.bookingId}`,
+  ].join("\n");
+
+  const body = `
+    <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
+    <div style="margin:12px 0 0 0;white-space:pre-line;font-size:15px;line-height:1.55;color:${TEXT};">${escapeHtml(params.message)}</div>
+    <p style="margin:16px 0 0 0;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;color:${MUTED};">
+      Regarding your ${escapeHtml(ctx.serviceLine)} appointment on ${escapeHtml(formatChicagoDateTimeShort(ctx.start))}
+    </p>
+    <p style="margin:16px 0 0 0;font-size:14px;">
+      Questions? Call
+      <a href="tel:+1${loc.phonePrimary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phonePrimary)}</a>${
+        loc.phoneSecondary
+          ? ` (massage desk <a href="tel:+1${loc.phoneSecondary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phoneSecondary)}</a>)`
+          : ""
+      }.
+    </p>
+    <p style="margin:16px 0 0 0;font-size:12px;color:${MUTED};">Reference: ${escapeHtml(ctx.bookingId)}</p>
+  `;
+
+  const html = brandedShell({
+    preheader: params.message.slice(0, 100),
+    heading: params.subject,
+    body,
+  });
+
+  return { subject, text, html };
+}
+
 /** Generic contact form notification. */
 export function contactFormEmail(params: {
   name: string;

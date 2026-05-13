@@ -11,7 +11,11 @@ export type BookingEventType =
   | "accepted"
   | "declined"
   | "cancelled"
-  | "note";
+  | "note"
+  | "reminder_sent"
+  | "payment_requested"
+  | "payment_completed"
+  | "custom_email";
 
 export type BookingEventRecord = {
   type: BookingEventType;

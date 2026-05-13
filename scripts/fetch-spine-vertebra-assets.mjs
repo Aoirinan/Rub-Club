@@ -51,6 +51,32 @@ async function save(rel) {
   return true;
 }
 
+function collectAtlasManifests() {
+  const tasks = new Set();
+  const re = /src\s*:\s*["']([^"']+\.(?:png|jpg|jpeg|gif))(?:\?[^"']*)?["']/gi;
+  function walk(dir, relDir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      const rel = relDir ? `${relDir}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        walk(full, rel);
+      } else if (entry.isFile() && entry.name.endsWith(".js")) {
+        const text = fs.readFileSync(full, "utf8");
+        let m;
+        while ((m = re.exec(text))) {
+          const src = m[1].trim();
+          if (src.startsWith("http") || src.startsWith("//") || src.startsWith("data:")) continue;
+          const dirRel = relDir ? `${relDir}/` : "";
+          const joined = path.posix.normalize(`${dirRel}${src}`);
+          tasks.add(joined);
+        }
+      }
+    }
+  }
+  walk(OUT, "");
+  return [...tasks];
+}
+
 async function main() {
   const tasks = [];
   for (const id of IDS) {
@@ -60,6 +86,11 @@ async function main() {
     for (let i = 1; i <= 6; i++) {
       tasks.push(`images/${id}/${i}.png`);
     }
+  }
+
+  for (const rel of collectAtlasManifests()) {
+    const dest = path.join(OUT, rel.split("/").join(path.sep));
+    if (!fs.existsSync(dest)) tasks.push(rel);
   }
 
   let ok = 0;
