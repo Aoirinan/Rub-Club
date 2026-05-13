@@ -213,19 +213,20 @@ function CalendarBlock({
   const geom = blockGeometry(booking.startAtMs, booking.durationMin, openHour, closeHour, slotPx);
   if (geom.heightPx <= 0) return null;
   const status = booking.status ?? "pending";
+  const providerLabel = booking.providerDisplayName || "First available";
   return (
     <button
       type="button"
       onClick={() => onSelect(booking.id)}
       className={`absolute left-1 right-1 overflow-hidden rounded-md px-2 py-1 text-left text-xs shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-500 ${bookingStatusBlockClasses(status)}`}
       style={{ top: `${geom.topPx}px`, height: `${geom.heightPx}px` }}
-      title={`${booking.name ?? ""} · ${booking.serviceLine ?? ""} · ${booking.durationMin}m`}
+      title={`${booking.name ?? ""} · ${booking.serviceLine ?? ""} · ${booking.durationMin}m · ${providerLabel}`}
     >
       <div className="truncate font-semibold">
         {formatChicagoTime(booking.startAtMs)} · {booking.name ?? "Unknown"}
       </div>
-      <div className="truncate text-[11px] opacity-90">
-        {booking.serviceLine} · {booking.durationMin}m
+      <div className="truncate text-[11px] font-medium opacity-90">
+        {providerLabel} · {booking.serviceLine} · {booking.durationMin}m
       </div>
     </button>
   );
