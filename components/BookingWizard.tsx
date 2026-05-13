@@ -1,10 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DateTime } from "luxon";
 import { LOCATIONS, TIME_ZONE, type DurationMin, type LocationId, type ServiceLine } from "@/lib/constants";
 
 type Slot = { startIso: string; label: string };
+
+type ProviderOption = { id: string; displayName: string; sortOrder: number };
+
+type ProviderMode = "specific" | "any";
 
 function todayIso(): string {
   return DateTime.now().setZone(TIME_ZONE).toFormat("yyyy-LL-dd");
@@ -21,7 +25,15 @@ export function BookingWizard() {
   const [date, setDate] = useState<string>(todayIso());
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [slotsError, setSlotsError] = useState<string | null>(null);
+  const [slotsHint, setSlotsHint] = useState<string | null>(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
+
+  const [providers, setProviders] = useState<ProviderOption[] | null>(null);
+  const [providersError, setProvidersError] = useState<string | null>(null);
+
+  const [providerMode, setProviderMode] = useState<ProviderMode>("specific");
+  const [selectedProviderId, setSelectedProviderId] = useState("");
+  const [preferredProviderId, setPreferredProviderId] = useState("");
 
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
 
@@ -36,26 +48,74 @@ export function BookingWizard() {
   const minDate = useMemo(() => todayIso(), []);
   const maxDate = useMemo(() => addDaysIso(90), []);
 
+  useEffect(() => {
+    let cancelled = false;
+    async function loadProviders() {
+      setProvidersError(null);
+      setProviders(null);
+      try {
+        const qs = new URLSearchParams({ locationId, serviceLine });
+        const res = await fetch(`/api/providers?${qs.toString()}`);
+        const data = (await res.json()) as { providers?: ProviderOption[]; error?: string };
+        if (!res.ok) throw new Error(data.error || "Could not load providers");
+        const list = data.providers ?? [];
+        if (cancelled) return;
+        setProviders(list);
+        setSelectedProviderId((prev) => (list.some((p) => p.id === prev) ? prev : list[0]?.id ?? ""));
+        setPreferredProviderId((prev) => (prev && list.some((p) => p.id === prev) ? prev : ""));
+      } catch (e) {
+        if (!cancelled) {
+          setProvidersError(e instanceof Error ? e.message : "Could not load providers.");
+          setProviders([]);
+        }
+      }
+    }
+    void loadProviders();
+    return () => {
+      cancelled = true;
+    };
+  }, [locationId, serviceLine]);
+
   async function loadSlots() {
     setSlotsError(null);
+    setSlotsHint(null);
     setSlots(null);
     setSelectedSlot(null);
+    if (!providers?.length) {
+      setSlotsError("No bookable providers for this location and service yet. Please call the office.");
+      return;
+    }
+    if (providerMode === "specific" && !selectedProviderId) {
+      setSlotsError("Choose a provider first.");
+      return;
+    }
     setLoadingSlots(true);
     try {
       const qs = new URLSearchParams({
         locationId,
         date,
         durationMin: String(durationMin),
+        serviceLine,
+        providerMode,
       });
-      const res = await fetch(`/api/slots?${qs.toString()}`, { method: "GET" });
-      if (!res.ok) {
-        const errBody = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(errBody.error || "Could not load times");
+      if (providerMode === "specific") {
+        qs.set("providerId", selectedProviderId);
       }
-      const data = (await res.json()) as { slots: Slot[] };
-      setSlots(data.slots);
-      if (data.slots.length === 0) {
-        setSlotsError("No open times that day. Try another date or duration.");
+      const res = await fetch(`/api/slots?${qs.toString()}`, { method: "GET" });
+      const data = (await res.json().catch(() => ({}))) as {
+        slots?: Slot[];
+        message?: string;
+        error?: string;
+      };
+      if (!res.ok) {
+        throw new Error(data.error || "Could not load times");
+      }
+      setSlots(data.slots ?? []);
+      if ((data.slots ?? []).length === 0) {
+        setSlotsError("No open times that day. Try another date, duration, or provider option.");
+      }
+      if (typeof data.message === "string" && data.message.length > 0) {
+        setSlotsHint(data.message);
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Could not load times. Please try again.";
@@ -68,24 +128,39 @@ export function BookingWizard() {
   async function submitBooking() {
     setSubmitMessage(null);
     if (!selectedSlot) return;
+    if (providerMode === "specific" && !selectedProviderId) return;
+
     setSubmitting(true);
     try {
+      const body: Record<string, unknown> = {
+        locationId,
+        serviceLine,
+        durationMin,
+        startIso: selectedSlot.startIso,
+        name,
+        phone,
+        email,
+        notes,
+        website,
+        providerMode,
+      };
+      if (providerMode === "specific") {
+        body.providerId = selectedProviderId;
+      }
+      if (providerMode === "any" && preferredProviderId) {
+        body.preferredProviderId = preferredProviderId;
+      }
+
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          locationId,
-          serviceLine,
-          durationMin,
-          startIso: selectedSlot.startIso,
-          name,
-          phone,
-          email,
-          notes,
-          website,
-        }),
+        body: JSON.stringify(body),
       });
-      const data = await res.json().catch(() => ({}));
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        providerDisplayName?: string;
+        providerMode?: ProviderMode;
+      };
       if (res.status === 409) {
         setSubmitMessage(
           "That time was just taken. Please pick another slot and submit again.",
@@ -99,8 +174,14 @@ export function BookingWizard() {
         );
         return;
       }
+      const who =
+        data.providerMode === "any" && data.providerDisplayName
+          ? ` First available slot held with ${data.providerDisplayName} (subject to office confirmation).`
+          : data.providerDisplayName
+            ? ` Requested with ${data.providerDisplayName}.`
+            : "";
       setSubmitMessage(
-        "Request received. The office will follow up to confirm. If this is urgent, please call the location directly.",
+        `Request received.${who} The office will follow up to confirm. If this is urgent, please call the location directly.`,
       );
       setName("");
       setPhone("");
@@ -113,12 +194,15 @@ export function BookingWizard() {
     }
   }
 
+  const canPickSlots = Boolean(providers?.length);
+  const providerSelectDisabled = !providers?.length;
+
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-10">
       <div className="space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Book an appointment</h1>
         <p className="text-slate-600">
-          Pick a location, service type, and time. This form only schedules a request—no insurance or
+          Pick a location, service, provider option, and time. This form only schedules a request—no insurance or
           medical records are collected here.
         </p>
       </div>
@@ -174,15 +258,111 @@ export function BookingWizard() {
           </label>
         </div>
 
+        <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4">
+          <p className="text-sm font-medium text-slate-800">Provider</p>
+          {providers === null ? (
+            <p className="text-sm text-slate-600">Loading providers…</p>
+          ) : providersError ? (
+            <p className="text-sm text-red-700">{providersError}</p>
+          ) : providers.length === 0 ? (
+            <p className="text-sm text-amber-900">
+              No providers are published for this location and service yet. Please call the office to schedule.
+            </p>
+          ) : (
+            <>
+              <fieldset className="space-y-2 text-sm">
+                <legend className="sr-only">How to choose a provider</legend>
+                <label className="flex cursor-pointer items-start gap-2">
+                  <input
+                    type="radio"
+                    name="providerMode"
+                    className="mt-1"
+                    checked={providerMode === "specific"}
+                    onChange={() => {
+                      setProviderMode("specific");
+                      setPreferredProviderId("");
+                      setSlots(null);
+                      setSelectedSlot(null);
+                    }}
+                  />
+                  <span>
+                    <span className="font-medium text-slate-900">I want a specific provider</span>
+                    <span className="block text-slate-600">Only their open times are shown.</span>
+                  </span>
+                </label>
+                <label className="flex cursor-pointer items-start gap-2">
+                  <input
+                    type="radio"
+                    name="providerMode"
+                    className="mt-1"
+                    checked={providerMode === "any"}
+                    onChange={() => {
+                      setProviderMode("any");
+                      setSlots(null);
+                      setSelectedSlot(null);
+                    }}
+                  />
+                  <span>
+                    <span className="font-medium text-slate-900">First available for this service</span>
+                    <span className="block text-slate-600">
+                      Times when any qualified provider at this location is free. The next step lets you note a
+                      preference; assignment is automatic and not guaranteed.
+                    </span>
+                  </span>
+                </label>
+              </fieldset>
+
+              {providerMode === "specific" ? (
+                <label className="block space-y-1 text-sm">
+                  <span className="font-medium text-slate-800">Provider</span>
+                  <select
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                    value={selectedProviderId}
+                    onChange={(e) => {
+                      setSelectedProviderId(e.target.value);
+                      setSlots(null);
+                      setSelectedSlot(null);
+                    }}
+                    disabled={providerSelectDisabled}
+                  >
+                    {providers.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.displayName}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <label className="block space-y-1 text-sm">
+                  <span className="font-medium text-slate-800">Preference (optional)</span>
+                  <select
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                    value={preferredProviderId}
+                    onChange={(e) => setPreferredProviderId(e.target.value)}
+                  >
+                    <option value="">No preference — truly first available</option>
+                    {providers.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        Prefer {p.displayName} if they have this slot (not guaranteed)
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </>
+          )}
+        </div>
+
         <button
           type="button"
           className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
           onClick={loadSlots}
-          disabled={loadingSlots}
+          disabled={loadingSlots || !canPickSlots}
         >
           {loadingSlots ? "Loading times…" : "See open times"}
         </button>
 
+        {slotsHint ? <p className="text-sm text-slate-600">{slotsHint}</p> : null}
         {slotsError ? <p className="text-sm text-red-700">{slotsError}</p> : null}
 
         {slots && slots.length > 0 ? (
@@ -264,7 +444,7 @@ export function BookingWizard() {
         <button
           type="button"
           className="rounded-full bg-emerald-700 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
-          disabled={!selectedSlot || submitting || !name || !phone || !email}
+          disabled={!selectedSlot || submitting || !name || !phone || !email || !canPickSlots}
           onClick={submitBooking}
         >
           {submitting ? "Submitting…" : "Submit booking request"}

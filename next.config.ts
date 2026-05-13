@@ -10,6 +10,15 @@ const sha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7);
 const appVersion = sha ? `${pkg.version} · ${sha}` : pkg.version;
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cdcssl.ibsrv.net",
+        pathname: "/ibimg/**",
+      },
+    ],
+  },
   env: {
     NEXT_PUBLIC_APP_VERSION: appVersion,
   },

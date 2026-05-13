@@ -19,6 +19,9 @@ type BookingRow = {
   locationId?: string;
   serviceLine?: string;
   durationMin?: number;
+  providerDisplayName?: string;
+  providerMode?: string;
+  preferredProviderDisplayName?: string;
   name?: string;
   phone?: string;
   email?: string;
@@ -158,6 +161,7 @@ export default function AdminDashboardPage() {
               <th className="px-4 py-3">When (UTC ISO)</th>
               <th className="px-4 py-3">Location</th>
               <th className="px-4 py-3">Service</th>
+              <th className="px-4 py-3">Provider</th>
               <th className="px-4 py-3">Duration</th>
               <th className="px-4 py-3">Patient</th>
               <th className="px-4 py-3">Status</th>
@@ -170,6 +174,14 @@ export default function AdminDashboardPage() {
                 <td className="px-4 py-3 font-mono text-xs text-slate-800">{b.startIso}</td>
                 <td className="px-4 py-3 text-slate-700">{b.locationId}</td>
                 <td className="px-4 py-3 text-slate-700">{b.serviceLine}</td>
+                <td className="px-4 py-3 text-slate-700">
+                  <div>{b.providerDisplayName ?? "—"}</div>
+                  {b.providerMode === "any" && b.preferredProviderDisplayName ? (
+                    <div className="text-xs text-slate-500">
+                      Pref: {b.preferredProviderDisplayName}
+                    </div>
+                  ) : null}
+                </td>
                 <td className="px-4 py-3 text-slate-700">{b.durationMin}</td>
                 <td className="px-4 py-3 text-slate-700">
                   <div className="font-medium text-slate-900">{b.name}</div>
@@ -192,7 +204,7 @@ export default function AdminDashboardPage() {
             ))}
             {bookings.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-slate-600" colSpan={7}>
+                <td className="px-4 py-6 text-slate-600" colSpan={8}>
                   No bookings in the current window.
                 </td>
               </tr>

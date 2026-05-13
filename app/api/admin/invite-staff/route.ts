@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getAuth, getFirestore } from "@/lib/firebase-admin";
+import { getPublicAppOrigin } from "@/lib/app-origin";
 import { requireStaff } from "@/lib/staff-auth";
 import { sendStaffInviteEmail } from "@/lib/sendgrid";
 
@@ -94,7 +95,11 @@ export async function POST(req: Request) {
   let inviteEmailIssue: "missing_env" | "sendgrid_error" | "reset_link_failed" | null = null;
   let inviteEmailDetail: string | undefined;
   try {
-    const resetLink = await auth.generatePasswordResetLink(email);
+    const origin = getPublicAppOrigin();
+    const resetLink = await auth.generatePasswordResetLink(email, {
+      url: `${origin}/auth/password-reset-complete`,
+      handleCodeInApp: false,
+    });
     const isBrandNew = createdNewAuthUser && temporaryPassword;
     const emailResult = await sendStaffInviteEmail({
       to: email,
