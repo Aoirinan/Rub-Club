@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "vercel:login": "npx vercel@50 login",
+    "vercel:link": "npx vercel@50 link",
+    "deploy:vercel": "npx vercel@50 deploy --prod --yes"
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.6",

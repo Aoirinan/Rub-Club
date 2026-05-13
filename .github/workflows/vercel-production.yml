@@ -1,0 +1,38 @@
+# Deploy to Vercel production (build runs on Vercel; no token stored in repo).
+#
+# One-time: GitHub → Settings → Secrets and variables → Actions → add:
+#   VERCEL_TOKEN       https://vercel.com/account/tokens
+#   VERCEL_ORG_ID      Vercel → Project → Settings → General (Team ID)
+#   VERCEL_PROJECT_ID  same page (Project ID)
+#
+# Run: Actions → "Vercel Production Deploy" → Run workflow
+
+name: Vercel Production Deploy
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: vercel-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Vercel secrets
+        run: |
+          test -n "$VERCEL_TOKEN" || { echo "Missing GitHub secret VERCEL_TOKEN"; exit 1; }
+          test -n "$VERCEL_ORG_ID" || { echo "Missing GitHub secret VERCEL_ORG_ID"; exit 1; }
+          test -n "$VERCEL_PROJECT_ID" || { echo "Missing GitHub secret VERCEL_PROJECT_ID"; exit 1; }
+
+      - name: Deploy to Vercel (production)
+        run: npx vercel@50 deploy --prod --yes --token="$VERCEL_TOKEN"
