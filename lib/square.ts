@@ -1,5 +1,5 @@
 import { SquareClient, SquareEnvironment } from "square";
-import { randomUUID } from "crypto";
+import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 
 let client: SquareClient | null = null;
 
@@ -84,11 +84,10 @@ export function verifySquareWebhook(
   if (!sigKey) return false;
 
   try {
-    const crypto = require("crypto") as typeof import("crypto");
-    const hmac = crypto.createHmac("sha256", sigKey);
+    const hmac = createHmac("sha256", sigKey);
     hmac.update(notificationUrl + body);
     const expected = hmac.digest("base64");
-    return crypto.timingSafeEqual(
+    return timingSafeEqual(
       Buffer.from(signature, "base64"),
       Buffer.from(expected, "base64"),
     );
