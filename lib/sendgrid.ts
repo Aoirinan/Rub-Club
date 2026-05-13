@@ -37,33 +37,41 @@ function escapeHtml(s: string): string {
     .replaceAll(">", "&gt;");
 }
 
-/** Returns true if an email was sent. */
+/** Returns true if SendGrid accepted the message. */
 export async function sendStaffInviteEmail(params: {
   to: string;
   resetLink: string;
   inviterNote?: string;
+  subject?: string;
 }): Promise<boolean> {
   ensureSendgrid();
   const key = process.env.SENDGRID_API_KEY;
   const from = process.env.SENDGRID_FROM_EMAIL;
   if (!key || !from) return false;
 
-  const note = params.inviterNote ?? "You have been invited to the staff portal.";
+  const note =
+    params.inviterNote ?? "You have been invited to the staff portal.";
+  const subject = params.subject ?? "Staff portal — set your password";
   const text = [
     note,
     "",
-    "Use this link to choose your own password and sign in:",
+    "Use this link to sign in or set a new password:",
     params.resetLink,
     "",
     "If the link expires, use “Forgot password” on the staff sign-in page with this email address.",
   ].join("\n");
 
-  await sgMail.send({
-    to: params.to,
-    from,
-    subject: "Staff portal — set your password",
-    text,
-    html: `<p>${escapeHtml(note)}</p><p><a href="${params.resetLink}">Set your password</a></p>`,
-  });
-  return true;
+  try {
+    await sgMail.send({
+      to: params.to,
+      from,
+      subject,
+      text,
+      html: `<p>${escapeHtml(note)}</p><p><a href="${params.resetLink}">Open staff portal link</a></p>`,
+    });
+    return true;
+  } catch (e) {
+    console.error("SendGrid staff invite failed", e);
+    return false;
+  }
 }

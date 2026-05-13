@@ -91,17 +91,21 @@ export async function POST(req: Request) {
     );
 
   let emailedReset = false;
-  if (createdNewAuthUser && temporaryPassword) {
-    try {
-      const resetLink = await auth.generatePasswordResetLink(email);
-      emailedReset = await sendStaffInviteEmail({
-        to: email,
-        resetLink,
-        inviterNote: `A manager added you to the Paris Wellness staff portal.`,
-      });
-    } catch (e) {
-      console.error("Password reset link / email failed", e);
-    }
+  try {
+    const resetLink = await auth.generatePasswordResetLink(email);
+    const isBrandNew = createdNewAuthUser && temporaryPassword;
+    emailedReset = await sendStaffInviteEmail({
+      to: email,
+      resetLink,
+      inviterNote: isBrandNew
+        ? "A manager added you to the Paris Wellness staff portal."
+        : "You have been granted access to the Paris Wellness staff portal. Use the link below to sign in or reset your password if needed.",
+      subject: isBrandNew
+        ? "Staff portal — set your password"
+        : "Staff portal — access granted",
+    });
+  } catch (e) {
+    console.error("Password reset link / email failed", e);
   }
 
   return NextResponse.json({
