@@ -5,7 +5,7 @@ import { getFirestore } from "@/lib/firebase-admin";
 import { requireStaff } from "@/lib/staff-auth";
 import { recordBookingEventInTx } from "@/lib/booking-events";
 import { bookingDocToEmailContext } from "@/lib/booking-doc";
-import { patientCancelledEmail } from "@/lib/email-templates";
+import { patientDeclinedEmail } from "@/lib/email-templates";
 import { sendBookingNotification } from "@/lib/sendgrid";
 
 export const runtime = "nodejs";
@@ -50,14 +50,10 @@ export async function POST(req: Request, ctx: Params) {
         throw new Error("not_found");
       }
       const prev = snap.get("status");
-      if (prev === "cancelled") {
+      if (prev === "declined") {
         return;
       }
-      // Cancelling a pending request is also allowed (acts like decline-without-email)
-      // but the dedicated /decline route is preferred. We accept both confirmed and
-      // pending here to be resilient — but only emit the cancellation email when the
-      // booking was already confirmed (the patient was told it was confirmed before).
-      if (prev !== "confirmed" && prev !== "pending") {
+      if (prev !== "pending") {
         throw new Error("bad_status");
       }
       const bucketIds = snap.get("bucketIds") as string[] | undefined;
@@ -67,14 +63,14 @@ export async function POST(req: Request, ctx: Params) {
         }
       }
       tx.update(bookingRef, {
-        status: "cancelled",
-        cancelledAt: FieldValue.serverTimestamp(),
-        cancelledByUid: staff.uid,
-        cancelledByEmail: staff.email ?? null,
-        ...(reason ? { cancelReason: reason } : {}),
+        status: "declined",
+        declinedAt: FieldValue.serverTimestamp(),
+        declinedByUid: staff.uid,
+        declinedByEmail: staff.email ?? null,
+        ...(reason ? { declineReason: reason } : {}),
       });
       recordBookingEventInTx(db, tx, id, {
-        type: "cancelled",
+        type: "declined",
         byUid: staff.uid,
         byEmail: staff.email ?? null,
         ...(reason ? { reason } : {}),
@@ -87,41 +83,29 @@ export async function POST(req: Request, ctx: Params) {
     }
     if (e instanceof Error && e.message === "bad_status") {
       return NextResponse.json(
-        { error: "This booking can no longer be cancelled." },
+        { error: "Only pending requests can be declined." },
         { status: 409 },
       );
     }
     console.error(e);
-    return NextResponse.json({ error: "Could not cancel" }, { status: 500 });
+    return NextResponse.json({ error: "Could not decline" }, { status: 500 });
   }
 
   try {
     const fresh = await bookingRef.get();
     const emailCtx = bookingDocToEmailContext(fresh);
-    // Only email the patient if they previously saw a confirmation. The transaction
-    // already updated the booking, so read prevStatus from the last event we wrote.
     if (emailCtx) {
-      const lastEvent = await db
-        .collection("bookings")
-        .doc(id)
-        .collection("events")
-        .orderBy("at", "desc")
-        .limit(1)
-        .get();
-      const prevStatus = lastEvent.docs[0]?.get("meta.prevStatus") as string | undefined;
-      if (prevStatus === "confirmed") {
-        const { subject, text, html } = patientCancelledEmail(emailCtx, reason);
-        await sendBookingNotification({
-          to: emailCtx.email,
-          subject,
-          text,
-          html,
-          fromName: "The Rub Club & Chiropractic Associates",
-        });
-      }
+      const { subject, text, html } = patientDeclinedEmail(emailCtx, reason);
+      await sendBookingNotification({
+        to: emailCtx.email,
+        subject,
+        text,
+        html,
+        fromName: "The Rub Club & Chiropractic Associates",
+      });
     }
   } catch (err) {
-    console.error("Cancel email failed", err);
+    console.error("Decline email failed", err);
   }
 
   return NextResponse.json({ ok: true });

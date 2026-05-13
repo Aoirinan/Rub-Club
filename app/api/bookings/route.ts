@@ -19,10 +19,10 @@ import {
 } from "@/lib/slots-luxon";
 import {
   officeNotificationEmail,
-  patientConfirmationEmail,
+  patientPendingEmail,
   type BookingEmailContext,
 } from "@/lib/email-templates";
-import { buildIcs } from "@/lib/ics";
+import { recordBookingEventInTx } from "@/lib/booking-events";
 
 export const runtime = "nodejs";
 
@@ -180,9 +180,15 @@ export async function POST(req: Request) {
           phone: body.phone.trim(),
           email: body.email.trim().toLowerCase(),
           notes: body.notes?.trim() || "",
-          status: "confirmed",
+          status: "pending",
           sourceIp: getClientIp(req.headers),
           createdAt: FieldValue.serverTimestamp(),
+        });
+        recordBookingEventInTx(db, tx, bookingRef.id, {
+          type: "created",
+          byUid: null,
+          byEmail: body.email.trim().toLowerCase(),
+          meta: { via: "public_form", providerMode: "specific" },
         });
       });
     } else {
@@ -247,9 +253,15 @@ export async function POST(req: Request) {
           phone: body.phone.trim(),
           email: body.email.trim().toLowerCase(),
           notes: body.notes?.trim() || "",
-          status: "confirmed",
+          status: "pending",
           sourceIp: getClientIp(req.headers),
           createdAt: FieldValue.serverTimestamp(),
+        });
+        recordBookingEventInTx(db, tx, bookingRef.id, {
+          type: "created",
+          byUid: null,
+          byEmail: body.email.trim().toLowerCase(),
+          meta: { via: "public_form", providerMode: "any" },
         });
       });
     }
@@ -283,18 +295,6 @@ export async function POST(req: Request) {
     preferredProviderName,
   };
 
-  const ics = buildIcs({
-    uid: `${bookingRef.id}@wellnessparistx`,
-    startUtc: start.toUTC(),
-    durationMinutes: durationMin,
-    summary: `${serviceLine === "massage" ? "Massage" : "Chiropractic"} appointment`,
-    description: `Appointment request with ${assignedDisplayName || "first available provider"}. Reference: ${bookingRef.id}.`,
-    location: `${locationId === "paris" ? "Paris" : "Sulphur Springs"}, TX`,
-    organizerEmail: process.env.OFFICE_NOTIFICATION_EMAIL,
-    organizerName: "Paris Wellness",
-  });
-  const icsBase64 = Buffer.from(ics, "utf8").toString("base64");
-
   const officeTo = process.env.OFFICE_NOTIFICATION_EMAIL;
   if (officeTo) {
     try {
@@ -304,13 +304,6 @@ export async function POST(req: Request) {
         subject,
         text,
         html,
-        attachments: [
-          {
-            filename: "appointment.ics",
-            content: icsBase64,
-            type: "text/calendar; method=PUBLISH",
-          },
-        ],
       });
     } catch (err) {
       console.error("Office SendGrid failed", err);
@@ -318,20 +311,13 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { subject, text, html } = patientConfirmationEmail(emailContext);
+    const { subject, text, html } = patientPendingEmail(emailContext);
     await sendBookingNotification({
       to: emailContext.email,
       subject,
       text,
       html,
       fromName: "The Rub Club & Chiropractic Associates",
-      attachments: [
-        {
-          filename: "appointment.ics",
-          content: icsBase64,
-          type: "text/calendar; method=PUBLISH",
-        },
-      ],
     });
   } catch (err) {
     console.error("Patient SendGrid failed", err);
@@ -341,6 +327,7 @@ export async function POST(req: Request) {
     {
       ok: true,
       bookingId: bookingRef.id,
+      status: "pending",
       providerId: assignedProviderId,
       providerDisplayName: assignedDisplayName,
       providerMode: body.providerMode,

@@ -126,19 +126,84 @@ function detailsTable(ctx: BookingEmailContext): string {
   </table>`;
 }
 
-/** Patient-facing booking confirmation. */
-export function patientConfirmationEmail(ctx: BookingEmailContext): {
+/**
+ * Patient email sent when an appointment request is first received.
+ * No calendar invite yet — only after the office accepts.
+ */
+export function patientPendingEmail(ctx: BookingEmailContext): {
   subject: string;
   text: string;
   html: string;
 } {
   const loc = LOCATIONS[ctx.locationId];
-  const subject = `Appointment request received — ${formatChicagoDateTimeShort(ctx.start)}`;
+  const subject = `Request received — ${formatChicagoDateTimeShort(ctx.start)}`;
 
   const text = [
     `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
     "",
-    "Thank you for booking with us. Your request has been received and the office will follow up shortly to confirm.",
+    "Thanks — we got your appointment request. The office will review it and email you again as soon as it is confirmed.",
+    "",
+    `Requested time: ${formatChicagoDateTimeLong(ctx.start)}`,
+    `Service: ${ctx.serviceLine === "massage" ? "Massage therapy" : "Chiropractic"} (${ctx.durationMin} min)`,
+    `Provider: ${ctx.providerDisplayName || "First available"}`,
+    `Location: ${loc.name} — ${loc.addressLines.join(", ")}`,
+    "",
+    "Status: PENDING — we have not yet confirmed this appointment.",
+    "",
+    `Need to change or cancel? Call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
+    "",
+    `Reference: ${ctx.bookingId}`,
+  ].join("\n");
+
+  const prefNote =
+    ctx.providerMode === "any" && ctx.preferredProviderName
+      ? `<p style="margin:8px 0 0 0;font-size:14px;color:${MUTED};">Provider preference noted: <strong>${escapeHtml(ctx.preferredProviderName)}</strong> (final assignment by the office).</p>`
+      : "";
+
+  const body = `
+    <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
+    <p style="margin:12px 0 0 0;">Thanks — we received your appointment request. The office will review it and email you again as soon as it is confirmed. You do not need to do anything else right now.</p>
+    <p style="margin:12px 0 0 0;padding:10px 12px;background:#fdf6e0;border:1px solid #f2d25d;border-radius:6px;font-size:14px;font-weight:700;color:${TEXT};">
+      Status: PENDING — we have not yet confirmed this appointment.
+    </p>
+    ${detailsTable(ctx)}
+    ${prefNote}
+    <p style="margin:16px 0 0 0;font-size:14px;">
+      Need to change or cancel? Call
+      <a href="tel:+1${loc.phonePrimary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phonePrimary)}</a>${
+        loc.phoneSecondary
+          ? ` (massage desk <a href="tel:+1${loc.phoneSecondary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phoneSecondary)}</a>)`
+          : ""
+      }.
+    </p>
+    <p style="margin:16px 0 0 0;font-size:12px;color:${MUTED};">Reference: ${escapeHtml(ctx.bookingId)}</p>
+  `;
+
+  const html = brandedShell({
+    preheader: `Your ${ctx.durationMin}-minute ${ctx.serviceLine} request for ${formatChicagoDateTimeShort(ctx.start)}.`,
+    heading: "We received your appointment request",
+    body,
+  });
+
+  return { subject, text, html };
+}
+
+/**
+ * Patient email sent once the office has accepted the request.
+ * This is the "real" confirmation — pair it with the ICS attachment.
+ */
+export function patientAcceptedEmail(ctx: BookingEmailContext): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const loc = LOCATIONS[ctx.locationId];
+  const subject = `Appointment confirmed — ${formatChicagoDateTimeShort(ctx.start)}`;
+
+  const text = [
+    `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
+    "",
+    "Good news — your appointment has been confirmed.",
     "",
     `When: ${formatChicagoDateTimeLong(ctx.start)}`,
     `Service: ${ctx.serviceLine === "massage" ? "Massage therapy" : "Chiropractic"} (${ctx.durationMin} min)`,
@@ -157,12 +222,12 @@ export function patientConfirmationEmail(ctx: BookingEmailContext): {
 
   const prefNote =
     ctx.providerMode === "any" && ctx.preferredProviderName
-      ? `<p style="margin:8px 0 0 0;font-size:14px;color:${MUTED};">Provider preference noted: <strong>${escapeHtml(ctx.preferredProviderName)}</strong> (final assignment by the office).</p>`
+      ? `<p style="margin:8px 0 0 0;font-size:14px;color:${MUTED};">Provider preference noted: <strong>${escapeHtml(ctx.preferredProviderName)}</strong>.</p>`
       : "";
 
   const body = `
     <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
-    <p style="margin:12px 0 0 0;">Thank you for booking with us. Your request has been received and the office will follow up shortly to confirm.</p>
+    <p style="margin:12px 0 0 0;">Good news — your appointment has been confirmed. We've attached a calendar invite (.ics) to add it to your calendar.</p>
     ${detailsTable(ctx)}
     ${prefNote}
     <h2 style="margin:20px 0 6px 0;font-size:16px;color:${TEXT};">Before your visit</h2>
@@ -183,8 +248,8 @@ export function patientConfirmationEmail(ctx: BookingEmailContext): {
   `;
 
   const html = brandedShell({
-    preheader: `Your ${ctx.durationMin}-minute ${ctx.serviceLine} request for ${formatChicagoDateTimeShort(ctx.start)}.`,
-    heading: "We received your appointment request",
+    preheader: `Confirmed: ${ctx.durationMin}-minute ${ctx.serviceLine} on ${formatChicagoDateTimeShort(ctx.start)}.`,
+    heading: "Your appointment is confirmed",
     body,
     ctaText: "View location and map",
     ctaHref: loc.mapsUrl,
@@ -192,6 +257,139 @@ export function patientConfirmationEmail(ctx: BookingEmailContext): {
 
   return { subject, text, html };
 }
+
+/**
+ * Patient email sent when the office declines a pending request (slot freed).
+ */
+export function patientDeclinedEmail(
+  ctx: BookingEmailContext,
+  reason?: string,
+): { subject: string; text: string; html: string } {
+  const loc = LOCATIONS[ctx.locationId];
+  const subject = `Unable to confirm — ${formatChicagoDateTimeShort(ctx.start)}`;
+
+  const cleanReason = (reason ?? "").trim();
+
+  const text = [
+    `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
+    "",
+    "We're sorry — we weren't able to confirm the appointment you requested.",
+    "",
+    `Requested time: ${formatChicagoDateTimeLong(ctx.start)}`,
+    `Service: ${ctx.serviceLine === "massage" ? "Massage therapy" : "Chiropractic"} (${ctx.durationMin} min)`,
+    `Location: ${loc.name}`,
+    "",
+    cleanReason ? `Reason from the office: ${cleanReason}` : "",
+    cleanReason ? "" : "",
+    `We'd love to fit you in another time. Pick a new time at ${siteUrl("/book")} or call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
+    "",
+    `Reference: ${ctx.bookingId}`,
+  ]
+    .filter((s) => s !== "")
+    .join("\n");
+
+  const reasonBlock = cleanReason
+    ? `<p style="margin:12px 0 0 0;padding:10px 12px;background:#f4f4f5;border:1px solid #d4d4d8;border-radius:6px;font-size:14px;color:${TEXT};">
+        <strong>Reason from the office:</strong> ${escapeHtml(cleanReason)}
+      </p>`
+    : "";
+
+  const body = `
+    <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
+    <p style="margin:12px 0 0 0;">We're sorry — we weren't able to confirm the appointment you requested. The time slot is now released and no charges have been made.</p>
+    ${detailsTable(ctx)}
+    ${reasonBlock}
+    <p style="margin:16px 0 0 0;font-size:14px;">
+      We'd love to fit you in another time. Pick a new time online or call the office:
+      <a href="tel:+1${loc.phonePrimary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phonePrimary)}</a>${
+        loc.phoneSecondary
+          ? ` (massage desk <a href="tel:+1${loc.phoneSecondary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phoneSecondary)}</a>)`
+          : ""
+      }.
+    </p>
+    <p style="margin:16px 0 0 0;font-size:12px;color:${MUTED};">Reference: ${escapeHtml(ctx.bookingId)}</p>
+  `;
+
+  const html = brandedShell({
+    preheader: `We could not confirm your ${formatChicagoDateTimeShort(ctx.start)} request.`,
+    heading: "We couldn't confirm your appointment",
+    body,
+    ctaText: "Pick another time",
+    ctaHref: siteUrl("/book"),
+  });
+
+  return { subject, text, html };
+}
+
+/**
+ * Patient email sent when the office cancels an already-confirmed appointment.
+ */
+export function patientCancelledEmail(
+  ctx: BookingEmailContext,
+  reason?: string,
+): { subject: string; text: string; html: string } {
+  const loc = LOCATIONS[ctx.locationId];
+  const subject = `Appointment cancelled — ${formatChicagoDateTimeShort(ctx.start)}`;
+
+  const cleanReason = (reason ?? "").trim();
+
+  const text = [
+    `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
+    "",
+    "We're writing to let you know your appointment has been cancelled by the office.",
+    "",
+    `When (cancelled): ${formatChicagoDateTimeLong(ctx.start)}`,
+    `Service: ${ctx.serviceLine === "massage" ? "Massage therapy" : "Chiropractic"} (${ctx.durationMin} min)`,
+    `Provider: ${ctx.providerDisplayName || "First available"}`,
+    `Location: ${loc.name}`,
+    "",
+    cleanReason ? `Reason from the office: ${cleanReason}` : "",
+    cleanReason ? "" : "",
+    `To rebook: ${siteUrl("/book")} or call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
+    "",
+    `Reference: ${ctx.bookingId}`,
+  ]
+    .filter((s) => s !== "")
+    .join("\n");
+
+  const reasonBlock = cleanReason
+    ? `<p style="margin:12px 0 0 0;padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;font-size:14px;color:${TEXT};">
+        <strong>Reason from the office:</strong> ${escapeHtml(cleanReason)}
+      </p>`
+    : "";
+
+  const body = `
+    <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
+    <p style="margin:12px 0 0 0;">Your appointment has been cancelled by the office. The time slot is now released.</p>
+    ${detailsTable(ctx)}
+    ${reasonBlock}
+    <p style="margin:16px 0 0 0;font-size:14px;">
+      We'd love to rebook you. Pick a new time online or call the office:
+      <a href="tel:+1${loc.phonePrimary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phonePrimary)}</a>${
+        loc.phoneSecondary
+          ? ` (massage desk <a href="tel:+1${loc.phoneSecondary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phoneSecondary)}</a>)`
+          : ""
+      }.
+    </p>
+    <p style="margin:16px 0 0 0;font-size:12px;color:${MUTED};">Reference: ${escapeHtml(ctx.bookingId)}</p>
+  `;
+
+  const html = brandedShell({
+    preheader: `Your ${formatChicagoDateTimeShort(ctx.start)} appointment was cancelled by the office.`,
+    heading: "Your appointment was cancelled",
+    body,
+    ctaText: "Pick another time",
+    ctaHref: siteUrl("/book"),
+  });
+
+  return { subject, text, html };
+}
+
+/**
+ * @deprecated Use `patientPendingEmail` (new request) or `patientAcceptedEmail`
+ * (after the office confirms). Kept as a thin alias to avoid breaking older imports.
+ */
+export const patientConfirmationEmail = patientPendingEmail;
 
 /** Office-facing rich HTML notification. */
 export function officeNotificationEmail(ctx: BookingEmailContext): {
@@ -228,8 +426,15 @@ export function officeNotificationEmail(ctx: BookingEmailContext): {
     .filter(Boolean)
     .join("\n");
 
+  const adminFocusUrl = siteUrl(`/admin?focus=${encodeURIComponent(ctx.bookingId)}`);
+
   const body = `
     <p style="margin:0;font-weight:700;">New appointment request submitted on ${escapeHtml(siteShortName)}.</p>
+    <p style="margin:12px 0 0 0;padding:12px 14px;background:#fdf6e0;border:1px solid #f2d25d;border-radius:6px;font-size:14px;color:${TEXT};">
+      <strong>Action needed:</strong> Accept or decline this request in the admin portal.
+      <br>
+      <a href="${escapeHtml(adminFocusUrl)}" style="display:inline-block;margin-top:6px;color:${PRIMARY};font-weight:700;">Open this booking in /admin →</a>
+    </p>
     ${detailsTable(ctx)}
     <h2 style="margin:20px 0 6px 0;font-size:16px;color:${TEXT};">Patient</h2>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
