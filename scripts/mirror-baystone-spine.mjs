@@ -1,6 +1,9 @@
 /**
  * One-off crawler: copies Baystone nerve_chart static files into public/spine-simulator/nerve_chart/
  * so the app can self-host the simulator. Run: node scripts/mirror-baystone-spine.mjs
+ *
+ * Afterward run: node scripts/fetch-spine-vertebra-assets.mjs
+ * (custom.js loads images/C1/1.png etc., which href-regex crawling does not discover.)
  */
 import fs from "node:fs";
 import path from "node:path";
