@@ -22,6 +22,7 @@ type InviteStaffResponse = {
   createdNewAuthUser?: boolean;
   emailedReset?: boolean;
   inviteEmailIssue?: "missing_env" | "sendgrid_error" | "reset_link_failed" | null;
+  inviteEmailDetail?: string;
   temporaryPassword?: string;
   passwordWarning?: string;
 };
@@ -31,7 +32,7 @@ function inviteEmailIssueHint(issue?: InviteStaffResponse["inviteEmailIssue"]): 
     return " No email was sent: add SENDGRID_API_KEY and SENDGRID_FROM_EMAIL to this app’s Production env in Vercel (they are per-project, not shared with your other software).";
   }
   if (issue === "sendgrid_error") {
-    return " No email was sent: SendGrid rejected the API call from this deployment (often a different API key than your other app, or the “from” address is not verified for this key). Check Vercel → this project → Logs for /api/admin/invite-staff.";
+    return " No email was sent: SendGrid rejected this request (see the SendGrid line below if present). Common causes: API key not granted “Mail Send”, Preview deployment without env vars, or “from” not verified for this key.";
   }
   if (issue === "reset_link_failed") {
     return " Password reset link could not be created in Firebase; email was not attempted.";
@@ -127,7 +128,12 @@ export default function SuperAdminPage() {
         `Staff access was saved, but no invitation email was sent.${issueNote} They can still use “Forgot password” on the staff login page with their work email once mail is working.`,
       );
     }
-    setMessage(parts.join(" "));
+    const joined = parts.join(" ");
+    const detail =
+      typeof data.inviteEmailDetail === "string" && data.inviteEmailDetail.length > 0
+        ? ` SendGrid: ${data.inviteEmailDetail}`
+        : "";
+    setMessage(`${joined}${detail}`);
     setEmail("");
     await loadStaff(token);
   }
