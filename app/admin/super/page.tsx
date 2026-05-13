@@ -35,6 +35,7 @@ export default function SuperAdminPage() {
   const [role, setRole] = useState<"admin" | "superadmin">("admin");
   const [bootstrapSecret, setBootstrapSecret] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [deletingUid, setDeletingUid] = useState<string | null>(null);
 
   useEffect(() => {
     setAuth(getFirebaseClientAuth());
@@ -108,6 +109,38 @@ export default function SuperAdminPage() {
     setMessage(parts.join(" "));
     setEmail("");
     await loadStaff(token);
+  }
+
+  async function deleteStaffRow(targetUid: string) {
+    setMessage(null);
+    if (!auth?.currentUser) return;
+    if (targetUid === auth.currentUser.uid) return;
+    const label =
+      staff.find((s) => s.uid === targetUid)?.email ?? targetUid.slice(0, 8) + "…";
+    if (
+      !window.confirm(
+        `Remove ${label} completely? This deletes their staff record and their Firebase sign-in account. You can invite them again later (a new account will be created if needed).`,
+      )
+    ) {
+      return;
+    }
+    setDeletingUid(targetUid);
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch(`/api/admin/staff?uid=${encodeURIComponent(targetUid)}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setMessage(typeof data.error === "string" ? data.error : "Could not remove staff.");
+        return;
+      }
+      setMessage("Staff access and sign-in account removed.");
+      await loadStaff(token);
+    } finally {
+      setDeletingUid(null);
+    }
   }
 
   async function runBootstrap() {
@@ -273,13 +306,36 @@ export default function SuperAdminPage() {
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
             <h2 className="text-lg font-semibold text-slate-900">Current staff documents</h2>
             <ul className="space-y-2 text-sm text-slate-700">
-              {staff.map((s) => (
-                <li key={s.uid} className="rounded-lg bg-slate-50 px-3 py-2 font-mono text-xs">
-                  <div className="font-semibold text-slate-900">{s.email ?? s.uid}</div>
-                  <div>uid: {s.uid}</div>
-                  <div>role: {s.role}</div>
-                </li>
-              ))}
+              {staff.map((s) => {
+                const isSelf = auth?.currentUser?.uid === s.uid;
+                return (
+                  <li
+                    key={s.uid}
+                    className="flex flex-wrap items-start justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 font-mono text-xs"
+                  >
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="font-semibold text-slate-900">{s.email ?? s.uid}</div>
+                      <div>uid: {s.uid}</div>
+                      <div>role: {s.role}</div>
+                      {isSelf ? (
+                        <div className="font-sans text-[11px] text-slate-500">
+                          You cannot remove yourself here; another manager must revoke your access.
+                        </div>
+                      ) : null}
+                    </div>
+                    {!isSelf ? (
+                      <button
+                        type="button"
+                        disabled={deletingUid === s.uid}
+                        onClick={() => deleteStaffRow(s.uid)}
+                        className="shrink-0 rounded-full border border-red-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-red-700 hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {deletingUid === s.uid ? "Removing…" : "Remove access"}
+                      </button>
+                    ) : null}
+                  </li>
+                );
+              })}
               {staff.length === 0 ? <li className="text-slate-600">No rows returned.</li> : null}
             </ul>
           </section>

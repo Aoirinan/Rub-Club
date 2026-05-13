@@ -91,6 +91,9 @@ export default function Home() {
           Online scheduling collects only contact details and your preferred time so the office can
           confirm your visit. Square payments can be added later.
         </p>
+        <p className="mt-2 text-slate-500">
+          Photography and logos on this site are used with the practice&apos;s permission.
+        </p>
       </footer>
     </div>
   );
