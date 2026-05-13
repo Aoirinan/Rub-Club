@@ -37,17 +37,38 @@ function escapeHtml(s: string): string {
     .replaceAll(">", "&gt;");
 }
 
-/** Returns true if SendGrid accepted the message. */
+export type StaffInviteEmailIssue = "missing_env" | "sendgrid_error";
+
+export type StaffInviteEmailResult =
+  | { sent: true }
+  | { sent: false; issue: StaffInviteEmailIssue };
+
+function sendgridErrorDetail(e: unknown): string {
+  if (typeof e !== "object" || e === null) return String(e);
+  const o = e as { message?: string; response?: { body?: unknown } };
+  if (o.response?.body !== undefined) {
+    try {
+      return JSON.stringify(o.response.body);
+    } catch {
+      return o.message ?? "SendGrid error";
+    }
+  }
+  return o.message ?? String(e);
+}
+
+/** SendGrid accepted the message, or a stable reason this deployment did not send. */
 export async function sendStaffInviteEmail(params: {
   to: string;
   resetLink: string;
   inviterNote?: string;
   subject?: string;
-}): Promise<boolean> {
+}): Promise<StaffInviteEmailResult> {
   ensureSendgrid();
   const key = process.env.SENDGRID_API_KEY;
   const from = process.env.SENDGRID_FROM_EMAIL;
-  if (!key || !from) return false;
+  if (!key || !from) {
+    return { sent: false, issue: "missing_env" };
+  }
 
   const note =
     params.inviterNote ?? "You have been invited to the staff portal.";
@@ -69,9 +90,9 @@ export async function sendStaffInviteEmail(params: {
       text,
       html: `<p>${escapeHtml(note)}</p><p><a href="${params.resetLink}">Open staff portal link</a></p>`,
     });
-    return true;
+    return { sent: true };
   } catch (e) {
-    console.error("SendGrid staff invite failed", e);
-    return false;
+    console.error("SendGrid staff invite failed:", sendgridErrorDetail(e));
+    return { sent: false, issue: "sendgrid_error" };
   }
 }

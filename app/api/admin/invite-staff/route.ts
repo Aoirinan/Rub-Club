@@ -91,10 +91,11 @@ export async function POST(req: Request) {
     );
 
   let emailedReset = false;
+  let inviteEmailIssue: "missing_env" | "sendgrid_error" | "reset_link_failed" | null = null;
   try {
     const resetLink = await auth.generatePasswordResetLink(email);
     const isBrandNew = createdNewAuthUser && temporaryPassword;
-    emailedReset = await sendStaffInviteEmail({
+    const emailResult = await sendStaffInviteEmail({
       to: email,
       resetLink,
       inviterNote: isBrandNew
@@ -104,8 +105,11 @@ export async function POST(req: Request) {
         ? "Staff portal — set your password"
         : "Staff portal — access granted",
     });
+    emailedReset = emailResult.sent;
+    if (!emailResult.sent) inviteEmailIssue = emailResult.issue;
   } catch (e) {
     console.error("Password reset link / email failed", e);
+    inviteEmailIssue = "reset_link_failed";
   }
 
   return NextResponse.json({
@@ -114,6 +118,7 @@ export async function POST(req: Request) {
     role,
     createdNewAuthUser,
     emailedReset,
+    inviteEmailIssue,
     ...(createdNewAuthUser && !emailedReset && temporaryPassword
       ? {
           temporaryPassword,

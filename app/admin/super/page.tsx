@@ -21,9 +21,23 @@ type InviteStaffResponse = {
   role?: string;
   createdNewAuthUser?: boolean;
   emailedReset?: boolean;
+  inviteEmailIssue?: "missing_env" | "sendgrid_error" | "reset_link_failed" | null;
   temporaryPassword?: string;
   passwordWarning?: string;
 };
+
+function inviteEmailIssueHint(issue?: InviteStaffResponse["inviteEmailIssue"]): string {
+  if (issue === "missing_env") {
+    return " No email was sent: add SENDGRID_API_KEY and SENDGRID_FROM_EMAIL to this app’s Production env in Vercel (they are per-project, not shared with your other software).";
+  }
+  if (issue === "sendgrid_error") {
+    return " No email was sent: SendGrid rejected the API call from this deployment (often a different API key than your other app, or the “from” address is not verified for this key). Check Vercel → this project → Logs for /api/admin/invite-staff.";
+  }
+  if (issue === "reset_link_failed") {
+    return " Password reset link could not be created in Firebase; email was not attempted.";
+  }
+  return "";
+}
 
 export default function SuperAdminPage() {
   const router = useRouter();
@@ -93,6 +107,7 @@ export default function SuperAdminPage() {
       return;
     }
     const parts: string[] = [];
+    const issueNote = inviteEmailIssueHint(data.inviteEmailIssue);
     if (data.createdNewAuthUser) {
       if (data.emailedReset) {
         parts.push("New account created. They should receive an email with a link to set their password.");
@@ -101,10 +116,16 @@ export default function SuperAdminPage() {
           `${data.passwordWarning ?? "Share this password once, securely."} Temporary password: ${data.temporaryPassword}`,
         );
       } else {
-        parts.push("New account created.");
+        parts.push(`New account created.${issueNote}`);
       }
+    } else if (data.emailedReset) {
+      parts.push(
+        "Staff access updated. They should receive an email with a link to open the portal or reset their password.",
+      );
     } else {
-      parts.push("Staff access updated for an existing sign-in account.");
+      parts.push(
+        `Staff access was saved, but no invitation email was sent.${issueNote} They can still use “Forgot password” on the staff login page with their work email once mail is working.`,
+      );
     }
     setMessage(parts.join(" "));
     setEmail("");
