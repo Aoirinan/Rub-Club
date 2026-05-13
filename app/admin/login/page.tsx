@@ -23,7 +23,12 @@ function authErrorMessage(err: unknown): string {
         return "Email/password sign-in is not enabled for this Firebase project.";
       case "auth/network-request-failed":
         return "Network error. Check your connection and try again.";
+      case "auth/invalid-api-key":
+        return "Invalid Firebase web API key. In Vercel verify NEXT_PUBLIC_FIREBASE_API_KEY, redeploy, and in Google Cloud → Credentials allow this site’s domain under API key restrictions.";
       default:
+        if (err.code.includes("api-key")) {
+          return "Invalid Firebase web API key. In Vercel verify NEXT_PUBLIC_FIREBASE_API_KEY matches Firebase Console (no extra spaces), redeploy. In Google Cloud → APIs & Credentials → your browser key → Application restrictions → add https://rub-club.vercel.app/* and https://*.vercel.app/* (or use “None” temporarily to test).";
+        }
         return `Sign-in failed (${err.code}).`;
     }
   }
