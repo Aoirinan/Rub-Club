@@ -42,6 +42,24 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        source: "/api/providers",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, must-revalidate",
+          },
+        ],
+      },
+      {
+        source: "/api/slots",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, must-revalidate",
+          },
+        ],
+      },
     ];
   },
 };

@@ -12,22 +12,22 @@ function authErrorMessage(err: unknown): string {
       case "auth/invalid-credential":
       case "auth/wrong-password":
       case "auth/user-not-found":
-        return "Wrong email or password, or this account is not in this Firebase project.";
+        return "Wrong email or password, or this account does not have staff access.";
       case "auth/invalid-email":
         return "That email address does not look valid.";
       case "auth/user-disabled":
-        return "This account has been disabled in Firebase.";
+        return "This account has been disabled. Contact your administrator.";
       case "auth/too-many-requests":
         return "Too many attempts. Wait several minutes, then try again.";
       case "auth/operation-not-allowed":
-        return "Email/password sign-in is not enabled for this Firebase project.";
+        return "Email and password sign-in is not enabled for this site. Contact your administrator.";
       case "auth/network-request-failed":
         return "Network error. Check your connection and try again.";
       case "auth/invalid-api-key":
-        return "Invalid Firebase web API key. In Vercel verify NEXT_PUBLIC_FIREBASE_API_KEY, redeploy, and in Google Cloud → Credentials allow this site’s domain under API key restrictions.";
+        return "Sign-in could not be completed because of a site configuration issue. Your administrator may need to update API keys or allowed domains for this app.";
       default:
         if (err.code.includes("api-key")) {
-          return "Invalid Firebase web API key. In Vercel verify NEXT_PUBLIC_FIREBASE_API_KEY matches Firebase Console (no extra spaces), redeploy. In Google Cloud → APIs & Credentials → your browser key → Application restrictions → add https://rub-club.vercel.app/* and https://*.vercel.app/* (or use “None” temporarily to test).";
+          return "Sign-in could not be completed because of a site configuration issue. Your administrator may need to update API keys or allowed domains for this app.";
         }
         return `Sign-in failed (${err.code}).`;
     }
@@ -65,7 +65,7 @@ export default function AdminLoginPage() {
         <p className="text-sm font-black uppercase tracking-[0.22em] text-[#0f5f5c]">Staff Login</p>
         <h1 className="mt-2 text-2xl font-black text-[#173f3b]">Staff sign-in</h1>
         <p className="mt-2 text-sm text-stone-700">
-          Use the Firebase email/password account your administrator created for you.
+          Use the email and password your administrator created for you.
         </p>
       </div>
 

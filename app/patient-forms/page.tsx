@@ -22,7 +22,7 @@ export default function PatientFormsPage() {
         <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Patient Forms</h1>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-8">
+      <div className="mx-auto max-w-5xl px-4 py-10 pb-16 sm:px-8">
         <div className="flex min-h-[280px] items-center justify-center rounded-sm bg-stone-700 shadow-inner">
           <a
             href={PDF_PATH}
@@ -34,14 +34,6 @@ export default function PatientFormsPage() {
           </a>
         </div>
       </div>
-
-      <p className="mx-auto max-w-5xl px-4 pb-12 text-center text-sm text-stone-600 sm:px-8">
-        Opens the same new client questionnaire as a PDF (
-        <a href={PDF_PATH} className="font-medium text-[#0f5f5c] underline hover:text-[#0f817b]">
-          download / print
-        </a>
-        ). Hosted on this site.
-      </p>
     </div>
   );
 }

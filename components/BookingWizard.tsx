@@ -55,7 +55,7 @@ export function BookingWizard() {
       setProviders(null);
       try {
         const qs = new URLSearchParams({ locationId, serviceLine });
-        const res = await fetch(`/api/providers?${qs.toString()}`);
+        const res = await fetch(`/api/providers?${qs.toString()}`, { cache: "no-store" });
         const data = (await res.json()) as { providers?: ProviderOption[]; error?: string };
         if (!res.ok) throw new Error(data.error || "Could not load providers");
         const list = data.providers ?? [];
@@ -101,7 +101,7 @@ export function BookingWizard() {
       if (providerMode === "specific") {
         qs.set("providerId", selectedProviderId);
       }
-      const res = await fetch(`/api/slots?${qs.toString()}`, { method: "GET" });
+      const res = await fetch(`/api/slots?${qs.toString()}`, { method: "GET", cache: "no-store" });
       const data = (await res.json().catch(() => ({}))) as {
         slots?: Slot[];
         message?: string;
@@ -216,7 +216,15 @@ export function BookingWizard() {
             <select
               className="w-full border border-stone-300 bg-white px-3 py-2"
               value={locationId}
-              onChange={(e) => setLocationId(e.target.value as LocationId)}
+              onChange={(e) => {
+                setLocationId(e.target.value as LocationId);
+                setSelectedProviderId("");
+                setPreferredProviderId("");
+                setSlots(null);
+                setSelectedSlot(null);
+                setSlotsError(null);
+                setSlotsHint(null);
+              }}
             >
               <option value="paris">{LOCATIONS.paris.name}</option>
               <option value="sulphur_springs">{LOCATIONS.sulphur_springs.name}</option>
