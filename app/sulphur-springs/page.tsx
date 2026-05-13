@@ -91,9 +91,9 @@ export default function SulphurSpringsPage() {
       {/* SS Navigation bar */}
       <nav
         aria-label="Sulphur Springs navigation"
-        className="bg-[#2980b9] shadow-md"
+        className="relative z-30 bg-[#2980b9] shadow-md"
       >
-        <div className="mx-auto flex max-w-6xl overflow-x-auto">
+        <div className="mx-auto flex max-w-6xl flex-wrap">
           {SS_NAV.map((item) =>
             item.href ? (
               <Link
