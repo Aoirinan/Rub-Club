@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
 import { telHref, LOCATIONS } from "@/lib/constants";
-import { SS_STAFF } from "@/lib/sulphur-springs-content";
+import { SS_STAFF, type SSStaffMember } from "@/lib/sulphur-springs-content";
 
 const ss = LOCATIONS.sulphur_springs;
 const [featured, ...rest] = SS_STAFF;
@@ -19,9 +20,22 @@ export const metadata: Metadata = {
   },
 };
 
-function PhotoPlaceholder() {
+function StaffPhoto({ member, className }: { member: SSStaffMember; className?: string }) {
+  if (member.image) {
+    return (
+      <div className={`relative aspect-[3/4] w-full overflow-hidden bg-stone-200 ${className ?? ""}`}>
+        <Image
+          src={member.image}
+          alt={`Portrait of ${member.name}, ${member.role}`}
+          fill
+          className="object-cover object-top"
+          sizes="(max-width: 640px) 100vw, 33vw"
+        />
+      </div>
+    );
+  }
   return (
-    <div className="aspect-[3/4] w-full bg-stone-200 flex items-center justify-center">
+    <div className={`aspect-[3/4] w-full bg-stone-200 flex items-center justify-center ${className ?? ""}`}>
       <svg
         className="h-16 w-16 text-stone-400"
         fill="none"
@@ -56,10 +70,9 @@ export default function SulphurSpringsStaffPage() {
       />
 
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
-        {/* Featured: Dr. Conner Collins */}
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_2fr]">
-            <PhotoPlaceholder />
+            <StaffPhoto member={featured} />
             <div className="space-y-4">
               <div>
                 <h2 className="text-2xl font-black text-[#173f3b]">
@@ -78,7 +91,6 @@ export default function SulphurSpringsStaffPage() {
           </div>
         </section>
 
-        {/* Remaining staff */}
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
           <h2 className="text-2xl font-black text-[#173f3b]">Our Team</h2>
           <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -87,7 +99,7 @@ export default function SulphurSpringsStaffPage() {
                 key={member.name}
                 className="flex flex-col overflow-hidden border border-stone-200 bg-stone-50 shadow-sm"
               >
-                <PhotoPlaceholder />
+                <StaffPhoto member={member} />
                 <div className="flex flex-1 flex-col p-5">
                   <h3 className="text-lg font-black text-[#173f3b]">
                     {member.name}

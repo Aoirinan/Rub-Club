@@ -14,27 +14,32 @@ export type SSStaffMember = {
   name: string;
   role: string;
   bio: string;
+  image?: string;
 };
 
 export const SS_STAFF: readonly SSStaffMember[] = [
   {
     name: "Dr. Conner Collins",
     role: "Chiropractor",
+    image: "/images/staff-ss/conner-collins.webp",
     bio: "Dr. Connor Collins is a chiropractor who takes a practical, hands-on approach to patient care, focusing on getting people out of pain and back to doing what they love. He specializes in treating spine and extremity conditions, including injuries from motor vehicle collisions and chronic musculoskeletal issues.\n\nBefore entering the healthcare field, Connor grew up working blue-collar jobs, including construction, oil fields, and cowboying. That background gives him a unique perspective on how the body moves, breaks down, and recovers—especially for patients who work hard physically. He understands the demands of that lifestyle and tailors his treatment approach to match real-world function, not just textbook outcomes.\n\nDr. Connor uses a combination of chiropractic techniques, including diversified, drop table, and Activator methods, along with soft tissue therapy, therapeutic exercise, and mechanical traction to help restore movement, reduce pain, and improve overall function. Outside of the clinic, he enjoys riding horses, working on his farm, and spending time outdoors. His goal is simple: help patients feel better, move better, and get back to living their lives.",
   },
   {
     name: "Jade Petty",
     role: "Receptionist",
+    image: "/images/staff-ss/jade-petty.webp",
     bio: "",
   },
   {
     name: "Taylor Harrison",
     role: "Receptionist",
+    image: "/images/staff-ss/taylor-harrison.webp",
     bio: "",
   },
   {
     name: "Leotta Cascia",
     role: "Massage Therapist",
+    image: "/images/staff-ss/leotta-cascia.webp",
     bio: "",
   },
   {
