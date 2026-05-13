@@ -48,14 +48,18 @@ export function BookingWizard() {
         durationMin: String(durationMin),
       });
       const res = await fetch(`/api/slots?${qs.toString()}`, { method: "GET" });
-      if (!res.ok) throw new Error("Could not load times");
+      if (!res.ok) {
+        const errBody = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(errBody.error || "Could not load times");
+      }
       const data = (await res.json()) as { slots: Slot[] };
       setSlots(data.slots);
       if (data.slots.length === 0) {
         setSlotsError("No open times that day. Try another date or duration.");
       }
-    } catch {
-      setSlotsError("Could not load times. Please try again.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Could not load times. Please try again.";
+      setSlotsError(msg);
     } finally {
       setLoadingSlots(false);
     }

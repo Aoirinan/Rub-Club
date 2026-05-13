@@ -47,6 +47,16 @@ export async function GET(req: Request) {
     return NextResponse.json({ slots: available });
   } catch (e) {
     console.error(e);
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes("Missing Firebase Admin credentials")) {
+      return NextResponse.json(
+        {
+          error:
+            "Server is missing FIREBASE_SERVICE_ACCOUNT_KEY. Add it under Vercel → Settings → Environment Variables (Production), then redeploy.",
+        },
+        { status: 503 },
+      );
+    }
     return NextResponse.json({ error: "Failed to load slots" }, { status: 500 });
   }
 }
