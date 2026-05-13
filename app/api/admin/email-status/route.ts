@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireStaff } from "@/lib/staff-auth";
 
-import { getSendgridApiKey, getSendgridFromEmail } from "@/lib/sendgrid";
+import { getSendgridApiKey, getSendgridFromEmail, getSendgridFromEmailNormalized, isValidOutboundFromEmail } from "@/lib/sendgrid";
 
 export const runtime = "nodejs";
 
@@ -16,10 +16,15 @@ export async function GET(req: Request) {
   }
 
   const key = getSendgridApiKey();
-  const from = getSendgridFromEmail();
+  const rawFrom = getSendgridFromEmail();
+  const fromNorm = getSendgridFromEmailNormalized();
+  const hasValidFrom = isValidOutboundFromEmail(fromNorm);
+  const fromEnvInvalidFormat = rawFrom.trim().length > 0 && !hasValidFrom;
+
   return NextResponse.json({
-    sendgridConfigured: Boolean(key && from),
+    sendgridConfigured: Boolean(key && hasValidFrom),
     hasApiKey: Boolean(key),
-    hasFromEmail: Boolean(from),
+    hasFromEmail: hasValidFrom,
+    fromEnvInvalidFormat,
   });
 }

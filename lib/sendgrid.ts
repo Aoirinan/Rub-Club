@@ -22,6 +22,41 @@ export function getSendgridFromEmail(): string {
   return v ?? "";
 }
 
+/** Strip quotes, first line only, optional `Name <addr>` / JSON `{"email":...}` — Vercel pastes often break SendGrid "from". */
+export function normalizeSingleSenderEmail(raw: string): string {
+  let s = raw.trim();
+  const nl = s.search(/\r?\n/);
+  if (nl >= 0) s = s.slice(0, nl).trim();
+  if (
+    (s.startsWith('"') && s.endsWith('"')) ||
+    (s.startsWith("'") && s.endsWith("'"))
+  ) {
+    s = s.slice(1, -1).trim();
+  }
+  if (s.startsWith("{")) {
+    try {
+      const j = JSON.parse(s) as { email?: string };
+      if (typeof j.email === "string") return j.email.trim();
+    } catch {
+      /* ignore */
+    }
+  }
+  const angle = s.match(/<([^<>]+@[^<>]+)>/);
+  if (angle) return angle[1].trim();
+  return s.trim();
+}
+
+export function getSendgridFromEmailNormalized(): string {
+  return normalizeSingleSenderEmail(getSendgridFromEmail());
+}
+
+const OUTBOUND_EMAIL_RE = /^[^\s<>]+@[^\s<>]+\.[^\s<>]+$/;
+
+export function isValidOutboundFromEmail(s: string): boolean {
+  const t = s.trim();
+  return t.length > 4 && t.length < 254 && OUTBOUND_EMAIL_RE.test(t);
+}
+
 function ensureSendgrid(): void {
   if (configured) return;
   const key = getSendgridApiKey();
@@ -38,8 +73,8 @@ export async function sendBookingNotification(params: {
 }): Promise<void> {
   ensureSendgrid();
   const key = getSendgridApiKey();
-  const fromEmail = getSendgridFromEmail();
-  if (!key || !fromEmail) return;
+  const fromEmail = getSendgridFromEmailNormalized();
+  if (!key || !isValidOutboundFromEmail(fromEmail)) return;
 
   await sgMail.send({
     to: params.to,
@@ -124,9 +159,18 @@ export async function sendStaffInviteEmail(params: {
 }): Promise<StaffInviteEmailResult> {
   ensureSendgrid();
   const key = getSendgridApiKey();
-  const fromEmail = getSendgridFromEmail();
-  if (!key || !fromEmail) {
+  const rawFrom = getSendgridFromEmail();
+  const fromEmail = getSendgridFromEmailNormalized();
+  if (!key || !rawFrom.trim()) {
     return { sent: false, issue: "missing_env" };
+  }
+  if (!isValidOutboundFromEmail(fromEmail)) {
+    return {
+      sent: false,
+      issue: "sendgrid_error",
+      sendgridDetail:
+        "FROM address is not a valid email after cleaning the env value. Use only the address (e.g. russell_forsyth_1992@outlook.com): no quotes, no newlines, no JSON. If the value looks like SG.x… you may have put the API key in sendgridfromemail by mistake — swap the two variables in Vercel.",
+    };
   }
 
   const note =

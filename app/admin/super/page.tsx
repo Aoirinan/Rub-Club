@@ -18,6 +18,7 @@ type EmailStatus = {
   sendgridConfigured: boolean;
   hasApiKey: boolean;
   hasFromEmail: boolean;
+  fromEnvInvalidFormat?: boolean;
 };
 
 type InviteStaffResponse = {
@@ -284,7 +285,22 @@ export default function SuperAdminPage() {
 
       {isSuper ? (
         <>
-          {emailStatus && !emailStatus.sendgridConfigured ? (
+          {emailStatus?.fromEnvInvalidFormat ? (
+            <section className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-950">
+              <p className="font-medium">SendGrid “from” value is not a valid email</p>
+              <p className="mt-2">
+                Vercel has something in <code className="rounded bg-white/80 px-1">sendgridfromemail</code> /{" "}
+                <code className="rounded bg-white/80 px-1">SENDGRID_FROM_EMAIL</code>, but after cleaning it is still not
+                a plain address like <code className="rounded bg-white/80 px-1">russell_forsyth_1992@outlook.com</code>.
+                Remove wrapping quotes, extra spaces, or newlines. If the value starts with{" "}
+                <code className="rounded bg-white/80 px-1">SG.</code>, you swapped the API key into the wrong variable —
+                put the key only in <code className="rounded bg-white/80 px-1">SENDGRID_API_KEY</code> or{" "}
+                <code className="rounded bg-white/80 px-1">send_grid</code>.
+              </p>
+            </section>
+          ) : null}
+
+          {emailStatus && !emailStatus.sendgridConfigured && !emailStatus.fromEnvInvalidFormat ? (
             <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">
               <p className="font-medium">SendGrid is not available on this deployment</p>
               <p className="mt-2 text-amber-900/90">
