@@ -84,7 +84,14 @@ export async function sendBookingNotification(params: {
   ensureSendgrid();
   const key = getSendgridApiKey();
   const fromEmail = getSendgridFromEmailNormalized();
-  if (!key || !isValidOutboundFromEmail(fromEmail)) return;
+  if (!key) {
+    console.warn("[sendgrid] SENDGRID_API_KEY is missing — email NOT sent to", params.to);
+    return;
+  }
+  if (!isValidOutboundFromEmail(fromEmail)) {
+    console.warn("[sendgrid] SENDGRID_FROM_EMAIL is missing or invalid — email NOT sent to", params.to);
+    return;
+  }
 
   await sgMail.send({
     to: params.to,

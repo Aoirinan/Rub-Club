@@ -308,10 +308,13 @@ export async function POST(req: Request) {
     } catch (err) {
       console.error("Office SendGrid failed", err);
     }
+  } else {
+    console.warn("[booking] OFFICE_NOTIFICATION_EMAIL is not set — skipping office notification");
   }
 
   try {
     const { subject, text, html } = patientPendingEmail(emailContext);
+    console.log("[booking] Sending patient confirmation to", emailContext.email);
     await sendBookingNotification({
       to: emailContext.email,
       subject,
@@ -319,6 +322,7 @@ export async function POST(req: Request) {
       html,
       fromName: "The Rub Club & Chiropractic Associates",
     });
+    console.log("[booking] Patient email send completed for", emailContext.email);
   } catch (err) {
     console.error("Patient SendGrid failed", err);
   }
