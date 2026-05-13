@@ -6,38 +6,9 @@ import { MobileNav } from "@/components/MobileNav";
 import { DesktopNav, type NavItem } from "@/components/DesktopNav";
 
 const NAV_ITEMS: NavItem[] = [
-  {
-    href: "/services/massage",
-    label: "Services",
-    mega: true,
-    children: [
-      { href: "/services/massage", label: "Massage Therapy", group: "Paris" },
-      { href: "/services/chiropractic", label: "Chiropractic Care", group: "Paris" },
-      { href: "/sulphur-springs/acupuncture", label: "Acupuncture", group: "Sulphur Springs" },
-      { href: "/sulphur-springs/adjustments-and-manipulation", label: "Adjustments", group: "Sulphur Springs" },
-      { href: "/sulphur-springs/common-chiropractic-conditions", label: "Common Conditions", group: "Sulphur Springs" },
-      { href: "/sulphur-springs/degenerative-disc-disease", label: "Degenerative Disc", group: "Sulphur Springs" },
-      { href: "/sulphur-springs/electrical-muscle-stimulation", label: "Electrical Muscle Stim", group: "Sulphur Springs" },
-      { href: "/sulphur-springs/ice-pack-cryotherapy", label: "Ice Pack Cryotherapy", group: "Sulphur Springs" },
-      { href: "/sulphur-springs/postural-rehabilitation", label: "Postural Rehab", group: "Sulphur Springs" },
-      { href: "/sulphur-springs/spinal-decompression", label: "Spinal Decompression", group: "Sulphur Springs" },
-      { href: "/sulphur-springs/therapeutic-exercise", label: "Therapeutic Exercise", group: "Sulphur Springs" },
-      { href: "/sulphur-springs/therapeutic-ultrasound", label: "Therapeutic Ultrasound", group: "Sulphur Springs" },
-      { href: "/sulphur-springs/auto-injury", label: "Auto Injury", group: "Injuries" },
-      { href: "/sulphur-springs/personal-injury", label: "Personal Injury", group: "Injuries" },
-      { href: "/sulphur-springs/sports-injury", label: "Sports Injury", group: "Injuries" },
-    ],
-  },
-  {
-    href: "/sulphur-springs",
-    label: "Sulphur Springs",
-    children: [
-      { href: "/sulphur-springs", label: "Overview" },
-      { href: "/sulphur-springs/staff", label: "Meet the Staff" },
-      { href: "/sulphur-springs/patient-resources", label: "Patient Resources" },
-      { href: "/sulphur-springs/q-and-a", label: "Q & A" },
-    ],
-  },
+  { href: "/services/massage", label: "Massage" },
+  { href: "/services/chiropractic", label: "Chiropractic" },
+  { href: "/sulphur-springs", label: "Sulphur Springs" },
   {
     href: "/locations/paris",
     label: "Locations",
@@ -46,14 +17,7 @@ const NAV_ITEMS: NavItem[] = [
       { href: "/locations/sulphur-springs", label: "Sulphur Springs, TX" },
     ],
   },
-  {
-    href: "/about",
-    label: "About",
-    children: [
-      { href: "/about", label: "About Us" },
-      { href: "/sulphur-springs/staff", label: "Sulphur Springs Staff" },
-    ],
-  },
+  { href: "/about", label: "About" },
   { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
 ];
