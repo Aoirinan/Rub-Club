@@ -82,18 +82,31 @@ export async function PATCH(req: Request, ctx: Params) {
   return NextResponse.json({ ok: true, provider: row });
 }
 
-export async function DELETE(_req: Request, ctx: Params) {
-  const staff = await requireStaff(_req.headers.get("authorization"), "superadmin");
+export async function DELETE(req: Request, ctx: Params) {
+  const staff = await requireStaff(req.headers.get("authorization"), "superadmin");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await ctx.params;
+  if (!id?.trim()) {
+    return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+  }
+
   const db = getFirestore();
   const ref = db.collection("providers").doc(id);
   const snap = await ref.get();
   if (!snap.exists) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const permanent =
+    new URL(req.url).searchParams.get("permanent") === "1" ||
+    new URL(req.url).searchParams.get("permanent") === "true";
+
+  if (permanent) {
+    await ref.delete();
+    return NextResponse.json({ ok: true });
   }
 
   await ref.update({

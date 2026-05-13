@@ -162,6 +162,7 @@ export default function SuperAdminPage() {
   const [newSort, setNewSort] = useState(0);
   const [editingProvider, setEditingProvider] = useState<BookableProviderRow | null>(null);
   const [savingProvider, setSavingProvider] = useState(false);
+  const [deletingProviderId, setDeletingProviderId] = useState<string | null>(null);
 
   useEffect(() => {
     setAuth(getFirebaseClientAuth());
@@ -417,6 +418,36 @@ export default function SuperAdminPage() {
     setMessage("Provider hidden from booking.");
     if (editingProvider?.id === id) setEditingProvider(null);
     await loadBookableProviders(token);
+  }
+
+  async function permanentlyDeleteBookableProvider(id: string, label: string) {
+    setMessage(null);
+    if (!auth?.currentUser) return;
+    if (
+      !window.confirm(
+        `Permanently delete "${label}"? This removes their bookable profile from the database. Past bookings may still reference this id; some screens may not show a name. This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    setDeletingProviderId(id);
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch(`/api/admin/providers/${encodeURIComponent(id)}?permanent=1`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setMessage(typeof data.error === "string" ? data.error : "Could not delete provider.");
+        return;
+      }
+      setMessage("Provider deleted.");
+      if (editingProvider?.id === id) setEditingProvider(null);
+      await loadBookableProviders(token);
+    } finally {
+      setDeletingProviderId(null);
+    }
   }
 
   async function runBootstrap() {
@@ -923,6 +954,14 @@ export default function SuperAdminPage() {
                         Hide
                       </button>
                     ) : null}
+                    <button
+                      type="button"
+                      disabled={deletingProviderId === p.id}
+                      onClick={() => permanentlyDeleteBookableProvider(p.id, p.displayName)}
+                      className="rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {deletingProviderId === p.id ? "Deleting…" : "Delete"}
+                    </button>
                   </div>
                 </li>
               ))}
