@@ -14,6 +14,12 @@ type Me = {
 
 type StaffRow = { uid: string; role?: string; email?: string };
 
+type EmailStatus = {
+  sendgridConfigured: boolean;
+  hasApiKey: boolean;
+  hasFromEmail: boolean;
+};
+
 type InviteStaffResponse = {
   ok?: boolean;
   error?: string;
@@ -51,6 +57,7 @@ export default function SuperAdminPage() {
   const [bootstrapSecret, setBootstrapSecret] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [deletingUid, setDeletingUid] = useState<string | null>(null);
+  const [emailStatus, setEmailStatus] = useState<EmailStatus | null>(null);
 
   useEffect(() => {
     setAuth(getFirebaseClientAuth());
@@ -63,6 +70,17 @@ export default function SuperAdminPage() {
     if (!res.ok) return;
     const data = (await res.json()) as { staff: StaffRow[] };
     setStaff(data.staff);
+  }
+
+  async function loadEmailStatus(token: string) {
+    const res = await fetch("/api/admin/email-status", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      setEmailStatus(null);
+      return;
+    }
+    setEmailStatus((await res.json()) as EmailStatus);
   }
 
   useEffect(() => {
@@ -81,8 +99,10 @@ export default function SuperAdminPage() {
       setMeReady(true);
       if (data.role === "superadmin") {
         await loadStaff(token);
+        await loadEmailStatus(token);
       } else {
         setStaff([]);
+        setEmailStatus(null);
       }
     });
     return () => unsub();
@@ -197,6 +217,7 @@ export default function SuperAdminPage() {
     });
     setMe((await meRes.json()) as Me);
     await loadStaff(fresh);
+    await loadEmailStatus(fresh);
   }
 
   if (!meReady) {
@@ -263,6 +284,39 @@ export default function SuperAdminPage() {
 
       {isSuper ? (
         <>
+          {emailStatus && !emailStatus.sendgridConfigured ? (
+            <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">
+              <p className="font-medium">SendGrid is not available on this deployment</p>
+              <p className="mt-2 text-amber-900/90">
+                The production server does not see both environment variables. Missing:{" "}
+                <strong>
+                  {[!emailStatus.hasApiKey ? "SENDGRID_API_KEY" : null, !emailStatus.hasFromEmail ? "SENDGRID_FROM_EMAIL" : null]
+                    .filter(Boolean)
+                    .join(" and ")}
+                </strong>
+                .
+              </p>
+              <p className="mt-2">
+                In{" "}
+                <a
+                  href="https://vercel.com/dashboard"
+                  className="font-semibold underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Vercel
+                </a>
+                , open <strong>this project</strong> (the one that serves this URL) → Settings → Environment
+                Variables. For each variable, set <strong>Environment = Production</strong> (not only Preview), save,
+                then trigger a new deployment so serverless functions pick up the values.
+              </p>
+            </section>
+          ) : emailStatus?.sendgridConfigured ? (
+            <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+              Outbound email (SendGrid) is configured on this deployment — invite emails can be sent.
+            </p>
+          ) : null}
+
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">Add or invite staff</h2>
             <p className="text-sm text-slate-600">
