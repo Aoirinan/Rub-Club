@@ -117,7 +117,7 @@ function MegaPanel({
 export function DesktopNav({ items }: { items: readonly NavItem[] }) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const navRef = useRef<HTMLElement>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     if (openIdx === null) return;
