@@ -31,6 +31,7 @@ import {
   type BookingStatus,
 } from "@/lib/booking-status";
 import { BookingDrawer } from "./_scheduler/BookingDrawer";
+import { NewBookingDrawer } from "./_scheduler/NewBookingDrawer";
 import { DayView, ListView, WeekView } from "./_scheduler/views";
 
 type Me = {
@@ -63,6 +64,7 @@ function AdminDashboard() {
   const [providers, setProviders] = useState<ProviderRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [newBookingOpen, setNewBookingOpen] = useState(false);
 
   useEffect(() => {
     setAuth(getFirebaseClientAuth());
@@ -192,6 +194,15 @@ function AdminDashboard() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            {me?.role ? (
+              <button
+                type="button"
+                onClick={() => setNewBookingOpen(true)}
+                className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+              >
+                + New appointment
+              </button>
+            ) : null}
             {me?.role === "superadmin" ? (
               <Link
                 href="/admin/super"
@@ -280,6 +291,17 @@ function AdminDashboard() {
           await refreshBookings();
         }}
         getIdToken={getIdToken}
+      />
+
+      <NewBookingDrawer
+        open={newBookingOpen}
+        onClose={() => setNewBookingOpen(false)}
+        onCreated={async () => {
+          await refreshBookings();
+        }}
+        getIdToken={getIdToken}
+        providers={providers}
+        defaultDate={filters.date}
       />
     </div>
   );
