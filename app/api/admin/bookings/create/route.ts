@@ -8,6 +8,7 @@ import { TIME_ZONE } from "@/lib/constants";
 import { requireStaff } from "@/lib/staff-auth";
 import {
   bucketDocIdsForAppointment,
+  holdBucketIdsForAppointment,
   isAlignedToSlotGrid,
   parseStartIsoToDateTime,
 } from "@/lib/slots-luxon";
@@ -28,6 +29,10 @@ const bodySchema = z.object({
   notes: z.string().max(1200).optional(),
   status: z.enum(["pending", "confirmed"]).optional(),
   skipConflictCheck: z.boolean().optional(),
+  recurrence: z.object({
+    frequency: z.enum(["weekly", "biweekly"]),
+    count: z.number().int().min(2).max(26),
+  }).optional(),
 });
 
 export async function POST(req: Request) {
@@ -62,91 +67,133 @@ export async function POST(req: Request) {
   const serviceLine = body.serviceLine as ServiceLine;
   const status = body.status ?? "confirmed";
 
+  const intervalDays = body.recurrence?.frequency === "biweekly" ? 14 : 7;
+  const occurrences = body.recurrence?.count ?? 1;
+
+  const starts: DateTime[] = [];
+  for (let i = 0; i < occurrences; i++) {
+    starts.push(start.plus({ days: i * intervalDays }));
+  }
+
+  const seriesId = occurrences > 1 ? `series_${Date.now()}_${Math.random().toString(36).slice(2, 8)}` : undefined;
+
   const db = getFirestore();
-  const bookingRef = db.collection("bookings").doc();
+  const createdIds: string[] = [];
+  const conflicts: string[] = [];
 
-  try {
-    const bucketIds = bucketDocIdsForAppointment(locationId, body.providerId, start, durationMin);
+  for (const thisStart of starts) {
+    const bookingRef = db.collection("bookings").doc();
 
-    await db.runTransaction(async (tx) => {
-      if (!body.skipConflictCheck) {
-        const bucketRefs = bucketIds.map((id) => db.collection("slot_buckets").doc(id));
-        const snaps = await Promise.all(bucketRefs.map((r) => tx.get(r)));
-        for (const s of snaps) {
-          if (s.exists) throw new Error("slot_taken");
+    try {
+      const bucketIds = bucketDocIdsForAppointment(locationId, body.providerId, thisStart, durationMin);
+
+      await db.runTransaction(async (tx) => {
+        if (!body.skipConflictCheck) {
+          const providerBucketRefs = bucketIds.map((id) => db.collection("slot_buckets").doc(id));
+          const holdIds = holdBucketIdsForAppointment(locationId, serviceLine, thisStart, durationMin);
+          const holdRefs = holdIds.map((id) => db.collection("slot_buckets").doc(id));
+
+          const providerSnaps = await Promise.all(providerBucketRefs.map((r) => tx.get(r)));
+          for (const s of providerSnaps) {
+            if (s.exists) throw new Error("slot_taken");
+          }
+          const holdSnaps = await Promise.all(holdRefs.map((r) => tx.get(r)));
+          for (const s of holdSnaps) {
+            if (s.exists) throw new Error("slot_blocked");
+          }
+
+          for (const ref of providerBucketRefs) {
+            tx.set(ref, {
+              bookingId: bookingRef.id,
+              locationId,
+              providerId: body.providerId,
+              serviceLine,
+              durationMin,
+              startIso: thisStart.toUTC().toISO(),
+              createdAt: FieldValue.serverTimestamp(),
+            });
+          }
         }
-        for (const ref of bucketRefs) {
-          tx.set(ref, {
-            bookingId: bookingRef.id,
-            locationId,
-            providerId: body.providerId,
-            serviceLine,
-            durationMin,
-            startIso: start.toUTC().toISO(),
-            createdAt: FieldValue.serverTimestamp(),
-          });
-        }
-      }
 
-      const startAt = Timestamp.fromDate(start.toUTC().toJSDate());
+        const startAt = Timestamp.fromDate(thisStart.toUTC().toJSDate());
 
-      tx.set(bookingRef, {
-        locationId,
-        serviceLine,
-        durationMin,
-        startIso: start.toUTC().toISO(),
-        startAt,
-        bucketIds,
-        providerMode: "specific",
-        providerId: body.providerId,
-        providerDisplayName: body.providerDisplayName,
-        name: body.name.trim(),
-        phone: body.phone?.trim() || "",
-        email: body.email?.trim().toLowerCase() || "",
-        notes: body.notes?.trim() || "",
-        status,
-        ...(status === "confirmed"
-          ? {
-              acceptedByUid: staff.uid,
-              acceptedByEmail: staff.email ?? null,
-              acceptedAt: FieldValue.serverTimestamp(),
-            }
-          : {}),
-        createdAt: FieldValue.serverTimestamp(),
-      });
+        tx.set(bookingRef, {
+          locationId,
+          serviceLine,
+          durationMin,
+          startIso: thisStart.toUTC().toISO(),
+          startAt,
+          bucketIds,
+          providerMode: "specific",
+          providerId: body.providerId,
+          providerDisplayName: body.providerDisplayName,
+          name: body.name.trim(),
+          phone: body.phone?.trim() || "",
+          email: body.email?.trim().toLowerCase() || "",
+          notes: body.notes?.trim() || "",
+          status,
+          ...(seriesId ? { seriesId, recurrence: body.recurrence } : {}),
+          ...(status === "confirmed"
+            ? {
+                acceptedByUid: staff.uid,
+                acceptedByEmail: staff.email ?? null,
+                acceptedAt: FieldValue.serverTimestamp(),
+              }
+            : {}),
+          createdAt: FieldValue.serverTimestamp(),
+        });
 
-      recordBookingEventInTx(db, tx, bookingRef.id, {
-        type: "created",
-        byUid: staff.uid,
-        byEmail: staff.email ?? null,
-        meta: { via: "admin_manual" },
-      });
-
-      if (status === "confirmed") {
         recordBookingEventInTx(db, tx, bookingRef.id, {
-          type: "accepted",
+          type: "created",
           byUid: staff.uid,
           byEmail: staff.email ?? null,
-          meta: { via: "admin_manual", autoConfirmed: true },
+          meta: {
+            via: "admin_manual",
+            ...(seriesId ? { seriesId, recurrence: body.recurrence } : {}),
+          },
         });
+
+        if (status === "confirmed") {
+          recordBookingEventInTx(db, tx, bookingRef.id, {
+            type: "accepted",
+            byUid: staff.uid,
+            byEmail: staff.email ?? null,
+            meta: { via: "admin_manual", autoConfirmed: true },
+          });
+        }
+      });
+
+      createdIds.push(bookingRef.id);
+    } catch (e) {
+      if (e instanceof Error && (e.message === "slot_taken" || e.message === "slot_blocked")) {
+        const dateLabel = thisStart.setZone(TIME_ZONE).toFormat("LLL d");
+        conflicts.push(dateLabel);
+        if (occurrences === 1) {
+          return NextResponse.json(
+            {
+              error: e.message === "slot_taken"
+                ? "That time slot is already taken by another appointment."
+                : "That time is blocked by an admin hold. Remove the matching hold first (Scheduler → Block tray), or enable 'Allow double-booking' to override.",
+            },
+            { status: 409 },
+          );
+        }
+        continue;
       }
-    });
-  } catch (e) {
-    if (e instanceof Error && e.message === "slot_taken") {
-      return NextResponse.json(
-        { error: "That time slot is already taken by another appointment." },
-        { status: 409 },
-      );
+      console.error("[admin/bookings/create]", e);
+      return NextResponse.json({ error: "Could not create booking" }, { status: 500 });
     }
-    console.error("[admin/bookings/create]", e);
-    return NextResponse.json({ error: "Could not create booking" }, { status: 500 });
   }
 
   return NextResponse.json(
     {
       ok: true,
-      bookingId: bookingRef.id,
+      bookingId: createdIds[0],
+      bookingIds: createdIds,
       status,
+      ...(seriesId ? { seriesId } : {}),
+      ...(conflicts.length > 0 ? { conflicts, conflictsMessage: `Skipped ${conflicts.length} date(s) due to conflicts: ${conflicts.join(", ")}` } : {}),
+      totalCreated: createdIds.length,
     },
     { status: 201 },
   );

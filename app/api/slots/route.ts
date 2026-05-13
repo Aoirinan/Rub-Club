@@ -7,6 +7,7 @@ import { formatChicagoSlotChoice } from "@/lib/chicago-datetime-format";
 import { fetchActiveProvidersForService } from "@/lib/providers-db";
 import {
   bucketDocIdsForAppointment,
+  holdBucketIdsForAppointment,
   isWithinScheduleWindow,
   unionCandidateStartsFromSchedules,
   enumerateCandidateStartsInWindow,
@@ -21,11 +22,14 @@ async function bucketsFree(
   db: Firestore,
   locationId: LocationId,
   providerId: string,
+  serviceLine: ServiceLine,
   start: DateTime,
   durationMin: DurationMin,
 ): Promise<boolean> {
-  const ids = bucketDocIdsForAppointment(locationId, providerId, start, durationMin);
-  const refs = ids.map((id) => db.collection("slot_buckets").doc(id));
+  const providerIds = bucketDocIdsForAppointment(locationId, providerId, start, durationMin);
+  const holdIds = holdBucketIdsForAppointment(locationId, serviceLine, start, durationMin);
+  const allIds = [...providerIds, ...holdIds];
+  const refs = allIds.map((id) => db.collection("slot_buckets").doc(id));
   const snaps = await db.getAll(...refs);
   return !snaps.some((s) => s.exists);
 }
@@ -84,7 +88,7 @@ export async function GET(req: Request) {
       const candidates = enumerateCandidateStartsInWindow(date, durationMin, window);
       for (const start of candidates) {
         if (!isWithinScheduleWindow(start, durationMin, provider.schedule ?? null)) continue;
-        if (await bucketsFree(db, locationId, providerId, start, durationMin)) {
+        if (await bucketsFree(db, locationId, providerId, serviceLine, start, durationMin)) {
           available.push({
             startIso: start.toUTC().toISO()!,
             label: formatChicagoSlotChoice(start),
@@ -100,7 +104,7 @@ export async function GET(req: Request) {
         );
         let open = false;
         for (const p of usable) {
-          if (await bucketsFree(db, locationId, p.id, start, durationMin)) {
+          if (await bucketsFree(db, locationId, p.id, serviceLine, start, durationMin)) {
             open = true;
             break;
           }

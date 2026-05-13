@@ -3,11 +3,15 @@ import {
   BUSINESS,
   type DurationMin,
   type LocationId,
+  type ServiceLine,
   TIME_ZONE,
 } from "./constants";
 import type { ProviderDaySchedule } from "./provider-types";
 
 export type DayWindow = { open: DateTime; close: DateTime };
+
+/** Scope of an admin "block this time" hold. */
+export type HoldScope = "all" | ServiceLine;
 
 export function bucketDocId(locationId: LocationId, providerId: string, start: DateTime): string {
   const z = start.setZone(TIME_ZONE);
@@ -28,6 +32,65 @@ export function bucketDocIdsForAppointment(
     bucketDocId(locationId, providerId, first),
     bucketDocId(locationId, providerId, first.plus({ minutes: 30 })),
   ];
+}
+
+/* ---------------- Hold (block-all-providers) bucket ids ---------------- */
+
+/**
+ * Build the 30-minute slot starts a duration covers, e.g. 60 min at 09:00
+ * yields [09:00, 09:30]. Always returns at least one slot.
+ */
+export function enumerateThirtyMinuteStarts(start: DateTime, durationMin: number): DateTime[] {
+  const z = start.setZone(TIME_ZONE).startOf("minute");
+  const count = Math.max(1, Math.round(durationMin / 30));
+  const out: DateTime[] = [];
+  for (let i = 0; i < count; i++) out.push(z.plus({ minutes: i * 30 }));
+  return out;
+}
+
+export function holdBucketDocId(
+  locationId: LocationId,
+  scope: HoldScope,
+  start: DateTime,
+): string {
+  const z = start.setZone(TIME_ZONE);
+  return `${locationId}__hold__${scope}__${z.toFormat("yyyy-LL-dd")}__${z.toFormat("HHmm")}`;
+}
+
+const HOLD_ID_RE = /^(?:paris|sulphur_springs)__hold__(?:all|massage|chiropractic)__/;
+export function isHoldBucketId(id: string): boolean {
+  return HOLD_ID_RE.test(id);
+}
+
+/**
+ * Hold-bucket ids that would block a provider appointment of this service at
+ * this time. Includes both the "all services" scope and the booking's specific
+ * service line scope, for every 30-minute slot the booking covers.
+ */
+export function holdBucketIdsForAppointment(
+  locationId: LocationId,
+  serviceLine: ServiceLine,
+  start: DateTime,
+  durationMin: DurationMin,
+): string[] {
+  const slots = enumerateThirtyMinuteStarts(start, durationMin);
+  const out: string[] = [];
+  for (const s of slots) {
+    out.push(holdBucketDocId(locationId, "all", s));
+    out.push(holdBucketDocId(locationId, serviceLine, s));
+  }
+  return out;
+}
+
+/** Bucket ids that a single hold itself writes. */
+export function holdBucketIdsForHold(
+  locationId: LocationId,
+  scope: HoldScope,
+  start: DateTime,
+  durationMin: number,
+): string[] {
+  const slots = enumerateThirtyMinuteStarts(start, durationMin);
+  return slots.map((s) => holdBucketDocId(locationId, scope, s));
 }
 
 function dayBoundsFromBusiness(dateStr: string): DayWindow {

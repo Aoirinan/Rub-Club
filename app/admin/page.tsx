@@ -28,10 +28,13 @@ import {
 import {
   bookingStatusLabel,
   bookingStatusPillClasses,
+  SERVICE_LINE_COLORS,
   type BookingStatus,
 } from "@/lib/booking-status";
 import { BookingDrawer } from "./_scheduler/BookingDrawer";
 import { NewBookingDrawer } from "./_scheduler/NewBookingDrawer";
+import { BlockTimeDrawer } from "./_scheduler/BlockTimeDrawer";
+import { HoldsTray, type HoldRow } from "./_scheduler/HoldsTray";
 import { DayView, ListView, WeekView } from "./_scheduler/views";
 
 type Me = {
@@ -62,9 +65,11 @@ function AdminDashboard() {
 
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [providers, setProviders] = useState<ProviderRow[]>([]);
+  const [holds, setHolds] = useState<HoldRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newBookingOpen, setNewBookingOpen] = useState(false);
+  const [blockTimeOpen, setBlockTimeOpen] = useState(false);
 
   useEffect(() => {
     setAuth(getFirebaseClientAuth());
@@ -119,6 +124,22 @@ function AdminDashboard() {
     setProviders(payload.providers);
   }, [getIdToken]);
 
+  const refreshHolds = useCallback(async () => {
+    const token = await getIdToken();
+    if (!token) return;
+    const qs = new URLSearchParams({ date: filters.date });
+    if (filters.locationId !== "all") qs.set("locationId", filters.locationId);
+    const res = await fetch(`/api/admin/holds?${qs.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      setHolds([]);
+      return;
+    }
+    const payload = (await res.json()) as { holds: HoldRow[] };
+    setHolds(payload.holds ?? []);
+  }, [getIdToken, filters.date, filters.locationId]);
+
   useEffect(() => {
     if (!auth) return;
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -138,14 +159,16 @@ function AdminDashboard() {
       }
       await refreshProviders();
       await refreshBookings();
+      await refreshHolds();
     });
     return () => unsub();
-  }, [auth, router, refreshBookings, refreshProviders]);
+  }, [auth, router, refreshBookings, refreshProviders, refreshHolds]);
 
   useEffect(() => {
     if (!me?.role) return;
     refreshBookings();
-  }, [filters, me?.role, refreshBookings]);
+    refreshHolds();
+  }, [filters, me?.role, refreshBookings, refreshHolds]);
 
   useEffect(() => {
     const focus = searchParams.get("focus");
@@ -203,6 +226,47 @@ function AdminDashboard() {
                 + New appointment
               </button>
             ) : null}
+            {me?.role ? (
+              <button
+                type="button"
+                onClick={() => setBlockTimeOpen(true)}
+                className="rounded-full border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50"
+              >
+                Block time
+              </button>
+            ) : null}
+            {me?.role ? (
+              <button
+                type="button"
+                onClick={async () => {
+                  const token = await getIdToken();
+                  if (!token) return;
+                  const { qs } = bookingsApiQuery(filters);
+                  const res = await fetch(`/api/admin/bookings/export?${qs}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                  if (!res.ok) return;
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `bookings-export.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
+              >
+                Export CSV
+              </button>
+            ) : null}
+            {me?.role ? (
+              <Link
+                href="/admin/reports"
+                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
+              >
+                Reports
+              </Link>
+            ) : null}
             {me?.role === "superadmin" ? (
               <Link
                 href="/admin/super"
@@ -256,6 +320,16 @@ function AdminDashboard() {
               <PendingTray rows={pendingRows} onSelect={setSelectedId} />
             ) : null}
 
+            {filters.view === "day" && holds.length > 0 ? (
+              <HoldsTray
+                holds={holds}
+                getIdToken={getIdToken}
+                onDeleted={async () => {
+                  await refreshHolds();
+                }}
+              />
+            ) : null}
+
             {filters.view === "day" ? (
               <DayView
                 bookings={viewBookings}
@@ -301,6 +375,16 @@ function AdminDashboard() {
         }}
         getIdToken={getIdToken}
         providers={providers}
+        defaultDate={filters.date}
+      />
+
+      <BlockTimeDrawer
+        open={blockTimeOpen}
+        onClose={() => setBlockTimeOpen(false)}
+        onCreated={async () => {
+          await refreshHolds();
+        }}
+        getIdToken={getIdToken}
         defaultDate={filters.date}
       />
     </div>
@@ -501,6 +585,18 @@ function Toolbar({
           >
             Active
           </button>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Service
+          </span>
+          {SERVICE_LINE_COLORS.map((c) => (
+            <span key={c.serviceLine} className="inline-flex items-center gap-1 text-xs text-slate-700">
+              <span className={`inline-block h-2.5 w-2.5 rounded-full ${c.dotClass}`} />
+              {c.label}
+            </span>
+          ))}
         </div>
 
         <div className="ml-auto">

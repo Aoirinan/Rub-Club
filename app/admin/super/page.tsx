@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
@@ -126,6 +126,46 @@ function ProviderSchedule12hRow(props: {
       </label>
     </div>
   );
+}
+
+type ProviderIssue = {
+  kind: "duplicate";
+  key: string;
+  displayName: string;
+  locationIds: string[];
+  serviceLines: string[];
+  providers: BookableProviderRow[];
+};
+
+function detectProviderIssues(rows: BookableProviderRow[]): ProviderIssue[] {
+  const groups = new Map<string, BookableProviderRow[]>();
+  for (const p of rows) {
+    if (!p.active) continue;
+    const locKey = [...p.locationIds].sort().join(",");
+    const svcKey = [...p.serviceLines].sort().join(",");
+    const nameKey = p.displayName.trim().toLowerCase();
+    if (!nameKey) continue;
+    const key = `${nameKey}__${locKey}__${svcKey}`;
+    const arr = groups.get(key) ?? [];
+    arr.push(p);
+    groups.set(key, arr);
+  }
+  const issues: ProviderIssue[] = [];
+  for (const [key, list] of groups) {
+    if (list.length <= 1) continue;
+    const sorted = [...list].sort((a, b) => a.id.localeCompare(b.id));
+    const [first] = sorted;
+    issues.push({
+      kind: "duplicate",
+      key,
+      displayName: first.displayName,
+      locationIds: first.locationIds,
+      serviceLines: first.serviceLines,
+      providers: sorted,
+    });
+  }
+  issues.sort((a, b) => a.displayName.localeCompare(b.displayName));
+  return issues;
 }
 
 function inviteEmailIssueHint(issue?: InviteStaffResponse["inviteEmailIssue"]): string {
@@ -481,6 +521,8 @@ export default function SuperAdminPage() {
     await loadBookableProviders(fresh);
   }
 
+  const providerIssues = useMemo(() => detectProviderIssues(bookableProviders), [bookableProviders]);
+
   if (!meReady) {
     return (
       <div className="px-4 py-16 text-center text-sm text-slate-600">Checking permissions…</div>
@@ -502,9 +544,19 @@ export default function SuperAdminPage() {
             Build {process.env.NEXT_PUBLIC_APP_VERSION ?? "unknown"}
           </p>
         </div>
-        <Link href="/admin" className="text-sm font-semibold text-slate-900 hover:underline">
-          Back to bookings
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          {isSuper ? (
+            <Link
+              href="/admin/super/slot-inspector"
+              className="text-sm font-semibold text-slate-900 hover:underline"
+            >
+              Slot Inspector
+            </Link>
+          ) : null}
+          <Link href="/admin" className="text-sm font-semibold text-slate-900 hover:underline">
+            Back to bookings
+          </Link>
+        </div>
       </div>
 
       {message ? <p className="text-sm text-slate-800">{message}</p> : null}
@@ -639,6 +691,93 @@ export default function SuperAdminPage() {
               Add or invite
             </button>
           </section>
+
+          {providerIssues.length > 0 ? (
+            <section className="rounded-2xl border border-amber-300 bg-amber-50 p-6 shadow-sm space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold text-amber-950">
+                  Provider health — {providerIssues.length}{" "}
+                  {providerIssues.length === 1 ? "issue" : "issues"} found
+                </h2>
+                <p className="mt-1 text-sm text-amber-900/90">
+                  These look like accidental duplicates. The customer&apos;s &ldquo;First
+                  available&rdquo; mode treats each row as a separate person, so duplicates
+                  double-count one staff member&apos;s availability and can make slots appear
+                  open when the real person is actually booked. If two real staff members
+                  share a name, you can safely ignore the warning.
+                </p>
+              </div>
+              <ul className="space-y-3">
+                {providerIssues.map((issue) => (
+                  <li
+                    key={issue.key}
+                    className="rounded-xl border border-amber-200 bg-white p-3 text-sm text-slate-800"
+                  >
+                    <p className="font-semibold text-slate-900">
+                      Duplicate: &ldquo;{issue.displayName}&rdquo;
+                      <span className="ml-2 font-normal text-slate-600">
+                        — {issue.providers.length} active rows for{" "}
+                        {issue.locationIds.join(", ")} / {issue.serviceLines.join(", ")}
+                      </span>
+                    </p>
+                    <ul className="mt-2 space-y-1.5">
+                      {issue.providers.map((p, idx) => (
+                        <li
+                          key={p.id}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-slate-50 px-2 py-1.5"
+                        >
+                          <div className="min-w-0 flex-1 space-y-0.5">
+                            <div className="font-mono text-xs text-slate-700">{p.id}</div>
+                            <div className="text-[11px] text-slate-500">
+                              {idx === 0 ? "(oldest by id — usually keep)" : "(later duplicate)"}{" "}
+                              · sort {p.sortOrder}
+                              {p.schedule
+                                ? ` · ${formatTime12h(p.schedule.openHour, p.schedule.openMinute)}–${formatTime12h(p.schedule.closeHour, p.schedule.closeMinute)}`
+                                : " · default hours"}
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setEditingProvider({ ...p })}
+                              className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-900 hover:border-slate-400"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => hideBookableProvider(p.id, p.displayName)}
+                              className="rounded-full border border-amber-300 bg-white px-3 py-1 text-xs font-semibold text-amber-900 hover:bg-amber-50"
+                            >
+                              Hide
+                            </button>
+                            <button
+                              type="button"
+                              disabled={deletingProviderId === p.id}
+                              onClick={() => permanentlyDeleteBookableProvider(p.id, p.displayName)}
+                              className="rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {deletingProviderId === p.id ? "Deleting…" : "Delete"}
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : bookableProviders.length > 0 ? (
+            <section className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-950">
+              <p className="font-semibold">Provider health: no duplicates detected.</p>
+              <p className="mt-1 text-emerald-900/90">
+                No active providers share the same display name within the same location and
+                service. If a customer slot looks open and shouldn&apos;t be, remember that
+                &ldquo;First available&rdquo; mode shows the slot if <em>any</em> qualified
+                provider is free.
+              </p>
+            </section>
+          ) : null}
 
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">Bookable providers (public scheduling)</h2>

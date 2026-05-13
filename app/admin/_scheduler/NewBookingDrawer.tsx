@@ -35,15 +35,20 @@ export function NewBookingDrawer({
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<"confirmed" | "pending">("confirmed");
   const [skipConflictCheck, setSkipConflictCheck] = useState(false);
+  const [recurring, setRecurring] = useState(false);
+  const [recurrenceFreq, setRecurrenceFreq] = useState<"weekly" | "biweekly">("weekly");
+  const [recurrenceCount, setRecurrenceCount] = useState(4);
 
   const [working, setWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [successDetail, setSuccessDetail] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       setError(null);
       setSuccess(false);
+      setSuccessDetail(null);
       setDate(defaultDate ?? DateTime.now().setZone(TIME_ZONE).toFormat("yyyy-LL-dd"));
     }
   }, [open, defaultDate]);
@@ -105,35 +110,51 @@ export function NewBookingDrawer({
       }
       const startIso = startDt.toUTC().toISO()!;
 
+      const payload: Record<string, unknown> = {
+        locationId,
+        serviceLine,
+        durationMin,
+        startIso,
+        providerId: provider.id,
+        providerDisplayName: provider.displayName,
+        name: name.trim(),
+        phone: phone.trim() || undefined,
+        email: email.trim() || undefined,
+        notes: notes.trim() || undefined,
+        status,
+        skipConflictCheck,
+      };
+      if (recurring && recurrenceCount > 1) {
+        payload.recurrence = { frequency: recurrenceFreq, count: recurrenceCount };
+      }
+
       const res = await fetch("/api/admin/bookings/create", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "content-type": "application/json",
         },
-        body: JSON.stringify({
-          locationId,
-          serviceLine,
-          durationMin,
-          startIso,
-          providerId: provider.id,
-          providerDisplayName: provider.displayName,
-          name: name.trim(),
-          phone: phone.trim() || undefined,
-          email: email.trim() || undefined,
-          notes: notes.trim() || undefined,
-          status,
-          skipConflictCheck,
-        }),
+        body: JSON.stringify(payload),
       });
 
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        totalCreated?: number;
+        conflictsMessage?: string;
+      };
+
       if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
         setError(data.error ?? "Failed to create appointment.");
         return;
       }
 
       setSuccess(true);
+      if (data.totalCreated && data.totalCreated > 1) {
+        const detail = data.conflictsMessage
+          ? `Created ${data.totalCreated} appointments. ${data.conflictsMessage}`
+          : `Created ${data.totalCreated} recurring appointments.`;
+        setSuccessDetail(detail);
+      }
       setName("");
       setPhone("");
       setEmail("");
@@ -368,6 +389,51 @@ export function NewBookingDrawer({
                 />
                 Allow double-booking (skip conflict check)
               </label>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={recurring}
+                  onChange={(e) => setRecurring(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+                Recurring appointment
+              </label>
+              {recurring ? (
+                <div className="ml-6 space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="block space-y-1 text-sm">
+                      <span className="text-xs font-medium text-slate-700">Frequency</span>
+                      <select
+                        value={recurrenceFreq}
+                        onChange={(e) => setRecurrenceFreq(e.target.value as "weekly" | "biweekly")}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="weekly">Weekly</option>
+                        <option value="biweekly">Every 2 weeks</option>
+                      </select>
+                    </label>
+                    <label className="block space-y-1 text-sm">
+                      <span className="text-xs font-medium text-slate-700">Occurrences</span>
+                      <select
+                        value={recurrenceCount}
+                        onChange={(e) => setRecurrenceCount(Number(e.target.value))}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      >
+                        {Array.from({ length: 25 }, (_, i) => i + 2).map((n) => (
+                          <option key={n} value={n}>
+                            {n} appointments
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Creates {recurrenceCount} appointments, same day/time,{" "}
+                    {recurrenceFreq === "weekly" ? "every week" : "every 2 weeks"}.
+                    Dates with conflicts will be skipped.
+                  </p>
+                </div>
+              ) : null}
             </fieldset>
           </div>
 
@@ -380,7 +446,7 @@ export function NewBookingDrawer({
             ) : null}
             {success ? (
               <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-                Appointment created successfully.
+                {successDetail ?? "Appointment created successfully."}
               </p>
             ) : null}
             <div className="flex gap-3">

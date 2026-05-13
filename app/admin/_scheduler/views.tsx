@@ -5,6 +5,7 @@ import {
   bookingStatusBlockClasses,
   bookingStatusLabel,
   bookingStatusPillClasses,
+  serviceLineColor,
 } from "@/lib/booking-status";
 import {
   blockGeometry,
@@ -214,11 +215,12 @@ function CalendarBlock({
   if (geom.heightPx <= 0) return null;
   const status = booking.status ?? "pending";
   const providerLabel = booking.providerDisplayName || "First available";
+  const svcColor = serviceLineColor(booking.serviceLine);
   return (
     <button
       type="button"
       onClick={() => onSelect(booking.id)}
-      className={`absolute left-1 right-1 overflow-hidden rounded-md px-2 py-1 text-left text-xs shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-500 ${bookingStatusBlockClasses(status)}`}
+      className={`absolute left-1 right-1 overflow-hidden rounded-md px-2 py-1 text-left text-xs shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-500 ${bookingStatusBlockClasses(status)} ${svcColor.borderClass}`}
       style={{ top: `${geom.topPx}px`, height: `${geom.heightPx}px` }}
       title={`${booking.name ?? ""} · ${booking.serviceLine ?? ""} · ${booking.durationMin}m · ${providerLabel}`}
     >
@@ -371,7 +373,7 @@ function AllProvidersWeekSummary({
                       <button
                         type="button"
                         onClick={() => onSelect(b.id)}
-                        className={`w-full rounded-md px-2 py-1.5 text-left text-xs ${bookingStatusBlockClasses(b.status ?? "pending")}`}
+                        className={`w-full rounded-md px-2 py-1.5 text-left text-xs ${bookingStatusBlockClasses(b.status ?? "pending")} ${serviceLineColor(b.serviceLine).borderClass}`}
                       >
                         <div className="font-semibold">
                           {b.startAtMs ? formatChicagoTime(b.startAtMs) : "—"} ·{" "}

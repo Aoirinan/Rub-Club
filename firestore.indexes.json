@@ -7,6 +7,14 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "startAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "slot_holds",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "locationId", "order": "ASCENDING" },
+        { "fieldPath": "startAt", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

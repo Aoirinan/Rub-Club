@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
+import { IntakeForm } from "@/components/IntakeForm";
 
 const PDF_PATH = "/the-rub-club-new-client-form-1.pdf";
 
 export const metadata: Metadata = {
   title: "Patient Forms",
   description:
-    "Download The Rub Club new-client intake form before your first massage appointment in Paris, TX.",
+    "Complete your new-client intake form online before your first massage or chiropractic appointment in Paris or Sulphur Springs, TX.",
   alternates: { canonical: "/patient-forms" },
   openGraph: {
-    title: "Patient Forms — The Rub Club",
-    description: "New-client intake form for The Rub Club massage in Paris, TX.",
+    title: "Patient Forms — The Rub Club & Chiropractic Associates",
+    description: "Complete your intake form online or download the PDF.",
     url: "/patient-forms",
   },
 };
@@ -28,16 +29,18 @@ export default function PatientFormsPage() {
       <PageHero
         eyebrow="Welcome to our practice"
         title="Patient forms"
-        lede="Save time at your first visit by downloading the intake form ahead of time."
+        lede="Save time at your first visit by filling out the intake form online — or download the PDF to bring with you."
       />
       <div className="mx-auto max-w-3xl space-y-6 px-4 pb-16">
+        <IntakeForm />
+
         <section className="border-t-4 border-[#0f5f5c] bg-white p-8 text-center shadow-md sm:p-12">
           <p className="text-sm font-bold uppercase tracking-wide text-stone-600">
-            For new massage clients
+            Prefer paper?
           </p>
-          <h2 className="mt-2 text-2xl font-black text-[#173f3b]">The Rub Club intake form</h2>
+          <h2 className="mt-2 text-xl font-black text-[#173f3b]">Download the PDF form</h2>
           <p className="mt-3 text-stone-700">
-            Print, fill out, and bring it to your first appointment — or fill it out in the office.
+            Print it out, fill it in by hand, and bring it to your first appointment.
           </p>
           <a
             href={PDF_PATH}

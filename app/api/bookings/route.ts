@@ -13,6 +13,7 @@ import {
 import { sendBookingNotification } from "@/lib/sendgrid";
 import {
   bucketDocIdsForAppointment,
+  holdBucketIdsForAppointment,
   isAlignedToSlotGrid,
   isWithinScheduleWindow,
   parseStartIsoToDateTime,
@@ -141,10 +142,16 @@ export async function POST(req: Request) {
   try {
     if (body.providerMode === "specific") {
       const bucketIds = bucketDocIdsForAppointment(locationId, assignedProviderId, start, durationMin);
+      const holdIds = holdBucketIdsForAppointment(locationId, serviceLine, start, durationMin);
       await db.runTransaction(async (tx) => {
         const bucketRefs = bucketIds.map((id) => db.collection("slot_buckets").doc(id));
+        const holdRefs = holdIds.map((id) => db.collection("slot_buckets").doc(id));
         const snaps = await Promise.all(bucketRefs.map((r) => tx.get(r)));
         for (const s of snaps) {
+          if (s.exists) throw new Error("slot_taken");
+        }
+        const holdSnaps = await Promise.all(holdRefs.map((r) => tx.get(r)));
+        for (const s of holdSnaps) {
           if (s.exists) throw new Error("slot_taken");
         }
         const startAt = Timestamp.fromDate(start.toUTC().toJSDate());
@@ -193,7 +200,12 @@ export async function POST(req: Request) {
       });
     } else {
       const tryOrder = orderProvidersForAnyBooking(eligible, preferredProviderId);
+      const holdIds = holdBucketIdsForAppointment(locationId, serviceLine, start, durationMin);
       await db.runTransaction(async (tx) => {
+        const holdRefs = holdIds.map((id) => db.collection("slot_buckets").doc(id));
+        const holdSnaps = await Promise.all(holdRefs.map((r) => tx.get(r)));
+        if (holdSnaps.some((s) => s.exists)) throw new Error("slot_taken");
+
         const bucketRefsByProvider: { id: string; name: string; refs: DocumentReference[] }[] = [];
         for (const p of tryOrder) {
           if (!isWithinScheduleWindow(start, durationMin, p.schedule ?? null)) continue;

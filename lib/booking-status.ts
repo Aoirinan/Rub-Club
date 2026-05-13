@@ -57,6 +57,28 @@ export function bookingStatusBlockClasses(status: BookingStatus): string {
   }
 }
 
+/** Service-line color for the left border stripe on calendar blocks. */
+export function serviceLineColor(serviceLine: string | undefined): {
+  borderClass: string;
+  dotClass: string;
+  label: string;
+} {
+  switch (serviceLine) {
+    case "massage":
+      return { borderClass: "border-l-4 border-l-teal-500", dotClass: "bg-teal-500", label: "Massage" };
+    case "chiropractic":
+      return { borderClass: "border-l-4 border-l-indigo-500", dotClass: "bg-indigo-500", label: "Chiropractic" };
+    default:
+      return { borderClass: "border-l-4 border-l-slate-400", dotClass: "bg-slate-400", label: "Other" };
+  }
+}
+
+/** All service line color entries for rendering a legend. */
+export const SERVICE_LINE_COLORS = [
+  { serviceLine: "massage", dotClass: "bg-teal-500", label: "Massage" },
+  { serviceLine: "chiropractic", dotClass: "bg-indigo-500", label: "Chiropractic" },
+] as const;
+
 /** Whether the status counts as "live" (still occupies a time slot in the day view). */
 export function isLiveStatus(status: BookingStatus): boolean {
   return status === "pending" || status === "confirmed";
