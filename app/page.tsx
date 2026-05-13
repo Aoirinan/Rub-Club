@@ -1,16 +1,55 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { LOCATIONS } from "@/lib/constants";
+import { LOCATION_LIST, telHref } from "@/lib/constants";
 import { IMAGES } from "@/lib/home-images";
-import { CHIRO, MASSAGE, TEAM } from "@/lib/home-verbatim";
+import {
+  CHIRO,
+  CHIRO_INTRO_VIDEO_SRC,
+  DOCTORS,
+  MASSAGE,
+  TEAM,
+} from "@/lib/home-verbatim";
+import { JsonLd } from "@/components/JsonLd";
+import { HomeVideo } from "@/components/HomeVideo";
+import { FaqList } from "@/components/FaqList";
+import {
+  chiropractorJsonLd,
+  faqPageJsonLd,
+  massageJsonLd,
+} from "@/lib/structured-data";
+import { LOCATIONS } from "@/lib/constants";
+import { TESTIMONIALS } from "@/lib/testimonials";
+import { HOME_FAQS } from "@/lib/faqs";
+import { siteDescription, siteTitle } from "@/lib/site-content";
+
+export const metadata: Metadata = {
+  title: { absolute: siteTitle },
+  description: siteDescription,
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: siteTitle,
+    description: siteDescription,
+    url: "/",
+    type: "website",
+  },
+};
 
 export default function Home() {
   return (
     <div className="bg-[#f4f2ea]">
+      <JsonLd
+        data={[
+          chiropractorJsonLd(LOCATIONS.paris),
+          chiropractorJsonLd(LOCATIONS.sulphur_springs),
+          massageJsonLd(),
+          faqPageJsonLd(HOME_FAQS),
+        ]}
+      />
       <section className="relative min-h-[440px] overflow-hidden bg-[#0f5f5c]">
         <Image
           src={IMAGES.massageHeroBanner}
-          alt=""
+          alt="Calm massage room at The Rub Club"
           fill
           priority
           className="object-cover"
@@ -22,19 +61,19 @@ export default function Home() {
             {CHIRO.spineHeadline}
           </p>
           <h1 className="mt-3 max-w-2xl text-4xl font-black leading-tight drop-shadow sm:text-5xl">
-            {MASSAGE.heroTitle}
+            Massage Therapy &amp; Chiropractic Care in Paris &amp; Sulphur Springs, TX
           </h1>
           <p className="mt-4 max-w-xl text-xl font-semibold text-white/95">{CHIRO.spineSub}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/book"
-              className="bg-[#f2d25d] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#173f3b] shadow hover:bg-[#e6c13d]"
+              className="focus-ring bg-[#f2d25d] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#173f3b] shadow hover:bg-[#e6c13d]"
             >
               Book Online
             </Link>
             <a
-              className="border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#173f3b]"
-              href="tel:9037399959"
+              className="focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#173f3b]"
+              href={telHref("903-739-9959")}
             >
               Call 903-739-9959
             </a>
@@ -42,38 +81,46 @@ export default function Home() {
         </div>
       </section>
 
+      <div className="bg-[#fff7d7] py-3 text-center text-sm text-[#5a4a15]">
+        <strong>Voted Best Chiropractic Center &amp; Best Massage</strong> &mdash; The Paris News reader polls.
+      </div>
+
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
-        <section className="grid gap-4 md:grid-cols-4">
+        <section aria-label="Featured services" className="grid gap-4 md:grid-cols-4">
           {[
             {
               label: "DEEP TISSUE MASSAGE",
-              href: "/#the-rub-club",
+              href: "/services/massage",
               img: IMAGES.serviceDeepTissue,
+              alt: "Deep tissue massage at The Rub Club",
             },
             {
               label: "PRE-NATAL MASSAGE",
-              href: "/#the-rub-club",
+              href: "/services/massage",
               img: IMAGES.servicePrenatal,
+              alt: "Prenatal massage at The Rub Club",
             },
             {
               label: "CHIROPRACTIC CARE",
-              href: "/#chiropractic-associates",
+              href: "/services/chiropractic",
               img: IMAGES.massageChiroTile,
+              alt: "Chiropractic adjustment at Chiropractic Associates",
             },
             {
               label: "SPORTS MASSAGE",
-              href: "/#the-rub-club",
+              href: "/services/massage",
               img: IMAGES.serviceSports,
+              alt: "Sports massage at The Rub Club",
             },
           ].map((tile) => (
             <Link
               key={tile.label}
               href={tile.href}
-              className="group relative flex min-h-[220px] flex-col justify-end overflow-hidden bg-[#173f3b] p-5 text-white shadow-lg"
+              className="focus-ring group relative flex min-h-[220px] flex-col justify-end overflow-hidden bg-[#173f3b] p-5 text-white shadow-lg"
             >
               <Image
                 src={tile.img}
-                alt=""
+                alt={tile.alt}
                 fill
                 className="object-cover transition duration-300 group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, 25vw"
@@ -99,41 +146,22 @@ export default function Home() {
                   {p}
                 </p>
               ))}
+              <Link
+                href="/services/massage"
+                className="focus-ring inline-flex bg-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
+              >
+                Explore massage services
+              </Link>
             </div>
             <div className="relative aspect-[4/3] overflow-hidden shadow-md lg:aspect-auto lg:min-h-[360px]">
               <Image
                 src={IMAGES.massagePatient}
-                alt="patient receiving treatment"
+                alt="A licensed massage therapist working with a client at The Rub Club"
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"
               />
             </div>
-          </div>
-
-          <div className="mt-10 grid gap-10 border-t border-stone-200 pt-8 lg:grid-cols-2">
-            <div>
-              <h3 className="text-xl font-black text-[#173f3b]">{MASSAGE.whenTitle}</h3>
-              <p className="mt-4 leading-relaxed text-stone-700">{MASSAGE.whenBody}</p>
-            </div>
-            <div>
-              <h3 className="text-xl font-black text-[#173f3b]">{MASSAGE.treatmentsTitle}</h3>
-              <p className="mt-4 leading-relaxed text-stone-700">{MASSAGE.treatmentsIntro}</p>
-              <ul className="mt-4 list-disc space-y-2 pl-6 text-stone-700">
-                {MASSAGE.treatmentsList.map((t) => (
-                  <li key={t}>{t}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          <div className="mt-10 bg-[#f2efe3] p-6">
-            <h3 className="text-2xl font-black text-[#173f3b]">{MASSAGE.closingTitle}</h3>
-            {MASSAGE.closingParas.map((p) => (
-              <p key={p} className="mt-4 leading-relaxed text-stone-700">
-                {p}
-              </p>
-            ))}
           </div>
         </section>
 
@@ -146,24 +174,22 @@ export default function Home() {
               <h2 className="text-3xl font-black text-[#173f3b]">{CHIRO.chooseTitle}</h2>
               <p className="leading-relaxed text-stone-700">{CHIRO.chooseLead}</p>
               <p className="leading-relaxed text-stone-700">{CHIRO.chooseP2}</p>
-              <p className="leading-relaxed text-stone-700">{CHIRO.chooseP3}</p>
               <ul className="list-disc space-y-2 pl-6 text-stone-700">
                 {CHIRO.conditions.map((c) => (
                   <li key={c}>{c}</li>
                 ))}
               </ul>
-              <p className="font-bold text-stone-700">{CHIRO.treatmentsIntro}</p>
-              <ul className="list-disc space-y-2 pl-6 text-stone-700">
-                {CHIRO.treatments.map((t) => (
-                  <li key={t}>{t}</li>
-                ))}
-              </ul>
-              <p className="leading-relaxed text-stone-700">{CHIRO.awards}</p>
+              <Link
+                href="/services/chiropractic"
+                className="focus-ring inline-flex bg-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
+              >
+                Explore chiropractic care
+              </Link>
             </div>
             <div className="relative aspect-[3/2] overflow-hidden shadow-lg lg:min-h-[320px]">
               <Image
                 src={IMAGES.chiroBg}
-                alt=""
+                alt="A chiropractor adjusting a patient at Chiropractic Associates"
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -171,67 +197,79 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="bg-[#173f3b] px-6 py-8 text-white shadow-inner sm:px-10">
-            <h3 className="text-2xl font-black">{CHIRO.contactUsTitle}</h3>
-            <p className="mt-4 leading-relaxed text-white/90">{CHIRO.mission}</p>
-            <p className="mt-4 leading-relaxed text-white/90">{CHIRO.bookCta}</p>
-          </div>
+          <HomeVideo src={CHIRO_INTRO_VIDEO_SRC} heading={CHIRO.introVideoHeading} />
+        </section>
 
-          <div className="border border-[#d8c061] bg-[#fff7d7] p-6 text-center shadow-sm">
-            <p className="font-bold text-[#5a4a15]">{CHIRO.stretchP1}</p>
-            <p className="mt-2 text-[#5a4a15]">{CHIRO.stretchP2}</p>
-            <p className="mt-4 text-lg font-black uppercase tracking-wide text-[#0f5f5c]">
-              <strong>{CHIRO.stretchCallPart1}</strong> <strong>{CHIRO.stretchCallPart2}</strong>
-            </p>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-3">
-            {[
-              { title: "Chiropractic Care" },
-              { title: "Prenatal Care" },
-              { title: "Pediatric Care" },
-            ].map((card) => (
-              <Link
-                key={card.title}
-                href="/#chiropractic-associates"
-                className="flex flex-col items-center justify-center bg-[#0f5f5c] px-4 py-10 text-center text-lg font-black text-white shadow-md hover:bg-[#0f817b]"
+        <section
+          aria-labelledby="testimonials"
+          className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10"
+        >
+          <h2 id="testimonials" className="text-3xl font-black text-[#173f3b]">
+            What our patients say
+          </h2>
+          <p className="mt-2 text-sm text-stone-600">
+            Paraphrased from public reviews — read more or leave your own on{" "}
+            <Link className="font-bold text-[#0f5f5c] underline" href="/reviews">
+              our reviews page
+            </Link>
+            .
+          </p>
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            {TESTIMONIALS.slice(0, 3).map((t) => (
+              <figure
+                key={t.quote}
+                className="flex h-full flex-col justify-between border border-stone-200 bg-stone-50 p-5"
               >
-                {card.title}
-              </Link>
+                <blockquote className="text-sm italic leading-relaxed text-stone-700">
+                  &ldquo;{t.quote}&rdquo;
+                </blockquote>
+                <figcaption className="mt-4 border-t border-stone-200 pt-3 text-xs">
+                  <span className="font-bold text-[#173f3b]">{t.author}</span>
+                  {t.context ? <span className="block text-stone-600">{t.context}</span> : null}
+                </figcaption>
+              </figure>
             ))}
           </div>
+        </section>
 
-          <div>
-            <h3 className="text-2xl font-black text-[#173f3b]">{CHIRO.betterTitle}</h3>
-            <div className="mt-8 grid gap-8 md:grid-cols-2">
-              <div className="bg-stone-50 p-6 ring-1 ring-stone-200">
-                <h4 className="text-lg font-black text-[#173f3b]">{CHIRO.teamHelpTitle}</h4>
-                <p className="mt-3 leading-relaxed text-stone-700">{CHIRO.teamHelpBody}</p>
-              </div>
-              <div className="bg-stone-50 p-6 ring-1 ring-stone-200">
-                <h4 className="text-lg font-black text-[#173f3b]">{CHIRO.qualityTitle}</h4>
-                <p className="mt-3 leading-relaxed text-stone-700">{CHIRO.qualityBody}</p>
-              </div>
-            </div>
-            <div className="mt-8 grid gap-6 md:grid-cols-2">
-              <div className="bg-white p-6 shadow ring-1 ring-[#0f5f5c]/15">
-                <h4 className="text-base font-black uppercase tracking-wide text-[#173f3b]">
-                  {CHIRO.mainOfficeTitle}
-                </h4>
-                <p className="mt-3 leading-relaxed text-stone-700">{CHIRO.mainOfficeBody}</p>
-              </div>
-              <div className="bg-white p-6 shadow ring-1 ring-[#0f5f5c]/15">
-                <h4 className="text-base font-black uppercase tracking-wide text-[#173f3b]">
-                  {CHIRO.secondLocationTitle}
-                </h4>
-                <p className="mt-3 leading-relaxed text-stone-700">{CHIRO.secondLocationBody}</p>
-              </div>
-            </div>
+        <section
+          id="our-chiropractors"
+          className="scroll-mt-32 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10"
+        >
+          <h2 className="text-center text-3xl font-black text-[#173f3b]">Our Chiropractors</h2>
+          <p className="mx-auto mt-4 max-w-3xl text-center leading-relaxed text-stone-700">
+            Meet the doctors who lead care at Chiropractic Associates in Paris and Sulphur Springs.
+          </p>
+          <div className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+            {DOCTORS.map((member) => (
+              <article
+                key={member.name}
+                className="flex flex-col overflow-hidden border border-stone-200 bg-stone-50 shadow-sm"
+              >
+                <div className="relative aspect-[3/4] w-full bg-stone-200">
+                  <Image
+                    src={IMAGES[member.imageKey]}
+                    alt={`Portrait of ${member.name}, ${member.role}`}
+                    fill
+                    className="object-cover object-top"
+                    sizes="(max-width: 640px) 100vw, 33vw"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col p-5">
+                  <h3 className="text-lg font-black text-[#173f3b]">{member.name}</h3>
+                  <p className="text-sm font-bold text-stone-600">{member.role}</p>
+                  <p className="mt-3 flex-1 text-sm leading-relaxed text-stone-700">{member.bio}</p>
+                </div>
+              </article>
+            ))}
           </div>
         </section>
 
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
           <h2 className="text-center text-3xl font-black text-[#173f3b]">Meet the Team</h2>
+          <p className="mx-auto mt-4 max-w-3xl text-center text-sm font-semibold uppercase tracking-wide text-stone-600">
+            Massage therapy — The Rub Club
+          </p>
           <div className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
             {TEAM.map((member) => (
               <article
@@ -241,7 +279,7 @@ export default function Home() {
                 <div className="relative aspect-[3/4] w-full bg-stone-200">
                   <Image
                     src={IMAGES[member.imageKey]}
-                    alt={member.name}
+                    alt={`Portrait of ${member.name}, massage therapist`}
                     fill
                     className="object-cover object-top"
                     sizes="(max-width: 640px) 100vw, 33vw"
@@ -249,7 +287,9 @@ export default function Home() {
                 </div>
                 <div className="flex flex-1 flex-col p-5">
                   <h3 className="text-lg font-black text-[#173f3b]">{member.name}</h3>
-                  {"role" in member ? <p className="text-sm font-bold text-stone-600">{member.role}</p> : null}
+                  {"role" in member ? (
+                    <p className="text-sm font-bold text-stone-600">{member.role}</p>
+                  ) : null}
                   <p className="mt-3 flex-1 text-sm leading-relaxed text-stone-700">{member.bio}</p>
                 </div>
               </article>
@@ -259,11 +299,11 @@ export default function Home() {
 
         <section className="grid gap-8 overflow-hidden border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md lg:grid-cols-2 lg:items-center sm:p-10">
           <div>
-            <h3 className="text-2xl font-black text-[#173f3b]">{MASSAGE.spineTitle}</h3>
+            <h2 className="text-2xl font-black text-[#173f3b]">{MASSAGE.spineTitle}</h2>
             <p className="mt-4 leading-relaxed text-stone-700">{MASSAGE.spineBody}</p>
             <Link
               href={MASSAGE.spineHref}
-              className="mt-6 inline-flex bg-[#0f5f5c] px-6 py-3 text-sm font-black uppercase tracking-wide text-white shadow hover:bg-[#0f817b]"
+              className="focus-ring mt-6 inline-flex bg-[#0f5f5c] px-6 py-3 text-sm font-black uppercase tracking-wide text-white shadow hover:bg-[#0f817b]"
             >
               {MASSAGE.spineCta}
             </Link>
@@ -271,7 +311,7 @@ export default function Home() {
           <div className="relative mx-auto aspect-square w-full max-w-md">
             <Image
               src={IMAGES.spine3d}
-              alt="3D Spine Simulator"
+              alt="3D Spine Simulator preview"
               fill
               className="object-cover shadow-md ring-1 ring-black/10"
               sizes="(max-width: 1024px) 100vw, 400px"
@@ -279,7 +319,48 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="locations" className="scroll-mt-32 space-y-8 bg-[#173f3b] p-6 text-white shadow-xl sm:p-10">
+        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-black text-[#173f3b]">Insurance &amp; billing</h2>
+              <p className="mt-2 max-w-2xl text-stone-700">
+                We accept many major medical plans for chiropractic visits and file claims on your
+                behalf. Massage therapy is generally self-pay. Call to verify your benefits.
+              </p>
+            </div>
+            <Link
+              href="/insurance"
+              className="focus-ring inline-flex border-2 border-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-[#0f5f5c]/5"
+            >
+              Insurance details
+            </Link>
+          </div>
+        </section>
+
+        <section
+          aria-labelledby="home-faq"
+          className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="home-faq" className="text-2xl font-black text-[#173f3b]">
+              Frequently asked questions
+            </h2>
+            <Link
+              href="/faq"
+              className="focus-ring text-sm font-bold text-[#0f5f5c] underline"
+            >
+              See all FAQs
+            </Link>
+          </div>
+          <div className="mt-4">
+            <FaqList entries={HOME_FAQS} />
+          </div>
+        </section>
+
+        <section
+          id="locations"
+          className="scroll-mt-32 space-y-8 bg-[#173f3b] p-6 text-white shadow-xl sm:p-10"
+        >
           <h2 className="text-2xl font-black">{MASSAGE.contactTitle}</h2>
           <div className="grid gap-8 lg:grid-cols-2">
             <div>
@@ -287,82 +368,76 @@ export default function Home() {
               <p className="mt-1 text-sm text-white/80">{MASSAGE.hoursSubtitle}</p>
               <dl className="mt-4 space-y-2 text-sm">
                 {MASSAGE.hours.map((row) => (
-                  <div key={row.day} className="flex justify-between gap-4 border-b border-white/10 py-2">
+                  <div
+                    key={row.day}
+                    className="flex justify-between gap-4 border-b border-white/10 py-2"
+                  >
                     <dt className="font-bold">{row.day}</dt>
                     <dd>{row.hours}</dd>
                   </div>
                 ))}
               </dl>
             </div>
-            <div>
+            <div className="space-y-6 text-sm text-white/85">
               <h3 className="text-lg font-black text-[#f2d25d]">{MASSAGE.locationTitle}</h3>
-              <p className="mt-4 text-xl font-black">{MASSAGE.rubClubAddressTitle}</p>
-              <p className="mt-2 text-teal-50">
-                <span className="block font-bold">Address</span>
-                {MASSAGE.rubClubAddressLines.map((line) => (
-                  <span key={line} className="block">
-                    {line}
-                  </span>
-                ))}
-              </p>
-              <p className="mt-4">
-                <span className="block text-sm font-bold text-[#f2d25d]">Contact Information</span>
-                <a className="text-lg font-black hover:underline" href="tel:9037399959">
-                  903-739-9959
-                </a>
-              </p>
-              <div className="mt-8 space-y-4 border-t border-white/15 pt-6 text-sm text-white/80">
-                {Object.entries(LOCATIONS).map(([id, loc]) => (
-                  <div key={id}>
-                    <p className="font-black text-white">{loc.name}</p>
+              {LOCATION_LIST.map((loc) => (
+                <div key={loc.id}>
+                  <p className="text-base font-black text-white">{loc.name}</p>
+                  <p className="mt-1">
+                    {loc.addressLines.map((line) => (
+                      <span key={line} className="block">
+                        {line}
+                      </span>
+                    ))}
+                  </p>
+                  <a
+                    className="mt-1 inline-block font-bold text-[#f2d25d] hover:underline"
+                    href={telHref(loc.phonePrimary)}
+                  >
+                    {loc.phonePrimary}
+                  </a>
+                  {loc.phoneSecondary ? (
                     <p className="mt-1">
-                      {loc.addressLines.map((line) => (
-                        <span key={line} className="block">
-                          {line}
-                        </span>
-                      ))}
+                      Massage desk:{" "}
+                      <a
+                        className="font-bold text-[#f2d25d] hover:underline"
+                        href={telHref(loc.phoneSecondary)}
+                      >
+                        {loc.phoneSecondary}
+                      </a>
                     </p>
-                    <a
-                      className="mt-1 inline-block font-bold text-[#f2d25d] hover:underline"
-                      href={`tel:${loc.phonePrimary.replaceAll("-", "")}`}
-                    >
-                      {loc.phonePrimary}
-                    </a>
-                    {loc.phoneSecondary ? (
-                      <p className="mt-1">
-                        Massage desk:{" "}
-                        <a
-                          className="font-bold text-[#f2d25d] hover:underline"
-                          href={`tel:${loc.phoneSecondary.replaceAll("-", "")}`}
-                        >
-                          {loc.phoneSecondary}
-                        </a>
-                      </p>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
+                  ) : null}
+                  <Link
+                    href={`/locations/${loc.slug}`}
+                    className="mt-1 inline-block text-xs font-bold uppercase tracking-wide text-[#f2d25d] hover:underline"
+                  >
+                    Map &amp; details &rarr;
+                  </Link>
+                </div>
+              ))}
             </div>
           </div>
           <div className="flex flex-wrap gap-3 border-t border-white/15 pt-6">
             <Link
               href="/book"
-              className="bg-[#f2d25d] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#173f3b] shadow hover:bg-[#e6c13d]"
+              className="focus-ring bg-[#f2d25d] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#173f3b] shadow hover:bg-[#e6c13d]"
             >
               Book online
+            </Link>
+            <Link
+              href="/contact"
+              className="focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#173f3b]"
+            >
+              Contact us
             </Link>
           </div>
         </section>
 
-        <footer className="border-t border-stone-300 pt-10 text-sm text-stone-600">
-          <p>
-            Online booking on this site collects only your contact details and preferred visit time so the office can
-            confirm your appointment.
-          </p>
-          <p className="mt-2 text-stone-500">
-            Practice photography, logos, and editorial content are used with written permission from the owners.
-          </p>
-        </footer>
+        <p className="border-t border-stone-300 pt-8 text-center text-xs text-stone-600">
+          Online booking on this site collects only your contact details and preferred visit time so
+          the office can confirm your appointment. We do not collect insurance or medical records
+          here. Please do not share protected health information through the contact form.
+        </p>
       </div>
     </div>
   );

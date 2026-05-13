@@ -3,6 +3,12 @@
  * Paraphrased from prior public-site language; facts (providers, phones, addresses, awards) kept accurate.
  */
 
+/** Short home-page blurb linking to dedicated SEO routes. */
+export const HOME_INTRO = {
+  title: "Chiropractic and massage in Paris, TX",
+  body: "Chiropractic Associates and The Rub Club operate from one Paris address, with chiropractic care also available in Sulphur Springs. Use the pages below for services, provider bios, video, hours, and online booking.",
+} as const;
+
 export const CHIRO = {
   spineHeadline: "Your Spine Health Specialists",
   spineSub: "A more comfortable, active life is closer than you think.",
@@ -55,7 +61,12 @@ export const CHIRO = {
     "3305 NE Loop 286, Suite A — Paris, TX. Main chiropractic line: 903-785-5551.",
   secondLocationTitle: "Second Location",
   secondLocationBody: "207 Jefferson St. E, Sulphur Springs, TX. Phone: 903-919-5020.",
+  introVideoHeading: "Watch our 30-second video to learn more about Chiropractic Associates.",
 } as const;
+
+/** MP4 served on the public Chiropractic Associates homepage (CMS path unchanged as of integration). */
+export const CHIRO_INTRO_VIDEO_SRC =
+  "https://www.chiropracticparistexas.com/storage/app/media/sedona/paris-chiropractic-associates-jgtvt8zzw-9037855551.mp4" as const;
 
 export const MASSAGE = {
   heroTitle: "Relaxing Therapeutic Massage Services",
@@ -99,6 +110,28 @@ export const MASSAGE = {
   rubClubAddressTitle: "The Rub Club",
   rubClubAddressLines: ["3305 NE Loop 286 Suite A", "Paris, TX 75460"],
 } as const;
+
+/** Chiropractic providers — bios summarized from public practice pages. */
+export const DOCTORS = [
+  {
+    name: "Dr. Greg Thompson",
+    role: "Chiropractor",
+    imageKey: "doctorGreg" as const,
+    bio: "A Dallas native and Parker College of Chiropractic graduate, Dr. Thompson has led Chiropractic Associates in Paris since the late 1990s. He focuses on efficient, patient-centered care and founded The Rub Club so on-site therapeutic massage could support the same treatment goals.",
+  },
+  {
+    name: "Dr. Sean Welborn",
+    role: "Chiropractor",
+    imageKey: "doctorSean" as const,
+    bio: "Dr. Welborn earned his doctorate from Parker University and brings experience in high-volume chiropractic and rehab settings plus acupuncture for muscle and joint complaints. He is fluent in Spanish and welcomes patients who have struggled to find lasting relief elsewhere.",
+  },
+  {
+    name: "Dr. Brandy Collins",
+    role: "Chiropractor",
+    imageKey: "doctorCollins" as const,
+    bio: "Originally from Kentucky, Dr. Collins graduated from Parker Chiropractic College and cares for the whole family—from infants to seniors. She blends gentle low-force options with traditional adjustments, myofascial release, instrument-assisted care, and pregnancy-focused visits when appropriate.",
+  },
+] as const;
 
 export const TEAM = [
   {

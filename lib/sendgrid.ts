@@ -65,11 +65,21 @@ function ensureSendgrid(): void {
   configured = true;
 }
 
+export type EmailAttachment = {
+  filename: string;
+  /** Base64-encoded content. */
+  content: string;
+  type: string;
+  disposition?: "attachment" | "inline";
+};
+
 export async function sendBookingNotification(params: {
   to: string;
   subject: string;
   text: string;
   html?: string;
+  attachments?: EmailAttachment[];
+  fromName?: string;
 }): Promise<void> {
   ensureSendgrid();
   const key = getSendgridApiKey();
@@ -78,10 +88,16 @@ export async function sendBookingNotification(params: {
 
   await sgMail.send({
     to: params.to,
-    from: { email: fromEmail, name: "Paris Wellness Bookings" },
+    from: { email: fromEmail, name: params.fromName ?? "Paris Wellness Bookings" },
     subject: params.subject,
     text: params.text,
     html: params.html ?? `<pre>${escapeHtml(params.text)}</pre>`,
+    attachments: params.attachments?.map((a) => ({
+      filename: a.filename,
+      content: a.content,
+      type: a.type,
+      disposition: a.disposition ?? "attachment",
+    })),
     trackingSettings: {
       clickTracking: { enable: false },
       openTracking: { enable: false },

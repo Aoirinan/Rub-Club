@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="The Rub Club Massage and Chiropractic Associates">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f5f5c"/>
+      <stop offset="100%" stop-color="#0c3937"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g transform="translate(80,90)" fill="#f2d25d">
+    <rect width="120" height="6" rx="3"/>
+  </g>
+  <text x="80" y="220" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="80" fill="#ffffff">
+    The Rub Club &amp; Chiropractic
+  </text>
+  <text x="80" y="310" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="80" fill="#ffffff">
+    Associates
+  </text>
+  <text x="80" y="390" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="34" fill="#f2d25d">
+    Massage Therapy &amp; Chiropractic Care
+  </text>
+  <text x="80" y="436" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="34" fill="#ffffff" opacity="0.9">
+    Paris &amp; Sulphur Springs, TX
+  </text>
+  <g transform="translate(80,510)">
+    <rect width="280" height="64" rx="8" fill="#f2d25d"/>
+    <text x="140" y="42" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="24" fill="#173f3b">BOOK ONLINE</text>
+  </g>
+  <text x="380" y="552" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="22" fill="#ffffff" opacity="0.9">
+    Paris 903-785-5551  �  Sulphur Springs 903-919-5020
+  </text>
+</svg>

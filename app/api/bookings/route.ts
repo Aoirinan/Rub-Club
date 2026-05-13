@@ -17,7 +17,12 @@ import {
   isWithinScheduleWindow,
   parseStartIsoToDateTime,
 } from "@/lib/slots-luxon";
-import { formatChicagoDateTimeLong, formatChicagoDateTimeShort } from "@/lib/chicago-datetime-format";
+import {
+  officeNotificationEmail,
+  patientConfirmationEmail,
+  type BookingEmailContext,
+} from "@/lib/email-templates";
+import { buildIcs } from "@/lib/ics";
 
 export const runtime = "nodejs";
 
@@ -259,49 +264,77 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Could not complete booking" }, { status: 500 });
   }
 
+  const preferredProviderName = preferredProviderId
+    ? eligible.find((p) => p.id === preferredProviderId)?.displayName
+    : undefined;
+
+  const emailContext: BookingEmailContext = {
+    bookingId: bookingRef.id,
+    locationId,
+    serviceLine,
+    durationMin,
+    start,
+    name: body.name.trim(),
+    phone: body.phone.trim(),
+    email: body.email.trim().toLowerCase(),
+    notes: body.notes?.trim() || undefined,
+    providerDisplayName: assignedDisplayName,
+    providerMode: body.providerMode,
+    preferredProviderName,
+  };
+
+  const ics = buildIcs({
+    uid: `${bookingRef.id}@wellnessparistx`,
+    startUtc: start.toUTC(),
+    durationMinutes: durationMin,
+    summary: `${serviceLine === "massage" ? "Massage" : "Chiropractic"} appointment`,
+    description: `Appointment request with ${assignedDisplayName || "first available provider"}. Reference: ${bookingRef.id}.`,
+    location: `${locationId === "paris" ? "Paris" : "Sulphur Springs"}, TX`,
+    organizerEmail: process.env.OFFICE_NOTIFICATION_EMAIL,
+    organizerName: "Paris Wellness",
+  });
+  const icsBase64 = Buffer.from(ics, "utf8").toString("base64");
+
   const officeTo = process.env.OFFICE_NOTIFICATION_EMAIL;
   if (officeTo) {
-    let prefNote = "";
-    if (preferredProviderId) {
-      const prefName =
-        eligible.find((p) => p.id === preferredProviderId)?.displayName ?? preferredProviderId;
-      if (preferredProviderId !== assignedProviderId) {
-        prefNote = `Client preference (not guaranteed): ${prefName}. Assigned: ${assignedDisplayName}.`;
-      } else if (body.providerMode === "any") {
-        prefNote = `Client preferred first-available slot with: ${prefName} (matched).`;
-      } else {
-        prefNote = `Client preference: ${prefName}.`;
-      }
-    }
-
-    const text = [
-      "New online booking request",
-      `Booking ID: ${bookingRef.id}`,
-      `When (Chicago): ${formatChicagoDateTimeLong(start)}`,
-      `Duration: ${body.durationMin} minutes`,
-      `Service: ${body.serviceLine}`,
-      `Location: ${body.locationId}`,
-      `Provider: ${assignedDisplayName} (${assignedProviderId})`,
-      `Booking type: ${body.providerMode === "any" ? "first available" : "specific provider"}`,
-      prefNote,
-      "",
-      `Name: ${body.name}`,
-      `Phone: ${body.phone}`,
-      `Email: ${body.email}`,
-      body.notes ? `Notes: ${body.notes}` : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
-
     try {
+      const { subject, text, html } = officeNotificationEmail(emailContext);
       await sendBookingNotification({
         to: officeTo,
-        subject: `New booking: ${body.serviceLine} @ ${formatChicagoDateTimeShort(start)}`,
+        subject,
         text,
+        html,
+        attachments: [
+          {
+            filename: "appointment.ics",
+            content: icsBase64,
+            type: "text/calendar; method=PUBLISH",
+          },
+        ],
       });
     } catch (err) {
-      console.error("SendGrid failed", err);
+      console.error("Office SendGrid failed", err);
     }
+  }
+
+  try {
+    const { subject, text, html } = patientConfirmationEmail(emailContext);
+    await sendBookingNotification({
+      to: emailContext.email,
+      subject,
+      text,
+      html,
+      fromName: "The Rub Club & Chiropractic Associates",
+      attachments: [
+        {
+          filename: "appointment.ics",
+          content: icsBase64,
+          type: "text/calendar; method=PUBLISH",
+        },
+      ],
+    });
+  } catch (err) {
+    console.error("Patient SendGrid failed", err);
   }
 
   return NextResponse.json(
