@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireStaff } from "@/lib/staff-auth";
 
+import { getSendgridApiKey, getSendgridFromEmail } from "@/lib/sendgrid";
+
 export const runtime = "nodejs";
 
 /**
@@ -13,8 +15,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const key = process.env.SENDGRID_API_KEY?.trim();
-  const from = process.env.SENDGRID_FROM_EMAIL?.trim();
+  const key = getSendgridApiKey();
+  const from = getSendgridFromEmail();
   return NextResponse.json({
     sendgridConfigured: Boolean(key && from),
     hasApiKey: Boolean(key),

@@ -2,9 +2,29 @@ import sgMail from "@sendgrid/mail";
 
 let configured = false;
 
+/**
+ * Canonical names: SENDGRID_API_KEY, SENDGRID_FROM_EMAIL (see env.example).
+ * Aliases below match common Vercel typos / naming from other tools.
+ */
+export function getSendgridApiKey(): string {
+  const v =
+    process.env.SENDGRID_API_KEY?.trim() ??
+    process.env.SEND_GRID?.trim() ??
+    process.env.send_grid?.trim();
+  return v ?? "";
+}
+
+export function getSendgridFromEmail(): string {
+  const v =
+    process.env.SENDGRID_FROM_EMAIL?.trim() ??
+    process.env.sendgridfromemail?.trim() ??
+    process.env.SENDGRIDFROMEMAIL?.trim();
+  return v ?? "";
+}
+
 function ensureSendgrid(): void {
   if (configured) return;
-  const key = process.env.SENDGRID_API_KEY?.trim();
+  const key = getSendgridApiKey();
   if (!key) return;
   sgMail.setApiKey(key);
   configured = true;
@@ -17,8 +37,8 @@ export async function sendBookingNotification(params: {
   html?: string;
 }): Promise<void> {
   ensureSendgrid();
-  const key = process.env.SENDGRID_API_KEY?.trim();
-  const fromEmail = process.env.SENDGRID_FROM_EMAIL?.trim();
+  const key = getSendgridApiKey();
+  const fromEmail = getSendgridFromEmail();
   if (!key || !fromEmail) return;
 
   await sgMail.send({
@@ -103,8 +123,8 @@ export async function sendStaffInviteEmail(params: {
   subject?: string;
 }): Promise<StaffInviteEmailResult> {
   ensureSendgrid();
-  const key = process.env.SENDGRID_API_KEY?.trim();
-  const fromEmail = process.env.SENDGRID_FROM_EMAIL?.trim();
+  const key = getSendgridApiKey();
+  const fromEmail = getSendgridFromEmail();
   if (!key || !fromEmail) {
     return { sent: false, issue: "missing_env" };
   }
