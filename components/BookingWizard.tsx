@@ -198,21 +198,23 @@ export function BookingWizard() {
   const providerSelectDisabled = !providers?.length;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 px-4 py-10">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Book an appointment</h1>
-        <p className="text-slate-600">
+    <div className="bg-[#f4f2ea]">
+      <div className="mx-auto max-w-4xl space-y-8 px-4 py-12">
+      <div className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-8">
+        <p className="text-sm font-black uppercase tracking-[0.22em] text-[#0f5f5c]">Online Scheduling</p>
+        <h1 className="mt-2 text-3xl font-black tracking-tight text-[#173f3b]">Book an appointment</h1>
+        <p className="mt-3 text-stone-700">
           Pick a location, service, provider option, and time. This form only schedules a request—no insurance or
           medical records are collected here.
         </p>
       </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
+      <section className="space-y-5 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md">
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-800">Location</span>
+            <span className="font-bold text-[#173f3b]">Location</span>
             <select
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+              className="w-full border border-stone-300 bg-white px-3 py-2"
               value={locationId}
               onChange={(e) => setLocationId(e.target.value as LocationId)}
             >
@@ -222,9 +224,9 @@ export function BookingWizard() {
           </label>
 
           <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-800">Service</span>
+            <span className="font-bold text-[#173f3b]">Service</span>
             <select
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+              className="w-full border border-stone-300 bg-white px-3 py-2"
               value={serviceLine}
               onChange={(e) => setServiceLine(e.target.value as ServiceLine)}
             >
@@ -234,9 +236,9 @@ export function BookingWizard() {
           </label>
 
           <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-800">Duration</span>
+            <span className="font-bold text-[#173f3b]">Duration</span>
             <select
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+              className="w-full border border-stone-300 bg-white px-3 py-2"
               value={durationMin}
               onChange={(e) => setDurationMin(Number(e.target.value) as DurationMin)}
             >
@@ -246,10 +248,10 @@ export function BookingWizard() {
           </label>
 
           <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-800">Date ({TIME_ZONE})</span>
+            <span className="font-bold text-[#173f3b]">Date ({TIME_ZONE})</span>
             <input
               type="date"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+              className="w-full border border-stone-300 bg-white px-3 py-2"
               min={minDate}
               max={maxDate}
               value={date}
@@ -258,10 +260,10 @@ export function BookingWizard() {
           </label>
         </div>
 
-        <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4">
-          <p className="text-sm font-medium text-slate-800">Provider</p>
+        <div className="space-y-3 border border-stone-200 bg-[#f2efe3] p-4">
+          <p className="text-sm font-black uppercase tracking-wide text-[#173f3b]">Provider</p>
           {providers === null ? (
-            <p className="text-sm text-slate-600">Loading providers…</p>
+            <p className="text-sm text-stone-700">Loading providers…</p>
           ) : providersError ? (
             <p className="text-sm text-red-700">{providersError}</p>
           ) : providers.length === 0 ? (
@@ -286,8 +288,8 @@ export function BookingWizard() {
                     }}
                   />
                   <span>
-                    <span className="font-medium text-slate-900">I want a specific provider</span>
-                    <span className="block text-slate-600">Only their open times are shown.</span>
+                    <span className="font-bold text-[#173f3b]">I want a specific provider</span>
+                    <span className="block text-stone-700">Only their open times are shown.</span>
                   </span>
                 </label>
                 <label className="flex cursor-pointer items-start gap-2">
@@ -303,8 +305,8 @@ export function BookingWizard() {
                     }}
                   />
                   <span>
-                    <span className="font-medium text-slate-900">First available for this service</span>
-                    <span className="block text-slate-600">
+                    <span className="font-bold text-[#173f3b]">First available for this service</span>
+                    <span className="block text-stone-700">
                       Times when any qualified provider at this location is free. The next step lets you note a
                       preference; assignment is automatic and not guaranteed.
                     </span>
@@ -314,9 +316,9 @@ export function BookingWizard() {
 
               {providerMode === "specific" ? (
                 <label className="block space-y-1 text-sm">
-                  <span className="font-medium text-slate-800">Provider</span>
+                  <span className="font-bold text-[#173f3b]">Provider</span>
                   <select
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                    className="w-full border border-stone-300 bg-white px-3 py-2"
                     value={selectedProviderId}
                     onChange={(e) => {
                       setSelectedProviderId(e.target.value);
@@ -334,9 +336,9 @@ export function BookingWizard() {
                 </label>
               ) : (
                 <label className="block space-y-1 text-sm">
-                  <span className="font-medium text-slate-800">Preference (optional)</span>
+                  <span className="font-bold text-[#173f3b]">Preference (optional)</span>
                   <select
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                    className="w-full border border-stone-300 bg-white px-3 py-2"
                     value={preferredProviderId}
                     onChange={(e) => setPreferredProviderId(e.target.value)}
                   >
@@ -355,19 +357,19 @@ export function BookingWizard() {
 
         <button
           type="button"
-          className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+          className="bg-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b] disabled:opacity-50"
           onClick={loadSlots}
           disabled={loadingSlots || !canPickSlots}
         >
           {loadingSlots ? "Loading times…" : "See open times"}
         </button>
 
-        {slotsHint ? <p className="text-sm text-slate-600">{slotsHint}</p> : null}
+        {slotsHint ? <p className="text-sm text-stone-700">{slotsHint}</p> : null}
         {slotsError ? <p className="text-sm text-red-700">{slotsError}</p> : null}
 
         {slots && slots.length > 0 ? (
           <div className="space-y-2">
-            <p className="text-sm font-medium text-slate-800">Available start times</p>
+            <p className="text-sm font-black uppercase tracking-wide text-[#173f3b]">Available start times</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {slots.map((s) => (
                 <button
@@ -375,8 +377,8 @@ export function BookingWizard() {
                   key={s.startIso}
                   className={`rounded-xl border px-3 py-2 text-left text-sm transition ${
                     selectedSlot?.startIso === s.startIso
-                      ? "border-slate-900 bg-slate-900 text-white"
-                      : "border-slate-200 bg-slate-50 hover:border-slate-400"
+                      ? "border-[#0f5f5c] bg-[#0f5f5c] text-white"
+                      : "border-stone-200 bg-stone-50 hover:border-[#0f5f5c]"
                   }`}
                   onClick={() => setSelectedSlot(s)}
                 >
@@ -384,12 +386,18 @@ export function BookingWizard() {
                 </button>
               ))}
             </div>
+            {selectedSlot ? (
+              <p className="text-sm text-stone-700">
+                <span className="font-bold text-[#173f3b]">Selected time: </span>
+                {selectedSlot.label}
+              </p>
+            ) : null}
           </div>
         ) : null}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Your contact details</h2>
+      <section className="space-y-4 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md">
+        <h2 className="text-lg font-black text-[#173f3b]">Your contact details</h2>
 
         <div className="hidden" aria-hidden="true">
           <label>
@@ -405,36 +413,36 @@ export function BookingWizard() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="space-y-1 text-sm sm:col-span-2">
-            <span className="font-medium text-slate-800">Full name</span>
+            <span className="font-bold text-[#173f3b]">Full name</span>
             <input
-              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              className="w-full border border-stone-300 px-3 py-2"
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="name"
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-800">Phone</span>
+            <span className="font-bold text-[#173f3b]">Phone</span>
             <input
-              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              className="w-full border border-stone-300 px-3 py-2"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               autoComplete="tel"
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="font-medium text-slate-800">Email</span>
+            <span className="font-bold text-[#173f3b]">Email</span>
             <input
-              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              className="w-full border border-stone-300 px-3 py-2"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
             />
           </label>
           <label className="space-y-1 text-sm sm:col-span-2">
-            <span className="font-medium text-slate-800">Notes (optional)</span>
+            <span className="font-bold text-[#173f3b]">Notes (optional)</span>
             <textarea
-              className="min-h-[96px] w-full rounded-lg border border-slate-300 px-3 py-2"
+              className="min-h-[96px] w-full border border-stone-300 px-3 py-2"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
@@ -443,7 +451,7 @@ export function BookingWizard() {
 
         <button
           type="button"
-          className="rounded-full bg-emerald-700 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
+          className="bg-[#f2d25d] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d] disabled:opacity-50"
           disabled={!selectedSlot || submitting || !name || !phone || !email || !canPickSlots}
           onClick={submitBooking}
         >
@@ -451,11 +459,12 @@ export function BookingWizard() {
         </button>
 
         {submitMessage ? (
-          <p className="text-sm text-slate-700" role="status">
+          <p className="text-sm text-stone-700" role="status">
             {submitMessage}
           </p>
         ) : null}
       </section>
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, signOut, type Auth } from "firebase/auth";
+import { formatChicagoStartIso } from "@/lib/chicago-datetime-format";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 
 type Me = {
@@ -158,7 +159,7 @@ export default function AdminDashboardPage() {
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
             <tr>
-              <th className="px-4 py-3">When (UTC ISO)</th>
+              <th className="px-4 py-3">When (Chicago)</th>
               <th className="px-4 py-3">Location</th>
               <th className="px-4 py-3">Service</th>
               <th className="px-4 py-3">Provider</th>
@@ -171,7 +172,12 @@ export default function AdminDashboardPage() {
           <tbody className="divide-y divide-slate-100">
             {bookings.map((b) => (
               <tr key={b.id} className="align-top">
-                <td className="px-4 py-3 font-mono text-xs text-slate-800">{b.startIso}</td>
+                <td
+                  className="px-4 py-3 text-sm text-slate-800"
+                  title={b.startIso ? `Stored UTC: ${b.startIso}` : undefined}
+                >
+                  {formatChicagoStartIso(b.startIso)}
+                </td>
                 <td className="px-4 py-3 text-slate-700">{b.locationId}</td>
                 <td className="px-4 py-3 text-slate-700">{b.serviceLine}</td>
                 <td className="px-4 py-3 text-slate-700">

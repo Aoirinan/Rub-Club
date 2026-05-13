@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Online Chiro</title>    
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">  
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="author" content="">
+    <meta name="theme-color" content="#ffcc48">	
+    <link rel="shortcut icon" href="images/favicon/favicon.ico?v=2" type="image/x-icon" />
+    <!-- For iPhone -->
+    <link rel="apple-touch-icon" href="images/favicon/apple-touch-icon-57x57.png?v=2">
+    <!-- For iPhone Retina display -->
+    <link rel="apple-touch-icon" sizes="114x114" href="images/favicon/apple-touch-icon-114x114.png?v=2">
+    <!-- For iPad -->
+    <link rel="apple-touch-icon" sizes="72x72" href="images/favicon/apple-touch-icon-72x72.png?v=2">
+    <!-- For iPad Retina display -->
+    <link rel="apple-touch-icon" sizes="144x144" href="images/favicon/apple-touch-icon-114x114.png?v=2">    
+	  <!-- ======================CSS============================ -->
+    <link href="css/style.css" rel="stylesheet" type="text/css">
+	  <script src="js/jquery.min.js" ></script>
+  </head>
+<body class="nerve">
+ 
+<header>
+    <div class="top-navigation">
+        <div class="container">
+          <div class="top-header">
+            <div class="site-logo">
+            </div>
+            <div class="site-right">
+              <div class="site-menu">        
+                <div class="top-menu-link">
+                  <ul>
+                      <li class="active">
+                        <a href="nerve.html">Nerve Chart</a>
+                      </li>
+                      <li>
+                        <a href="postures.html">Body Postures</a>
+                      </li>
+                      <li>
+                        <a href="subluxation-degeneration.html">Degeneration</a>
+                      </li>
+                  </ul>
+                </div>
+              </div>              
+            </div>
+          </div>
+        </div>
+    </div>          
+</header>
+
+<div class="select-tag">  
+  <div class="help-guide">
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="16px" height="32px" viewBox="0 0 31.357 31.357" style="enable-background:new 0 0 31.357 31.357;" xml:space="preserve">
+    <g>
+    <path d="M15.255,0c5.424,0,10.764,2.498,10.764,8.473c0,5.51-6.314,7.629-7.67,9.62c-1.018,1.481-0.678,3.562-3.475,3.562   c-1.822,0-2.712-1.482-2.712-2.838c0-5.046,7.414-6.188,7.414-10.343c0-2.287-1.522-3.643-4.066-3.643   c-5.424,0-3.306,5.592-7.414,5.592c-1.483,0-2.756-0.89-2.756-2.584C5.339,3.683,10.084,0,15.255,0z M15.044,24.406   c1.904,0,3.475,1.566,3.475,3.476c0,1.91-1.568,3.476-3.475,3.476c-1.907,0-3.476-1.564-3.476-3.476   C11.568,25.973,13.137,24.406,15.044,24.406z" fill="#ffffff"/>
+    </g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g>
+    </svg>
+  </div>  
+</div>
+
+<section class="main-content">
+  <div class="container">
+    <div class="row">
+      <div class="dropdown">
+          <button onclick="myFunction()" class="dropbtn">Select Vertebrae</button>
+          <div id="myDropdown" class="dropdown-content mob-inner-link">
+            <ul>
+              <li><a  class="txt_c" id="C1" txt="&nbsp- Cervical 1">C1</a></li>
+              <li><a  class="txt_c" id="C2" txt="&nbsp- Cervical 2">C2</a></li>
+              <li><a  class="txt_c" id="C3" txt="&nbsp- Cervical 3">C3</a></li>
+              <li><a  class="txt_c" id="C4" txt="&nbsp- Cervical 4">C4</a></li>
+              <li><a  class="txt_c" id="C5" txt="&nbsp- Cervical 5">C5</a></li>
+              <li><a  class="txt_c" id="C6" txt="&nbsp- Cervical 6">C6</a></li>            
+              <li><a  class="txt_c" id="C7" txt="&nbsp- Cervical 7">C7</a></li>
+              <li><a  class="txt_c" id="T1" txt="&nbsp- Thoracic 1">T1</a></li>
+              <li><a  class="txt_c" id="T2" txt="&nbsp- Thoracic 2">T2</a></li>
+              <li><a  class="txt_c" id="T3" txt="&nbsp- Thoracic 3">T3</a></li>
+              <li><a  class="txt_c" id="T4" txt="&nbsp- Thoracic 4">T4</a></li>
+              <li><a  class="txt_c" id="T5" txt="&nbsp- Thoracic 5">T5</a></li>
+              <li><a  class="txt_c" id="T6" txt="&nbsp- Thoracic 6">T6</a></li>
+              <li><a  class="txt_c" id="T7" txt="&nbsp- Thoracic 7">T7</a></li>
+              <li><a  class="txt_c" id="T8" txt="&nbsp- Thoracic 8">T8</a></li>
+              <li><a  class="txt_c" id="T9" txt="&nbsp- Thoracic 9">T9</a></li>
+              <li><a  class="txt_c" id="T10" txt="&nbsp- Thoracic 10">T10</a></li>
+              <li><a  class="txt_c" id="T11" txt="&nbsp- Thoracic 11">T11</a></li>
+              <li><a  class="txt_c" id="T12" txt="&nbsp- Thoracic 12">T12</a></li>
+              <li><a  class="txt_c" id="L1" txt="&nbsp- Lumbar 1">L1</a></li>
+              <li><a  class="txt_c" id="L2" txt="&nbsp- Lumbar 2">L2</a></li>
+              <li><a  class="txt_c" id="L3" txt="&nbsp- Lumbar 3">L3</a></li>
+              <li><a  class="txt_c" id="L4" txt="&nbsp- Lumbar 4">L4</a></li>
+              <li><a  class="txt_c" id="L5" txt="&nbsp- Lumbar 5">L5</a></li>
+              <li><a  class="txt_c" id="SACR" txt="&nbsp- Sacral and Coccygeal">SACR</a></li>
+            </ul>
+          </div>
+      </div>
+      <div class="col-3 column-1" style="display:flex;">
+        <div class="inner-column ">
+          <h2>Organs</h2>          
+          <div class="replace_slider">
+            <div id="showContainer" class="default_image">
+              <div class="imageContainer" id="im_1">
+                  <img src="images/c/1.png" alt=""/>        
+              </div>
+              <div class="imageContainer" id="im_2">
+                  <img src="images/c/2.png" alt=""/>        
+              </div>
+              <div class="imageContainer" id="im_3">
+                  <img src="images/c/3.png" alt=""/>        
+              </div>
+              <div class="imageContainer" id="im_4">
+                  <img src="images/c/4.png" alt=""/>        
+              </div>
+              <div class="imageContainer" id="im_5">
+                  <img src="images/c/5.png" alt=""/>        
+              </div>
+              <div class="imageContainer" id="im_6">
+                  <img src="images/c/6.png" alt=""/>        
+              </div>
+            </div>
+            <div class="organ-tags" id="C1_id">
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalTwenty"><span>Nasal Palette</span></div>
+              </div>
+              <div class="tag-2">
+                <div class="tag-box" data-modal="modalNinten"><span>Eyes</span></div>
+              </div>
+              <div class="tag-3">
+                <div class="tag-box" data-modal="modalTwentyOne"><span>Brain</span></div>
+              </div>
+              <div class="tag-4">
+                <div class="tag-box" data-modal="modalEighten"><span>Sinus</span></div>
+              </div>
+              <div class="tag-5">
+                <div class="tag-box" data-modal="modalTwelve"><span>Lungs</span></div>
+              </div>
+              <div class="tag-6">
+                <div class="tag-box" data-modal="modalThree"><span>Kidney</span></div>
+              </div>
+              <div class="tag-7">
+                <div class="tag-box" data-modal="modalSix"><span>Liver</span></div>
+              </div>
+              <div class="tag-8">
+                <div class="tag-box" data-modal="modalTen"><span>Heart</span></div>
+              </div>
+              <div class="tag-9">
+                <div class="tag-box" data-modal="modalSeven"><span>Spleen</span></div>
+              </div>
+              <div class="tag-10">
+                <div class="tag-box" data-modal="modalNine"><span>Stomach</span></div>
+              </div>
+              <div class="tag-11">
+                <div class="tag-box" data-modal="modalTwo"><span>Large Intestine</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="C2_id">
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalTwenty"><span>Nasal Palette</span></div>
+              </div>
+              <div class="tag-2">
+                <div class="tag-box" data-modal="modalNinten"><span>Eyes</span></div>
+              </div>
+              <div class="tag-3">
+                <div class="tag-box" data-modal="modalTwentyOne"><span>Brain</span></div>
+              </div>
+              <div class="tag-4">
+                <div class="tag-box" data-modal="modalEighten"><span>Sinus</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="C3_id">
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalTwenty"><span>Nasal Palette</span></div>
+              </div>
+              <div class="tag-2">
+                <div class="tag-box" data-modal="modalNinten"><span>Eyes</span></div>
+              </div>              
+              <div class="tag-3">
+                <div class="tag-box" data-modal="modalEighten"><span>Sinus</span></div>
+              </div>
+            </div>  
+            <div class="organ-tags" id="C4_id">
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalTwenty"><span>Nasal Palette</span></div>
+              </div>
+              <div class="tag-2">
+                <div class="tag-box" data-modal="modalNinten"><span>Eyes</span></div>
+              </div>              
+              <div class="tag-3">
+                <div class="tag-box" data-modal="modalEighten"><span>Sinus</span></div>
+              </div>
+              <div class="tag-4">
+                <div class="tag-box" data-modal="modalSeventen"><span>Submandibular</span></div>
+              </div>
+              <div class="tag-5">
+                <div class="tag-box" data-modal="modalSixten"><span>Sublingual</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="C5_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalSeventen"><span>Submandibular</span></div>
+              </div>
+              <div class="tag-2">
+                <div class="tag-box" data-modal="modalSixten"><span>Sublingual</span></div>
+              </div>
+              <div class="tag-3">
+                <div class="tag-box" data-modal="modalFourten"><span>Parotid</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="C6_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalFiften"><span>Thyroid</span></div>
+              </div>
+              <div class="tag-2">
+                <div class="tag-box" data-modal="modalSixten"><span>Sublingual</span></div>
+              </div>
+              <div class="tag-3">
+                <div class="tag-box" data-modal="modalFourten"><span>Parotid</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="C7_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalFiften"><span>Thyroid</span></div>
+              </div>
+              <div class="tag-2">
+                <div class="tag-box" data-modal="modalTwelve"><span>Lungs</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="T1_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalEleven"><span>Carotid Artery</span></div>
+              </div>
+              <div class="tag-2">
+                <div class="tag-box" data-modal="modalTwelve"><span>Lungs</span></div>
+              </div>
+              <div class="tag-3">
+                <div class="tag-box" data-modal="modalTen"><span>Heart</span></div>
+              </div>
+              <div class="tag-4">
+                <div class="tag-box" data-modal="modalFourten"><span>Parotid</span></div>
+              </div>
+              <div class="tag-5">
+                <div class="tag-box" data-modal="modalThreeten"><span>Pulmonary</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="T2_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalEleven"><span>Carotid Artery</span></div>
+              </div>
+              <div class="tag-2">
+                <div class="tag-box" data-modal="modalTwelve"><span>Lungs</span></div>
+              </div>
+              <div class="tag-3">
+                <div class="tag-box" data-modal="modalTen"><span>Heart</span></div>
+              </div>
+              <div class="tag-4">
+                <div class="tag-box" data-modal="modalFourten"><span>Parotid</span></div>
+              </div>              
+            </div>
+            <div class="organ-tags" id="T3_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalEleven"><span>Carotid Artery</span></div>
+              </div>
+              <div class="tag-2">
+                <div class="tag-box" data-modal="modalTwelve"><span>Lungs</span></div>
+              </div>
+              <div class="tag-3">
+                <div class="tag-box" data-modal="modalTen"><span>Heart</span></div>
+              </div>
+              <div class="tag-4">
+                <div class="tag-box" data-modal="modalNine"><span>Stomach</span></div>
+              </div>
+              <div class="tag-5">
+                <div class="tag-box" data-modal="modalThreeten"><span>Pulmonary</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="T4_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalSix"><span>Liver</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="T5_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalNine"><span>Stomach</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="T6_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalEight"><span>Pancreas</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="T7_id">
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalSeven"><span>Spleen</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="T8_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalSix"><span>Liver</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="T9_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalFive"><span>Adrenal Glands</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="T10_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalFour"><span>Small Intestine</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="T11_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalThree"><span>Kidney</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="T12_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalThree"><span>Kidney</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="L1_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalTwo"><span>Large Intestine</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="L2_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalTwo"><span>Large Intestine</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="L3_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalTwo"><span>Large Intestine</span></div>
+              </div>
+              <div class="tag-2">
+                <div class="tag-box" data-modal="modalOne"><span>Bladder</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="L4_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalTwo"><span>Large Intestine</span></div>
+              </div>
+              <div class="tag-2">
+                <div class="tag-box" data-modal="modalOne"><span>Bladder</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="L5_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalTwo"><span>Large Intestine</span></div>
+              </div>
+              <div class="tag-2">
+                <div class="tag-box" data-modal="modalOne"><span>Bladder</span></div>
+              </div>
+            </div>
+            <div class="organ-tags" id="SACR_id">              
+              <div class="tag-1">
+                <div class="tag-box" data-modal="modalTwo"><span>Large Intestine</span></div>
+
+              </div>
+              <div class="tag-2">
+                <div class="tag-box" data-modal="modalOne"><span>Bladder</span></div>                
+              </div>
+            </div>
+          </div>
+          <div class="button-group nev-btn">
+            <div class="btn btn-prev">
+              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="20px" height="22px" viewBox="0 0 451.847 451.847" style="enable-background:new 0 0 451.847 451.847;" xml:space="preserve">
+              <g>
+              <path fill="#ffffff" d="M97.141,225.92c0-8.095,3.091-16.192,9.259-22.366L300.689,9.27c12.359-12.359,32.397-12.359,44.751,0   c12.354,12.354,12.354,32.388,0,44.748L173.525,225.92l171.903,171.909c12.354,12.354,12.354,32.391,0,44.744   c-12.354,12.365-32.386,12.365-44.745,0l-194.29-194.281C100.226,242.115,97.141,234.018,97.141,225.92z"/>
+              </g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g>
+              </g><g></g>
+              </svg>       
+              <span>Rotate to left</span>            
+            </div>
+            <div class="btn btn-next narola">
+              <span>Rotate to right</span>            
+              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" 
+               x="0px" y="0px" width="20px" height="22px" viewBox="0 0 451.846 451.847" style="enable-background:new 0 0 451.846 451.847;" xml:space="preserve">
+              <g>
+              <path fill="#ffffff" d="M345.441,248.292L151.154,442.573c-12.359,12.365-32.397,12.365-44.75,0c-12.354-12.354-12.354-32.391,0-44.744   L278.318,225.92L106.409,54.017c-12.354-12.359-12.354-32.394,0-44.748c12.354-12.359,32.391-12.359,44.75,0l194.287,194.284   c6.177,6.18,9.262,14.271,9.262,22.366C354.708,234.018,351.617,242.115,345.441,248.292z"/>
+              </g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g>
+              </g><g></g>
+              </svg>              
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-5 column-2">
+        <div class="inner-column inner-box-1 center_image">                  
+          <div class="default_image">
+            <h4>Spine</h4>
+          </div>
+        </div>
+        <div class="inner-column inner-box-2">    
+          <div class="img spine_img">            
+            <img src="images/spine.png" alt="">
+          </div>
+          <div class="inner-link">
+            <ul>
+              <li id="liC1"><a  class="txt_c" id="C1" txt="&nbsp- Cervical 1">C1</a></li>
+              <li><a  class="txt_c" id="C2" txt="&nbsp- Cervical 2">C2</a></li>
+              <li><a  class="txt_c" id="C3" txt="&nbsp- Cervical 3">C3</a></li>
+              <li><a  class="txt_c" id="C4" txt="&nbsp- Cervical 4">C4</a></li>
+              <li><a  class="txt_c" id="C5" txt="&nbsp- Cervical 5">C5</a></li>
+              <li><a  class="txt_c" id="C6" txt="&nbsp- Cervical 6">C6</a></li>            
+              <li><a  class="txt_c" id="C7" txt="&nbsp- Cervical 7">C7</a></li>
+              <li><a  class="txt_c" id="T1" txt="&nbsp- Thoracic 1">T1</a></li>
+              <li><a  class="txt_c" id="T2" txt="&nbsp- Thoracic 2">T2</a></li>
+              <li><a  class="txt_c" id="T3" txt="&nbsp- Thoracic 3">T3</a></li>
+              <li><a  class="txt_c" id="T4" txt="&nbsp- Thoracic 4">T4</a></li>
+              <li><a  class="txt_c" id="T5" txt="&nbsp- Thoracic 5">T5</a></li>
+              <li><a  class="txt_c" id="T6" txt="&nbsp- Thoracic 6">T6</a></li>
+              <li><a  class="txt_c" id="T7" txt="&nbsp- Thoracic 7">T7</a></li>
+              <li><a  class="txt_c" id="T8" txt="&nbsp- Thoracic 8">T8</a></li>
+              <li><a  class="txt_c" id="T9" txt="&nbsp- Thoracic 9">T9</a></li>
+              <li><a  class="txt_c" id="T10" txt="&nbsp- Thoracic 10">T10</a></li>
+              <li><a  class="txt_c" id="T11" txt="&nbsp- Thoracic 11">T11</a></li>
+              <li><a  class="txt_c" id="T12" txt="&nbsp- Thoracic 12">T12</a></li>
+              <li><a  class="txt_c" id="L1" txt="&nbsp- Lumbar 1">L1</a></li>
+              <li><a  class="txt_c" id="L2" txt="&nbsp- Lumbar 2">L2</a></li>
+              <li><a  class="txt_c" id="L3" txt="&nbsp- Lumbar 3">L3</a></li>
+              <li><a  class="txt_c" id="L4" txt="&nbsp- Lumbar 4">L4</a></li>
+              <li><a  class="txt_c" id="L5" txt="&nbsp- Lumbar 5">L5</a></li>
+              <li><a  class="txt_c" id="SACR" txt="&nbsp- Sacral and Coccygeal">SACR</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-3 column-3" style="display:flex;">
+        <div class="inner-column">
+          <h2>Nerves</h2>
+          <div class="right_im">
+            <img src="images/nerves.png" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <p>COPYRIGHT © 2019 MH SUB I, LLC DBA BAYSTONE MEDIA</p>
+</footer>
+    
+<div class="overlay"></div>
+<section class="guide-popup">
+  <div class="modal-dialog">
+      <div class="close">
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 47.971 47.971" style="enable-background:new 0 0 47.971 47.971;" xml:space="preserve">
+        <g>
+        <path fill="#ffffff" d="M28.228,23.986L47.092,5.122c1.172-1.171,1.172-3.071,0-4.242c-1.172-1.172-3.07-1.172-4.242,0L23.986,19.744L5.121,0.88   c-1.172-1.172-3.07-1.172-4.242,0c-1.172,1.171-1.172,3.071,0,4.242l18.865,18.864L0.879,42.85c-1.172,1.171-1.172,3.071,0,4.242   C1.465,47.677,2.233,47.97,3,47.97s1.535-0.293,2.121-0.879l18.865-18.864L42.85,47.091c0.586,0.586,1.354,0.879,2.121,0.879   s1.535-0.293,2.121-0.879c1.172-1.171,1.172-3.071,0-4.242L28.228,23.986z"/>
+        </g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g><g></g>
+        </svg>
+      </div>
+      <div class="left-txt">
+        <div class="box-inner">
+          <h6>Organs Affected</h6>
+          <p>This area shows organs in the human body affected by the selected vertebrae. Additional options include rotating the body and a close up of the organ.</p>
+        </div>
+      </div>
+      <div class="right-txt">
+        <div class="box-inner">
+          <h6>Nerves Affected</h6>
+          <p>Area showing nerve impulses affected by selected vertebrae.</p>
+        </div>
+      </div>
+      <div class="top-txt">
+        <div class="box-inner">
+          <h6>Selected Vertebrae</h6>
+          <p>Area showing enlarged view of vertebrae and name of selected vertebrae.</p>
+        </div>
+      </div>
+      <div class="center-txt">
+        <div class="box-inner">
+          <h6 style="color:#009bc9;">START HERE!</h6>
+          <p>Click anywhere on the spine to see the affected organs and nerves.</p>
+        </div>
+      </div>
+      <div class="bottom-txt">
+        <div class="box-inner">
+          <h6>How to use this tool?</h6>
+          <p>All of the functions related to human body are controlled and coordinated by the nervous system, which is continually sending and receiving electrical impulses to and from the brain. Interference or stresses in any part of the nervous system may result in health problems in a variety of different areas throughout the body. Take a moment and explore which areas of the body are influenced by different areas of the spine. You will be amazed to learn how the spine and nervous system are interrelated and connected to every aspect of health and wellness.
+          </p>
+        </div>
+      </div>
+  </div>
+</section>
+
+<div id="modalOne" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <a class="close">&times;</a>
+      <img src="images/Bladder.png" alt="">
+      <h2>Bladder/Urethra</h2>
+      <p>The bladder is a distensible organ located just above the pelvic floor. It is responsible for collecting urine prior to elimination. The urethra is a duct that connects to the bladder, allowing the bladder to drain.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalTwo" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/LargeIntestine.png" alt="">
+      <h2>Large Intestine</h2>
+      <p>The portion of the intestine that extends from the ileum to the anus, forming an arch around the convolutions of the small intestine and including the cecum, colon, rectum, and anal canal.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalThree" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Kidney.png" alt="">
+      <h2>Kidney</h2>
+      <p>The kidneys are a pair of blood-filtering organs responsible for controlling the volume of various fluids within the body, the electrolyte and acid-base balance within the blood, and the removal of toxins.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalFour" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/SmallIntestine.png" alt="">
+      <h2>Small Intestine</h2>
+      <p>The narrow, winding, upper part of the intestine where digestion is completed and nutrients are absorbed by the blood. It extends from the pylorus to the cecum and consists of the duodenum, the jejunum, and the ileum.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalFive" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Adrenal.png" alt="">
+      <h2>Adrenal Glands</h2>
+      <p>The adrenal glands function as part of the endocrine system. Located on top of each kidney, the adrenal glands produce a number of different hormones for the body, such as adrenaline, aldosterone, and cortisol.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalSix" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Liver.png" alt="">
+      <h2>Liver</h2>
+      <p>The liver is a large, reddish-brown organ located in the upper right portion of the abdominal cavity. It performs various essential biological functions related to detoxification, such as the formation of various proteins and biochemicals for digestion and growth, the conversion and storage of nutrients like glucose and glycogen, and the decomposition of red blood cells.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalSeven" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Spleen.png" alt="">
+      <h2>Spleen</h2>
+      <p>The spleen functions primarily as a blood filter, removing old or degenerated red blood cells. It also stores blood for emergencies and houses lymphocytes that produce antibodies.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalEight" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Pancreas.png" alt="">
+      <h2>Pancreas</h2>
+      <p>The pancreas is a heterocrine gland, performing both endocrine and exocrine functions. Its endocrine functions include regulating blood sugar levels by secreting insulin, glucagon, somatostatin, and pancreatic polypeptide. Its exocrine function is to secrete pancreatic juice into the duodenum to neutralize stomach acid.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalNine" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Stomach.png" alt="">
+      <h2>Stomach</h2>
+      <p>The stomach is an essential digestive organ. It takes part in the gastric phase of digestion, specifically the chemical breakdown of food. The stomach also plays a role in regulating gut microbiota, which influences overall health.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalTen" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Heart.png" alt="">
+      <h2>Heart</h2>
+      <p>The heart is the muscle responsible for circulating blood throughout the body. The circulatory system, of which the heart is a primary component, is responsible for carrying oxygen and nutrients to tissues throughout the body.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalEleven" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Carotid.png" alt="">
+      <h2>Carotid Artery</h2>
+      <p>An artery that originates on the right from the brachiocephalic artery and on the left from the aortic arch, runs upward into the neck and divides opposite the upper border of the thyroid cartilage, with the external and internal carotid arteries as its terminal branches.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalTwelve" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Lungs.png" alt="">
+      <h2>Lungs</h2>
+      <p>Two spongy, saclike respiratory organs occupying the chest cavity together with the heart. Their primary function is to remove carbon dioxide from the blood and provide it with oxygen.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalThreeten" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Pulmonary.png" alt="">
+      <h2>Pulmonary Artery</h2>
+      <p>This artery carries deoxygenated blood from the heart to the lungs so that it can be re-oxygenated.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalFourten" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Parotid-single.png" alt="">
+      <h2>Parotid Gland</h2>
+      <p>The parotid glands, located on either side of the mouth in front of each ear, are the largest salivary glands.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalFiften" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Thyroid.png" alt="">
+      <h2>Thyroid and Parathyroid Glands</h2>
+      <p>The thyroid secretes hormones that influence metabolic rate, protein synthesis, and early-life growth and development. The parathyroid glands are responsible for producing hormones that regulate the amount of calcium in the body’s blood and bones.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalSixten" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Sublingual-single.png" alt="">
+      <h2>Sublingual Glands</h2>
+      <p>Either of two salivary glands situated in the mucus membrane on the floor of the mouth beneath the tongue.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalSeventen" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Submaxilary-single.png" alt="">
+      <h2>Submandibular Glands</h2>
+      <p>Either of two salivary glands situated in the neck near the lower edge of each side of the mandible and emptying into the submandibular duct.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalEighten" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Sinus.png" alt="">
+      <h2>Sinus</h2>
+      <p>Various air-filled cavities in the bones of the skull, especially one communicating with the nostrils.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalNinten" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Eyes.png" alt="">
+      <h2>Eyes</h2>
+      <p>A pair of hollow structures located in bony sockets of the skull, functioning together or independently, each having a lens capable of focusing incident light on an internal photosensitive retina from which nerve impulses are sent to the brain; the vertebrate organ of vision.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalTwenty" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Nasal.png" alt="">
+      <h2>Nasal and Palette Glands</h2>
+      <p>Glands from the posterior two-thirds of the nasal cavities and from the accessory air sinuses Lymphatic Vessels of the mouth.</p>
+    </div>
+  </div>
+</div>
+
+<div id="modalTwentyOne" class="modal">
+  <div class="modal-content">
+    <div class="contact-form">
+      <span class="close">&times;</span>
+      <img src="images/Brain.png" alt="">
+      <h2>Brain</h2>
+      <p>The portion of the central nervous system that is enclosed within the cranium, continuous with the spinal cord, and composed of gray matter and white matter. The brain is the primary center for activities, receiving and interpreting sensory impulses, and transmitting information to the muscles and body organs. It is also the seat of consciousness, thought, memory, and emotion.</p>
+    </div>
+  </div>
+</div>
+
+<script src="js/custom.js" ></script>
+<script>
+$(function(){
+
+    $(".dropdown-content").on('click', 'li a', function(){
+      $(".dropbtn").text($(this).text());
+      $(".dropbtn").val($(this).text());
+   });
+
+});
+ 
+function myFunction() {
+  document.getElementById("myDropdown").classList.toggle("show");
+}
+
+window.onclick = function(event) {
+  if (!event.target.matches('.dropbtn')) {
+    var dropdowns = document.getElementsByClassName("dropdown-content");
+    var i;
+    for (i = 0; i < dropdowns.length; i++) {
+      var openDropdown = dropdowns[i];
+      if (openDropdown.classList.contains('show')) {
+        openDropdown.classList.remove('show');
+      }
+    }
+  }
+}
+
+window.onload = function(){
+  document.getElementById("C1").click();
+  document.getElementById("liC1").classList.add("active");
+}
+
+</script>
+</body>
+</html>
+

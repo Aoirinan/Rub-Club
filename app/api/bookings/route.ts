@@ -17,6 +17,7 @@ import {
   isWithinScheduleWindow,
   parseStartIsoToDateTime,
 } from "@/lib/slots-luxon";
+import { formatChicagoDateTimeLong, formatChicagoDateTimeShort } from "@/lib/chicago-datetime-format";
 
 export const runtime = "nodejs";
 
@@ -276,7 +277,7 @@ export async function POST(req: Request) {
     const text = [
       "New online booking request",
       `Booking ID: ${bookingRef.id}`,
-      `When (Chicago): ${start.setZone(TIME_ZONE).toFormat("cccc, LLL d yyyy — h:mm a")} (${TIME_ZONE})`,
+      `When (Chicago): ${formatChicagoDateTimeLong(start)}`,
       `Duration: ${body.durationMin} minutes`,
       `Service: ${body.serviceLine}`,
       `Location: ${body.locationId}`,
@@ -295,7 +296,7 @@ export async function POST(req: Request) {
     try {
       await sendBookingNotification({
         to: officeTo,
-        subject: `New booking: ${body.serviceLine} @ ${start.setZone(TIME_ZONE).toFormat("LLL d h:mm a")}`,
+        subject: `New booking: ${body.serviceLine} @ ${formatChicagoDateTimeShort(start)}`,
         text,
       });
     } catch (err) {

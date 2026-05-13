@@ -3,6 +3,7 @@ import type { Firestore } from "firebase-admin/firestore";
 import type { DateTime } from "luxon";
 import { getFirestore } from "@/lib/firebase-admin";
 import type { DurationMin, LocationId, ServiceLine } from "@/lib/constants";
+import { formatChicagoSlotChoice } from "@/lib/chicago-datetime-format";
 import { fetchActiveProvidersForService } from "@/lib/providers-db";
 import {
   bucketDocIdsForAppointment,
@@ -86,7 +87,7 @@ export async function GET(req: Request) {
         if (await bucketsFree(db, locationId, providerId, start, durationMin)) {
           available.push({
             startIso: start.toUTC().toISO()!,
-            label: start.toFormat("cccc, LLL d — h:mm a"),
+            label: formatChicagoSlotChoice(start),
           });
         }
       }
@@ -107,7 +108,7 @@ export async function GET(req: Request) {
         if (open) {
           available.push({
             startIso: start.toUTC().toISO()!,
-            label: start.toFormat("cccc, LLL d — h:mm a"),
+            label: formatChicagoSlotChoice(start),
           });
         }
       }

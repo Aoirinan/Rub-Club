@@ -49,6 +49,85 @@ type BookableProviderRow = {
   } | null;
 };
 
+function hour24To12Parts(hour24: number): { h12: number; pm: boolean } {
+  const h = ((hour24 % 24) + 24) % 24;
+  if (h === 0) return { h12: 12, pm: false };
+  if (h < 12) return { h12: h, pm: false };
+  if (h === 12) return { h12: 12, pm: true };
+  return { h12: h - 12, pm: true };
+}
+
+function hour12To24(h12: number, pm: boolean): number {
+  const h = Math.min(12, Math.max(1, Math.round(h12)));
+  if (!pm) return h === 12 ? 0 : h;
+  return h === 12 ? 12 : h + 12;
+}
+
+function formatTime12h(hour24: number, minute: number): string {
+  const m = Math.min(59, Math.max(0, minute));
+  const { h12, pm } = hour24To12Parts(hour24);
+  return `${h12}:${String(m).padStart(2, "0")} ${pm ? "PM" : "AM"}`;
+}
+
+function ProviderSchedule12hRow(props: {
+  label: string;
+  hour24: number;
+  minute: number;
+  onPatch: (patch: { hour24?: number; minute?: number }) => void;
+}) {
+  const { h12, pm } = hour24To12Parts(props.hour24);
+  const min = Math.min(59, Math.max(0, props.minute));
+  return (
+    <div className="flex flex-wrap items-end gap-2">
+      <span className="w-full text-xs font-medium text-slate-600 sm:mb-6 sm:w-14 sm:shrink-0">{props.label}</span>
+      <label className="space-y-1">
+        <span className="text-xs text-slate-600">Hour</span>
+        <input
+          type="number"
+          min={1}
+          max={12}
+          className="w-16 rounded border border-slate-300 px-2 py-1"
+          value={h12}
+          onChange={(e) => {
+            const raw = Number(e.target.value);
+            const v = Number.isFinite(raw) ? Math.min(12, Math.max(1, raw)) : 1;
+            props.onPatch({ hour24: hour12To24(v, pm) });
+          }}
+        />
+      </label>
+      <label className="space-y-1">
+        <span className="text-xs text-slate-600">Min</span>
+        <input
+          type="number"
+          min={0}
+          max={59}
+          className="w-16 rounded border border-slate-300 px-2 py-1"
+          value={min}
+          onChange={(e) => {
+            const raw = Number(e.target.value);
+            const v = Number.isFinite(raw) ? Math.min(59, Math.max(0, raw)) : 0;
+            props.onPatch({ minute: v });
+          }}
+        />
+      </label>
+      <label className="space-y-1">
+        <span className="text-xs text-slate-600">AM/PM</span>
+        <select
+          className="rounded border border-slate-300 bg-white px-2 py-1 text-sm"
+          value={pm ? "pm" : "am"}
+          onChange={(e) => {
+            const nextPm = e.target.value === "pm";
+            props.onPatch({ hour24: hour12To24(h12, nextPm) });
+          }}
+        >
+          <option value="am">AM</option>
+          <option value="pm">PM</option>
+        </select>
+      </label>
+    </div>
+  );
+}
+
 function inviteEmailIssueHint(issue?: InviteStaffResponse["inviteEmailIssue"]): string {
   if (issue === "missing_env") {
     return " No email was sent: add SENDGRID_API_KEY and SENDGRID_FROM_EMAIL to this app’s Production env in Vercel (they are per-project, not shared with your other software).";
@@ -534,7 +613,7 @@ export default function SuperAdminPage() {
             <h2 className="text-lg font-semibold text-slate-900">Bookable providers (public scheduling)</h2>
             <p className="text-sm text-slate-600">
               Each row is a person clients can book. Two providers can share the same time at one location because
-              slots are tracked per provider. Optional custom hours override the default 9:00–17:00 Chicago window for
+              slots are tracked per provider. Optional custom hours override the default 9:00 AM–5:00 PM Chicago window for
               that person only.
             </p>
 
@@ -703,79 +782,45 @@ export default function SuperAdminPage() {
                 <div className="space-y-2">
                   <p className="font-medium text-slate-800">Custom hours (optional)</p>
                   {editingProvider.schedule ? (
-                    <div className="grid gap-2 sm:grid-cols-4">
-                      <label className="space-y-1">
-                        <span className="text-xs text-slate-600">Open H</span>
-                        <input
-                          type="number"
-                          className="w-full rounded border border-slate-300 px-2 py-1"
-                          value={editingProvider.schedule.openHour}
-                          onChange={(e) =>
-                            setEditingProvider((prev) =>
-                              prev?.schedule
-                                ? {
-                                    ...prev,
-                                    schedule: { ...prev.schedule, openHour: Number(e.target.value) || 0 },
-                                  }
-                                : prev,
-                            )
-                          }
-                        />
-                      </label>
-                      <label className="space-y-1">
-                        <span className="text-xs text-slate-600">Open M</span>
-                        <input
-                          type="number"
-                          className="w-full rounded border border-slate-300 px-2 py-1"
-                          value={editingProvider.schedule.openMinute}
-                          onChange={(e) =>
-                            setEditingProvider((prev) =>
-                              prev?.schedule
-                                ? {
-                                    ...prev,
-                                    schedule: { ...prev.schedule, openMinute: Number(e.target.value) || 0 },
-                                  }
-                                : prev,
-                            )
-                          }
-                        />
-                      </label>
-                      <label className="space-y-1">
-                        <span className="text-xs text-slate-600">Close H</span>
-                        <input
-                          type="number"
-                          className="w-full rounded border border-slate-300 px-2 py-1"
-                          value={editingProvider.schedule.closeHour}
-                          onChange={(e) =>
-                            setEditingProvider((prev) =>
-                              prev?.schedule
-                                ? {
-                                    ...prev,
-                                    schedule: { ...prev.schedule, closeHour: Number(e.target.value) || 0 },
-                                  }
-                                : prev,
-                            )
-                          }
-                        />
-                      </label>
-                      <label className="space-y-1">
-                        <span className="text-xs text-slate-600">Close M</span>
-                        <input
-                          type="number"
-                          className="w-full rounded border border-slate-300 px-2 py-1"
-                          value={editingProvider.schedule.closeMinute}
-                          onChange={(e) =>
-                            setEditingProvider((prev) =>
-                              prev?.schedule
-                                ? {
-                                    ...prev,
-                                    schedule: { ...prev.schedule, closeMinute: Number(e.target.value) || 0 },
-                                  }
-                                : prev,
-                            )
-                          }
-                        />
-                      </label>
+                    <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/80 p-3">
+                      <ProviderSchedule12hRow
+                        label="Opens"
+                        hour24={editingProvider.schedule.openHour}
+                        minute={editingProvider.schedule.openMinute}
+                        onPatch={(patch) =>
+                          setEditingProvider((prev) =>
+                            prev?.schedule
+                              ? {
+                                  ...prev,
+                                  schedule: {
+                                    ...prev.schedule,
+                                    ...(patch.hour24 !== undefined ? { openHour: patch.hour24 } : {}),
+                                    ...(patch.minute !== undefined ? { openMinute: patch.minute } : {}),
+                                  },
+                                }
+                              : prev,
+                          )
+                        }
+                      />
+                      <ProviderSchedule12hRow
+                        label="Closes"
+                        hour24={editingProvider.schedule.closeHour}
+                        minute={editingProvider.schedule.closeMinute}
+                        onPatch={(patch) =>
+                          setEditingProvider((prev) =>
+                            prev?.schedule
+                              ? {
+                                  ...prev,
+                                  schedule: {
+                                    ...prev.schedule,
+                                    ...(patch.hour24 !== undefined ? { closeHour: patch.hour24 } : {}),
+                                    ...(patch.minute !== undefined ? { closeMinute: patch.minute } : {}),
+                                  },
+                                }
+                              : prev,
+                          )
+                        }
+                      />
                     </div>
                   ) : null}
                   <div className="flex flex-wrap gap-2">
@@ -785,7 +830,7 @@ export default function SuperAdminPage() {
                         className="text-xs font-semibold text-slate-700 underline"
                         onClick={() => setEditingProvider((prev) => (prev ? { ...prev, schedule: null } : prev))}
                       >
-                        Use default site hours (9–17)
+                        Use default site hours (9 AM–5 PM)
                       </button>
                     ) : (
                       <button
@@ -854,11 +899,11 @@ export default function SuperAdminPage() {
                     </div>
                     {p.schedule ? (
                       <div className="text-xs text-slate-600">
-                        Hours: {p.schedule.openHour}:{String(p.schedule.openMinute).padStart(2, "0")}–
-                        {p.schedule.closeHour}:{String(p.schedule.closeMinute).padStart(2, "0")}
+                        Hours: {formatTime12h(p.schedule.openHour, p.schedule.openMinute)}–
+                        {formatTime12h(p.schedule.closeHour, p.schedule.closeMinute)}
                       </div>
                     ) : (
-                      <div className="text-xs text-slate-600">Hours: default 9:00–17:00 (Chicago)</div>
+                      <div className="text-xs text-slate-600">Hours: default 9:00 AM–5:00 PM (Chicago)</div>
                     )}
                   </div>
                   <div className="flex shrink-0 flex-wrap gap-2">
