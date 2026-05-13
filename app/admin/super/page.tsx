@@ -14,6 +14,17 @@ type Me = {
 
 type StaffRow = { uid: string; role?: string; email?: string };
 
+type InviteStaffResponse = {
+  ok?: boolean;
+  error?: string;
+  uid?: string;
+  role?: string;
+  createdNewAuthUser?: boolean;
+  emailedReset?: boolean;
+  temporaryPassword?: string;
+  passwordWarning?: string;
+};
+
 export default function SuperAdminPage() {
   const router = useRouter();
   const [auth, setAuth] = useState<Auth | null>(null);
@@ -67,7 +78,7 @@ export default function SuperAdminPage() {
     const user = auth.currentUser;
     if (!user) return;
     const token = await user.getIdToken();
-    const res = await fetch("/api/admin/staff", {
+    const res = await fetch("/api/admin/invite-staff", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -75,12 +86,26 @@ export default function SuperAdminPage() {
       },
       body: JSON.stringify({ email: email.trim(), role }),
     });
-    const data = await res.json().catch(() => ({}));
+    const data = (await res.json().catch(() => ({}))) as InviteStaffResponse;
     if (!res.ok) {
       setMessage(typeof data.error === "string" ? data.error : "Could not save staff.");
       return;
     }
-    setMessage("Saved.");
+    const parts: string[] = [];
+    if (data.createdNewAuthUser) {
+      if (data.emailedReset) {
+        parts.push("New account created. They should receive an email with a link to set their password.");
+      } else if (data.temporaryPassword) {
+        parts.push(
+          `${data.passwordWarning ?? "Share this password once, securely."} Temporary password: ${data.temporaryPassword}`,
+        );
+      } else {
+        parts.push("New account created.");
+      }
+    } else {
+      parts.push("Staff access updated for an existing sign-in account.");
+    }
+    setMessage(parts.join(" "));
     setEmail("");
     await loadStaff(token);
   }
@@ -174,10 +199,12 @@ export default function SuperAdminPage() {
       {isSuper ? (
         <>
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Grant staff access</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Add or invite staff</h2>
             <p className="text-sm text-slate-600">
-              The person must already exist in Firebase Authentication (email/password). Creates a Firestore
-              document at <code className="rounded bg-slate-100 px-1">{`staff/<uid>`}</code>.
+              Enter their work email. If they do not have a sign-in yet, the app creates the account and either
+              emails them a password-reset link (when SendGrid is configured) or shows you a one-time temporary
+              password to share securely. Creates or updates <code className="rounded bg-slate-100 px-1">{`staff/<uid>`}</code>{" "}
+              in Firestore.
             </p>
             <ul className="list-disc pl-5 text-sm text-slate-600">
               <li>
@@ -190,7 +217,7 @@ export default function SuperAdminPage() {
             </ul>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="space-y-1 text-sm sm:col-span-2">
-                <span className="font-medium text-slate-800">Email (Firebase user)</span>
+                <span className="font-medium text-slate-800">Email</span>
                 <input
                   className="w-full rounded-lg border border-slate-300 px-3 py-2"
                   value={email}
@@ -214,7 +241,7 @@ export default function SuperAdminPage() {
               onClick={submitStaff}
               className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800"
             >
-              Save access
+              Add or invite
             </button>
           </section>
 
