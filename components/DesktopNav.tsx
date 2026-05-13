@@ -151,7 +151,7 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
     <nav
       ref={navRef}
       aria-label="Primary"
-      className="hidden flex-wrap items-center justify-end gap-x-5 gap-y-2 text-xs font-bold uppercase tracking-wide text-[#17433f] md:flex sm:text-sm"
+      className="hidden items-center justify-end gap-x-3 gap-y-2 text-[11px] font-bold uppercase tracking-wide text-[#17433f] lg:flex xl:gap-x-4 xl:text-xs"
     >
       {items.map((item, idx) => {
         const hasChildren = !!item.children?.length;

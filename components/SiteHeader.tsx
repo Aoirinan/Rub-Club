@@ -75,13 +75,13 @@ export function SiteHeader() {
         </a>
       </div>
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
-        <Link href="/" className="flex flex-wrap items-center gap-5" aria-label="Home">
+        <Link href="/" className="flex flex-wrap items-center gap-3 lg:gap-4" aria-label="Home">
           <Image
             src={IMAGES.rubClubLogo}
             alt="The Rub Club"
             width={216}
             height={44}
-            className="h-10 w-auto max-w-[210px] object-contain sm:h-12"
+            className="h-9 w-auto max-w-[180px] object-contain sm:h-10 lg:h-11"
             priority
           />
           <span className="hidden text-[#0f5f5c]/30 sm:inline" aria-hidden>
@@ -92,7 +92,7 @@ export function SiteHeader() {
             alt="Chiropractic Associates"
             width={220}
             height={62}
-            className="h-11 w-auto max-w-[230px] object-contain sm:h-12"
+            className="h-9 w-auto max-w-[190px] object-contain sm:h-10 lg:h-11"
             priority
           />
         </Link>

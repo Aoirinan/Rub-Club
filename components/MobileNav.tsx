@@ -37,7 +37,7 @@ export function MobileNav({ items }: { items: readonly NavItem[] }) {
     <>
       <button
         type="button"
-        className="focus-ring inline-flex items-center justify-center gap-2 rounded border border-[#0f5f5c]/30 bg-white px-3 py-2 text-xs font-black uppercase tracking-wide text-[#173f3b] md:hidden"
+        className="focus-ring inline-flex items-center justify-center gap-2 rounded border border-[#0f5f5c]/30 bg-white px-3 py-2 text-xs font-black uppercase tracking-wide text-[#173f3b] lg:hidden"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
         aria-expanded={open}
@@ -52,7 +52,7 @@ export function MobileNav({ items }: { items: readonly NavItem[] }) {
       {open ? (
         <div
           id="mobile-menu"
-          className="fixed inset-0 z-50 md:hidden"
+          className="fixed inset-0 z-50 lg:hidden"
           role="dialog"
           aria-modal="true"
           aria-label="Site navigation"
