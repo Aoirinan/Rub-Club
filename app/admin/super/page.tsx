@@ -114,7 +114,7 @@ export default function SuperAdminPage() {
         parts.push("New account created. They should receive an email with a link to set their password.");
       } else if (data.temporaryPassword) {
         parts.push(
-          `${data.passwordWarning ?? "Share this password once, securely."} Temporary password: ${data.temporaryPassword}`,
+          `${data.passwordWarning ?? "Share this password once, securely."} Temporary password: ${data.temporaryPassword}${issueNote}`,
         );
       } else {
         parts.push(`New account created.${issueNote}`);

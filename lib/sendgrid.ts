@@ -59,6 +59,29 @@ function sendgridUserFacingDetail(e: unknown): string | undefined {
   return undefined;
 }
 
+/** Human-readable line for superadmin when SendGrid send fails. */
+function sendgridDisplayForAdmin(e: unknown): string {
+  const fromErrors = sendgridUserFacingDetail(e);
+  if (fromErrors) return fromErrors;
+
+  if (typeof e === "object" && e !== null) {
+    const body = (e as { response?: { body?: unknown } }).response?.body;
+    if (typeof body === "string" && body.length > 0) {
+      return body.slice(0, 400);
+    }
+    if (body && typeof body === "object") {
+      const top = (body as { message?: string }).message;
+      if (typeof top === "string" && top.length > 0) return top.slice(0, 400);
+    }
+    const msg = (e as { message?: string }).message;
+    if (typeof msg === "string" && msg.length > 0) return msg.slice(0, 400);
+  }
+
+  const raw = sendgridErrorDetail(e);
+  const s = raw.replace(/\s+/g, " ").trim();
+  return s.length > 450 ? `${s.slice(0, 447)}…` : s;
+}
+
 function sendgridErrorDetail(e: unknown): string {
   if (typeof e !== "object" || e === null) return String(e);
   const o = e as { message?: string; response?: { body?: unknown } };
@@ -118,7 +141,7 @@ export async function sendStaffInviteEmail(params: {
     return {
       sent: false,
       issue: "sendgrid_error",
-      sendgridDetail: sendgridUserFacingDetail(e),
+      sendgridDetail: sendgridDisplayForAdmin(e),
     };
   }
 }
