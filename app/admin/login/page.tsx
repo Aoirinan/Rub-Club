@@ -3,7 +3,33 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { FirebaseError } from "firebase/app";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
+
+function authErrorMessage(err: unknown): string {
+  if (err instanceof FirebaseError) {
+    switch (err.code) {
+      case "auth/invalid-credential":
+      case "auth/wrong-password":
+      case "auth/user-not-found":
+        return "Wrong email or password, or this account is not in this Firebase project.";
+      case "auth/invalid-email":
+        return "That email address does not look valid.";
+      case "auth/user-disabled":
+        return "This account has been disabled in Firebase.";
+      case "auth/too-many-requests":
+        return "Too many attempts. Wait several minutes, then try again.";
+      case "auth/operation-not-allowed":
+        return "Email/password sign-in is not enabled for this Firebase project.";
+      case "auth/network-request-failed":
+        return "Network error. Check your connection and try again.";
+      default:
+        return `Sign-in failed (${err.code}).`;
+    }
+  }
+  if (err instanceof Error) return err.message;
+  return "Could not sign in.";
+}
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -20,8 +46,8 @@ export default function AdminLoginPage() {
       const auth = getFirebaseClientAuth();
       await signInWithEmailAndPassword(auth, email.trim(), password);
       router.replace("/admin");
-    } catch {
-      setError("Could not sign in. Check the email and password.");
+    } catch (err) {
+      setError(authErrorMessage(err));
     } finally {
       setBusy(false);
     }
