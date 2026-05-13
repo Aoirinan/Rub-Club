@@ -136,7 +136,20 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {error ? <p className="text-sm text-amber-800">{error}</p> : null}
+      {error ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <p>{error}</p>
+          {error.includes("not yet granted staff") ? (
+            <p className="mt-2">
+              <Link href="/admin/super" className="font-semibold underline">
+                Open staff setup / manager tools
+              </Link>{" "}
+              (first time: use bootstrap with your server secret; or add your user in Firestore under{" "}
+              <code className="rounded bg-amber-100 px-1">staff/&lt;uid&gt;</code>).
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full text-left text-sm">
