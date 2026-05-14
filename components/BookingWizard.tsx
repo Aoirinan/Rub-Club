@@ -305,28 +305,30 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
     three: Boolean(name.trim() && phone.trim() && email.trim()),
   };
 
-  const fieldLabel = "block text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[#0f5f5c]";
+  const fieldLabel =
+    "block text-[0.7rem] font-bold uppercase tracking-[0.1em] text-[#0f5f5c] sm:text-[0.65rem] sm:tracking-[0.12em]";
+  /** 16px+ on small screens avoids iOS input zoom; 48px min height for comfortable taps. */
   const fieldControl =
-    "focus-ring w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900 shadow-sm transition placeholder:text-stone-400 hover:border-stone-400";
+    "touch-manipulation focus-ring w-full min-h-[48px] rounded-xl border border-stone-300 bg-white px-4 py-3 text-base text-stone-900 shadow-sm transition placeholder:text-stone-400 hover:border-stone-400 sm:min-h-0 sm:rounded-lg sm:px-3 sm:py-2.5 sm:text-sm";
 
   return (
-    <div className="min-h-screen bg-[#f4f2ea]">
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-        <header className="rounded-2xl border border-stone-200/90 bg-white p-6 shadow-sm sm:p-8 sm:p-10">
-          <div className="border-l-4 border-[#0f5f5c] pl-4 sm:pl-5">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#0f5f5c] sm:text-sm">
+    <div className="min-h-screen overflow-x-hidden bg-[#f4f2ea] pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div className="mx-auto w-full max-w-6xl px-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] py-8 sm:px-6 sm:py-14">
+        <header className="rounded-2xl border border-stone-200/90 bg-white p-5 shadow-sm sm:p-8 sm:p-10">
+          <div className="border-l-4 border-[#0f5f5c] pl-3 sm:pl-5">
+            <p className="text-[0.7rem] font-black uppercase tracking-[0.18em] text-[#0f5f5c] sm:text-sm sm:tracking-[0.2em]">
               Online scheduling
             </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-[#173f3b] sm:text-4xl md:text-[2.5rem] md:leading-tight">
+            <h1 className="mt-2 text-[1.65rem] font-black leading-tight tracking-tight text-[#173f3b] min-[400px]:text-3xl sm:text-4xl md:text-[2.5rem] md:leading-tight">
               Book an appointment
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-stone-600 sm:text-base">
+            <p className="mt-3 max-w-2xl text-[0.9375rem] leading-relaxed text-stone-600 sm:text-base">
               Choose your visit, see real openings, then send your request. We&rsquo;ll email you next
               steps; when online payment is enabled, you&rsquo;ll be able to check out on Square right
               after you submit.
             </p>
           </div>
-          <ol className="mt-8 flex flex-col gap-2 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+          <ol className="mt-6 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 pt-0.5 [-webkit-overflow-scrolling:touch] sm:mt-10 sm:flex-wrap sm:overflow-visible sm:pb-0">
             {(
               [
                 { n: 1, label: "Service & time", done: stepDone.one },
@@ -336,20 +338,20 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
             ).map((step) => (
               <li
                 key={step.n}
-                className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold uppercase tracking-wide transition sm:text-[0.7rem] ${
+                className={`flex min-h-[48px] shrink-0 snap-start items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-[0.7rem] font-bold uppercase tracking-wide transition min-[400px]:text-xs sm:min-h-0 sm:px-3 sm:py-2 sm:text-[0.7rem] ${
                   step.done
                     ? "border-[#0f5f5c]/40 bg-[#0f5f5c] text-white shadow-sm"
                     : "border-stone-200 bg-stone-50 text-stone-500"
                 }`}
               >
                 <span
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-black ${
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black sm:h-6 sm:w-6 sm:text-[0.7rem] ${
                     step.done ? "bg-white/20 text-white" : "bg-stone-200 text-stone-600"
                   }`}
                 >
                   {step.n}
                 </span>
-                {step.label}
+                <span className="whitespace-nowrap">{step.label}</span>
               </li>
             ))}
           </ol>
@@ -361,16 +363,18 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
           <div className="min-w-0 space-y-8 sm:space-y-10">
             <section
               aria-labelledby="step-one"
-              className="rounded-2xl border border-stone-200/90 bg-white p-6 shadow-sm sm:p-8"
+              className="rounded-2xl border border-stone-200/90 bg-white p-4 shadow-sm sm:p-8"
             >
-              <div className="flex flex-col gap-1 border-b border-stone-100 pb-5 sm:pb-6">
-                <h2 id="step-one" className="text-xl font-black text-[#173f3b] sm:text-2xl">
+              <div className="flex flex-col gap-1 border-b border-stone-100 pb-4 sm:pb-6">
+                <h2 id="step-one" className="text-lg font-black leading-tight text-[#173f3b] sm:text-2xl">
                   What, where, and when
                 </h2>
-                <p className="text-sm text-stone-600">Set the basics, then choose how you want to match with a provider.</p>
+                <p className="text-[0.9375rem] leading-snug text-stone-600 sm:text-sm">
+                  Set the basics, then choose how you want to match with a provider.
+                </p>
               </div>
 
-              <div className="mt-6 grid gap-5 sm:grid-cols-2">
+              <div className="mt-5 grid gap-4 sm:mt-6 sm:grid-cols-2 sm:gap-5">
             <label className="block space-y-1.5 text-sm">
               <span className={fieldLabel}>Location</span>
               <select
@@ -442,11 +446,13 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
             </label>
           </div>
 
-          <div className="mt-8 space-y-5 rounded-2xl border border-stone-200/80 bg-gradient-to-b from-[#faf8f3] to-[#f0ebe0] p-5 shadow-inner sm:p-6">
+          <div className="mt-6 space-y-4 rounded-2xl border border-stone-200/80 bg-gradient-to-b from-[#faf8f3] to-[#f0ebe0] p-4 shadow-inner sm:mt-8 sm:space-y-5 sm:p-6">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className={fieldLabel}>Provider matching</p>
-                <p className="mt-1 text-base font-black text-[#173f3b]">How should we match you?</p>
+                <p className="mt-1 text-[1.05rem] font-black leading-snug text-[#173f3b] sm:text-base">
+                  How should we match you?
+                </p>
               </div>
             </div>
             {providers === null ? (
@@ -456,7 +462,10 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
             ) : providers.length === 0 ? (
               <p className="text-sm leading-relaxed text-amber-950">
                 No providers are published for this location and service yet. Please call{" "}
-                <a className="font-bold underline underline-offset-2" href={`tel:${loc.phonePrimary.replaceAll("-", "")}`}>
+                <a
+                  className="inline-flex min-h-[44px] items-center font-bold underline underline-offset-2"
+                  href={`tel:${loc.phonePrimary.replaceAll("-", "")}`}
+                >
                   {loc.phonePrimary}
                 </a>{" "}
                 to schedule.
@@ -465,13 +474,13 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
               <>
                 <fieldset>
                   <legend className="sr-only">How to choose a provider</legend>
-                  <div className="flex flex-col gap-2 sm:inline-flex sm:flex-row sm:rounded-xl sm:border sm:border-stone-300 sm:bg-white sm:p-1 sm:shadow-sm">
+                  <div className="flex flex-col gap-1.5 rounded-xl border border-stone-300 bg-white p-1 shadow-sm sm:inline-flex sm:flex-row sm:gap-0">
                     <button
                       type="button"
-                      className={`focus-ring rounded-lg px-4 py-3 text-left text-sm transition sm:py-2.5 ${
+                      className={`focus-ring touch-manipulation min-h-[52px] rounded-lg px-4 py-3.5 text-left text-[0.9375rem] transition active:bg-stone-100 sm:min-h-0 sm:py-2.5 sm:text-sm ${
                         providerMode === "any"
                           ? "bg-[#0f5f5c] text-white shadow-sm sm:px-5"
-                          : "bg-white text-stone-800 hover:bg-stone-50 sm:bg-transparent"
+                          : "text-stone-800 hover:bg-stone-50 sm:bg-transparent"
                       }`}
                       onClick={() => {
                         setProviderMode("any");
@@ -487,10 +496,10 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                     </button>
                     <button
                       type="button"
-                      className={`focus-ring rounded-lg px-4 py-3 text-left text-sm transition sm:py-2.5 ${
+                      className={`focus-ring touch-manipulation min-h-[52px] rounded-lg px-4 py-3.5 text-left text-[0.9375rem] transition active:bg-stone-100 sm:min-h-0 sm:py-2.5 sm:text-sm ${
                         providerMode === "specific"
                           ? "bg-[#0f5f5c] text-white shadow-sm sm:px-5"
-                          : "bg-white text-stone-800 hover:bg-stone-50 sm:bg-transparent"
+                          : "text-stone-800 hover:bg-stone-50 sm:bg-transparent"
                       }`}
                       onClick={() => {
                         setProviderMode("specific");
@@ -509,64 +518,28 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
 
                 {providerMode === "specific" ? (
                   <>
-                    <p className="text-xs leading-relaxed text-stone-600">
-                      Listed providers accept new clients through online booking. Tap a card to select
-                      them, then load open times below.
+                    <p className="text-[0.8125rem] leading-relaxed text-stone-600 sm:text-xs">
+                      Listed providers accept new clients through online booking. Choose a provider from
+                      the list, then load open times below.
                     </p>
-                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                      {providers.map((p) => {
-                        const selected = selectedProviderId === p.id;
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            className={`focus-ring group flex flex-col overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition ${
-                              selected
-                                ? "border-[#0f5f5c] ring-2 ring-[#0f5f5c] ring-offset-2 ring-offset-white"
-                                : "border-stone-200/90 hover:border-[#0f5f5c]/40 hover:shadow-md"
-                            }`}
-                            onClick={() => {
-                              setSelectedProviderId(p.id);
-                              setSlots(null);
-                              setSelectedSlot(null);
-                            }}
-                            aria-pressed={selected}
-                          >
-                            <div className="relative aspect-[5/6] w-full overflow-hidden bg-gradient-to-b from-stone-100 to-stone-200">
-                              {p.photoUrl ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
-                                  src={p.photoUrl}
-                                  alt={p.displayName}
-                                  className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
-                                  loading="lazy"
-                                  referrerPolicy="no-referrer"
-                                />
-                              ) : (
-                                <div className="flex h-full w-full items-center justify-center text-4xl font-black text-stone-400">
-                                  {p.displayName.slice(0, 1)}
-                                </div>
-                              )}
-                              {selected ? (
-                                <span className="absolute right-2 top-2 rounded-full bg-[#0f5f5c] px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-white shadow">
-                                  Selected
-                                </span>
-                              ) : null}
-                            </div>
-                            <div className="space-y-1.5 p-4">
-                              <span className="block font-bold text-[#173f3b]">{p.displayName}</span>
-                              {p.about ? (
-                                <span className="line-clamp-2 block text-xs leading-snug text-stone-600">
-                                  {p.about}
-                                </span>
-                              ) : (
-                                <span className="block text-xs text-stone-500">Bio in panel below.</span>
-                              )}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <label className="block space-y-1.5 text-sm">
+                      <span className={fieldLabel}>Provider</span>
+                      <select
+                        className={fieldControl}
+                        value={selectedProviderId}
+                        onChange={(e) => {
+                          setSelectedProviderId(e.target.value);
+                          setSlots(null);
+                          setSelectedSlot(null);
+                        }}
+                      >
+                        {providers.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.displayName}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                     {selectedProvider ? (
                       <div className="overflow-hidden rounded-2xl border border-[#0f5f5c]/20 bg-white shadow-sm">
                         <div className="border-b border-stone-100 bg-[#f0faf8] px-4 py-3 sm:px-5">
@@ -593,7 +566,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm leading-relaxed text-stone-700 sm:text-[0.9375rem] sm:leading-relaxed">
+                            <p className="text-[0.9375rem] leading-relaxed text-stone-700">
                               {selectedProvider.about?.trim()
                                 ? selectedProvider.about
                                 : "We are adding a short bio for this provider soon. You can still choose them and pick an open time below."}
@@ -641,10 +614,10 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
             )}
           </div>
 
-          <div className="mt-8 flex flex-col gap-4 border-t border-stone-100 pt-8 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-6 flex flex-col gap-3 border-t border-stone-100 pt-6 sm:mt-8 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:pt-8">
             <button
               type="button"
-              className="focus-ring inline-flex w-full items-center justify-center rounded-xl bg-[#0f5f5c] px-6 py-3.5 text-sm font-black uppercase tracking-wide text-white shadow-sm transition hover:bg-[#0f817b] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-[200px]"
+              className="focus-ring touch-manipulation inline-flex min-h-[52px] w-full items-center justify-center rounded-xl bg-[#0f5f5c] px-6 py-3.5 text-base font-black uppercase tracking-wide text-white shadow-sm transition hover:bg-[#0f817b] active:bg-[#0c4d4a] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-0 sm:w-auto sm:min-w-[200px] sm:py-3.5 sm:text-sm"
               onClick={loadSlots}
               disabled={loadingSlots || !canPickSlots}
             >
@@ -659,23 +632,25 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
 
           <div aria-live="polite" aria-busy={loadingSlots} className="mt-6 space-y-4">
             {slotsHint ? (
-              <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-700">
+              <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2.5 text-[0.9375rem] text-stone-700 sm:text-sm">
                 {slotsHint}
               </p>
             ) : null}
             {slotsError ? (
-              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">{slotsError}</p>
+              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-[0.9375rem] text-red-900 sm:text-sm">
+                {slotsError}
+              </p>
             ) : null}
 
             {slots && slots.length > 0 ? (
               <div className="space-y-3">
                 <p className={fieldLabel}>Available start times</p>
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-2 min-[400px]:gap-3 min-[480px]:grid-cols-3 lg:grid-cols-4">
                   {slots.map((s) => (
                     <button
                       type="button"
                       key={s.startIso}
-                      className={`focus-ring min-h-[52px] rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition ${
+                      className={`focus-ring touch-manipulation flex min-h-[54px] w-full items-center justify-center rounded-xl border px-2 py-2.5 text-center text-[0.8125rem] font-semibold leading-tight transition min-[400px]:px-3 min-[400px]:text-sm sm:min-h-[52px] sm:justify-start sm:text-left sm:text-sm ${
                         selectedSlot?.startIso === s.startIso
                           ? "border-[#0f5f5c] bg-[#0f5f5c] text-white shadow-md"
                           : "border-stone-200 bg-stone-50/90 text-[#173f3b] hover:border-[#0f5f5c]/50 hover:bg-white"
@@ -697,13 +672,13 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
 
         <section
           aria-labelledby="step-three"
-          className="rounded-2xl border border-stone-200/90 bg-white p-6 shadow-sm sm:p-8"
+          className="rounded-2xl border border-stone-200/90 bg-white p-4 shadow-sm sm:p-8"
         >
-          <div className="border-b border-stone-100 pb-5 sm:pb-6">
-            <h2 id="step-three" className="text-xl font-black text-[#173f3b] sm:text-2xl">
+          <div className="border-b border-stone-100 pb-4 sm:pb-6">
+            <h2 id="step-three" className="text-lg font-black leading-tight text-[#173f3b] sm:text-2xl">
               Your contact details
             </h2>
-            <p className="mt-1 text-sm text-stone-600">
+            <p className="mt-1.5 text-[0.9375rem] leading-snug text-stone-600 sm:text-sm">
               We&rsquo;ll use this to confirm your visit and send updates. Add anything helpful in notes.
             </p>
           </div>
@@ -720,7 +695,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
             </label>
           </div>
 
-          <div className="mt-6 grid gap-5 sm:grid-cols-2">
+          <div className="mt-5 grid gap-4 sm:mt-6 sm:grid-cols-2 sm:gap-5">
             <label className="block space-y-1.5 text-sm sm:col-span-2">
               <span className={fieldLabel}>Full name</span>
               <input
@@ -758,7 +733,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
             <label className="block space-y-1.5 text-sm sm:col-span-2">
               <span className={fieldLabel}>Notes (optional)</span>
               <textarea
-                className={`${fieldControl} min-h-[100px] resize-y`}
+                className={`${fieldControl} min-h-[120px] resize-y sm:min-h-[100px]`}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Anything we should know? Reason for visit, allergies, pregnancy, etc."
@@ -766,14 +741,14 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
             </label>
           </div>
 
-          <p className="mt-6 text-xs leading-relaxed text-stone-600">
+          <p className="mt-5 text-[0.8125rem] leading-relaxed text-stone-600 sm:mt-6 sm:text-xs">
             We only collect your contact details and visit preferences. No insurance or medical records
             are stored here. By submitting you agree to be contacted about your appointment.
           </p>
 
           <button
             type="button"
-            className="focus-ring mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#f2d25d] px-6 py-3.5 text-sm font-black uppercase tracking-wide text-[#173f3b] shadow-sm transition hover:bg-[#e6c13d] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-[240px]"
+            className="focus-ring touch-manipulation mt-5 inline-flex min-h-[52px] w-full items-center justify-center rounded-xl bg-[#f2d25d] px-6 py-3.5 text-base font-black uppercase tracking-wide text-[#173f3b] shadow-sm transition hover:bg-[#e6c13d] active:bg-[#d9b635] disabled:cursor-not-allowed disabled:opacity-50 sm:mt-6 sm:min-h-0 sm:w-auto sm:min-w-[240px] sm:text-sm"
             disabled={!selectedSlot || submitting || !name || !phone || !email || !canPickSlots}
             onClick={submitBooking}
           >
@@ -782,7 +757,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
 
           {submitMessage ? (
             <div
-              className={`mt-6 space-y-4 rounded-xl border px-4 py-4 text-sm leading-relaxed sm:px-5 sm:py-5 ${
+              className={`mt-5 space-y-4 rounded-xl border px-4 py-4 text-[0.9375rem] leading-relaxed sm:mt-6 sm:px-5 sm:py-5 sm:text-sm ${
                 submitSuccess
                   ? "border-emerald-200/80 bg-emerald-50/90 text-emerald-950"
                   : "border-amber-200/80 bg-amber-50/90 text-amber-950"
@@ -800,7 +775,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                     href={squarePayUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="focus-ring inline-flex w-full items-center justify-center rounded-xl bg-[#0f5f5c] px-5 py-3 text-center text-xs font-black uppercase tracking-wide text-white shadow-sm transition hover:bg-[#0f817b] sm:w-auto"
+                    className="focus-ring touch-manipulation inline-flex min-h-[52px] w-full items-center justify-center rounded-xl bg-[#0f5f5c] px-5 py-3.5 text-center text-sm font-black uppercase tracking-wide text-white shadow-sm transition hover:bg-[#0f817b] active:bg-[#0c4d4a] sm:min-h-0 sm:w-auto"
                   >
                     Pay with Square (new tab)
                   </a>
@@ -812,10 +787,10 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
       </div>
 
         {selectedSlot ? (
-          <aside className="mt-8 h-fit rounded-2xl border border-[#0f5f5c]/25 bg-gradient-to-b from-[#eaf6f4] to-[#e2f0ec] p-5 text-sm shadow-sm lg:sticky lg:top-24 lg:mt-0">
+          <aside className="mt-6 h-fit rounded-2xl border border-[#0f5f5c]/25 bg-gradient-to-b from-[#eaf6f4] to-[#e2f0ec] p-4 text-sm shadow-sm sm:p-5 lg:sticky lg:top-24 lg:mt-0">
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.15em] text-[#0f5f5c]">Your selection</p>
-            <p className="mt-2 text-lg font-black leading-snug text-[#173f3b]">{selectedSlot.label}</p>
-            <dl className="mt-4 space-y-2 border-t border-[#0f5f5c]/10 pt-4 text-xs text-stone-700 sm:text-sm">
+            <p className="mt-2 text-[1.35rem] font-black leading-snug text-[#173f3b] sm:text-xl">{selectedSlot.label}</p>
+            <dl className="mt-4 space-y-2.5 border-t border-[#0f5f5c]/10 pt-4 text-[0.9375rem] text-stone-700 sm:text-sm">
               <div className="flex justify-between gap-3">
                 <dt className="text-stone-500">Duration</dt>
                 <dd className="font-semibold text-[#173f3b]">{durationMin} min</dd>

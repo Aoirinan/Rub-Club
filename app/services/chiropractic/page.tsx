@@ -5,7 +5,7 @@ import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { IMAGES } from "@/lib/home-images";
 import { CHIRO, DOCTORS } from "@/lib/home-verbatim";
-import { CHIRO_PARIS_WELLNESS_CARE_PLANS_URL, LOCATIONS, telHref } from "@/lib/constants";
+import { LOCATIONS, WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
 import { chiropractorJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
 
@@ -143,17 +143,16 @@ export default function ChiropracticServicePage() {
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
           <h2 className="text-xl font-black text-[#173f3b]">Wellness care plans</h2>
           <p className="mt-3 max-w-3xl text-stone-700">
-            For an overview of chiropractic wellness and care-plan options at our Paris office, see
-            the dedicated page on our companion site.
+            Monthly Chiro-Fitness and Acu-Fit memberships at our Paris office combine adjustments,
+            roller table, massage, therapy, acupuncture, and rehab options — billed on automatic debit
+            for ongoing wellness care.
           </p>
-          <a
-            href={CHIRO_PARIS_WELLNESS_CARE_PLANS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href={WELLNESS_CARE_PLANS_PATH}
             className="focus-ring mt-4 inline-flex bg-[#0f5f5c] px-5 py-2.5 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
           >
             View wellness care plans
-          </a>
+          </Link>
         </section>
 
         <p className="rounded border border-[#d8c061] bg-[#fff7d7] p-5 text-center text-sm text-[#5a4a15]">

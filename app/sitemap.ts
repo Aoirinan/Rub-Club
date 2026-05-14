@@ -9,6 +9,7 @@ const ENTRIES: { path: string; changeFrequency: ChangeFrequency; priority: numbe
   { path: "/chiropractic", changeFrequency: "monthly", priority: 0.9 },
   { path: "/massage", changeFrequency: "monthly", priority: 0.9 },
   { path: "/services/chiropractic", changeFrequency: "monthly", priority: 0.85 },
+  { path: "/services/chiropractic/wellness-care-plans", changeFrequency: "monthly", priority: 0.8 },
   { path: "/services/massage", changeFrequency: "monthly", priority: 0.85 },
   { path: "/meet-the-doctors", changeFrequency: "monthly", priority: 0.85 },
   { path: "/locations", changeFrequency: "monthly", priority: 0.85 },

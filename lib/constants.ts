@@ -4,9 +4,9 @@ export const TIME_ZONE = "America/Chicago";
 export const FACEBOOK_URL =
   "https://www.facebook.com/chiropracticparistexas/";
 
-/** Paris chiropractic legacy site — wellness / membership-style care plans. */
-export const CHIRO_PARIS_WELLNESS_CARE_PLANS_URL =
-  "https://www.chiropracticparistexas.com/wellness-care-plans" as const;
+/** On-site wellness membership pricing (Chiro-Fitness / Acu-Fit). */
+export const WELLNESS_CARE_PLANS_PATH =
+  "/services/chiropractic/wellness-care-plans" as const;
 
 export const BUSINESS = {
   openHour: 9,

@@ -1,13 +1,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import { IMAGES } from "@/lib/home-images";
-import { FACEBOOK_URL, telHref } from "@/lib/constants";
+import { FACEBOOK_URL, WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
 import { MobileNav } from "@/components/MobileNav";
 import { DesktopNav, type NavItem } from "@/components/DesktopNav";
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/services/massage", label: "Massage" },
-  { href: "/services/chiropractic", label: "Chiropractic" },
+  {
+    href: "/services/chiropractic",
+    label: "Chiropractic",
+    children: [
+      { href: "/services/chiropractic", label: "Chiropractic care" },
+      { href: WELLNESS_CARE_PLANS_PATH, label: "Wellness care plans" },
+    ],
+  },
   { href: "/sulphur-springs", label: "Sulphur Springs" },
   {
     href: "/locations/paris",

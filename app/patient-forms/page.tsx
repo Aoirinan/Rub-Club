@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { IntakeForm } from "@/components/IntakeForm";
-import { CHIRO_PARIS_WELLNESS_CARE_PLANS_URL } from "@/lib/constants";
+import { WELLNESS_CARE_PLANS_PATH } from "@/lib/constants";
 
 const MASSAGE_NEW_CLIENT_PDF = "/the-rub-club-new-client-form-1.pdf";
 const CHIRO_INTAKE_PACKET_PDF = "/chiropractic-new-patient-packet.pdf";
@@ -64,15 +64,13 @@ export default function PatientFormsPage() {
           </a>
           <p className="mt-6 border-t border-stone-200 pt-6 text-sm leading-relaxed text-stone-700">
             Interested in ongoing chiropractic wellness options? See our{" "}
-            <a
-              href={CHIRO_PARIS_WELLNESS_CARE_PLANS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href={WELLNESS_CARE_PLANS_PATH}
               className="font-bold text-[#0f5f5c] underline hover:text-[#173f3b]"
             >
               wellness care plans overview
-            </a>{" "}
-            (opens in a new tab).
+            </Link>
+            .
           </p>
         </section>
 
