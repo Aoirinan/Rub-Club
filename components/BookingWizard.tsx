@@ -305,51 +305,76 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
     three: Boolean(name.trim() && phone.trim() && email.trim()),
   };
 
+  const fieldLabel = "block text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[#0f5f5c]";
+  const fieldControl =
+    "focus-ring w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900 shadow-sm transition placeholder:text-stone-400 hover:border-stone-400";
+
   return (
-    <div className="bg-[#f4f2ea]">
-      <div className="mx-auto max-w-4xl space-y-6 px-4 py-12">
-        <header className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-8">
-          <p className="text-sm font-black uppercase tracking-[0.22em] text-[#0f5f5c]">
-            Online Scheduling
-          </p>
-          <h1 className="mt-2 text-3xl font-black tracking-tight text-[#173f3b] sm:text-4xl">
-            Book an appointment
-          </h1>
-          <p className="mt-3 text-stone-700">
-            Pick a location, service, time, and we&rsquo;ll send you an email confirmation with an
-            add-to-calendar attachment. The office will follow up to finalize your appointment.
-          </p>
-          <ol className="mt-5 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wide">
-            <li
-              className={`rounded-full px-3 py-1 ${stepDone.one ? "bg-[#0f5f5c] text-white" : "bg-stone-200 text-stone-600"}`}
-            >
-              1. Service &amp; time
-            </li>
-            <li
-              className={`rounded-full px-3 py-1 ${stepDone.two ? "bg-[#0f5f5c] text-white" : "bg-stone-200 text-stone-600"}`}
-            >
-              2. Pick a slot
-            </li>
-            <li
-              className={`rounded-full px-3 py-1 ${stepDone.three ? "bg-[#0f5f5c] text-white" : "bg-stone-200 text-stone-600"}`}
-            >
-              3. Your details
-            </li>
+    <div className="min-h-screen bg-[#f4f2ea]">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+        <header className="rounded-2xl border border-stone-200/90 bg-white p-6 shadow-sm sm:p-8 sm:p-10">
+          <div className="border-l-4 border-[#0f5f5c] pl-4 sm:pl-5">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#0f5f5c] sm:text-sm">
+              Online scheduling
+            </p>
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-[#173f3b] sm:text-4xl md:text-[2.5rem] md:leading-tight">
+              Book an appointment
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-stone-600 sm:text-base">
+              Choose your visit, see real openings, then send your request. We&rsquo;ll email you next
+              steps; when online payment is enabled, you&rsquo;ll be able to check out on Square right
+              after you submit.
+            </p>
+          </div>
+          <ol className="mt-8 flex flex-col gap-2 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+            {(
+              [
+                { n: 1, label: "Service & time", done: stepDone.one },
+                { n: 2, label: "Pick a slot", done: stepDone.two },
+                { n: 3, label: "Your details", done: stepDone.three },
+              ] as const
+            ).map((step) => (
+              <li
+                key={step.n}
+                className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold uppercase tracking-wide transition sm:text-[0.7rem] ${
+                  step.done
+                    ? "border-[#0f5f5c]/40 bg-[#0f5f5c] text-white shadow-sm"
+                    : "border-stone-200 bg-stone-50 text-stone-500"
+                }`}
+              >
+                <span
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-black ${
+                    step.done ? "bg-white/20 text-white" : "bg-stone-200 text-stone-600"
+                  }`}
+                >
+                  {step.n}
+                </span>
+                {step.label}
+              </li>
+            ))}
           </ol>
         </header>
 
-        <section
-          aria-labelledby="step-one"
-          className="space-y-5 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md"
+        <div
+          className={`mt-8 sm:mt-10 ${selectedSlot ? "lg:grid lg:grid-cols-[minmax(0,1fr)_min(100%,300px)] lg:items-start lg:gap-10 xl:gap-12" : ""}`}
         >
-          <h2 id="step-one" className="text-lg font-black text-[#173f3b]">
-            What, where, and when
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="space-y-1 text-sm">
-              <span className="font-bold text-[#173f3b]">Location</span>
+          <div className="min-w-0 space-y-8 sm:space-y-10">
+            <section
+              aria-labelledby="step-one"
+              className="rounded-2xl border border-stone-200/90 bg-white p-6 shadow-sm sm:p-8"
+            >
+              <div className="flex flex-col gap-1 border-b border-stone-100 pb-5 sm:pb-6">
+                <h2 id="step-one" className="text-xl font-black text-[#173f3b] sm:text-2xl">
+                  What, where, and when
+                </h2>
+                <p className="text-sm text-stone-600">Set the basics, then choose how you want to match with a provider.</p>
+              </div>
+
+              <div className="mt-6 grid gap-5 sm:grid-cols-2">
+            <label className="block space-y-1.5 text-sm">
+              <span className={fieldLabel}>Location</span>
               <select
-                className="focus-ring w-full border border-stone-300 bg-white px-3 py-2"
+                className={fieldControl}
                 value={locationId}
                 onChange={(e) => {
                   setLocationId(e.target.value as LocationId);
@@ -366,10 +391,10 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
               </select>
             </label>
 
-            <label className="space-y-1 text-sm">
-              <span className="font-bold text-[#173f3b]">Service</span>
+            <label className="block space-y-1.5 text-sm">
+              <span className={fieldLabel}>Service</span>
               <select
-                className="focus-ring w-full border border-stone-300 bg-white px-3 py-2"
+                className={fieldControl}
                 value={serviceLine}
                 onChange={(e) => {
                   const value = e.target.value as ServiceLine;
@@ -384,10 +409,10 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
               </select>
             </label>
 
-            <label className="space-y-1 text-sm">
-              <span className="font-bold text-[#173f3b]">Duration</span>
+            <label className="block space-y-1.5 text-sm">
+              <span className={fieldLabel}>Duration</span>
               <select
-                className="focus-ring w-full border border-stone-300 bg-white px-3 py-2"
+                className={fieldControl}
                 value={durationMin}
                 onChange={(e) => {
                   setDurationMin(Number(e.target.value) as DurationMin);
@@ -400,11 +425,11 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
               </select>
             </label>
 
-            <label className="space-y-1 text-sm">
-              <span className="font-bold text-[#173f3b]">Date ({TIME_ZONE})</span>
+            <label className="block space-y-1.5 text-sm">
+              <span className={fieldLabel}>Date ({TIME_ZONE})</span>
               <input
                 type="date"
-                className="focus-ring w-full border border-stone-300 bg-white px-3 py-2"
+                className={fieldControl}
                 min={minDate}
                 max={maxDate}
                 value={date}
@@ -417,80 +442,88 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
             </label>
           </div>
 
-          <div className="space-y-3 border border-stone-200 bg-[#f2efe3] p-4">
-            <p className="text-sm font-black uppercase tracking-wide text-[#173f3b]">Provider</p>
+          <div className="mt-8 space-y-5 rounded-2xl border border-stone-200/80 bg-gradient-to-b from-[#faf8f3] to-[#f0ebe0] p-5 shadow-inner sm:p-6">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className={fieldLabel}>Provider matching</p>
+                <p className="mt-1 text-base font-black text-[#173f3b]">How should we match you?</p>
+              </div>
+            </div>
             {providers === null ? (
               <p className="text-sm text-stone-700">Loading providers&hellip;</p>
             ) : providersError ? (
               <p className="text-sm text-red-700">{providersError}</p>
             ) : providers.length === 0 ? (
-              <p className="text-sm text-amber-900">
+              <p className="text-sm leading-relaxed text-amber-950">
                 No providers are published for this location and service yet. Please call{" "}
-                <a className="font-bold underline" href={`tel:${loc.phonePrimary.replaceAll("-", "")}`}>
+                <a className="font-bold underline underline-offset-2" href={`tel:${loc.phonePrimary.replaceAll("-", "")}`}>
                   {loc.phonePrimary}
                 </a>{" "}
                 to schedule.
               </p>
             ) : (
               <>
-                <fieldset className="space-y-2 text-sm">
+                <fieldset>
                   <legend className="sr-only">How to choose a provider</legend>
-                  <label className="flex cursor-pointer items-start gap-2">
-                    <input
-                      type="radio"
-                      name="providerMode"
-                      className="mt-1"
-                      checked={providerMode === "any"}
-                      onChange={() => {
+                  <div className="flex flex-col gap-2 sm:inline-flex sm:flex-row sm:rounded-xl sm:border sm:border-stone-300 sm:bg-white sm:p-1 sm:shadow-sm">
+                    <button
+                      type="button"
+                      className={`focus-ring rounded-lg px-4 py-3 text-left text-sm transition sm:py-2.5 ${
+                        providerMode === "any"
+                          ? "bg-[#0f5f5c] text-white shadow-sm sm:px-5"
+                          : "bg-white text-stone-800 hover:bg-stone-50 sm:bg-transparent"
+                      }`}
+                      onClick={() => {
                         setProviderMode("any");
                         setRepeatWeeklyCount(1);
                         setSlots(null);
                         setSelectedSlot(null);
                       }}
-                    />
-                    <span>
-                      <span className="font-bold text-[#173f3b]">First available</span>
-                      <span className="block text-stone-700">
-                        Show every time someone qualified is free. Recommended.
+                    >
+                      <span className="font-bold">First available</span>
+                      <span className="mt-0.5 block text-xs font-normal opacity-90 sm:opacity-100">
+                        Earliest opening with any listed provider.
                       </span>
-                    </span>
-                  </label>
-                  <label className="flex cursor-pointer items-start gap-2">
-                    <input
-                      type="radio"
-                      name="providerMode"
-                      className="mt-1"
-                      checked={providerMode === "specific"}
-                      onChange={() => {
+                    </button>
+                    <button
+                      type="button"
+                      className={`focus-ring rounded-lg px-4 py-3 text-left text-sm transition sm:py-2.5 ${
+                        providerMode === "specific"
+                          ? "bg-[#0f5f5c] text-white shadow-sm sm:px-5"
+                          : "bg-white text-stone-800 hover:bg-stone-50 sm:bg-transparent"
+                      }`}
+                      onClick={() => {
                         setProviderMode("specific");
                         setPreferredProviderId("");
                         setSlots(null);
                         setSelectedSlot(null);
                       }}
-                    />
-                    <span>
-                      <span className="font-bold text-[#173f3b]">A specific provider</span>
-                      <span className="block text-stone-700">Show only their openings.</span>
-                    </span>
-                  </label>
+                    >
+                      <span className="font-bold">Choose a provider</span>
+                      <span className="mt-0.5 block text-xs font-normal opacity-90 sm:opacity-100">
+                        See their photo, bio, and only their openings.
+                      </span>
+                    </button>
+                  </div>
                 </fieldset>
 
                 {providerMode === "specific" ? (
                   <>
-                    <p className="text-xs text-stone-600">
-                      Only providers who accept new clients through online booking are listed here.
+                    <p className="text-xs leading-relaxed text-stone-600">
+                      Listed providers accept new clients through online booking. Tap a card to select
+                      them, then load open times below.
                     </p>
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                       {providers.map((p) => {
                         const selected = selectedProviderId === p.id;
                         return (
                           <button
                             key={p.id}
                             type="button"
-                            className={`focus-ring flex flex-col overflow-hidden rounded-lg border text-left transition ${
+                            className={`focus-ring group flex flex-col overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition ${
                               selected
-                                ? "border-[#0f5f5c] ring-2 ring-[#0f5f5c]/30"
-                                : "border-stone-200 bg-white hover:border-[#0f5f5c]/50"
+                                ? "border-[#0f5f5c] ring-2 ring-[#0f5f5c] ring-offset-2 ring-offset-[#f4f2ea]"
+                                : "border-stone-200/90 hover:border-[#0f5f5c]/40 hover:shadow-md"
                             }`}
                             onClick={() => {
                               setSelectedProviderId(p.id);
@@ -499,28 +532,35 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                             }}
                             aria-pressed={selected}
                           >
-                            <div className="relative aspect-[4/3] w-full bg-stone-200">
+                            <div className="relative aspect-[5/6] w-full overflow-hidden bg-gradient-to-b from-stone-100 to-stone-200">
                               {p.photoUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                   src={p.photoUrl}
-                                  alt=""
-                                  className="h-full w-full object-cover"
+                                  alt={p.displayName}
+                                  className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                                   loading="lazy"
                                   referrerPolicy="no-referrer"
                                 />
                               ) : (
-                                <div className="flex h-full w-full items-center justify-center text-3xl font-black text-stone-400">
+                                <div className="flex h-full w-full items-center justify-center text-4xl font-black text-stone-400">
                                   {p.displayName.slice(0, 1)}
                                 </div>
                               )}
+                              {selected ? (
+                                <span className="absolute right-2 top-2 rounded-full bg-[#0f5f5c] px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-white shadow">
+                                  Selected
+                                </span>
+                              ) : null}
                             </div>
-                            <div className="space-y-1 p-3">
-                              <span className="font-bold text-[#173f3b]">{p.displayName}</span>
+                            <div className="space-y-1.5 p-4">
+                              <span className="block font-bold text-[#173f3b]">{p.displayName}</span>
                               {p.about ? (
-                                <span className="line-clamp-2 block text-xs text-stone-600">{p.about}</span>
+                                <span className="line-clamp-2 block text-xs leading-snug text-stone-600">
+                                  {p.about}
+                                </span>
                               ) : (
-                                <span className="block text-xs text-stone-500">Profile below.</span>
+                                <span className="block text-xs text-stone-500">Bio in panel below.</span>
                               )}
                             </div>
                           </button>
@@ -528,30 +568,32 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                       })}
                     </div>
                     {selectedProvider ? (
-                      <div className="space-y-2 rounded-lg border border-[#0f5f5c]/25 bg-white p-4">
-                        <p className="text-xs font-black uppercase tracking-wide text-[#173f3b]">
-                          About this provider
-                        </p>
-                        <div className="flex flex-col gap-3 sm:flex-row">
-                          <div className="mx-auto w-40 shrink-0 sm:mx-0">
+                      <div className="overflow-hidden rounded-2xl border border-[#0f5f5c]/20 bg-white shadow-sm">
+                        <div className="border-b border-stone-100 bg-[#0f5f5c]/-[0.06] px-4 py-3 sm:px-5">
+                          <p className="text-[0.65rem] font-bold uppercase tracking-[0.15em] text-[#0f5f5c]">
+                            About this provider
+                          </p>
+                          <p className="mt-0.5 text-lg font-black text-[#173f3b]">{selectedProvider.displayName}</p>
+                        </div>
+                        <div className="flex flex-col gap-5 p-4 sm:flex-row sm:items-start sm:gap-6 sm:p-6">
+                          <div className="mx-auto w-full max-w-[200px] shrink-0 sm:mx-0 sm:max-w-[220px]">
                             {selectedProvider.photoUrl ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={selectedProvider.photoUrl}
-                                alt=""
-                                className="aspect-square w-full rounded-lg object-cover"
+                                alt={selectedProvider.displayName}
+                                className="aspect-square w-full rounded-xl object-cover shadow-md"
                                 loading="lazy"
                                 referrerPolicy="no-referrer"
                               />
                             ) : (
-                              <div className="flex aspect-square w-full items-center justify-center rounded-lg bg-stone-200 text-3xl font-black text-stone-500">
+                              <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-gradient-to-br from-stone-100 to-stone-200 text-4xl font-black text-stone-500 shadow-inner">
                                 {selectedProvider.displayName.slice(0, 1)}
                               </div>
                             )}
                           </div>
-                          <div className="min-w-0 flex-1 space-y-2">
-                            <p className="text-lg font-black text-[#173f3b]">{selectedProvider.displayName}</p>
-                            <p className="whitespace-pre-wrap text-sm text-stone-700">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm leading-relaxed text-stone-700 sm:text-[0.9375rem] sm:leading-relaxed">
                               {selectedProvider.about?.trim()
                                 ? selectedProvider.about
                                 : "We are adding a short bio for this provider soon. You can still choose them and pick an open time below."}
@@ -560,10 +602,10 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                         </div>
                       </div>
                     ) : null}
-                    <label className="block space-y-1 text-sm">
-                      <span className="font-bold text-[#173f3b]">Repeat (same weekday)</span>
+                    <label className="block space-y-1.5 text-sm">
+                      <span className={fieldLabel}>Repeat (same weekday)</span>
                       <select
-                        className="focus-ring w-full border border-stone-300 bg-white px-3 py-2"
+                        className={fieldControl}
                         value={repeatWeeklyCount}
                         onChange={(e) => setRepeatWeeklyCount(Number(e.target.value))}
                       >
@@ -573,16 +615,16 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                           </option>
                         ))}
                       </select>
-                      <span className="block text-xs text-stone-600">
+                      <span className="block text-xs leading-relaxed text-stone-600">
                         Each visit is a separate pending request until the office confirms.
                       </span>
                     </label>
                   </>
                 ) : (
-                  <label className="block space-y-1 text-sm">
-                    <span className="font-bold text-[#173f3b]">Preference (optional)</span>
+                  <label className="block space-y-1.5 text-sm">
+                    <span className={fieldLabel}>Preference (optional)</span>
                     <select
-                      className="focus-ring w-full border border-stone-300 bg-white px-3 py-2"
+                      className={fieldControl}
                       value={preferredProviderId}
                       onChange={(e) => setPreferredProviderId(e.target.value)}
                     >
@@ -599,33 +641,44 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
             )}
           </div>
 
-          <button
-            type="button"
-            className="focus-ring bg-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b] disabled:opacity-50"
-            onClick={loadSlots}
-            disabled={loadingSlots || !canPickSlots}
-          >
-            {loadingSlots ? "Loading times…" : "See open times"}
-          </button>
+          <div className="mt-8 flex flex-col gap-4 border-t border-stone-100 pt-8 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              type="button"
+              className="focus-ring inline-flex w-full items-center justify-center rounded-xl bg-[#0f5f5c] px-6 py-3.5 text-sm font-black uppercase tracking-wide text-white shadow-sm transition hover:bg-[#0f817b] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-[200px]"
+              onClick={loadSlots}
+              disabled={loadingSlots || !canPickSlots}
+            >
+              {loadingSlots ? "Loading times…" : "See open times"}
+            </button>
+            {slots && slots.length > 0 ? (
+              <p className="text-center text-xs text-stone-500 sm:text-left">
+                {slots.length} opening{slots.length === 1 ? "" : "s"} loaded — tap a time to continue.
+              </p>
+            ) : null}
+          </div>
 
-          <div aria-live="polite" aria-busy={loadingSlots} className="space-y-3">
-            {slotsHint ? <p className="text-sm text-stone-700">{slotsHint}</p> : null}
-            {slotsError ? <p className="text-sm text-red-700">{slotsError}</p> : null}
+          <div aria-live="polite" aria-busy={loadingSlots} className="mt-6 space-y-4">
+            {slotsHint ? (
+              <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-700">
+                {slotsHint}
+              </p>
+            ) : null}
+            {slotsError ? (
+              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">{slotsError}</p>
+            ) : null}
 
             {slots && slots.length > 0 ? (
-              <div className="space-y-2">
-                <p className="text-sm font-black uppercase tracking-wide text-[#173f3b]">
-                  Available start times
-                </p>
-                <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
+              <div className="space-y-3">
+                <p className={fieldLabel}>Available start times</p>
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
                   {slots.map((s) => (
                     <button
                       type="button"
                       key={s.startIso}
-                      className={`focus-ring min-h-[48px] rounded-xl border px-3 py-2 text-left text-sm transition ${
+                      className={`focus-ring min-h-[52px] rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition ${
                         selectedSlot?.startIso === s.startIso
-                          ? "border-[#0f5f5c] bg-[#0f5f5c] font-bold text-white"
-                          : "border-stone-200 bg-stone-50 hover:border-[#0f5f5c]"
+                          ? "border-[#0f5f5c] bg-[#0f5f5c] text-white shadow-md"
+                          : "border-stone-200 bg-stone-50/90 text-[#173f3b] hover:border-[#0f5f5c]/50 hover:bg-white"
                       }`}
                       onClick={() => {
                         setSelectedSlot(s);
@@ -642,23 +695,18 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
           </div>
         </section>
 
-        {selectedSlot ? (
-          <aside className="sticky top-24 z-10 border border-[#0f5f5c]/30 bg-[#eaf4f2] px-4 py-3 text-sm shadow-sm">
-            <span className="font-bold text-[#173f3b]">Selected: </span>
-            <span className="text-[#173f3b]">{selectedSlot.label}</span>
-            <span className="ml-2 text-stone-600">
-              · {durationMin} min · {serviceLine === "massage" ? "Massage" : "Chiropractic"} · {loc.shortName}
-            </span>
-          </aside>
-        ) : null}
-
         <section
           aria-labelledby="step-three"
-          className="space-y-4 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md"
+          className="rounded-2xl border border-stone-200/90 bg-white p-6 shadow-sm sm:p-8"
         >
-          <h2 id="step-three" className="text-lg font-black text-[#173f3b]">
-            Your contact details
-          </h2>
+          <div className="border-b border-stone-100 pb-5 sm:pb-6">
+            <h2 id="step-three" className="text-xl font-black text-[#173f3b] sm:text-2xl">
+              Your contact details
+            </h2>
+            <p className="mt-1 text-sm text-stone-600">
+              We&rsquo;ll use this to confirm your visit and send updates. Add anything helpful in notes.
+            </p>
+          </div>
 
           <div className="hidden" aria-hidden="true">
             <label>
@@ -672,21 +720,21 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
             </label>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="space-y-1 text-sm sm:col-span-2">
-              <span className="font-bold text-[#173f3b]">Full name</span>
+          <div className="mt-6 grid gap-5 sm:grid-cols-2">
+            <label className="block space-y-1.5 text-sm sm:col-span-2">
+              <span className={fieldLabel}>Full name</span>
               <input
-                className="focus-ring w-full border border-stone-300 px-3 py-2"
+                className={fieldControl}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 autoComplete="name"
                 required
               />
             </label>
-            <label className="space-y-1 text-sm">
-              <span className="font-bold text-[#173f3b]">Phone</span>
+            <label className="block space-y-1.5 text-sm">
+              <span className={fieldLabel}>Phone</span>
               <input
-                className="focus-ring w-full border border-stone-300 px-3 py-2"
+                className={fieldControl}
                 value={phone}
                 onChange={(e) => setPhone(formatPhone(e.target.value))}
                 autoComplete="tel"
@@ -695,11 +743,11 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                 required
               />
             </label>
-            <label className="space-y-1 text-sm">
-              <span className="font-bold text-[#173f3b]">Email</span>
+            <label className="block space-y-1.5 text-sm">
+              <span className={fieldLabel}>Email</span>
               <input
                 type="email"
-                className="focus-ring w-full border border-stone-300 px-3 py-2"
+                className={fieldControl}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
@@ -707,10 +755,10 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                 required
               />
             </label>
-            <label className="space-y-1 text-sm sm:col-span-2">
-              <span className="font-bold text-[#173f3b]">Notes (optional)</span>
+            <label className="block space-y-1.5 text-sm sm:col-span-2">
+              <span className={fieldLabel}>Notes (optional)</span>
               <textarea
-                className="focus-ring min-h-[96px] w-full border border-stone-300 px-3 py-2"
+                className={`${fieldControl} min-h-[100px] resize-y`}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Anything we should know? Reason for visit, allergies, pregnancy, etc."
@@ -718,14 +766,14 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
             </label>
           </div>
 
-          <p className="text-xs text-stone-600">
-            We only collect your contact details and visit preferences. No insurance or medical
-            records are stored here. By submitting you agree to be contacted about your appointment.
+          <p className="mt-6 text-xs leading-relaxed text-stone-600">
+            We only collect your contact details and visit preferences. No insurance or medical records
+            are stored here. By submitting you agree to be contacted about your appointment.
           </p>
 
           <button
             type="button"
-            className="focus-ring bg-[#f2d25d] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d] disabled:opacity-50"
+            className="focus-ring mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#f2d25d] px-6 py-3.5 text-sm font-black uppercase tracking-wide text-[#173f3b] shadow-sm transition hover:bg-[#e6c13d] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-[240px]"
             disabled={!selectedSlot || submitting || !name || !phone || !email || !canPickSlots}
             onClick={submitBooking}
           >
@@ -734,30 +782,57 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
 
           {submitMessage ? (
             <div
-              className={`space-y-3 rounded border px-3 py-2 text-sm ${
+              className={`mt-6 space-y-4 rounded-xl border px-4 py-4 text-sm leading-relaxed sm:px-5 sm:py-5 ${
                 submitSuccess
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                  : "border-amber-200 bg-amber-50 text-amber-900"
+                  ? "border-emerald-200/80 bg-emerald-50/90 text-emerald-950"
+                  : "border-amber-200/80 bg-amber-50/90 text-amber-950"
               }`}
               role="status"
               aria-live="polite"
             >
               <p>{submitMessage}</p>
               {submitSuccess && squarePayUrl ? (
-                <p>
+                <div className="flex flex-col gap-2 border-t border-emerald-200/60 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-emerald-900/90">
+                    Secure checkout
+                  </span>
                   <a
                     href={squarePayUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center rounded bg-[#0f5f5c] px-4 py-2 text-xs font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
+                    className="focus-ring inline-flex w-full items-center justify-center rounded-xl bg-[#0f5f5c] px-5 py-3 text-center text-xs font-black uppercase tracking-wide text-white shadow-sm transition hover:bg-[#0f817b] sm:w-auto"
                   >
-                    Pay with Square (opens new tab)
+                    Pay with Square (new tab)
                   </a>
-                </p>
+                </div>
               ) : null}
             </div>
           ) : null}
         </section>
+      </div>
+
+        {selectedSlot ? (
+          <aside className="mt-8 h-fit rounded-2xl border border-[#0f5f5c]/25 bg-gradient-to-b from-[#eaf6f4] to-[#e2f0ec] p-5 text-sm shadow-sm lg:sticky lg:top-24 lg:mt-0">
+            <p className="text-[0.65rem] font-bold uppercase tracking-[0.15em] text-[#0f5f5c]">Your selection</p>
+            <p className="mt-2 text-lg font-black leading-snug text-[#173f3b]">{selectedSlot.label}</p>
+            <dl className="mt-4 space-y-2 border-t border-[#0f5f5c]/10 pt-4 text-xs text-stone-700 sm:text-sm">
+              <div className="flex justify-between gap-3">
+                <dt className="text-stone-500">Duration</dt>
+                <dd className="font-semibold text-[#173f3b]">{durationMin} min</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-stone-500">Service</dt>
+                <dd className="font-semibold text-[#173f3b]">
+                  {serviceLine === "massage" ? "Massage" : "Chiropractic"}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-stone-500">Location</dt>
+                <dd className="text-right font-semibold text-[#173f3b]">{loc.shortName}</dd>
+              </div>
+            </dl>
+          </aside>
+        ) : null}
       </div>
     </div>
   );
