@@ -13,7 +13,13 @@ import { track } from "@/lib/analytics";
 
 type Slot = { startIso: string; label: string };
 
-type ProviderOption = { id: string; displayName: string; sortOrder: number };
+type ProviderOption = {
+  id: string;
+  displayName: string;
+  sortOrder: number;
+  photoUrl?: string | null;
+  about?: string | null;
+};
 
 type ProviderMode = "specific" | "any";
 
@@ -85,8 +91,13 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
   const [submitting, setSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [squarePayUrl, setSquarePayUrl] = useState<string | null>(null);
   const [repeatWeeklyCount, setRepeatWeeklyCount] = useState(1);
 
+  const selectedProvider = useMemo(
+    () => (providers && selectedProviderId ? providers.find((p) => p.id === selectedProviderId) ?? null : null),
+    [providers, selectedProviderId],
+  );
   const minDate = useMemo(() => todayIso(), []);
   const maxDate = useMemo(() => addDaysIso(90), []);
 
@@ -188,6 +199,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
   async function submitBooking() {
     setSubmitMessage(null);
     setSubmitSuccess(false);
+    setSquarePayUrl(null);
     if (!selectedSlot) return;
     if (providerMode === "specific" && !selectedProviderId) return;
 
@@ -232,6 +244,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
         providerMode?: ProviderMode;
         totalCreated?: number;
         conflictsMessage?: string;
+        paymentUrl?: string;
       };
       if (res.status === 409) {
         setSubmitMessage(
@@ -247,6 +260,9 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
         track("booking_failed", { error: msg });
         return;
       }
+      if (typeof data.paymentUrl === "string" && data.paymentUrl.length > 0) {
+        setSquarePayUrl(data.paymentUrl);
+      }
       const who =
         data.providerMode === "any" && data.providerDisplayName
           ? ` First available slot held with ${data.providerDisplayName} (subject to office confirmation).`
@@ -258,10 +274,11 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
           ? ` ${data.totalCreated} recurring weekly visits were submitted (each pending office confirmation).`
           : "";
       const conflict = data.conflictsMessage ? ` ${data.conflictsMessage}` : "";
+      const tail = data.paymentUrl
+        ? " Use the secure Square link below to pay for this time. After checkout you will receive a receipt and a confirmed appointment email with a calendar attachment."
+        : " You will receive a confirmation email shortly — check spam if you don't see it. The office will follow up to confirm.";
       setSubmitSuccess(true);
-      setSubmitMessage(
-        `Request received.${who}${repeat}${conflict} You will receive a confirmation email shortly — check spam if you don't see it. The office will follow up to confirm.`,
-      );
+      setSubmitMessage(`Request received.${who}${repeat}${conflict} ${tail}`);
       track("booking_succeeded", {
         service: serviceLine,
         location: locationId,
@@ -280,7 +297,6 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
   }
 
   const canPickSlots = Boolean(providers?.length);
-  const providerSelectDisabled = !providers?.length;
   const loc = LOCATIONS[locationId];
 
   const stepDone = {
@@ -461,25 +477,89 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
 
                 {providerMode === "specific" ? (
                   <>
-                    <label className="block space-y-1 text-sm">
-                      <span className="font-bold text-[#173f3b]">Provider</span>
-                      <select
-                        className="focus-ring w-full border border-stone-300 bg-white px-3 py-2"
-                        value={selectedProviderId}
-                        onChange={(e) => {
-                          setSelectedProviderId(e.target.value);
-                          setSlots(null);
-                          setSelectedSlot(null);
-                        }}
-                        disabled={providerSelectDisabled}
-                      >
-                        {providers.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.displayName}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    <p className="text-xs text-stone-600">
+                      Only providers who accept new clients through online booking are listed here.
+                    </p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {providers.map((p) => {
+                        const selected = selectedProviderId === p.id;
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            className={`focus-ring flex flex-col overflow-hidden rounded-lg border text-left transition ${
+                              selected
+                                ? "border-[#0f5f5c] ring-2 ring-[#0f5f5c]/30"
+                                : "border-stone-200 bg-white hover:border-[#0f5f5c]/50"
+                            }`}
+                            onClick={() => {
+                              setSelectedProviderId(p.id);
+                              setSlots(null);
+                              setSelectedSlot(null);
+                            }}
+                            aria-pressed={selected}
+                          >
+                            <div className="relative aspect-[4/3] w-full bg-stone-200">
+                              {p.photoUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={p.photoUrl}
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                  loading="lazy"
+                                  referrerPolicy="no-referrer"
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center text-3xl font-black text-stone-400">
+                                  {p.displayName.slice(0, 1)}
+                                </div>
+                              )}
+                            </div>
+                            <div className="space-y-1 p-3">
+                              <span className="font-bold text-[#173f3b]">{p.displayName}</span>
+                              {p.about ? (
+                                <span className="line-clamp-2 block text-xs text-stone-600">{p.about}</span>
+                              ) : (
+                                <span className="block text-xs text-stone-500">Profile below.</span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {selectedProvider ? (
+                      <div className="space-y-2 rounded-lg border border-[#0f5f5c]/25 bg-white p-4">
+                        <p className="text-xs font-black uppercase tracking-wide text-[#173f3b]">
+                          About this provider
+                        </p>
+                        <div className="flex flex-col gap-3 sm:flex-row">
+                          <div className="mx-auto w-40 shrink-0 sm:mx-0">
+                            {selectedProvider.photoUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={selectedProvider.photoUrl}
+                                alt=""
+                                className="aspect-square w-full rounded-lg object-cover"
+                                loading="lazy"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <div className="flex aspect-square w-full items-center justify-center rounded-lg bg-stone-200 text-3xl font-black text-stone-500">
+                                {selectedProvider.displayName.slice(0, 1)}
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1 space-y-2">
+                            <p className="text-lg font-black text-[#173f3b]">{selectedProvider.displayName}</p>
+                            <p className="whitespace-pre-wrap text-sm text-stone-700">
+                              {selectedProvider.about?.trim()
+                                ? selectedProvider.about
+                                : "We are adding a short bio for this provider soon. You can still choose them and pick an open time below."}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
                     <label className="block space-y-1 text-sm">
                       <span className="font-bold text-[#173f3b]">Repeat (same weekday)</span>
                       <select
@@ -653,8 +733,8 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
           </button>
 
           {submitMessage ? (
-            <p
-              className={`rounded border px-3 py-2 text-sm ${
+            <div
+              className={`space-y-3 rounded border px-3 py-2 text-sm ${
                 submitSuccess
                   ? "border-emerald-200 bg-emerald-50 text-emerald-900"
                   : "border-amber-200 bg-amber-50 text-amber-900"
@@ -662,8 +742,20 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
               role="status"
               aria-live="polite"
             >
-              {submitMessage}
-            </p>
+              <p>{submitMessage}</p>
+              {submitSuccess && squarePayUrl ? (
+                <p>
+                  <a
+                    href={squarePayUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center rounded bg-[#0f5f5c] px-4 py-2 text-xs font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
+                  >
+                    Pay with Square (opens new tab)
+                  </a>
+                </p>
+              ) : null}
+            </div>
           ) : null}
         </section>
       </div>

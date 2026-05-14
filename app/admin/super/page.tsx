@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
+import { IntakePhiSection } from "./IntakePhiSection";
+import { MassageTeamAdminSection } from "./_components/MassageTeamAdminSection";
 
 type Me = {
   authenticated: boolean;
@@ -19,6 +21,7 @@ type EmailStatus = {
   hasApiKey: boolean;
   hasFromEmail: boolean;
   fromEnvInvalidFormat?: boolean;
+  officeNotificationConfigured?: boolean;
 };
 
 type InviteStaffResponse = {
@@ -41,6 +44,9 @@ type BookableProviderRow = {
   locationIds: string[];
   serviceLines: string[];
   sortOrder: number;
+  acceptsNewClients: boolean;
+  photoUrl?: string | null;
+  about?: string | null;
   schedule?: {
     openHour: number;
     openMinute: number;
@@ -193,6 +199,9 @@ export default function SuperAdminPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [deletingUid, setDeletingUid] = useState<string | null>(null);
   const [emailStatus, setEmailStatus] = useState<EmailStatus | null>(null);
+  const [emailTestTo, setEmailTestTo] = useState("");
+  const [emailTestLoading, setEmailTestLoading] = useState(false);
+  const [emailTestMessage, setEmailTestMessage] = useState<string | null>(null);
   const [bookableProviders, setBookableProviders] = useState<BookableProviderRow[]>([]);
   const [newProviderName, setNewProviderName] = useState("");
   const [newParis, setNewParis] = useState(true);
@@ -226,6 +235,45 @@ export default function SuperAdminPage() {
       return;
     }
     setEmailStatus((await res.json()) as EmailStatus);
+  }
+
+  async function sendEmailTest() {
+    setEmailTestMessage(null);
+    if (!auth?.currentUser) return;
+    setEmailTestLoading(true);
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const trimmed = emailTestTo.trim();
+      const res = await fetch("/api/admin/email-test", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(trimmed ? { to: trimmed } : {}),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        issue?: string;
+        detail?: string;
+        error?: string;
+      };
+      if (res.ok && data.ok) {
+        setEmailTestMessage(
+          `SendGrid accepted the message${trimmed ? ` to ${trimmed}` : ""}. Check inbox/spam and SendGrid Activity.`,
+        );
+        return;
+      }
+      const detail =
+        typeof data.detail === "string" && data.detail.length > 0
+          ? data.detail
+          : typeof data.error === "string"
+            ? data.error
+            : `HTTP ${res.status}`;
+      setEmailTestMessage(`Test failed (${data.issue ?? "error"}): ${detail}`);
+    } finally {
+      setEmailTestLoading(false);
+    }
   }
 
   async function loadBookableProviders(token: string) {
@@ -379,6 +427,7 @@ export default function SuperAdminPage() {
           serviceLines,
           sortOrder: newSort,
           active: true,
+          acceptsNewClients: true,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -426,6 +475,9 @@ export default function SuperAdminPage() {
           sortOrder: editingProvider.sortOrder,
           active: editingProvider.active,
           schedule: editingProvider.schedule ?? null,
+          acceptsNewClients: editingProvider.acceptsNewClients,
+          photoUrl: editingProvider.photoUrl?.trim() || null,
+          about: editingProvider.about?.trim() || null,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -640,9 +692,66 @@ export default function SuperAdminPage() {
               </p>
             </section>
           ) : emailStatus?.sendgridConfigured ? (
-            <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
-              Outbound email (SendGrid) is configured on this deployment — invite emails can be sent.
-            </p>
+            <div className="space-y-3">
+              <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+                Outbound email (SendGrid) is configured on this deployment — invite emails can be sent.
+              </p>
+              {emailStatus.officeNotificationConfigured ? (
+                <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
+                  <code className="rounded bg-white/80 px-1">OFFICE_NOTIFICATION_EMAIL</code> is set — contact and
+                  booking flows can send the office notification copy when SendGrid sends.
+                </p>
+              ) : (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                  <code className="rounded bg-white/80 px-1">OFFICE_NOTIFICATION_EMAIL</code> is not set on this
+                  deployment — new bookings and the contact form will not email the office (patient-facing mail may
+                  still send). Add it under Vercel → Environment Variables → Production if you need office copies.
+                </p>
+              )}
+              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3 text-sm">
+                <p className="font-medium text-slate-900">SendGrid live test</p>
+                <p className="text-slate-600">
+                  Sends one real message through SendGrid. Confirm in your inbox or in{" "}
+                  <a
+                    href="https://app.sendgrid.com/email_activity"
+                    className="font-semibold underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    SendGrid Activity
+                  </a>
+                  .
+                </p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <label className="min-w-0 flex-1 space-y-1">
+                    <span className="font-medium text-slate-800">To (optional)</span>
+                    <input
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                      type="email"
+                      placeholder={me?.email ?? "Defaults to your sign-in email"}
+                      value={emailTestTo}
+                      onChange={(e) => setEmailTestTo(e.target.value)}
+                      autoComplete="email"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    disabled={emailTestLoading}
+                    onClick={() => void sendEmailTest()}
+                    className="shrink-0 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                  >
+                    {emailTestLoading ? "Sending…" : "Send test email"}
+                  </button>
+                </div>
+                {emailTestMessage ? (
+                  <p className="text-sm text-slate-800 whitespace-pre-wrap">{emailTestMessage}</p>
+                ) : null}
+              </section>
+            </div>
+          ) : null}
+
+          {auth?.currentUser ? (
+            <IntakePhiSection getIdToken={() => auth.currentUser!.getIdToken()} />
           ) : null}
 
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
@@ -936,6 +1045,40 @@ export default function SuperAdminPage() {
                   />
                   Active (shown on public booking)
                 </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={editingProvider.acceptsNewClients !== false}
+                    onChange={(e) =>
+                      setEditingProvider((prev) =>
+                        prev ? { ...prev, acceptsNewClients: e.target.checked } : prev,
+                      )
+                    }
+                  />
+                  Accepting new clients on the public book page (uncheck for existing clients only)
+                </label>
+                <label className="block space-y-1">
+                  <span className="font-medium text-slate-800">Photo URL (https only, optional)</span>
+                  <input
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                    value={editingProvider.photoUrl ?? ""}
+                    onChange={(e) =>
+                      setEditingProvider((prev) => (prev ? { ...prev, photoUrl: e.target.value } : prev))
+                    }
+                    placeholder="https://…"
+                  />
+                </label>
+                <label className="block space-y-1">
+                  <span className="font-medium text-slate-800">About (plain text, optional)</span>
+                  <textarea
+                    className="min-h-[100px] w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                    value={editingProvider.about ?? ""}
+                    onChange={(e) =>
+                      setEditingProvider((prev) => (prev ? { ...prev, about: e.target.value } : prev))
+                    }
+                    placeholder="Short bio shown when someone picks this provider to book."
+                  />
+                </label>
                 <label className="block space-y-1">
                   <span className="font-medium text-slate-800">Sort order</span>
                   <input
@@ -1061,7 +1204,11 @@ export default function SuperAdminPage() {
                       ) : (
                         <span className="text-amber-800">Hidden</span>
                       )}{" "}
-                      · sort {p.sortOrder} · id <span className="font-mono">{p.id}</span>
+                      · sort {p.sortOrder}
+                      {p.acceptsNewClients === false ? (
+                        <span className="text-amber-900"> · existing clients only</span>
+                      ) : null}{" "}
+                      · id <span className="font-mono">{p.id}</span>
                     </div>
                     <div className="text-xs">
                       Locations: {p.locationIds.join(", ") || "—"} · Services:{" "}
@@ -1109,6 +1256,8 @@ export default function SuperAdminPage() {
               ) : null}
             </ul>
           </section>
+
+          <MassageTeamAdminSection auth={auth} onNotify={setMessage} />
 
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
             <h2 className="text-lg font-semibold text-slate-900">Bootstrap again (optional)</h2>

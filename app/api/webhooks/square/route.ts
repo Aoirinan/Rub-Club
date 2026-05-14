@@ -3,8 +3,14 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getFirestore } from "@/lib/firebase-admin";
 import { recordBookingEvent } from "@/lib/booking-events";
 import { bookingDocToEmailContext } from "@/lib/booking-doc";
-import { patientPaymentReceiptEmail } from "@/lib/email-templates";
+import {
+  patientAcceptedEmail,
+  patientPaymentReceiptEmail,
+} from "@/lib/email-templates";
+import { buildIcs } from "@/lib/ics";
+import { generatePatientPortalToken, hashPatientPortalToken } from "@/lib/patient-portal-token";
 import { sendBookingNotification } from "@/lib/sendgrid";
+import { siteUrl } from "@/lib/site-content";
 import { verifySquareWebhook } from "@/lib/square";
 
 export const runtime = "nodejs";
@@ -66,11 +72,39 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, skipped: true });
   }
 
-  await bookingRef.update({
+  const existingPayId = snap.get("squarePaymentId");
+  if (typeof existingPayId === "string" && existingPayId.length > 0) {
+    if (existingPayId === squarePaymentId) {
+      return NextResponse.json({ ok: true, skipped: true });
+    }
+    console.warn("[square-webhook] Booking already linked to a different payment; ignoring.", bookingId);
+    return NextResponse.json({ ok: true, skipped: true });
+  }
+
+  const prepaidOnline = snap.get("prepaidOnline") === true;
+  const bookingStatus = snap.get("status");
+  const autoConfirm = prepaidOnline && bookingStatus === "pending";
+  let portalPlain: string | null = null;
+  let portalHash: string | null = null;
+  if (autoConfirm) {
+    portalPlain = generatePatientPortalToken();
+    portalHash = hashPatientPortalToken(portalPlain);
+  }
+
+  const paymentUpdate: Record<string, unknown> = {
     paidAt: FieldValue.serverTimestamp(),
     paidAmountCents: amountCents,
     squarePaymentId,
-  });
+  };
+  if (autoConfirm && portalHash) {
+    paymentUpdate.status = "confirmed";
+    paymentUpdate.acceptedAt = FieldValue.serverTimestamp();
+    paymentUpdate.acceptedByUid = null;
+    paymentUpdate.acceptedByEmail = "square_prepay";
+    paymentUpdate.patientPortalTokenHash = portalHash;
+  }
+
+  await bookingRef.update(paymentUpdate);
 
   await recordBookingEvent(db, bookingId, {
     type: "payment_completed",
@@ -78,6 +112,15 @@ export async function POST(req: Request) {
     byEmail: null,
     meta: { amountCents, squarePaymentId },
   }).catch((err) => console.error("Failed to log payment_completed event:", err));
+
+  if (autoConfirm && portalHash) {
+    await recordBookingEvent(db, bookingId, {
+      type: "accepted",
+      byUid: null,
+      byEmail: "square_prepay",
+      meta: { prevStatus: "pending", via: "square_prepay" },
+    }).catch((err) => console.error("Failed to log accepted event:", err));
+  }
 
   try {
     const emailCtx = bookingDocToEmailContext(snap);
@@ -96,6 +139,47 @@ export async function POST(req: Request) {
     }
   } catch (err) {
     console.error("Receipt email failed:", err);
+  }
+
+  if (autoConfirm && portalPlain) {
+    try {
+      const fresh = await bookingRef.get();
+      const emailCtx = bookingDocToEmailContext(fresh);
+      if (emailCtx) {
+        const manageUrl = siteUrl(`/book/manage?token=${encodeURIComponent(portalPlain)}`);
+        const ics = buildIcs({
+          uid: `${emailCtx.bookingId}@wellnessparistx`,
+          startUtc: emailCtx.start.toUTC(),
+          durationMinutes: emailCtx.durationMin,
+          summary: `${emailCtx.serviceLine === "massage" ? "Massage" : "Chiropractic"} appointment`,
+          description: `Confirmed appointment with ${emailCtx.providerDisplayName || "first available provider"}. Reference: ${emailCtx.bookingId}.`,
+          location: `${emailCtx.locationId === "paris" ? "Paris" : "Sulphur Springs"}, TX`,
+          organizerEmail: process.env.OFFICE_NOTIFICATION_EMAIL,
+          organizerName: "Paris Wellness",
+        });
+        const icsBase64 = Buffer.from(ics, "utf8").toString("base64");
+        const { subject, text, html } = patientAcceptedEmail({
+          ...emailCtx,
+          patientManageUrl: manageUrl,
+        });
+        await sendBookingNotification({
+          to: emailCtx.email,
+          subject,
+          text,
+          html,
+          fromName: "The Rub Club & Chiropractic Associates",
+          attachments: [
+            {
+              filename: "appointment.ics",
+              content: icsBase64,
+              type: "text/calendar; method=PUBLISH",
+            },
+          ],
+        });
+      }
+    } catch (err) {
+      console.error("Square prepay acceptance email failed:", err);
+    }
   }
 
   return NextResponse.json({ ok: true });

@@ -21,10 +21,14 @@ export async function GET(req: Request) {
   const hasValidFrom = isValidOutboundFromEmail(fromNorm);
   const fromEnvInvalidFormat = rawFrom.trim().length > 0 && !hasValidFrom;
 
+  const officeTo = process.env.OFFICE_NOTIFICATION_EMAIL?.trim() ?? "";
+
   return NextResponse.json({
     sendgridConfigured: Boolean(key && hasValidFrom),
     hasApiKey: Boolean(key),
     hasFromEmail: hasValidFrom,
     fromEnvInvalidFormat,
+    /** Set when contact/booking office notification copies can be sent (address not exposed). */
+    officeNotificationConfigured: officeTo.length > 0,
   });
 }

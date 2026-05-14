@@ -70,6 +70,9 @@ function AdminDashboard() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newBookingOpen, setNewBookingOpen] = useState(false);
   const [blockTimeOpen, setBlockTimeOpen] = useState(false);
+  const [csvImportSkipConflict, setCsvImportSkipConflict] = useState(false);
+  const [csvImportBusy, setCsvImportBusy] = useState(false);
+  const csvImportInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setAuth(getFirebaseClientAuth());
@@ -281,6 +284,81 @@ function AdminDashboard() {
               >
                 Export CSV
               </button>
+            ) : null}
+            {me?.role ? (
+              <>
+                <input
+                  ref={csvImportInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const input = e.target;
+                    const f = input.files?.[0];
+                    input.value = "";
+                    if (!f) return;
+                    const token = await getIdToken();
+                    if (!token) {
+                      setError("Sign in to import.");
+                      return;
+                    }
+                    setCsvImportBusy(true);
+                    setError(null);
+                    try {
+                      const fd = new FormData();
+                      fd.append("file", f);
+                      if (csvImportSkipConflict) fd.append("skipConflictCheck", "true");
+                      const res = await fetch("/api/admin/bookings/import", {
+                        method: "POST",
+                        headers: { Authorization: `Bearer ${token}` },
+                        body: fd,
+                      });
+                      const data = (await res.json().catch(() => ({}))) as {
+                        error?: string;
+                        created?: number;
+                        totalRows?: number;
+                        errors?: { row: number; message: string }[];
+                        skipped?: { row: number; reason: string }[];
+                      };
+                      if (!res.ok) {
+                        setError(typeof data.error === "string" ? data.error : "CSV import failed.");
+                        return;
+                      }
+                      const errLines =
+                        data.errors?.slice(0, 12).map((x) => `Row ${x.row}: ${x.message}`) ?? [];
+                      const skipN = data.skipped?.length ?? 0;
+                      const msg = [
+                        `Imported ${data.created ?? 0} of ${data.totalRows ?? 0} row(s).`,
+                        skipN ? `Skipped ${skipN} row(s) (e.g. existing booking IDs).` : "",
+                        errLines.length ? `Issues:\n${errLines.join("\n")}` : "",
+                      ]
+                        .filter(Boolean)
+                        .join("\n");
+                      window.alert(msg);
+                      await refreshBookings();
+                    } finally {
+                      setCsvImportBusy(false);
+                    }
+                  }}
+                />
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:border-slate-400">
+                  <input
+                    type="checkbox"
+                    checked={csvImportSkipConflict}
+                    onChange={(e) => setCsvImportSkipConflict(e.target.checked)}
+                    className="rounded border-slate-300"
+                  />
+                  Import overlaps
+                </label>
+                <button
+                  type="button"
+                  disabled={csvImportBusy}
+                  onClick={() => csvImportInputRef.current?.click()}
+                  className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400 disabled:opacity-50"
+                >
+                  {csvImportBusy ? "Importing…" : "Import CSV"}
+                </button>
+              </>
             ) : null}
             {me?.role ? (
               <Link

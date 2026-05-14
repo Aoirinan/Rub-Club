@@ -55,6 +55,7 @@ const SS_NAV: SSNavEntry[] = [
     items: [
       { href: "/sulphur-springs/patient-resources", label: "About Chiropractic" },
       { href: "/sulphur-springs/q-and-a", label: "Q & A" },
+      { href: "/patient-forms", label: "Patient forms & intake" },
     ],
   },
   { href: "/book", label: "Appointment Request" },

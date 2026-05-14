@@ -8,11 +8,12 @@ import {
   CHIRO_INTRO_VIDEO_SRC,
   DOCTORS,
   MASSAGE,
-  TEAM,
 } from "@/lib/home-verbatim";
+import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { JsonLd } from "@/components/JsonLd";
 import { HomeVideo } from "@/components/HomeVideo";
 import { FaqList } from "@/components/FaqList";
+import { MassageTeamGrid } from "@/components/marketing/MassageTeamGrid";
 import {
   chiropractorJsonLd,
   faqPageJsonLd,
@@ -35,7 +36,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export default async function Home() {
+  const massageTeam = await getMassageTeamForMarketing();
   return (
     <div className="bg-[#f4f2ea]">
       <JsonLd
@@ -265,37 +267,12 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-center text-3xl font-black text-[#173f3b]">Meet the Team</h2>
-          <p className="mx-auto mt-4 max-w-3xl text-center text-sm font-semibold uppercase tracking-wide text-stone-600">
-            Massage therapy — The Rub Club
-          </p>
-          <div className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
-            {TEAM.map((member) => (
-              <article
-                key={member.name}
-                className="flex flex-col overflow-hidden border border-stone-200 bg-stone-50 shadow-sm"
-              >
-                <div className="relative aspect-[3/4] w-full bg-stone-200">
-                  <Image
-                    src={IMAGES[member.imageKey]}
-                    alt={`Portrait of ${member.name}, massage therapist`}
-                    fill
-                    className="object-cover object-top"
-                    sizes="(max-width: 640px) 100vw, 33vw"
-                  />
-                </div>
-                <div className="flex flex-1 flex-col p-5">
-                  <h3 className="text-lg font-black text-[#173f3b]">{member.name}</h3>
-                  {"role" in member ? (
-                    <p className="text-sm font-bold text-stone-600">{member.role}</p>
-                  ) : null}
-                  <p className="mt-3 flex-1 text-sm leading-relaxed text-stone-700">{member.bio}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+        <MassageTeamGrid
+          members={massageTeam}
+          title="Meet the Team"
+          subtitle="Massage therapy — The Rub Club"
+          variant="home"
+        />
 
         <section className="grid gap-8 overflow-hidden border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md lg:grid-cols-2 lg:items-center sm:p-10">
           <div>

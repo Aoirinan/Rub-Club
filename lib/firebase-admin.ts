@@ -1,5 +1,22 @@
 import admin from "firebase-admin";
 
+function resolveStorageBucket(): string | undefined {
+  const explicit = process.env.FIREBASE_STORAGE_BUCKET?.trim();
+  if (explicit) return explicit;
+  const rawJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (rawJson) {
+    try {
+      const creds = JSON.parse(normalizeServiceAccountJson(rawJson)) as { project_id?: string };
+      if (creds.project_id) return `${creds.project_id}.appspot.com`;
+    } catch {
+      /* ignore */
+    }
+  }
+  const pub = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim();
+  if (pub) return `${pub}.appspot.com`;
+  return undefined;
+}
+
 function normalizeServiceAccountJson(raw: string): string {
   let s = raw.trim();
   if (s.charCodeAt(0) === 0xfeff) {
@@ -21,15 +38,19 @@ function initAdmin(): void {
   const rawJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
   if (rawJson) {
     const creds = JSON.parse(normalizeServiceAccountJson(rawJson)) as admin.ServiceAccount;
+    const storageBucket = resolveStorageBucket();
     admin.initializeApp({
       credential: admin.credential.cert(creds),
+      ...(storageBucket ? { storageBucket } : {}),
     });
     return;
   }
 
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    const storageBucket = resolveStorageBucket();
     admin.initializeApp({
       credential: admin.credential.applicationDefault(),
+      ...(storageBucket ? { storageBucket } : {}),
     });
     return;
   }
@@ -50,4 +71,11 @@ export function getFirestore(): admin.firestore.Firestore {
 
 export function getAuth(): admin.auth.Auth {
   return getAdminApp().auth();
+}
+
+export function getStorageBucket(): ReturnType<admin.storage.Storage["bucket"]> {
+  const app = getAdminApp();
+  const name = resolveStorageBucket();
+  if (name) return admin.storage(app).bucket(name);
+  return admin.storage(app).bucket();
 }

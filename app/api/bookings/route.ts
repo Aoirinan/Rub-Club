@@ -10,6 +10,7 @@ import {
   fetchActiveProvidersForService,
   orderProvidersForAnyBooking,
 } from "@/lib/providers-db";
+import { createPaymentLink } from "@/lib/square";
 import { sendBookingNotification } from "@/lib/sendgrid";
 import {
   bucketDocIdsForAppointment,
@@ -23,7 +24,8 @@ import {
   patientPendingEmail,
   type BookingEmailContext,
 } from "@/lib/email-templates";
-import { recordBookingEventInTx } from "@/lib/booking-events";
+import { recordBookingEventInTx, recordBookingEvent } from "@/lib/booking-events";
+import { resolvePublicBookingPrepayCents } from "@/lib/public-booking-prepay";
 
 export const runtime = "nodejs";
 
@@ -118,7 +120,9 @@ export async function POST(req: Request) {
   const serviceLine = body.serviceLine as ServiceLine;
 
   const db = getFirestore();
-  const eligible = await fetchActiveProvidersForService(db, locationId, serviceLine);
+  const eligible = await fetchActiveProvidersForService(db, locationId, serviceLine, {
+    publicBooking: true,
+  });
   if (eligible.length === 0) {
     return NextResponse.json(
       {
@@ -416,6 +420,44 @@ export async function POST(req: Request) {
     console.error("Patient SendGrid failed", err);
   }
 
+  let paymentUrl: string | undefined;
+  if (createdIds.length === 1 && !body.recurrence) {
+    const cents = resolvePublicBookingPrepayCents(serviceLine, durationMin);
+    if (cents !== null) {
+      const primaryId = createdIds[0]!;
+      const linkResult = await createPaymentLink({
+        amountCents: cents,
+        patientName: body.name.trim(),
+        bookingId: primaryId,
+        description: `${serviceLine === "massage" ? "Massage" : "Chiropractic"} · ${durationMin} min (online booking)`,
+      });
+      if (linkResult.created) {
+        const ref = db.collection("bookings").doc(primaryId);
+        await ref.update({
+          paymentLinkUrl: linkResult.url,
+          paymentLinkId: linkResult.paymentLinkId,
+          paymentAmountCents: cents,
+          paymentDescription: `${serviceLine === "massage" ? "Massage" : "Chiropractic"} · ${durationMin} min (online booking)`,
+          paymentRequestedAt: FieldValue.serverTimestamp(),
+          paymentRequestedByUid: null,
+          prepaidOnline: true,
+        });
+        paymentUrl = linkResult.url;
+        await recordBookingEvent(db, primaryId, {
+          type: "payment_requested",
+          byUid: null,
+          byEmail: null,
+          meta: {
+            amountCents: cents,
+            paymentLinkUrl: linkResult.url,
+            paymentLinkId: linkResult.paymentLinkId,
+            via: "public_prepay",
+          },
+        }).catch((e) => console.error("prepay event log failed", e));
+      }
+    }
+  }
+
   return NextResponse.json(
     {
       ok: true,
@@ -432,6 +474,7 @@ export async function POST(req: Request) {
           }
         : {}),
       totalCreated: createdIds.length,
+      ...(paymentUrl ? { paymentUrl } : {}),
     },
     { status: 201 },
   );

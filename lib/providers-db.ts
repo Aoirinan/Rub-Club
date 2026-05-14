@@ -20,6 +20,29 @@ function asServiceLines(raw: unknown): ServiceLine[] | null {
   return out.length ? out : null;
 }
 
+function asHttpsPhotoUrl(raw: unknown): string | null | undefined {
+  if (raw === null || raw === undefined) return raw as null | undefined;
+  if (typeof raw !== "string") return undefined;
+  const s = raw.trim();
+  if (!s) return null;
+  if (s.length > 800) return undefined;
+  try {
+    const u = new URL(s);
+    if (u.protocol !== "https:") return undefined;
+    return s;
+  } catch {
+    return undefined;
+  }
+}
+
+function asAboutText(raw: unknown): string | null | undefined {
+  if (raw === null || raw === undefined) return raw as null | undefined;
+  if (typeof raw !== "string") return undefined;
+  const s = raw.trim();
+  if (!s) return null;
+  return s.length > 4000 ? s.slice(0, 4000) : s;
+}
+
 function asSchedule(raw: unknown): ProviderDaySchedule | null | undefined {
   if (raw === null || raw === undefined) return raw as null | undefined;
   if (typeof raw !== "object" || raw === null) return undefined;
@@ -42,6 +65,9 @@ export function parseProviderDoc(id: string, data: DocumentData): ProviderRow | 
   const serviceLines = asServiceLines(data.serviceLines);
   if (!locationIds || !serviceLines) return null;
   const sortOrder = typeof data.sortOrder === "number" && Number.isFinite(data.sortOrder) ? data.sortOrder : 0;
+  const acceptsNewClients = data.acceptsNewClients === false ? false : true;
+  const photoUrl = asHttpsPhotoUrl(data.photoUrl);
+  const about = asAboutText(data.about);
   const schedule = asSchedule(data.schedule);
   const doc: ProviderDoc = {
     displayName,
@@ -49,6 +75,9 @@ export function parseProviderDoc(id: string, data: DocumentData): ProviderRow | 
     locationIds,
     serviceLines,
     sortOrder,
+    acceptsNewClients,
+    ...(photoUrl !== undefined ? { photoUrl } : {}),
+    ...(about !== undefined ? { about } : {}),
     ...(schedule !== undefined ? { schedule } : {}),
   };
   return { id, ...doc };
@@ -77,6 +106,7 @@ export async function fetchActiveProvidersForService(
   db: Firestore,
   locationId: LocationId,
   serviceLine: ServiceLine,
+  opts?: { publicBooking?: boolean },
 ): Promise<ProviderRow[]> {
   const snap = await db.collection("providers").where("active", "==", true).get();
   const rows: ProviderRow[] = [];
@@ -85,6 +115,7 @@ export async function fetchActiveProvidersForService(
     if (!row) continue;
     if (!row.locationIds.includes(locationId)) continue;
     if (!row.serviceLines.includes(serviceLine)) continue;
+    if (opts?.publicBooking && row.acceptsNewClients === false) continue;
     rows.push(row);
   }
   rows.sort(compareProvidersForAssignment);

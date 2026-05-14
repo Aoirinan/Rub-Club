@@ -22,8 +22,16 @@ export async function GET(req: Request) {
     }
 
     const db = getFirestore();
-    const rows = await fetchActiveProvidersForService(db, locationId, serviceLine);
-    const providers = rows.map((p) => ({ id: p.id, displayName: p.displayName, sortOrder: p.sortOrder }));
+    const rows = await fetchActiveProvidersForService(db, locationId, serviceLine, {
+      publicBooking: true,
+    });
+    const providers = rows.map((p) => ({
+      id: p.id,
+      displayName: p.displayName,
+      sortOrder: p.sortOrder,
+      photoUrl: p.photoUrl ?? null,
+      about: p.about ?? null,
+    }));
 
     return NextResponse.json({ providers }, { headers: noStore });
   } catch (e) {

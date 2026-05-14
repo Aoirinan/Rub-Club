@@ -3,8 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
+import { MassageTeamGrid } from "@/components/marketing/MassageTeamGrid";
 import { IMAGES } from "@/lib/home-images";
-import { MASSAGE, TEAM } from "@/lib/home-verbatim";
+import { MASSAGE } from "@/lib/home-verbatim";
+import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { LOCATIONS, telHref } from "@/lib/constants";
 import { massageJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
@@ -45,7 +47,8 @@ const SERVICES = [
   },
 ];
 
-export default function MassageServicePage() {
+export default async function MassageServicePage() {
+  const massageTeam = await getMassageTeamForMarketing();
   const paris = LOCATIONS.paris;
   return (
     <>
@@ -114,37 +117,12 @@ export default function MassageServicePage() {
           <p className="mt-4 max-w-3xl leading-relaxed text-stone-700">{MASSAGE.whenBody}</p>
         </section>
 
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">Meet the team</h2>
-          <p className="mt-2 text-sm font-semibold uppercase tracking-wide text-stone-600">
-            Licensed massage therapists at The Rub Club
-          </p>
-          <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {TEAM.map((member) => (
-              <article
-                key={member.name}
-                className="flex flex-col overflow-hidden border border-stone-200 bg-stone-50 shadow-sm"
-              >
-                <div className="relative aspect-[3/4] w-full bg-stone-200">
-                  <Image
-                    src={IMAGES[member.imageKey]}
-                    alt={`Portrait of ${member.name}, massage therapist`}
-                    fill
-                    className="object-cover object-top"
-                    sizes="(max-width: 640px) 100vw, 33vw"
-                  />
-                </div>
-                <div className="flex flex-1 flex-col p-5">
-                  <h3 className="text-lg font-black text-[#173f3b]">{member.name}</h3>
-                  {"role" in member ? (
-                    <p className="text-sm font-bold text-stone-600">{member.role}</p>
-                  ) : null}
-                  <p className="mt-3 flex-1 text-sm leading-relaxed text-stone-700">{member.bio}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+        <MassageTeamGrid
+          members={massageTeam}
+          title="Meet the team"
+          subtitle="Licensed massage therapists at The Rub Club"
+          variant="service"
+        />
 
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
           <h2 className="text-2xl font-black text-[#173f3b]">Visit us in Paris</h2>

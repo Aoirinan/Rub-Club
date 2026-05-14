@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LOCATION_LIST, telHref } from "@/lib/constants";
+import { CHIRO_PARIS_WELLNESS_CARE_PLANS_URL, LOCATION_LIST, telHref } from "@/lib/constants";
 import { MASSAGE } from "@/lib/home-verbatim";
 import { siteShortName } from "@/lib/site-content";
 
@@ -59,6 +59,16 @@ export function SiteFooter() {
               <Link className="hover:underline" href="/services/chiropractic">
                 Chiropractic care
               </Link>
+            </li>
+            <li>
+              <a
+                className="hover:underline"
+                href={CHIRO_PARIS_WELLNESS_CARE_PLANS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Chiropractic wellness care plans
+              </a>
             </li>
             <li>
               <Link className="hover:underline" href="/locations/paris">

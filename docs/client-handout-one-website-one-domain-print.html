@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>One website, one domain — handout</title>
+    <style>
+      :root {
+        --ink: #1c1917;
+        --muted: #57534e;
+        --rule: #d6d3d1;
+        --accent: #0f5f5c;
+        --accent-soft: #e7f4f3;
+        --paper: #fffdf8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", Times, serif;
+        color: var(--ink);
+        background: #e7e5e4;
+        line-height: 1.45;
+        font-size: 11.5pt;
+      }
+
+      .sheet {
+        max-width: 8.5in;
+        margin: 1rem auto;
+        background: var(--paper);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        padding: 0.65in 0.75in 0.55in;
+      }
+
+      h1 {
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-size: 22pt;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+        margin: 0 0 0.25rem;
+        color: var(--accent);
+      }
+
+      .tagline {
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-size: 12pt;
+        font-weight: 600;
+        color: var(--muted);
+        margin: 0 0 1rem;
+      }
+
+      .meta {
+        font-size: 9.5pt;
+        color: var(--muted);
+        border-top: 2px solid var(--accent);
+        padding-top: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      h2 {
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-size: 11pt;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--accent);
+        margin: 0.85rem 0 0.35rem;
+        break-after: avoid;
+      }
+
+      p {
+        margin: 0 0 0.55rem;
+      }
+
+      ul {
+        margin: 0.25rem 0 0.6rem;
+        padding-left: 1.15rem;
+      }
+
+      li {
+        margin-bottom: 0.35rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10.5pt;
+        margin: 0.5rem 0 0.75rem;
+        break-inside: avoid;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--rule);
+        padding: 0.4rem 0.45rem;
+        vertical-align: top;
+      }
+
+      th {
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        text-align: left;
+        background: var(--accent-soft);
+        color: var(--ink);
+        font-weight: 700;
+        font-size: 9.5pt;
+      }
+
+      .callout {
+        background: var(--accent-soft);
+        border-left: 4px solid var(--accent);
+        padding: 0.55rem 0.65rem;
+        margin: 0.65rem 0;
+        font-size: 10.8pt;
+      }
+
+      .urls {
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 9.2pt;
+        word-break: break-all;
+        color: var(--muted);
+        line-height: 1.35;
+      }
+
+      .fine {
+        font-size: 9pt;
+        color: var(--muted);
+        margin-top: 0.75rem;
+      }
+
+      @page {
+        size: letter;
+        margin: 0.5in;
+      }
+
+      @media print {
+        body {
+          background: #fff;
+        }
+
+        .sheet {
+          box-shadow: none;
+          margin: 0;
+          max-width: none;
+          padding: 0;
+        }
+
+        a {
+          color: inherit;
+          text-decoration: none;
+        }
+
+        .no-print {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <p class="no-print" style="text-align: center; font-family: system-ui, sans-serif; font-size: 10pt; padding: 0.5rem 1rem; margin: 0; background: #fafaf9;">
+      <strong>Save as PDF:</strong> Open this file in Chrome or Edge → press <kbd>Ctrl</kbd>+<kbd>P</kbd> → choose <strong>Save as PDF</strong> → Save.
+    </p>
+    <article class="sheet">
+      <h1>One website, one domain</h1>
+      <p class="tagline">Why consolidating your public web presence makes sense</p>
+      <div class="meta">
+        Prepared for <strong>Chiropractic Associates</strong> &amp; <strong>The Rub Club</strong> — Paris &amp; Sulphur Springs, TX
+      </div>
+
+      <h2>In one sentence</h2>
+      <p>
+        <strong>We are not removing your online presence — we are organizing it.</strong> Patients, Google, and your staff get
+        <strong>one primary website</strong> with clear sections for <strong>each location</strong> and <strong>each service</strong> (massage and chiropractic). Your existing web addresses can keep working by
+        <strong>automatically forwarding</strong> visitors to the right place on the new site.
+      </p>
+
+      <h2>The situation today</h2>
+      <p>
+        You currently have <strong>multiple public websites</strong> (for example, separate sites for massage-focused marketing, Paris chiropractic, and Sulphur Springs). That made sense in the past, but it creates
+        <strong>ongoing duplication</strong>:
+      </p>
+      <ul>
+        <li>Hours, insurance, providers, services, forms, and promos must be updated in <strong>more than one place</strong> — or the sites slowly disagree with each other and with your <strong>Google Business Profile</strong>.</li>
+        <li>Patients and referral sources can land on <strong>different “official” websites</strong> with different navigation and messaging.</li>
+        <li>Marketing links (Google Ads, email signatures, print materials) get split across domains, so <strong>nobody is sure which link is canonical</strong>.</li>
+      </ul>
+      <p class="urls">
+        https://www.chiropracticparistexas.com/<br />
+        https://www.massageparistexas.com/<br />
+        https://www.chiropracticsulphursprings.com/
+      </p>
+
+      <h2>The recommendation</h2>
+      <p><strong>One primary domain. One modern website.</strong> Inside that site, you still have everything you need:</p>
+      <ul>
+        <li>Distinct <strong>location</strong> pages (Paris vs Sulphur Springs).</li>
+        <li>Distinct <strong>service</strong> sections (massage vs chiropractic vs injury care, etc.).</li>
+        <li>Online booking and contact paths that match how you actually operate.</li>
+      </ul>
+      <p>
+        Your older domains remain valuable as <strong>entry points</strong>: they can <strong>permanently forward</strong> to the matching page on the main site so bookmarks and old ads still work.
+      </p>
+
+      <h2>What this fixes (without “SEO homework”)</h2>
+      <p>This approach is not about chasing trends. It is about <strong>reducing maintenance and confusion</strong>:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Area</th>
+            <th>Multiple sites</th>
+            <th>One site, one domain</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Updates</td>
+            <td>Change hours/services in several places</td>
+            <td>Update <strong>once</strong> in the admin panel; the public site stays consistent</td>
+          </tr>
+          <tr>
+            <td>Patient experience</td>
+            <td>“Which site is real?”</td>
+            <td><strong>One front door</strong>; clear paths to each office and service</td>
+          </tr>
+          <tr>
+            <td>Google Business Profile</td>
+            <td>Easy to mismatch website URL and on-site info</td>
+            <td><strong>One website URL</strong> to maintain across listings</td>
+          </tr>
+          <tr>
+            <td>Ads &amp; email</td>
+            <td>Pick which domain to promote</td>
+            <td><strong>One domain</strong> on cards, ads, and signatures</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        A solid technical baseline (fast pages, clear titles, sitemap, accurate business information) can be <strong>built into the new site up front</strong>. The part that still needs occasional attention is
+        <strong>real-world accuracy</strong> — providers, services, hours — which you can manage from the <strong>superadmin panel</strong> without ongoing “SEO research.”
+      </p>
+
+      <div class="callout">
+        <strong>What we are not claiming:</strong> No one can guarantee Google rankings or a specific map radius. One domain does not mean one Google listing if you have
+        <strong>two real addresses</strong> — you should still maintain appropriate Google Business Profiles per location (Paris vs Sulphur Springs), all pointing to the <strong>same primary website</strong>.
+      </div>
+
+      <h2>Launch sequence (simple)</h2>
+      <ol>
+        <li><strong>New site goes live</strong> on the primary (chiropractic) domain.</li>
+        <li><strong>Old sites forward</strong> to the new site so important old links open the closest matching new page when possible.</li>
+        <li><strong>Google Business Profile “Website” fields</strong> are updated to the primary domain.</li>
+        <li><strong>Google Ads</strong> (if used) are updated so ad URLs match where patients land.</li>
+        <li><strong>You edit content</strong> going forward through the <strong>superadmin panel</strong> — not by logging into three separate website builders.</li>
+      </ol>
+
+      <h2>Common questions</h2>
+      <p>
+        <strong>“Don’t we need separate sites so massage shows up in Google separately?”</strong><br />
+        No. Search engines rank <strong>pages</strong>, not “number of domains.” You can have strong massage pages and strong chiropractic pages on the same website. Separate sites often split reviews, links, and consistent branding without adding a patient benefit.
+      </p>
+      <p>
+        <strong>“Will we lose patients who only know the old web address?”</strong><br />
+        No, if redirects are set up correctly. The old address should open the new site automatically.
+      </p>
+      <p>
+        <strong>“Is this only for SEO?”</strong><br />
+        It helps clarity and consistency, which supports search and ads, but the <strong>main win</strong> is operational: <strong>one place to manage</strong> the public face of the practice.
+      </p>
+
+      <h2>Summary</h2>
+      <p>
+        <strong>One domain and one website</strong> gives patients a clear, modern front door, reduces duplicate work for staff, aligns your Google Business Profile links with reality, and lets you manage content centrally through the
+        <strong>superadmin panel</strong> — while preserving old web addresses via <strong>forwards</strong> so nothing feels “turned off.”
+      </p>
+
+      <p class="fine">
+        This handout describes a standard web consolidation approach. Search rankings depend on many factors outside any single project; the goal here is a maintainable, patient-friendly foundation.
+      </p>
+    </article>
+  </body>
+</html>

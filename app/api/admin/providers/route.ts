@@ -14,6 +14,9 @@ const createSchema = z.object({
   serviceLines: z.array(z.enum(["massage", "chiropractic"])).min(1),
   active: z.boolean().optional(),
   sortOrder: z.number().optional(),
+  acceptsNewClients: z.boolean().optional(),
+  photoUrl: z.string().max(800).nullable().optional(),
+  about: z.string().max(4000).nullable().optional(),
   schedule: z
     .object({
       openHour: z.number(),
@@ -64,11 +67,18 @@ export async function POST(req: Request) {
     locationIds: body.locationIds as LocationId[],
     serviceLines: body.serviceLines as ServiceLine[],
     sortOrder: typeof body.sortOrder === "number" ? body.sortOrder : 0,
+    acceptsNewClients: body.acceptsNewClients ?? true,
     updatedAt: FieldValue.serverTimestamp(),
     updatedByUid: staff.uid,
   };
   if (body.schedule !== undefined) {
     doc.schedule = body.schedule;
+  }
+  if (body.photoUrl !== undefined) {
+    doc.photoUrl = body.photoUrl === null ? null : body.photoUrl.trim() || null;
+  }
+  if (body.about !== undefined) {
+    doc.about = body.about === null ? null : body.about.trim() || null;
   }
 
   await ref.set(doc);

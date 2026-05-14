@@ -65,7 +65,9 @@ export async function GET(req: Request) {
     }
 
     const db = getFirestore();
-    const eligible = await fetchActiveProvidersForService(db, locationId, serviceLine);
+    const eligible = await fetchActiveProvidersForService(db, locationId, serviceLine, {
+      publicBooking: true,
+    });
 
     if (eligible.length === 0) {
       return NextResponse.json({

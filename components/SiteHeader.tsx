@@ -19,6 +19,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   { href: "/about", label: "About" },
   { href: "/faq", label: "FAQ" },
+  { href: "/patient-forms", label: "Patient forms" },
   { href: "/contact", label: "Contact" },
 ];
 

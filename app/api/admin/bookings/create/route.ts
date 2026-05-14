@@ -1,19 +1,12 @@
 import { NextResponse } from "next/server";
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { DateTime } from "luxon";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
 import type { DurationMin, LocationId, ServiceLine } from "@/lib/constants";
 import { TIME_ZONE } from "@/lib/constants";
 import { requireStaff } from "@/lib/staff-auth";
-import {
-  bucketDocIdsForAppointment,
-  holdBucketIdsForAppointment,
-  isAlignedToSlotGrid,
-  parseStartIsoToDateTime,
-} from "@/lib/slots-luxon";
-import { recordBookingEventInTx } from "@/lib/booking-events";
-import { generatePatientPortalToken, hashPatientPortalToken } from "@/lib/patient-portal-token";
+import { isAlignedToSlotGrid, parseStartIsoToDateTime } from "@/lib/slots-luxon";
+import { insertAdminBookingInTransaction } from "@/lib/admin-booking-insert";
 
 export const runtime = "nodejs";
 
@@ -82,108 +75,52 @@ export async function POST(req: Request) {
   const createdIds: string[] = [];
   const conflicts: string[] = [];
 
+  const staffActor = { uid: staff.uid, email: staff.email ?? null };
+
   for (const thisStart of starts) {
     const bookingRef = db.collection("bookings").doc();
-    const portalHash =
-      status === "confirmed" ? hashPatientPortalToken(generatePatientPortalToken()) : "";
 
     try {
-      const bucketIds = bucketDocIdsForAppointment(locationId, body.providerId, thisStart, durationMin);
-
-      await db.runTransaction(async (tx) => {
-        if (!body.skipConflictCheck) {
-          const providerBucketRefs = bucketIds.map((id) => db.collection("slot_buckets").doc(id));
-          const holdIds = holdBucketIdsForAppointment(locationId, serviceLine, thisStart, durationMin);
-          const holdRefs = holdIds.map((id) => db.collection("slot_buckets").doc(id));
-
-          const providerSnaps = await Promise.all(providerBucketRefs.map((r) => tx.get(r)));
-          for (const s of providerSnaps) {
-            if (s.exists) throw new Error("slot_taken");
-          }
-          const holdSnaps = await Promise.all(holdRefs.map((r) => tx.get(r)));
-          for (const s of holdSnaps) {
-            if (s.exists) throw new Error("slot_blocked");
-          }
-
-          for (const ref of providerBucketRefs) {
-            tx.set(ref, {
-              bookingId: bookingRef.id,
-              locationId,
-              providerId: body.providerId,
-              serviceLine,
-              durationMin,
-              startIso: thisStart.toUTC().toISO(),
-              createdAt: FieldValue.serverTimestamp(),
-            });
-          }
-        }
-
-        const startAt = Timestamp.fromDate(thisStart.toUTC().toJSDate());
-
-        tx.set(bookingRef, {
-          locationId,
-          serviceLine,
-          durationMin,
-          startIso: thisStart.toUTC().toISO(),
-          startAt,
-          bucketIds,
-          providerMode: "specific",
-          providerId: body.providerId,
-          providerDisplayName: body.providerDisplayName,
-          name: body.name.trim(),
-          phone: body.phone?.trim() || "",
-          email: body.email?.trim().toLowerCase() || "",
-          notes: body.notes?.trim() || "",
-          status,
-          ...(seriesId ? { seriesId, recurrence: body.recurrence } : {}),
-          ...(status === "confirmed"
-            ? {
-                acceptedByUid: staff.uid,
-                acceptedByEmail: staff.email ?? null,
-                acceptedAt: FieldValue.serverTimestamp(),
-                ...(portalHash ? { patientPortalTokenHash: portalHash } : {}),
-              }
-            : {}),
-          createdAt: FieldValue.serverTimestamp(),
-        });
-
-        recordBookingEventInTx(db, tx, bookingRef.id, {
-          type: "created",
-          byUid: staff.uid,
-          byEmail: staff.email ?? null,
-          meta: {
-            via: "admin_manual",
-            ...(seriesId ? { seriesId, recurrence: body.recurrence } : {}),
-          },
-        });
-
-        if (status === "confirmed") {
-          recordBookingEventInTx(db, tx, bookingRef.id, {
-            type: "accepted",
-            byUid: staff.uid,
-            byEmail: staff.email ?? null,
-            meta: { via: "admin_manual", autoConfirmed: true },
-          });
-        }
+      const result = await insertAdminBookingInTransaction(db, bookingRef, {
+        start: thisStart,
+        locationId,
+        serviceLine,
+        durationMin,
+        providerId: body.providerId,
+        providerDisplayName: body.providerDisplayName,
+        name: body.name,
+        phone: body.phone?.trim() || "",
+        email: body.email?.trim().toLowerCase() || "",
+        notes: body.notes?.trim() || "",
+        status,
+        skipConflictCheck: body.skipConflictCheck ?? false,
+        staff: staffActor,
+        createMetaVia: "admin_manual",
+        ...(seriesId ? { seriesId, recurrence: body.recurrence } : {}),
       });
 
-      createdIds.push(bookingRef.id);
-    } catch (e) {
-      if (e instanceof Error && (e.message === "slot_taken" || e.message === "slot_blocked")) {
+      if (result === "ok") {
+        createdIds.push(bookingRef.id);
+        continue;
+      }
+
+      if (result === "slot_taken" || result === "slot_blocked") {
         const dateLabel = thisStart.setZone(TIME_ZONE).toFormat("LLL d");
         conflicts.push(dateLabel);
         if (occurrences === 1) {
           return NextResponse.json(
             {
-              error: e.message === "slot_taken"
-                ? "That time slot is already taken by another appointment."
-                : "That time is blocked by an admin hold. Remove the matching hold first (Scheduler → Block tray), or enable 'Allow double-booking' to override.",
+              error:
+                result === "slot_taken"
+                  ? "That time slot is already taken by another appointment."
+                  : "That time is blocked by an admin hold. Remove the matching hold first (Scheduler → Block tray), or enable 'Allow double-booking' to override.",
             },
             { status: 409 },
           );
         }
         continue;
       }
+    } catch (e) {
       console.error("[admin/bookings/create]", e);
       return NextResponse.json({ error: "Could not create booking" }, { status: 500 });
     }
@@ -196,7 +133,12 @@ export async function POST(req: Request) {
       bookingIds: createdIds,
       status,
       ...(seriesId ? { seriesId } : {}),
-      ...(conflicts.length > 0 ? { conflicts, conflictsMessage: `Skipped ${conflicts.length} date(s) due to conflicts: ${conflicts.join(", ")}` } : {}),
+      ...(conflicts.length > 0
+        ? {
+            conflicts,
+            conflictsMessage: `Skipped ${conflicts.length} date(s) due to conflicts: ${conflicts.join(", ")}`,
+          }
+        : {}),
       totalCreated: createdIds.length,
     },
     { status: 201 },

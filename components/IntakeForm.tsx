@@ -21,6 +21,8 @@ function formatPhone(input: string): string {
 }
 
 export function IntakeForm() {
+  const [insuranceCardFile, setInsuranceCardFile] = useState<File | null>(null);
+  const [driversLicenseFile, setDriversLicenseFile] = useState<File | null>(null);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -63,12 +65,45 @@ export function IntakeForm() {
     setError(null);
 
     try {
+      const fd = new FormData();
+      fd.append("website", form.website);
+      const textKeys = [
+        "firstName",
+        "lastName",
+        "dateOfBirth",
+        "phone",
+        "email",
+        "address",
+        "city",
+        "state",
+        "zip",
+        "emergencyContactName",
+        "emergencyContactPhone",
+        "reasonForVisit",
+        "areasOfConcern",
+        "allergies",
+        "medications",
+        "medicalConditions",
+        "previousMassage",
+        "pressurePreference",
+        "howDidYouHear",
+        "additionalNotes",
+        "service",
+        "location",
+      ] as const;
+      for (const key of textKeys) {
+        fd.append(key, String(form[key]));
+      }
+      fd.append("pregnant", form.pregnant ? "true" : "false");
+      fd.append("pacemaker", form.pacemaker ? "true" : "false");
+      if (insuranceCardFile) fd.append("insuranceCard", insuranceCardFile);
+      if (driversLicenseFile) fd.append("driversLicense", driversLicenseFile);
+
       const res = await fetch("/api/intake", {
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(form),
+        body: fd,
       });
-      const data = await res.json();
+      const data = (await res.json()) as { error?: string };
       if (!res.ok) {
         setError(data.error ?? "Submission failed. Please try again.");
         return;
@@ -243,6 +278,44 @@ export function IntakeForm() {
         </div>
       </fieldset>
 
+      {/* ID & insurance (optional uploads) */}
+      <fieldset className="space-y-3">
+        <legend className="text-sm font-black uppercase tracking-wide text-[#0f5f5c]">
+          Insurance card and ID (optional)
+        </legend>
+        <p className="text-sm text-stone-600">
+          You may upload a photo or scan of your insurance card and your driver&apos;s license or
+          government-issued ID to speed up intake. This is optional. Accepted formats: JPG, PNG,
+          WebP, or PDF (max 10 MB each).
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="space-y-1 text-sm">
+            <span className="font-bold text-[#173f3b]">Insurance card</span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+              className="focus-ring w-full border border-stone-300 bg-white px-2 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-[#0f5f5c] file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white"
+              onChange={(e) => setInsuranceCardFile(e.target.files?.[0] ?? null)}
+            />
+            {insuranceCardFile ? (
+              <span className="text-xs text-stone-500">{insuranceCardFile.name}</span>
+            ) : null}
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className="font-bold text-[#173f3b]">Driver&apos;s license or ID</span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+              className="focus-ring w-full border border-stone-300 bg-white px-2 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-[#0f5f5c] file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white"
+              onChange={(e) => setDriversLicenseFile(e.target.files?.[0] ?? null)}
+            />
+            {driversLicenseFile ? (
+              <span className="text-xs text-stone-500">{driversLicenseFile.name}</span>
+            ) : null}
+          </label>
+        </div>
+      </fieldset>
+
       {/* Emergency contact */}
       <fieldset className="space-y-3">
         <legend className="text-sm font-black uppercase tracking-wide text-[#0f5f5c]">
@@ -409,9 +482,9 @@ export function IntakeForm() {
       </fieldset>
 
       <p className="text-xs text-stone-500">
-        This form is for scheduling purposes only. We do not collect insurance or billing information
-        through this site. Your information is stored securely and used only for appointment
-        preparation.
+        Information you submit is used for appointment preparation and care coordination. Optional
+        uploads are stored securely and are only available to authorized clinic staff; access is
+        logged for privacy compliance.
       </p>
 
       {error ? (

@@ -14,6 +14,9 @@ const patchSchema = z.object({
   serviceLines: z.array(z.enum(["massage", "chiropractic"])).min(1).optional(),
   active: z.boolean().optional(),
   sortOrder: z.number().optional(),
+  acceptsNewClients: z.boolean().optional(),
+  photoUrl: z.string().max(800).nullable().optional(),
+  about: z.string().max(4000).nullable().optional(),
   schedule: z
     .object({
       openHour: z.number(),
@@ -68,6 +71,13 @@ export async function PATCH(req: Request, ctx: Params) {
   if (body.active !== undefined) updates.active = body.active;
   if (body.sortOrder !== undefined) updates.sortOrder = body.sortOrder;
   if (body.schedule !== undefined) updates.schedule = body.schedule;
+  if (body.acceptsNewClients !== undefined) updates.acceptsNewClients = body.acceptsNewClients;
+  if (body.photoUrl !== undefined) {
+    updates.photoUrl = body.photoUrl === null ? null : body.photoUrl.trim() || null;
+  }
+  if (body.about !== undefined) {
+    updates.about = body.about === null ? null : body.about.trim() || null;
+  }
 
   await ref.update(updates);
   const next = await ref.get();

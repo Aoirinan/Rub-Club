@@ -14,6 +14,12 @@ export type ProviderDoc = {
   locationIds: LocationId[];
   serviceLines: ServiceLine[];
   sortOrder: number;
+  /** When false, hidden from public booking lists (existing clients / staff scheduling only). Default true. */
+  acceptsNewClients: boolean;
+  /** HTTPS URL shown on the public booking flow (optional). */
+  photoUrl?: string | null;
+  /** Short plain-text bio for the public booking flow (optional). */
+  about?: string | null;
   schedule?: ProviderDaySchedule | null;
 };
 

@@ -232,3 +232,68 @@ export async function sendStaffInviteEmail(params: {
     };
   }
 }
+
+const SIMPLE_EMAIL_RE = /^[^\s<>]+@[^\s<>]+\.[^\s<>]+$/;
+
+export type SuperadminTestEmailResult =
+  | { ok: true }
+  | {
+      ok: false;
+      issue: "missing_env" | "invalid_from" | "invalid_to" | "sendgrid_error";
+      detail?: string;
+    };
+
+/** One-off transactional ping for superadmins to confirm SendGrid accepts mail on this deployment. */
+export async function sendSuperadminTestEmail(toRaw: string): Promise<SuperadminTestEmailResult> {
+  const to = toRaw.trim();
+  if (!to || !SIMPLE_EMAIL_RE.test(to)) {
+    return { ok: false, issue: "invalid_to", detail: "Provide a valid recipient email address." };
+  }
+
+  ensureSendgrid();
+  const key = getSendgridApiKey();
+  const rawFrom = getSendgridFromEmail();
+  const fromEmail = getSendgridFromEmailNormalized();
+  if (!key || !rawFrom.trim()) {
+    return { ok: false, issue: "missing_env" };
+  }
+  if (!isValidOutboundFromEmail(fromEmail)) {
+    return {
+      ok: false,
+      issue: "invalid_from",
+      detail:
+        "FROM address is not valid after cleaning SENDGRID_FROM_EMAIL. Use a verified Single Sender address only.",
+    };
+  }
+
+  const subject = "Paris Wellness — SendGrid test";
+  const text = [
+    "This is a manual test message from the Super Admin page.",
+    "",
+    "If you received this, SendGrid accepted and delivered (or queued) mail from this deployment.",
+    "",
+    `Sent at: ${new Date().toISOString()}`,
+  ].join("\n");
+
+  try {
+    await sgMail.send({
+      to,
+      from: { email: fromEmail, name: "Paris Wellness Staff" },
+      subject,
+      text,
+      html: `<p>This is a manual test message from the Super Admin page.</p><p>If you received this, SendGrid accepted mail from this deployment.</p><p><small>${escapeHtml(new Date().toISOString())}</small></p>`,
+      trackingSettings: {
+        clickTracking: { enable: false },
+        openTracking: { enable: false },
+      },
+    });
+    return { ok: true };
+  } catch (e) {
+    console.error("SendGrid superadmin test failed:", sendgridErrorDetail(e));
+    return {
+      ok: false,
+      issue: "sendgrid_error",
+      detail: sendgridDisplayForAdmin(e),
+    };
+  }
+}
