@@ -15,7 +15,9 @@ export type BookingEventType =
   | "reminder_sent"
   | "payment_requested"
   | "payment_completed"
-  | "custom_email";
+  | "custom_email"
+  | "rescheduled"
+  | "survey_sent";
 
 export type BookingEventRecord = {
   type: BookingEventType;

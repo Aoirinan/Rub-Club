@@ -101,6 +101,27 @@ export default function ReportsPage() {
     if (authed) loadReport();
   }, [authed, loadReport]);
 
+  const downloadCsv = useCallback(async () => {
+    const token = await getIdToken();
+    if (!token || !data) return;
+    const qs = new URLSearchParams({
+      from: `${data.period.from}T00:00:00.000Z`,
+      to: `${data.period.to}T23:59:59.999Z`,
+    });
+    if (locationId) qs.set("locationId", locationId);
+    const res = await fetch(`/api/admin/bookings/export?${qs.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `bookings-${data.period.from}-to-${data.period.to}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [getIdToken, data, locationId]);
+
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
@@ -110,6 +131,14 @@ export default function ReportsPage() {
             <p className="text-xs text-slate-500">Scheduling performance at a glance.</p>
           </div>
           <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => void downloadCsv()}
+              disabled={!data || loading}
+              className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400 disabled:opacity-50"
+            >
+              Download CSV
+            </button>
             <Link
               href="/admin"
               className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"

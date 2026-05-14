@@ -41,6 +41,12 @@ const bodySchema = z
     providerMode: z.enum(["specific", "any"]),
     providerId: z.string().max(200).optional(),
     preferredProviderId: z.string().max(200).optional(),
+    recurrence: z
+      .object({
+        frequency: z.enum(["weekly", "biweekly"]),
+        count: z.number().int().min(2).max(8),
+      })
+      .optional(),
   })
   .superRefine((val, ctx) => {
     if (val.providerMode === "specific" && !val.providerId?.trim()) {
@@ -48,6 +54,13 @@ const bodySchema = z
         code: "custom",
         message: "providerId is required when providerMode is specific",
         path: ["providerId"],
+      });
+    }
+    if (val.recurrence && val.providerMode !== "specific") {
+      ctx.addIssue({
+        code: "custom",
+        message: "Recurrence is only available when you pick a specific provider.",
+        path: ["recurrence"],
       });
     }
   });
@@ -83,12 +96,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid start time" }, { status: 400 });
   }
 
-  const now = DateTime.now().setZone(TIME_ZONE);
-  if (start < now.plus({ minutes: 2 })) {
-    return NextResponse.json({ error: "Start time is in the past" }, { status: 400 });
+  const intervalDays = body.recurrence?.frequency === "biweekly" ? 14 : 7;
+  const occurrences = body.recurrence ? body.recurrence.count : 1;
+  const starts: DateTime[] = [];
+  for (let i = 0; i < occurrences; i++) {
+    starts.push(start.plus({ days: i * intervalDays }));
   }
-  if (start > now.plus({ days: 90 })) {
-    return NextResponse.json({ error: "Start time is too far out" }, { status: 400 });
+
+  const now = DateTime.now().setZone(TIME_ZONE);
+  for (const t of starts) {
+    if (t < now.plus({ minutes: 2 })) {
+      return NextResponse.json({ error: "Start time is in the past" }, { status: 400 });
+    }
+    if (t > now.plus({ days: 90 })) {
+      return NextResponse.json({ error: "Start time is too far out" }, { status: 400 });
+    }
   }
 
   const locationId = body.locationId as LocationId;
@@ -121,8 +143,13 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
-    if (!isWithinScheduleWindow(start, durationMin, provider.schedule ?? null)) {
-      return NextResponse.json({ error: "Outside that provider's bookable hours" }, { status: 400 });
+    for (const t of starts) {
+      if (!isWithinScheduleWindow(t, durationMin, provider.schedule ?? null)) {
+        return NextResponse.json(
+          { error: "One of the repeated visits falls outside that provider's bookable hours" },
+          { status: 400 },
+        );
+      }
     }
     assignedProviderId = provider.id;
     assignedDisplayName = provider.displayName;
@@ -137,167 +164,205 @@ export async function POST(req: Request) {
     assignedDisplayName = "";
   }
 
-  const bookingRef = db.collection("bookings").doc();
+  const createdIds: string[] = [];
+  const conflicts: string[] = [];
+  const multiVisit = starts.length > 1;
 
-  try {
-    if (body.providerMode === "specific") {
-      const bucketIds = bucketDocIdsForAppointment(locationId, assignedProviderId, start, durationMin);
-      const holdIds = holdBucketIdsForAppointment(locationId, serviceLine, start, durationMin);
-      await db.runTransaction(async (tx) => {
-        const bucketRefs = bucketIds.map((id) => db.collection("slot_buckets").doc(id));
-        const holdRefs = holdIds.map((id) => db.collection("slot_buckets").doc(id));
-        const snaps = await Promise.all(bucketRefs.map((r) => tx.get(r)));
-        for (const s of snaps) {
-          if (s.exists) throw new Error("slot_taken");
-        }
-        const holdSnaps = await Promise.all(holdRefs.map((r) => tx.get(r)));
-        for (const s of holdSnaps) {
-          if (s.exists) throw new Error("slot_taken");
-        }
-        const startAt = Timestamp.fromDate(start.toUTC().toJSDate());
-        for (const ref of bucketRefs) {
-          tx.set(ref, {
-            bookingId: bookingRef.id,
-            locationId,
-            providerId: assignedProviderId,
-            serviceLine,
-            durationMin,
-            startIso: start.toUTC().toISO(),
-            createdAt: FieldValue.serverTimestamp(),
-          });
-        }
-        tx.set(bookingRef, {
+  for (let si = 0; si < starts.length; si++) {
+    const thisStart = starts[si]!;
+    const bookingRef = db.collection("bookings").doc();
+    try {
+      if (body.providerMode === "specific") {
+        const bucketIds = bucketDocIdsForAppointment(
           locationId,
-          serviceLine,
+          assignedProviderId,
+          thisStart,
           durationMin,
-          startIso: start.toUTC().toISO(),
-          startAt,
-          bucketIds,
-          providerMode: "specific",
-          providerId: assignedProviderId,
-          providerDisplayName: assignedDisplayName,
-          ...(preferredProviderId && preferredProviderId !== assignedProviderId
-            ? {
-                preferredProviderId,
-                preferredProviderDisplayName:
-                  eligible.find((p) => p.id === preferredProviderId)?.displayName ?? "",
-              }
-            : {}),
-          name: body.name.trim(),
-          phone: body.phone.trim(),
-          email: body.email.trim().toLowerCase(),
-          notes: body.notes?.trim() || "",
-          status: "pending",
-          sourceIp: getClientIp(req.headers),
-          createdAt: FieldValue.serverTimestamp(),
-        });
-        recordBookingEventInTx(db, tx, bookingRef.id, {
-          type: "created",
-          byUid: null,
-          byEmail: body.email.trim().toLowerCase(),
-          meta: { via: "public_form", providerMode: "specific" },
-        });
-      });
-    } else {
-      const tryOrder = orderProvidersForAnyBooking(eligible, preferredProviderId);
-      const holdIds = holdBucketIdsForAppointment(locationId, serviceLine, start, durationMin);
-      await db.runTransaction(async (tx) => {
-        const holdRefs = holdIds.map((id) => db.collection("slot_buckets").doc(id));
-        const holdSnaps = await Promise.all(holdRefs.map((r) => tx.get(r)));
-        if (holdSnaps.some((s) => s.exists)) throw new Error("slot_taken");
-
-        const bucketRefsByProvider: { id: string; name: string; refs: DocumentReference[] }[] = [];
-        for (const p of tryOrder) {
-          if (!isWithinScheduleWindow(start, durationMin, p.schedule ?? null)) continue;
-          const ids = bucketDocIdsForAppointment(locationId, p.id, start, durationMin);
-          const refs = ids.map((id) => db.collection("slot_buckets").doc(id));
-          bucketRefsByProvider.push({ id: p.id, name: p.displayName, refs });
-        }
-        let picked: { id: string; name: string; refs: DocumentReference[] } | null = null;
-        for (const row of bucketRefsByProvider) {
-          const snaps = await Promise.all(row.refs.map((r) => tx.get(r)));
-          if (!snaps.some((s) => s.exists)) {
-            picked = row;
-            break;
+        );
+        const holdIds = holdBucketIdsForAppointment(locationId, serviceLine, thisStart, durationMin);
+        await db.runTransaction(async (tx) => {
+          const bucketRefs = bucketIds.map((id) => db.collection("slot_buckets").doc(id));
+          const holdRefs = holdIds.map((id) => db.collection("slot_buckets").doc(id));
+          const snaps = await Promise.all(bucketRefs.map((r) => tx.get(r)));
+          for (const s of snaps) {
+            if (s.exists) throw new Error("slot_taken");
           }
-        }
-        if (!picked) throw new Error("slot_taken");
-
-        assignedProviderId = picked.id;
-        assignedDisplayName = picked.name;
-
-        const bucketIds = bucketDocIdsForAppointment(locationId, assignedProviderId, start, durationMin);
-        const startAt = Timestamp.fromDate(start.toUTC().toJSDate());
-
-        for (const ref of picked.refs) {
-          tx.set(ref, {
-            bookingId: bookingRef.id,
+          const holdSnaps = await Promise.all(holdRefs.map((r) => tx.get(r)));
+          for (const s of holdSnaps) {
+            if (s.exists) throw new Error("slot_taken");
+          }
+          const startAt = Timestamp.fromDate(thisStart.toUTC().toJSDate());
+          for (const ref of bucketRefs) {
+            tx.set(ref, {
+              bookingId: bookingRef.id,
+              locationId,
+              providerId: assignedProviderId,
+              serviceLine,
+              durationMin,
+              startIso: thisStart.toUTC().toISO(),
+              createdAt: FieldValue.serverTimestamp(),
+            });
+          }
+          tx.set(bookingRef, {
             locationId,
-            providerId: assignedProviderId,
             serviceLine,
             durationMin,
-            startIso: start.toUTC().toISO(),
+            startIso: thisStart.toUTC().toISO(),
+            startAt,
+            bucketIds,
+            providerMode: "specific",
+            providerId: assignedProviderId,
+            providerDisplayName: assignedDisplayName,
+            ...(preferredProviderId && preferredProviderId !== assignedProviderId
+              ? {
+                  preferredProviderId,
+                  preferredProviderDisplayName:
+                    eligible.find((p) => p.id === preferredProviderId)?.displayName ?? "",
+                }
+              : {}),
+            name: body.name.trim(),
+            phone: body.phone.trim(),
+            email: body.email.trim().toLowerCase(),
+            notes: body.notes?.trim() || "",
+            status: "pending",
+            sourceIp: getClientIp(req.headers),
+            createdAt: FieldValue.serverTimestamp(),
+            ...(body.recurrence
+              ? {
+                  recurrence: body.recurrence,
+                  seriesIndex: si,
+                  seriesSize: starts.length,
+                }
+              : {}),
+          });
+          recordBookingEventInTx(db, tx, bookingRef.id, {
+            type: "created",
+            byUid: null,
+            byEmail: body.email.trim().toLowerCase(),
+            meta: {
+              via: "public_form",
+              providerMode: "specific",
+              ...(body.recurrence ? { recurrence: body.recurrence } : {}),
+            },
+          });
+        });
+      } else {
+        const tryOrder = orderProvidersForAnyBooking(eligible, preferredProviderId);
+        const holdIds = holdBucketIdsForAppointment(locationId, serviceLine, thisStart, durationMin);
+        await db.runTransaction(async (tx) => {
+          const holdRefs = holdIds.map((id) => db.collection("slot_buckets").doc(id));
+          const holdSnaps = await Promise.all(holdRefs.map((r) => tx.get(r)));
+          if (holdSnaps.some((s) => s.exists)) throw new Error("slot_taken");
+
+          const bucketRefsByProvider: { id: string; name: string; refs: DocumentReference[] }[] = [];
+          for (const p of tryOrder) {
+            if (!isWithinScheduleWindow(thisStart, durationMin, p.schedule ?? null)) continue;
+            const ids = bucketDocIdsForAppointment(locationId, p.id, thisStart, durationMin);
+            const refs = ids.map((id) => db.collection("slot_buckets").doc(id));
+            bucketRefsByProvider.push({ id: p.id, name: p.displayName, refs });
+          }
+          let picked: { id: string; name: string; refs: DocumentReference[] } | null = null;
+          for (const row of bucketRefsByProvider) {
+            const snaps = await Promise.all(row.refs.map((r) => tx.get(r)));
+            if (!snaps.some((s) => s.exists)) {
+              picked = row;
+              break;
+            }
+          }
+          if (!picked) throw new Error("slot_taken");
+
+          assignedProviderId = picked.id;
+          assignedDisplayName = picked.name;
+
+          const bucketIds = bucketDocIdsForAppointment(locationId, assignedProviderId, thisStart, durationMin);
+          const startAt = Timestamp.fromDate(thisStart.toUTC().toJSDate());
+
+          for (const ref of picked.refs) {
+            tx.set(ref, {
+              bookingId: bookingRef.id,
+              locationId,
+              providerId: assignedProviderId,
+              serviceLine,
+              durationMin,
+              startIso: thisStart.toUTC().toISO(),
+              createdAt: FieldValue.serverTimestamp(),
+            });
+          }
+
+          const prefRow = preferredProviderId
+            ? eligible.find((p) => p.id === preferredProviderId)
+            : undefined;
+
+          tx.set(bookingRef, {
+            locationId,
+            serviceLine,
+            durationMin,
+            startIso: thisStart.toUTC().toISO(),
+            startAt,
+            bucketIds,
+            providerMode: "any",
+            providerId: assignedProviderId,
+            providerDisplayName: assignedDisplayName,
+            ...(preferredProviderId
+              ? {
+                  preferredProviderId,
+                  preferredProviderDisplayName: prefRow?.displayName ?? "",
+                }
+              : {}),
+            name: body.name.trim(),
+            phone: body.phone.trim(),
+            email: body.email.trim().toLowerCase(),
+            notes: body.notes?.trim() || "",
+            status: "pending",
+            sourceIp: getClientIp(req.headers),
             createdAt: FieldValue.serverTimestamp(),
           });
+          recordBookingEventInTx(db, tx, bookingRef.id, {
+            type: "created",
+            byUid: null,
+            byEmail: body.email.trim().toLowerCase(),
+            meta: { via: "public_form", providerMode: "any" },
+          });
+        });
+      }
+      createdIds.push(bookingRef.id);
+    } catch (e) {
+      if (e instanceof Error && e.message === "slot_taken") {
+        if (multiVisit) {
+          conflicts.push(thisStart.setZone(TIME_ZONE).toFormat("LLL d"));
+          continue;
         }
-
-        const prefRow = preferredProviderId
-          ? eligible.find((p) => p.id === preferredProviderId)
-          : undefined;
-
-        tx.set(bookingRef, {
-          locationId,
-          serviceLine,
-          durationMin,
-          startIso: start.toUTC().toISO(),
-          startAt,
-          bucketIds,
-          providerMode: "any",
-          providerId: assignedProviderId,
-          providerDisplayName: assignedDisplayName,
-          ...(preferredProviderId
-            ? {
-                preferredProviderId,
-                preferredProviderDisplayName: prefRow?.displayName ?? "",
-              }
-            : {}),
-          name: body.name.trim(),
-          phone: body.phone.trim(),
-          email: body.email.trim().toLowerCase(),
-          notes: body.notes?.trim() || "",
-          status: "pending",
-          sourceIp: getClientIp(req.headers),
-          createdAt: FieldValue.serverTimestamp(),
-        });
-        recordBookingEventInTx(db, tx, bookingRef.id, {
-          type: "created",
-          byUid: null,
-          byEmail: body.email.trim().toLowerCase(),
-          meta: { via: "public_form", providerMode: "any" },
-        });
-      });
+        return NextResponse.json(
+          { error: "That time was just taken. Pick another slot." },
+          { status: 409 },
+        );
+      }
+      console.error(e);
+      return NextResponse.json({ error: "Could not complete booking" }, { status: 500 });
     }
-  } catch (e) {
-    if (e instanceof Error && e.message === "slot_taken") {
-      return NextResponse.json(
-        { error: "That time was just taken. Pick another slot." },
-        { status: 409 },
-      );
-    }
-    console.error(e);
-    return NextResponse.json({ error: "Could not complete booking" }, { status: 500 });
+  }
+
+  if (createdIds.length === 0) {
+    return NextResponse.json(
+      {
+        error: "No visits could be booked — those times were just taken.",
+        conflicts,
+      },
+      { status: 409 },
+    );
   }
 
   const preferredProviderName = preferredProviderId
     ? eligible.find((p) => p.id === preferredProviderId)?.displayName
     : undefined;
 
+  const firstStart = starts[0]!;
   const emailContext: BookingEmailContext = {
-    bookingId: bookingRef.id,
+    bookingId: createdIds[0]!,
     locationId,
     serviceLine,
     durationMin,
-    start,
+    start: firstStart,
     name: body.name.trim(),
     phone: body.phone.trim(),
     email: body.email.trim().toLowerCase(),
@@ -307,10 +372,22 @@ export async function POST(req: Request) {
     preferredProviderName,
   };
 
+  const recurrenceNote =
+    createdIds.length > 1
+      ? `We also received ${createdIds.length - 1} additional weekly visit(s) on the same weekday. Each is pending office confirmation (references: ${createdIds.slice(1).join(", ")}).`
+      : undefined;
+
   const officeTo = process.env.OFFICE_NOTIFICATION_EMAIL;
   if (officeTo) {
     try {
-      const { subject, text, html } = officeNotificationEmail(emailContext);
+      const officePayload = officeNotificationEmail(emailContext);
+      let subject = officePayload.subject;
+      let text = officePayload.text;
+      const html = officePayload.html;
+      if (createdIds.length > 1) {
+        subject = `[${createdIds.length} visits] ${subject}`;
+        text = `Patient requested ${createdIds.length} recurring visits (same weekday).\nBooking IDs: ${createdIds.join(", ")}\n\n${text}`;
+      }
       await sendBookingNotification({
         to: officeTo,
         subject,
@@ -325,7 +402,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { subject, text, html } = patientPendingEmail(emailContext);
+    const { subject, text, html } = patientPendingEmail(emailContext, { recurrenceNote });
     console.log("[booking] Sending patient confirmation to", emailContext.email);
     await sendBookingNotification({
       to: emailContext.email,
@@ -342,11 +419,19 @@ export async function POST(req: Request) {
   return NextResponse.json(
     {
       ok: true,
-      bookingId: bookingRef.id,
+      bookingId: createdIds[0],
+      bookingIds: createdIds,
       status: "pending",
       providerId: assignedProviderId,
       providerDisplayName: assignedDisplayName,
       providerMode: body.providerMode,
+      ...(conflicts.length > 0
+        ? {
+            conflicts,
+            conflictsMessage: `Some dates were skipped (slot taken): ${conflicts.join(", ")}`,
+          }
+        : {}),
+      totalCreated: createdIds.length,
     },
     { status: 201 },
   );

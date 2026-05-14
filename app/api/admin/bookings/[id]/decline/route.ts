@@ -67,6 +67,7 @@ export async function POST(req: Request, ctx: Params) {
         declinedAt: FieldValue.serverTimestamp(),
         declinedByUid: staff.uid,
         declinedByEmail: staff.email ?? null,
+        patientPortalTokenHash: FieldValue.delete(),
         ...(reason ? { declineReason: reason } : {}),
       });
       recordBookingEventInTx(db, tx, id, {

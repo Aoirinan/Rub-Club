@@ -13,6 +13,7 @@ import {
   parseStartIsoToDateTime,
 } from "@/lib/slots-luxon";
 import { recordBookingEventInTx } from "@/lib/booking-events";
+import { generatePatientPortalToken, hashPatientPortalToken } from "@/lib/patient-portal-token";
 
 export const runtime = "nodejs";
 
@@ -83,6 +84,8 @@ export async function POST(req: Request) {
 
   for (const thisStart of starts) {
     const bookingRef = db.collection("bookings").doc();
+    const portalHash =
+      status === "confirmed" ? hashPatientPortalToken(generatePatientPortalToken()) : "";
 
     try {
       const bucketIds = bucketDocIdsForAppointment(locationId, body.providerId, thisStart, durationMin);
@@ -138,6 +141,7 @@ export async function POST(req: Request) {
                 acceptedByUid: staff.uid,
                 acceptedByEmail: staff.email ?? null,
                 acceptedAt: FieldValue.serverTimestamp(),
+                ...(portalHash ? { patientPortalTokenHash: portalHash } : {}),
               }
             : {}),
           createdAt: FieldValue.serverTimestamp(),

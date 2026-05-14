@@ -140,6 +140,29 @@ function AdminDashboard() {
     setHolds(payload.holds ?? []);
   }, [getIdToken, filters.date, filters.locationId]);
 
+  const handleRescheduleBooking = useCallback(
+    async (bookingId: string, startIso: string) => {
+      const token = await getIdToken();
+      if (!token) {
+        setError("Sign in again to reschedule.");
+        return;
+      }
+      const res = await fetch(`/api/admin/bookings/${encodeURIComponent(bookingId)}/reschedule`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ startIso }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setError(typeof data.error === "string" ? data.error : "Could not reschedule.");
+        return;
+      }
+      setError(null);
+      await refreshBookings();
+    },
+    [getIdToken, refreshBookings],
+  );
+
   useEffect(() => {
     if (!auth) return;
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -336,6 +359,7 @@ function AdminDashboard() {
                 providers={columnProviders}
                 filters={filters}
                 onSelect={setSelectedId}
+                onRescheduleBooking={handleRescheduleBooking}
               />
             ) : null}
             {filters.view === "week" ? (

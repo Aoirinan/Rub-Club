@@ -85,6 +85,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
   const [submitting, setSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [repeatWeeklyCount, setRepeatWeeklyCount] = useState(1);
 
   const minDate = useMemo(() => todayIso(), []);
   const maxDate = useMemo(() => addDaysIso(90), []);
@@ -213,6 +214,9 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
       if (providerMode === "specific") {
         body.providerId = selectedProviderId;
       }
+      if (providerMode === "specific" && repeatWeeklyCount > 1) {
+        body.recurrence = { frequency: "weekly", count: repeatWeeklyCount };
+      }
       if (providerMode === "any" && preferredProviderId) {
         body.preferredProviderId = preferredProviderId;
       }
@@ -226,6 +230,8 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
         error?: string;
         providerDisplayName?: string;
         providerMode?: ProviderMode;
+        totalCreated?: number;
+        conflictsMessage?: string;
       };
       if (res.status === 409) {
         setSubmitMessage(
@@ -247,9 +253,14 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
           : data.providerDisplayName
             ? ` Requested with ${data.providerDisplayName}.`
             : "";
+      const repeat =
+        typeof data.totalCreated === "number" && data.totalCreated > 1
+          ? ` ${data.totalCreated} recurring weekly visits were submitted (each pending office confirmation).`
+          : "";
+      const conflict = data.conflictsMessage ? ` ${data.conflictsMessage}` : "";
       setSubmitSuccess(true);
       setSubmitMessage(
-        `Request received.${who} You will receive a confirmation email shortly — check spam if you don't see it. The office will follow up to confirm.`,
+        `Request received.${who}${repeat}${conflict} You will receive a confirmation email shortly — check spam if you don't see it. The office will follow up to confirm.`,
       );
       track("booking_succeeded", {
         service: serviceLine,
@@ -260,6 +271,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
       setPhone("");
       setEmail("");
       setNotes("");
+      setRepeatWeeklyCount(1);
       setSelectedSlot(null);
       setSlots(null);
     } finally {
@@ -415,6 +427,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                       checked={providerMode === "any"}
                       onChange={() => {
                         setProviderMode("any");
+                        setRepeatWeeklyCount(1);
                         setSlots(null);
                         setSelectedSlot(null);
                       }}
@@ -447,25 +460,44 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                 </fieldset>
 
                 {providerMode === "specific" ? (
-                  <label className="block space-y-1 text-sm">
-                    <span className="font-bold text-[#173f3b]">Provider</span>
-                    <select
-                      className="focus-ring w-full border border-stone-300 bg-white px-3 py-2"
-                      value={selectedProviderId}
-                      onChange={(e) => {
-                        setSelectedProviderId(e.target.value);
-                        setSlots(null);
-                        setSelectedSlot(null);
-                      }}
-                      disabled={providerSelectDisabled}
-                    >
-                      {providers.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.displayName}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  <>
+                    <label className="block space-y-1 text-sm">
+                      <span className="font-bold text-[#173f3b]">Provider</span>
+                      <select
+                        className="focus-ring w-full border border-stone-300 bg-white px-3 py-2"
+                        value={selectedProviderId}
+                        onChange={(e) => {
+                          setSelectedProviderId(e.target.value);
+                          setSlots(null);
+                          setSelectedSlot(null);
+                        }}
+                        disabled={providerSelectDisabled}
+                      >
+                        {providers.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.displayName}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="block space-y-1 text-sm">
+                      <span className="font-bold text-[#173f3b]">Repeat (same weekday)</span>
+                      <select
+                        className="focus-ring w-full border border-stone-300 bg-white px-3 py-2"
+                        value={repeatWeeklyCount}
+                        onChange={(e) => setRepeatWeeklyCount(Number(e.target.value))}
+                      >
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                          <option key={n} value={n}>
+                            {n === 1 ? "One visit only" : `${n} weekly visits (same weekday)`}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="block text-xs text-stone-600">
+                        Each visit is a separate pending request until the office confirms.
+                      </span>
+                    </label>
+                  </>
                 ) : (
                   <label className="block space-y-1 text-sm">
                     <span className="font-bold text-[#173f3b]">Preference (optional)</span>

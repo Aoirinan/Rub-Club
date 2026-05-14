@@ -7,6 +7,8 @@ import { bookingDocToEmailContext } from "@/lib/booking-doc";
 import { patientAcceptedEmail } from "@/lib/email-templates";
 import { sendBookingNotification } from "@/lib/sendgrid";
 import { buildIcs } from "@/lib/ics";
+import { generatePatientPortalToken, hashPatientPortalToken } from "@/lib/patient-portal-token";
+import { siteUrl } from "@/lib/site-content";
 
 export const runtime = "nodejs";
 
@@ -21,6 +23,9 @@ export async function POST(req: Request, ctx: Params) {
   const { id } = await ctx.params;
   const db = getFirestore();
   const bookingRef = db.collection("bookings").doc(id);
+  const portalPlain = generatePatientPortalToken();
+  const portalHash = hashPatientPortalToken(portalPlain);
+  let acceptedNow = false;
 
   try {
     await db.runTransaction(async (tx) => {
@@ -40,6 +45,7 @@ export async function POST(req: Request, ctx: Params) {
         acceptedAt: FieldValue.serverTimestamp(),
         acceptedByUid: staff.uid,
         acceptedByEmail: staff.email ?? null,
+        patientPortalTokenHash: portalHash,
       });
       recordBookingEventInTx(db, tx, id, {
         type: "accepted",
@@ -47,6 +53,7 @@ export async function POST(req: Request, ctx: Params) {
         byEmail: staff.email ?? null,
         meta: { prevStatus: prev },
       });
+      acceptedNow = true;
     });
   } catch (e) {
     if (e instanceof Error && e.message === "not_found") {
@@ -63,9 +70,13 @@ export async function POST(req: Request, ctx: Params) {
   }
 
   try {
+    if (!acceptedNow) {
+      return NextResponse.json({ ok: true });
+    }
     const fresh = await bookingRef.get();
     const emailCtx = bookingDocToEmailContext(fresh);
     if (emailCtx) {
+      const manageUrl = siteUrl(`/book/manage?token=${encodeURIComponent(portalPlain)}`);
       const ics = buildIcs({
         uid: `${emailCtx.bookingId}@wellnessparistx`,
         startUtc: emailCtx.start.toUTC(),
@@ -78,7 +89,10 @@ export async function POST(req: Request, ctx: Params) {
       });
       const icsBase64 = Buffer.from(ics, "utf8").toString("base64");
 
-      const { subject, text, html } = patientAcceptedEmail(emailCtx);
+      const { subject, text, html } = patientAcceptedEmail({
+        ...emailCtx,
+        patientManageUrl: manageUrl,
+      });
       await sendBookingNotification({
         to: emailCtx.email,
         subject,

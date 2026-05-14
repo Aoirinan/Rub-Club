@@ -32,11 +32,30 @@ const ROW_LABELS: { hour: number; label: string }[] = (() => {
 
 const TOTAL_SLOT_PX = (DAY_CLOSE_HOUR - DAY_OPEN_HOUR) * 2 * SLOT_PX;
 
+function startIsoUtcFromDayColumnDrop(
+  dateYmd: string,
+  yPx: number,
+  openHour: number,
+  closeHour: number,
+  slotPx: number,
+): string {
+  const day = chicagoDayStart(dateYmd);
+  let slotIdx = Math.floor(yPx / slotPx);
+  const maxIdx = (closeHour - openHour) * 2 - 1;
+  slotIdx = Math.max(0, Math.min(slotIdx, maxIdx));
+  const start = day
+    .set({ hour: openHour, minute: 0, second: 0, millisecond: 0 })
+    .plus({ minutes: slotIdx * 30 });
+  return start.toUTC().toISO()!;
+}
+
 type ViewProps = {
   bookings: BookingRow[];
   providers: ProviderRow[];
   filters: FilterState;
   onSelect: (id: string) => void;
+  /** Day view: drag a block to another time (same provider column). */
+  onRescheduleBooking?: (bookingId: string, startIso: string) => Promise<void>;
 };
 
 function bookingsForDayProvider(
@@ -65,7 +84,7 @@ function unassignedBookingsForDay(rows: BookingRow[], dayStart: DateTime): Booki
 
 /* ---------------- Day view ---------------- */
 
-export function DayView({ bookings, providers, filters, onSelect }: ViewProps) {
+export function DayView({ bookings, providers, filters, onSelect, onRescheduleBooking }: ViewProps) {
   const dayStart = chicagoDayStart(filters.date);
   const unassigned = unassignedBookingsForDay(bookings, dayStart);
 
@@ -127,6 +146,27 @@ export function DayView({ bookings, providers, filters, onSelect }: ViewProps) {
                 key={p.id}
                 className="relative border-r border-slate-200 last:border-r-0"
                 style={{ height: `${TOTAL_SLOT_PX}px` }}
+                onDragOver={(e) => {
+                  if (onRescheduleBooking) e.preventDefault();
+                }}
+                onDrop={(e) => {
+                  if (!onRescheduleBooking) return;
+                  e.preventDefault();
+                  const rawId = e.dataTransfer.getData("application/x-booking-id");
+                  if (!rawId) return;
+                  const b = rows.find((x) => x.id === rawId);
+                  if (!b || b.providerId !== p.id) return;
+                  const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                  const y = e.clientY - rect.top;
+                  const startIso = startIsoUtcFromDayColumnDrop(
+                    filters.date,
+                    y,
+                    DAY_OPEN_HOUR,
+                    DAY_CLOSE_HOUR,
+                    SLOT_PX,
+                  );
+                  void onRescheduleBooking(b.id, startIso);
+                }}
               >
                 {ROW_LABELS.map((r) => (
                   <div
@@ -148,6 +188,7 @@ export function DayView({ bookings, providers, filters, onSelect }: ViewProps) {
                     key={b.id}
                     booking={b}
                     onSelect={onSelect}
+                    onRescheduleBooking={onRescheduleBooking}
                     openHour={DAY_OPEN_HOUR}
                     closeHour={DAY_CLOSE_HOUR}
                     slotPx={SLOT_PX}
@@ -198,12 +239,14 @@ export function DayView({ bookings, providers, filters, onSelect }: ViewProps) {
 function CalendarBlock({
   booking,
   onSelect,
+  onRescheduleBooking,
   openHour,
   closeHour,
   slotPx,
 }: {
   booking: BookingRow;
   onSelect: (id: string) => void;
+  onRescheduleBooking?: (bookingId: string, startIso: string) => Promise<void>;
   openHour: number;
   closeHour: number;
   slotPx: number;
@@ -216,9 +259,20 @@ function CalendarBlock({
   const status = booking.status ?? "pending";
   const providerLabel = booking.providerDisplayName || "First available";
   const svcColor = serviceLineColor(booking.serviceLine);
+  const dragEnabled =
+    Boolean(onRescheduleBooking) &&
+    (status === "confirmed" || status === "pending") &&
+    Boolean(booking.providerId);
   return (
     <button
       type="button"
+      draggable={dragEnabled}
+      onDragStart={(e) => {
+        if (!dragEnabled) return;
+        e.stopPropagation();
+        e.dataTransfer.setData("application/x-booking-id", booking.id);
+        e.dataTransfer.effectAllowed = "move";
+      }}
       onClick={() => onSelect(booking.id)}
       className={`absolute left-1 right-1 overflow-hidden rounded-md px-2 py-1 text-left text-xs shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-500 ${bookingStatusBlockClasses(status)} ${svcColor.borderClass}`}
       style={{ top: `${geom.topPx}px`, height: `${geom.heightPx}px` }}

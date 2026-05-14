@@ -1,6 +1,7 @@
 import { DateTime } from "luxon";
 import {
   LOCATIONS,
+  reviewUrlForLocation,
   type DurationMin,
   type LocationId,
   type ServiceLine,
@@ -24,6 +25,8 @@ export type BookingEmailContext = {
   providerDisplayName: string;
   providerMode: "specific" | "any";
   preferredProviderName?: string;
+  /** Self-service manage link (only included in confirmation emails when issued). */
+  patientManageUrl?: string;
 };
 
 function escapeHtml(s: string): string {
@@ -130,13 +133,18 @@ function detailsTable(ctx: BookingEmailContext): string {
  * Patient email sent when an appointment request is first received.
  * No calendar invite yet — only after the office accepts.
  */
-export function patientPendingEmail(ctx: BookingEmailContext): {
+export function patientPendingEmail(
+  ctx: BookingEmailContext,
+  opts?: { recurrenceNote?: string },
+): {
   subject: string;
   text: string;
   html: string;
 } {
   const loc = LOCATIONS[ctx.locationId];
   const subject = `Request received — ${formatChicagoDateTimeShort(ctx.start)}`;
+
+  const recLine = opts?.recurrenceNote?.trim();
 
   const text = [
     `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
@@ -150,6 +158,7 @@ export function patientPendingEmail(ctx: BookingEmailContext): {
     "",
     "Status: PENDING — we have not yet confirmed this appointment.",
     "",
+    ...(recLine ? [recLine, ""] : []),
     `Need to change or cancel? Call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
     "",
     `Reference: ${ctx.bookingId}`,
@@ -168,6 +177,11 @@ export function patientPendingEmail(ctx: BookingEmailContext): {
     </p>
     ${detailsTable(ctx)}
     ${prefNote}
+    ${
+      recLine
+        ? `<p style="margin:12px 0 0 0;padding:10px 12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;font-size:14px;color:${TEXT};">${escapeHtml(recLine)}</p>`
+        : ""
+    }
     <p style="margin:16px 0 0 0;font-size:14px;">
       Need to change or cancel? Call
       <a href="tel:+1${loc.phonePrimary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phonePrimary)}</a>${
@@ -216,6 +230,9 @@ export function patientAcceptedEmail(ctx: BookingEmailContext): {
     "• Comfortable clothing is fine for both massage and chiropractic.",
     "",
     `To reschedule or cancel: call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
+    ...(ctx.patientManageUrl
+      ? ["", `Or use your secure link (same device / browser): ${ctx.patientManageUrl}`]
+      : []),
     "",
     `Reference: ${ctx.bookingId}`,
   ].join("\n");
@@ -244,6 +261,13 @@ export function patientAcceptedEmail(ctx: BookingEmailContext): {
           : ""
       }.
     </p>
+    ${
+      ctx.patientManageUrl
+        ? `<p style="margin:16px 0 0 0;font-size:14px;">
+      Prefer online? <a href="${escapeHtml(ctx.patientManageUrl)}" style="color:${PRIMARY};font-weight:700;">Reschedule or cancel</a> with the link from this email.
+    </p>`
+        : ""
+    }
     <p style="margin:16px 0 0 0;font-size:12px;color:${MUTED};">Reference: ${escapeHtml(ctx.bookingId)}</p>
   `;
 
@@ -322,28 +346,34 @@ export function patientDeclinedEmail(
 }
 
 /**
- * Patient email sent when the office cancels an already-confirmed appointment.
+ * Patient email when a confirmed appointment is cancelled (office or self-service).
  */
 export function patientCancelledEmail(
   ctx: BookingEmailContext,
   reason?: string,
+  opts?: { viaPatientPortal?: boolean },
 ): { subject: string; text: string; html: string } {
   const loc = LOCATIONS[ctx.locationId];
   const subject = `Appointment cancelled — ${formatChicagoDateTimeShort(ctx.start)}`;
+  const self = opts?.viaPatientPortal === true;
+  const opener = self
+    ? "This confirms we cancelled your appointment as you requested through our online link."
+    : "We're writing to let you know your appointment has been cancelled by the office.";
+  const reasonLabel = self ? "Your note" : "Reason from the office";
 
   const cleanReason = (reason ?? "").trim();
 
   const text = [
     `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
     "",
-    "We're writing to let you know your appointment has been cancelled by the office.",
+    opener,
     "",
     `When (cancelled): ${formatChicagoDateTimeLong(ctx.start)}`,
     `Service: ${ctx.serviceLine === "massage" ? "Massage therapy" : "Chiropractic"} (${ctx.durationMin} min)`,
     `Provider: ${ctx.providerDisplayName || "First available"}`,
     `Location: ${loc.name}`,
     "",
-    cleanReason ? `Reason from the office: ${cleanReason}` : "",
+    cleanReason ? `${reasonLabel}: ${cleanReason}` : "",
     cleanReason ? "" : "",
     `To rebook: ${siteUrl("/book")} or call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
     "",
@@ -354,13 +384,17 @@ export function patientCancelledEmail(
 
   const reasonBlock = cleanReason
     ? `<p style="margin:12px 0 0 0;padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;font-size:14px;color:${TEXT};">
-        <strong>Reason from the office:</strong> ${escapeHtml(cleanReason)}
+        <strong>${escapeHtml(reasonLabel)}:</strong> ${escapeHtml(cleanReason)}
       </p>`
     : "";
 
   const body = `
     <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
-    <p style="margin:12px 0 0 0;">Your appointment has been cancelled by the office. The time slot is now released.</p>
+    <p style="margin:12px 0 0 0;">${
+      self
+        ? "Your appointment has been cancelled using your secure online link. The time slot is now released."
+        : "Your appointment has been cancelled by the office. The time slot is now released."
+    }</p>
     ${detailsTable(ctx)}
     ${reasonBlock}
     <p style="margin:16px 0 0 0;font-size:14px;">
@@ -543,6 +577,51 @@ export function patientReminderEmail(ctx: BookingEmailContext): {
     body,
     ctaText: "View location and map",
     ctaHref: loc.mapsUrl,
+  });
+
+  return { subject, text, html };
+}
+
+/** Short follow-up after a completed visit — asks for a public review when configured. */
+export function postVisitSurveyEmail(ctx: BookingEmailContext): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const loc = LOCATIONS[ctx.locationId];
+  const reviewUrl = reviewUrlForLocation(ctx.locationId);
+  const subject = `How was your visit? — ${loc.shortName}`;
+
+  const text = [
+    `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
+    "",
+    "Thank you for choosing us for your care. If you have a moment, we would really appreciate a brief review — it helps other neighbors find quality care.",
+    "",
+    `Leave a review: ${reviewUrl}`,
+    "",
+    `Your appointment was on ${formatChicagoDateTimeLong(ctx.start)} (${ctx.serviceLine === "massage" ? "massage therapy" : "chiropractic"}).`,
+    "",
+    `Questions? Call ${loc.phonePrimary}.`,
+    "",
+    `Reference: ${ctx.bookingId}`,
+  ].join("\n");
+
+  const body = `
+    <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
+    <p style="margin:12px 0 0 0;">Thank you for visiting ${escapeHtml(loc.shortName)}. If you have a moment, we would really appreciate a short public review — it helps others in the community find care.</p>
+    ${detailsTable(ctx)}
+    <p style="margin:16px 0 0 0;font-size:14px;">
+      <a href="${escapeHtml(reviewUrl)}" style="color:${PRIMARY};font-weight:700;">Share feedback on Google →</a>
+    </p>
+    <p style="margin:12px 0 0 0;font-size:12px;color:${MUTED};">Reference: ${escapeHtml(ctx.bookingId)}</p>
+  `;
+
+  const html = brandedShell({
+    preheader: "We would love your feedback.",
+    heading: "How was your visit?",
+    body,
+    ctaText: "Leave a review",
+    ctaHref: reviewUrl,
   });
 
   return { subject, text, html };

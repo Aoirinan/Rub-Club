@@ -590,6 +590,20 @@ function EventMeta({ meta, type }: { meta: Record<string, unknown>; type: Bookin
       </p>
     );
   }
+  if (type === "rescheduled" && meta.newStartIso) {
+    return (
+      <p className="mt-1 rounded bg-cyan-50 px-2 py-1 text-xs text-cyan-900">
+        New start: {String(meta.newStartIso)}
+      </p>
+    );
+  }
+  if (type === "survey_sent") {
+    return (
+      <p className="mt-1 rounded bg-teal-50 px-2 py-1 text-xs text-teal-900">
+        Automated review request
+      </p>
+    );
+  }
   return null;
 }
 
@@ -849,6 +863,10 @@ function eventLabel(type: BookingEvent["type"]): string {
       return "Payment received";
     case "custom_email":
       return "Email sent to patient";
+    case "rescheduled":
+      return "Rescheduled";
+    case "survey_sent":
+      return "Post-visit survey sent";
   }
 }
 
@@ -872,6 +890,10 @@ function eventDotClasses(type: BookingEvent["type"]): string {
       return "bg-emerald-600";
     case "custom_email":
       return "bg-violet-500";
+    case "rescheduled":
+      return "bg-cyan-500";
+    case "survey_sent":
+      return "bg-teal-400";
   }
 }
 
