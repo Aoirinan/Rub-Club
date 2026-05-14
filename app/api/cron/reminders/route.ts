@@ -13,22 +13,38 @@ export const runtime = "nodejs";
 
 /**
  * Automated reminder cron — sends reminders for confirmed appointments
- * starting between 18 and 42 hours from now (fits a once-daily schedule on
- * Vercel Hobby). On Pro you can run hourly and tighten the window in code.
+ * starting between 22 and 26 hours from now. Intended to run hourly via
+ * Vercel Cron (requires Pro or equivalent; Hobby is limited to daily crons).
  *
- * Protected by CRON_SECRET env var when set.
+ * On Vercel **production** (`VERCEL_ENV === "production"`), `CRON_SECRET` must
+ * be set and requests must send `Authorization: Bearer <CRON_SECRET>` (Vercel
+ * Cron does this automatically when the env var exists). Elsewhere, if
+ * `CRON_SECRET` is set, the same header is required; if unset, local calls work
+ * without a header for development only.
  */
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET?.trim();
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  const isVercelProduction = process.env.VERCEL_ENV === "production";
+
+  if (isVercelProduction) {
+    if (!cronSecret) {
+      return NextResponse.json(
+        { error: "CRON_SECRET must be set for production cron." },
+        { status: 503 },
+      );
+    }
+    if (authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  } else if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const db = getFirestore();
   const now = Date.now();
-  const windowStart = Timestamp.fromMillis(now + 18 * 60 * 60 * 1000);
-  const windowEnd = Timestamp.fromMillis(now + 42 * 60 * 60 * 1000);
+  const windowStart = Timestamp.fromMillis(now + 22 * 60 * 60 * 1000);
+  const windowEnd = Timestamp.fromMillis(now + 26 * 60 * 60 * 1000);
 
   const snap = await db
     .collection("bookings")
