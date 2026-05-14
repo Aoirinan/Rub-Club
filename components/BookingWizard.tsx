@@ -522,7 +522,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                             type="button"
                             className={`focus-ring group flex flex-col overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition ${
                               selected
-                                ? "border-[#0f5f5c] ring-2 ring-[#0f5f5c] ring-offset-2 ring-offset-[#f4f2ea]"
+                                ? "border-[#0f5f5c] ring-2 ring-[#0f5f5c] ring-offset-2 ring-offset-white"
                                 : "border-stone-200/90 hover:border-[#0f5f5c]/40 hover:shadow-md"
                             }`}
                             onClick={() => {
@@ -569,7 +569,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                     </div>
                     {selectedProvider ? (
                       <div className="overflow-hidden rounded-2xl border border-[#0f5f5c]/20 bg-white shadow-sm">
-                        <div className="border-b border-stone-100 bg-[#0f5f5c]/-[0.06] px-4 py-3 sm:px-5">
+                        <div className="border-b border-stone-100 bg-[#f0faf8] px-4 py-3 sm:px-5">
                           <p className="text-[0.65rem] font-bold uppercase tracking-[0.15em] text-[#0f5f5c]">
                             About this provider
                           </p>
@@ -834,6 +834,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
           </aside>
         ) : null}
       </div>
+    </div>
     </div>
   );
 }
