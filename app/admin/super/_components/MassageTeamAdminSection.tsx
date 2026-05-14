@@ -9,9 +9,20 @@ type Props = {
   onNotify: (message: string | null) => void;
 };
 
+async function parseAdminJson(res: Response): Promise<Record<string, unknown>> {
+  const text = await res.text();
+  if (!text.trim()) return {};
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
 export function MassageTeamAdminSection({ auth, onNotify }: Props) {
   const [members, setMembers] = useState<MassageTeamMemberStored[]>([]);
   const [siteUsesCustomList, setSiteUsesCustomList] = useState(false);
+  const [sectionAlert, setSectionAlert] = useState<{ kind: "error" | "success"; text: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [seeding, setSeeding] = useState(false);
@@ -45,17 +56,28 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
       const res = await fetch("/api/admin/massage-team", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      const data = await parseAdminJson(res);
       if (!res.ok) {
+        const apiError = typeof data.error === "string" ? data.error : null;
+        const msg =
+          apiError ??
+          (res.status === 401
+            ? "Not authorized to load the team list. You need manager (superadmin) access."
+            : `Could not load team (HTTP ${res.status}).`);
+        setSectionAlert({ kind: "error", text: msg });
         setMembers([]);
         setSiteUsesCustomList(false);
         return;
       }
-      const data = (await res.json()) as {
-        members?: MassageTeamMemberStored[];
-        siteUsesCustomList?: boolean;
-      };
-      setMembers(data.members ?? []);
+      setMembers((data.members as MassageTeamMemberStored[] | undefined) ?? []);
       setSiteUsesCustomList(Boolean(data.siteUsesCustomList));
+    } catch {
+      setSectionAlert({
+        kind: "error",
+        text: "Network error while loading the team list. Check your connection and try again.",
+      });
+      setMembers([]);
+      setSiteUsesCustomList(false);
     } finally {
       setLoading(false);
     }
@@ -66,6 +88,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
   }, [load]);
 
   async function seedDefaults() {
+    setSectionAlert(null);
     onNotify(null);
     const user = auth?.currentUser;
     if (!user) return;
@@ -87,12 +110,18 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
         },
         body: JSON.stringify({ seedDefaults: true }),
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = await parseAdminJson(res);
       if (!res.ok) {
-        onNotify(typeof data.error === "string" ? data.error : "Could not seed team.");
+        setSectionAlert({
+          kind: "error",
+          text: typeof data.error === "string" ? data.error : "Could not seed team.",
+        });
         return;
       }
-      onNotify("Team copied into Firestore. Edits on the site now come from this list.");
+      setSectionAlert({
+        kind: "success",
+        text: "Team copied into Firestore. The home page and /services/massage now use this list.",
+      });
       await load();
     } finally {
       setSeeding(false);
@@ -100,6 +129,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
   }
 
   async function clearAll() {
+    setSectionAlert(null);
     onNotify(null);
     const user = auth?.currentUser;
     if (!user) return;
@@ -117,12 +147,18 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = await parseAdminJson(res);
       if (!res.ok) {
-        onNotify(typeof data.error === "string" ? data.error : "Could not clear team.");
+        setSectionAlert({
+          kind: "error",
+          text: typeof data.error === "string" ? data.error : "Could not clear team.",
+        });
         return;
       }
-      onNotify("Custom team removed. Site is using the built-in list again.");
+      setSectionAlert({
+        kind: "success",
+        text: "Custom team removed. The site is using the built-in list again until you add or seed.",
+      });
       setEditing(null);
       await load();
     } finally {
@@ -131,15 +167,16 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
   }
 
   async function createMember() {
+    setSectionAlert(null);
     onNotify(null);
     const user = auth?.currentUser;
     if (!user) return;
     if (!newName.trim() || !newBio.trim()) {
-      onNotify("Name and bio are required.");
+      setSectionAlert({ kind: "error", text: "Name and bio are required." });
       return;
     }
     if (!newPhoto) {
-      onNotify("Choose a portrait image.");
+      setSectionAlert({ kind: "error", text: "Choose a portrait image." });
       return;
     }
     setSaving(true);
@@ -159,29 +196,39 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
         headers: { Authorization: `Bearer ${token}` },
         body: form,
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = await parseAdminJson(res);
       if (!res.ok) {
-        onNotify(typeof data.error === "string" ? data.error : "Could not add team member.");
+        setSectionAlert({
+          kind: "error",
+          text:
+            typeof data.error === "string"
+              ? data.error
+              : `Could not add team member (HTTP ${res.status}).`,
+        });
         return;
       }
-      onNotify("Team member added.");
       setNewName("");
       setNewBio("");
       setNewRole("");
       setNewSort("");
       setNewPhoto(null);
       await load();
+      setSectionAlert({
+        kind: "success",
+        text: "Team member added. They appear in “Meet the team” on the home page and on /services/massage.",
+      });
     } finally {
       setSaving(false);
     }
   }
 
   async function saveEdit() {
+    setSectionAlert(null);
     onNotify(null);
     const user = auth?.currentUser;
     if (!user || !editing) return;
     if (!editName.trim() || !editBio.trim()) {
-      onNotify("Name and bio are required.");
+      setSectionAlert({ kind: "error", text: "Name and bio are required." });
       return;
     }
     setSaving(true);
@@ -202,9 +249,12 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           headers: { Authorization: `Bearer ${token}` },
           body: form,
         });
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        const data = await parseAdminJson(res);
         if (!res.ok) {
-          onNotify(typeof data.error === "string" ? data.error : "Could not save.");
+          setSectionAlert({
+            kind: "error",
+            text: typeof data.error === "string" ? data.error : "Could not save.",
+          });
           return;
         }
       } else {
@@ -230,13 +280,16 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           },
           body: JSON.stringify(body),
         });
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        const data = await parseAdminJson(res);
         if (!res.ok) {
-          onNotify(typeof data.error === "string" ? data.error : "Could not save.");
+          setSectionAlert({
+            kind: "error",
+            text: typeof data.error === "string" ? data.error : "Could not save.",
+          });
           return;
         }
       }
-      onNotify("Saved.");
+      setSectionAlert({ kind: "success", text: "Saved." });
       setEditing(null);
       setEditPhoto(null);
       await load();
@@ -246,6 +299,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
   }
 
   async function deleteMember(row: MassageTeamMemberStored) {
+    setSectionAlert(null);
     onNotify(null);
     const user = auth?.currentUser;
     if (!user) return;
@@ -257,12 +311,15 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = await parseAdminJson(res);
       if (!res.ok) {
-        onNotify(typeof data.error === "string" ? data.error : "Could not delete.");
+        setSectionAlert({
+          kind: "error",
+          text: typeof data.error === "string" ? data.error : "Could not delete.",
+        });
         return;
       }
-      onNotify("Removed from site.");
+      setSectionAlert({ kind: "success", text: "Removed from site." });
       if (editing?.id === row.id) setEditing(null);
       await load();
     } finally {
@@ -271,6 +328,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
   }
 
   function openEdit(row: MassageTeamMemberStored) {
+    setSectionAlert(null);
     onNotify(null);
     setEditing(row);
     setEditName(row.name);
@@ -285,11 +343,23 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
       <div>
         <h2 className="text-lg font-semibold text-slate-900">Website — massage team (Meet the team)</h2>
         <p className="mt-2 text-sm text-slate-600">
-          The home page and massage page show this list when Firestore has at least one row. Otherwise they use the
-          built-in list from code. Upload portraits here (JPEG, PNG, or WebP, up to 5 MB). For uploaded files, add a
-          Firebase Storage rule allowing public read on <code className="rounded bg-slate-100 px-1">public_site/**</code>{" "}
-          so visitors can load images.
+          The home page and <code className="rounded bg-slate-100 px-1">/services/massage</code> show this list when
+          Firestore has at least one row. Otherwise they use the built-in list from code. Upload portraits here (JPEG,
+          PNG, or WebP, up to 5 MB). For uploaded files, add a Firebase Storage rule allowing public read on{" "}
+          <code className="rounded bg-slate-100 px-1">public_site/**</code> so visitors can load images.
         </p>
+        {sectionAlert ? (
+          <div
+            role={sectionAlert.kind === "error" ? "alert" : "status"}
+            className={
+              sectionAlert.kind === "error"
+                ? "mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-950"
+                : "mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950"
+            }
+          >
+            {sectionAlert.text}
+          </div>
+        ) : null}
         {loading ? (
           <p className="mt-2 text-xs text-slate-500">Loading team…</p>
         ) : siteUsesCustomList ? (

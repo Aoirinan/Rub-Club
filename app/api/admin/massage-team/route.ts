@@ -14,7 +14,7 @@ import {
 } from "@/lib/massage-team";
 import {
   deleteMassageTeamStorageObject,
-  MASSAGE_TEAM_ALLOWED_MIME,
+  resolveMassageTeamImageContentType,
   uploadMassageTeamPhoto,
 } from "@/lib/massage-team-upload";
 import { requireStaff } from "@/lib/staff-auth";
@@ -92,11 +92,14 @@ export async function POST(req: Request) {
     if (!(file instanceof File) || file.size === 0) {
       return NextResponse.json({ error: "Choose a portrait image (JPEG, PNG, or WebP)." }, { status: 400 });
     }
-    const contentType = file.type;
-    if (!MASSAGE_TEAM_ALLOWED_MIME[contentType]) {
-      return NextResponse.json({ error: "Unsupported image type." }, { status: 400 });
-    }
     const buf = Buffer.from(await file.arrayBuffer());
+    const contentType = resolveMassageTeamImageContentType(file.type, buf);
+    if (!contentType) {
+      return NextResponse.json(
+        { error: "Unsupported image type. Use JPEG, PNG, or WebP (if the file is JPEG, try re-saving or renaming to .jpg)." },
+        { status: 400 },
+      );
+    }
     const ref = db.collection(MASSAGE_TEAM_COLLECTION).doc();
     const id = ref.id;
     let photoUrl: string;

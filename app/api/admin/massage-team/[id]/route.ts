@@ -10,7 +10,7 @@ import {
 } from "@/lib/massage-team";
 import {
   deleteMassageTeamStorageObject,
-  MASSAGE_TEAM_ALLOWED_MIME,
+  resolveMassageTeamImageContentType,
   uploadMassageTeamPhoto,
 } from "@/lib/massage-team-upload";
 import { requireStaff } from "@/lib/staff-auth";
@@ -90,11 +90,11 @@ export async function PATCH(req: Request, ctx: Params) {
     }
 
     if (file instanceof File && file.size > 0) {
-      const contentType = file.type;
-      if (!MASSAGE_TEAM_ALLOWED_MIME[contentType]) {
-        return NextResponse.json({ error: "Unsupported image type." }, { status: 400 });
-      }
       const buf = Buffer.from(await file.arrayBuffer());
+      const contentType = resolveMassageTeamImageContentType(file.type, buf);
+      if (!contentType) {
+        return NextResponse.json({ error: "Unsupported image type. Use JPEG, PNG, or WebP." }, { status: 400 });
+      }
       const oldPath = existing.get("photoStoragePath");
       let photoUrl: string;
       let photoStoragePath: string;
