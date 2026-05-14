@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>One website &amp; scheduler — proposal</title>
+    <style>
+      :root {
+        --ink: #1c1917;
+        --muted: #57534e;
+        --rule: #d6d3d1;
+        --accent: #0f5f5c;
+        --accent-soft: #e7f4f3;
+        --paper: #fffdf8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", Times, serif;
+        color: var(--ink);
+        background: #e7e5e4;
+        line-height: 1.45;
+        font-size: 11.5pt;
+      }
+
+      .sheet {
+        max-width: 8.5in;
+        margin: 1rem auto;
+        background: var(--paper);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        padding: 0.65in 0.75in 0.55in;
+      }
+
+      h1 {
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-size: 22pt;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+        margin: 0 0 0.25rem;
+        color: var(--accent);
+      }
+
+      .tagline {
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-size: 12pt;
+        font-weight: 600;
+        color: var(--muted);
+        margin: 0 0 1rem;
+      }
+
+      .meta {
+        font-size: 9.5pt;
+        color: var(--muted);
+        border-top: 2px solid var(--accent);
+        padding-top: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      h2 {
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-size: 11pt;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--accent);
+        margin: 0.85rem 0 0.35rem;
+        break-after: avoid;
+      }
+
+      p {
+        margin: 0 0 0.55rem;
+      }
+
+      ul {
+        margin: 0.25rem 0 0.6rem;
+        padding-left: 1.15rem;
+      }
+
+      li {
+        margin-bottom: 0.35rem;
+      }
+
+      .grid {
+        display: grid;
+        gap: 0 1.25rem;
+        grid-template-columns: 1fr 1fr;
+        margin: 0.5rem 0 0.25rem;
+      }
+
+      @media (max-width: 720px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .callout {
+        background: var(--accent-soft);
+        border-left: 4px solid var(--accent);
+        padding: 0.55rem 0.65rem;
+        margin: 0.65rem 0;
+        font-size: 10.8pt;
+      }
+
+      .urls {
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 9.2pt;
+        word-break: break-all;
+        color: var(--muted);
+        line-height: 1.35;
+      }
+
+      .cta {
+        margin-top: 0.85rem;
+        padding-top: 0.65rem;
+        border-top: 1px solid var(--rule);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-size: 10.5pt;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .fine {
+        font-size: 9pt;
+        color: var(--muted);
+        margin-top: 0.75rem;
+      }
+
+      @page {
+        size: letter;
+        margin: 0.5in;
+      }
+
+      @media print {
+        body {
+          background: #fff;
+        }
+
+        .sheet {
+          box-shadow: none;
+          margin: 0;
+          max-width: none;
+          padding: 0;
+        }
+
+        a {
+          color: inherit;
+          text-decoration: none;
+        }
+
+        .no-print {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <p class="no-print" style="text-align: center; font-family: system-ui, sans-serif; font-size: 10pt; padding: 0.5rem 1rem; margin: 0; background: #fafaf9;">
+      <strong>Save as PDF:</strong> Open this file in Chrome or Edge → press <kbd>Ctrl</kbd>+<kbd>P</kbd> → choose <strong>Save as PDF</strong> → Save.
+    </p>
+    <article class="sheet">
+      <h1>One website. Real scheduling. Less friction.</h1>
+      <p class="tagline">A modern replacement for three separate patient-facing sites.</p>
+      <div class="meta">
+        Prepared for <strong>Chiropractic Associates</strong> &amp; <strong>The Rub Club</strong> — Paris, TX and Sulphur Springs, TX.
+      </div>
+
+      <h2>Where things stand today</h2>
+      <p>
+        The practice is effectively one operation with multiple entry points, but the public web is split across
+        <strong>three different domains</strong>. Patients and Google each have to “pick a door,” and it is easy for hours, phone numbers, and messaging to drift out of sync between them.
+      </p>
+      <p class="urls">
+        https://www.chiropracticparistexas.com/<br />
+        https://www.massageparistexas.com/<br />
+        https://www.chiropracticsulphursprings.com/
+      </p>
+
+      <h2>What we are proposing</h2>
+      <p>
+        <strong>One primary website</strong> that clearly explains both brands, both locations, and both service lines — chiropractic and massage — with a single, coherent path from “I need help” to “I’m booked.”
+      </p>
+      <p>
+        Behind that, a <strong>scheduler and staff tools</strong> (not just a contact form): real availability, confirmed appointments, notifications, and an internal view of the schedule so the front desk spends less time on phone tag.
+      </p>
+
+      <div class="grid">
+        <div>
+          <h2>Why consolidate</h2>
+          <ul>
+            <li><strong>Clarity for patients:</strong> one trusted place for services, hours, insurance, forms, and booking.</li>
+            <li><strong>Stronger marketing:</strong> one domain earns the reviews, links, and search relevance instead of splitting them three ways.</li>
+            <li><strong>Easier maintenance:</strong> update hours or providers once, not across three separate admin logins.</li>
+          </ul>
+        </div>
+        <div>
+          <h2>Why add real scheduling</h2>
+          <ul>
+            <li><strong>Fewer missed connections:</strong> patients see open times and commit without waiting for a callback.</li>
+            <li><strong>Staff alignment:</strong> the schedule becomes a shared source of truth, not sticky notes and voicemails.</li>
+            <li><strong>Room to grow:</strong> the same platform can evolve (reminders, policies, reporting) because you own the software path.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout">
+        Bottom line: you move from <strong>three brochure sites</strong> (read-only marketing on separate hosts) to <strong>one patient experience</strong> backed by <strong>operational software</strong> your team actually uses every day.
+      </div>
+
+      <p class="cta">If you want to move forward, the next step is a short walkthrough of the new site and scheduler on a demo link, then a simple cutover plan for domains, phones on marketing materials, and Search Console.</p>
+
+      <p class="fine">
+        This document is a concise summary for discussion; timelines, hosting, and legal/compliance details (including HIPAA-appropriate handling of patient communications) should be confirmed before launch.
+      </p>
+    </article>
+  </body>
+</html>

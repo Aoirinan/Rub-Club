@@ -1,5 +1,9 @@
 export const TIME_ZONE = "America/Chicago";
 
+/** Public Facebook page (Chiropractic Associates — Paris, TX). */
+export const FACEBOOK_URL =
+  "https://www.facebook.com/chiropracticparistexas/";
+
 export const BUSINESS = {
   openHour: 9,
   openMinute: 0,
