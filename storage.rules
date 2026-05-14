@@ -1,0 +1,18 @@
+rules_version = '2';
+
+// Client SDK access only (Firebase Admin bypasses these rules).
+// public_site: marketing portraits uploaded via superadmin — must be readable on the public website.
+// Everything else: deny unauthenticated reads/writes; server uploads use the service account.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /public_site/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
