@@ -28,6 +28,20 @@ function prettyLocation(id: string | undefined): string {
   return id ?? "";
 }
 
+function payStatusLabel(data: Record<string, unknown>): string {
+  const paid = data.paidAmountCents;
+  if (typeof paid === "number" && paid > 0) return "Paid";
+  if (typeof data.paymentLinkUrl === "string" && data.paymentLinkUrl.length > 0) return "Pay link";
+  if (data.prepaidOnline === true) return "Prepay";
+  return "";
+}
+
+function paidAmountDollars(data: Record<string, unknown>): string {
+  const cents = data.paidAmountCents;
+  if (typeof cents !== "number" || cents <= 0) return "";
+  return (cents / 100).toFixed(2);
+}
+
 export async function GET(req: Request) {
   const staff = await requireStaff(req.headers.get("authorization"), "admin");
   if (!staff) {
@@ -61,15 +75,33 @@ export async function GET(req: Request) {
     .get();
 
   const headers = [
-    "Date", "Time", "Patient Name", "Phone", "Email",
-    "Service", "Duration (min)", "Provider", "Location",
-    "Status", "Notes", "Created", "Booking ID",
+    "Date",
+    "Time",
+    "Patient Name",
+    "Phone",
+    "Email",
+    "Service",
+    "Duration (min)",
+    "Provider",
+    "Location",
+    "Status",
+    "Patient notes",
+    "Internal notes",
+    "Online confirm",
+    "Checked in",
+    "Needs reschedule",
+    "Pay status",
+    "Paid amount",
+    "Paid at (Chicago)",
+    "Square payment ID",
+    "Created",
+    "Booking ID",
   ];
 
   const rows: string[] = [headers.map(escapeCsv).join(",")];
 
   for (const d of snap.docs) {
-    const data = d.data();
+    const data = d.data() as Record<string, unknown>;
     const status = isBookingStatus(data.status) ? data.status : "unknown";
     if (statuses.length && !statuses.includes(status as never)) continue;
     if (locationId && data.locationId !== locationId) continue;
@@ -87,9 +119,17 @@ export async function GET(req: Request) {
       typeof data.serviceLine === "string" ? data.serviceLine : "",
       typeof data.durationMin === "number" ? String(data.durationMin) : "",
       typeof data.providerDisplayName === "string" ? data.providerDisplayName : "",
-      prettyLocation(data.locationId),
+      prettyLocation(typeof data.locationId === "string" ? data.locationId : undefined),
       status,
       typeof data.notes === "string" ? data.notes : "",
+      typeof data.internalNotes === "string" ? data.internalNotes : "",
+      typeof data.confirmationStatus === "string" ? data.confirmationStatus : "",
+      tsToChicago(data.checkedInAt),
+      data.needsReschedule === true ? "yes" : data.needsReschedule === false ? "no" : "",
+      payStatusLabel(data),
+      paidAmountDollars(data),
+      tsToChicago(data.paidAt),
+      typeof data.squarePaymentId === "string" ? data.squarePaymentId : "",
       tsToChicago(data.createdAt),
       d.id,
     ];

@@ -253,8 +253,9 @@ export function DayView({
                 <button
                   type="button"
                   onClick={() => onSelect(b.id)}
-                  className="w-full rounded-lg bg-white px-3 py-2 text-left text-sm shadow-sm ring-1 ring-amber-200 hover:ring-amber-400"
+                  className="relative w-full rounded-lg bg-white px-3 py-2 pr-8 text-left text-sm shadow-sm ring-1 ring-amber-200 hover:ring-amber-400"
                 >
+                  <DeskStatusIcons booking={b} />
                   <div className="flex items-center justify-between gap-2">
                     <span className="truncate font-semibold text-slate-900">
                       {b.name ?? "Unknown"}
@@ -278,15 +279,22 @@ export function DayView({
   );
 }
 
-function DeskStatusIcons({ booking }: { booking: BookingRow }) {
+function DeskStatusIcons({
+  booking,
+  layout = "overlay",
+}: {
+  booking: BookingRow;
+  layout?: "overlay" | "inline";
+}) {
   const status = booking.status ?? "pending";
   const live = status === "pending" || status === "confirmed";
   const online = booking.confirmationStatus === "confirmed_online";
+  const wrap =
+    layout === "overlay"
+      ? "pointer-events-none absolute right-0.5 top-0.5 flex items-center gap-0.5 text-[10px] leading-none"
+      : "pointer-events-none flex shrink-0 items-center gap-0.5 text-[10px] leading-none";
   return (
-    <div
-      className="pointer-events-none absolute right-0.5 top-0.5 flex items-center gap-0.5 text-[10px] leading-none"
-      aria-hidden
-    >
+    <div className={wrap} aria-hidden>
       {booking.needsReschedule ? (
         <span className="font-bold text-amber-700" title="Needs reschedule">
           ✕
@@ -528,8 +536,9 @@ function AllProvidersWeekSummary({
                         type="button"
                         onClick={() => onSelect(b.id)}
                         title={`${b.name ?? ""} · ${b.serviceLine ?? ""} · ${b.durationMin}m · ${b.providerDisplayName || "First avail"}${paymentHintSuffix(b)}`}
-                        className={`w-full rounded-md px-2 py-1.5 text-left text-xs ${bookingStatusBlockClasses(b.status ?? "pending")} ${serviceLineColor(b.serviceLine).borderClass}`}
+                        className={`relative w-full rounded-md px-2 py-1.5 pr-7 text-left text-xs ${bookingStatusBlockClasses(b.status ?? "pending")} ${serviceLineColor(b.serviceLine).borderClass}`}
                       >
+                        <DeskStatusIcons booking={b} />
                         <div className="font-semibold">
                           {b.startAtMs ? formatChicagoTime(b.startAtMs) : "—"} ·{" "}
                           {b.name ?? "Unknown"}
@@ -596,6 +605,7 @@ export function ListView({ bookings, onSelect }: ViewProps) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
+                      <DeskStatusIcons booking={b} layout="inline" />
                       <span className="font-semibold text-slate-900">{b.name ?? "Unknown"}</span>
                       <span
                         className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${bookingStatusPillClasses(b.status ?? "pending")}`}
