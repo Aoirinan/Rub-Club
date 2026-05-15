@@ -561,7 +561,7 @@ export default function SuperAdminPage() {
       setMessage(typeof data.error === "string" ? data.error : "Bootstrap failed.");
       return;
     }
-    setMessage("Bootstrap complete. You are now superadmin.");
+    setMessage("Bootstrap complete. You are now a manager.");
     setBootstrapSecret("");
     const fresh = await user.getIdToken(true);
     const meRes = await fetch("/api/admin/me", {
@@ -590,7 +590,7 @@ export default function SuperAdminPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
-            {isSuper ? "Superadmin" : needsBootstrap ? "Staff setup" : "Access"}
+            {isSuper ? "Manager" : needsBootstrap ? "Staff setup" : "Access"}
           </h1>
           <p className="mt-1 text-xs text-slate-400">
             Build {process.env.NEXT_PUBLIC_APP_VERSION ?? "unknown"}
@@ -598,12 +598,21 @@ export default function SuperAdminPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           {isSuper ? (
-            <Link
-              href="/admin/super/slot-inspector"
-              className="text-sm font-semibold text-slate-900 hover:underline"
-            >
-              Slot Inspector
-            </Link>
+            <>
+              <Link
+                href="/superadmin"
+                title="Owner superadmin — separate password; banner, specials, videos, site copy"
+                className="text-sm font-semibold text-[#0f5f5c] hover:underline"
+              >
+                Website / view
+              </Link>
+              <Link
+                href="/admin/super/slot-inspector"
+                className="text-sm font-semibold text-slate-900 hover:underline"
+              >
+                Slot Inspector
+              </Link>
+            </>
           ) : null}
           <Link href="/admin" className="text-sm font-semibold text-slate-900 hover:underline">
             Back to bookings
@@ -618,14 +627,14 @@ export default function SuperAdminPage() {
           <p className="font-medium">Employee access</p>
           <p className="mt-2">
             Your account is <strong>admin</strong> (employee): you can use <Link href="/admin" className="font-semibold underline">Bookings</Link>{" "}
-            but not this management page. Ask a <strong>manager (superadmin)</strong> to promote you if you need to invite staff.
+            but not this management page. Ask a <strong>manager</strong> to promote you if you need to invite staff.
           </p>
         </section>
       ) : null}
 
       {needsBootstrap ? (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
-          <h2 className="text-lg font-semibold text-slate-900">Become manager (first superadmin)</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Become manager (first on this project)</h2>
           <p className="text-sm text-slate-600">
             Put <code className="rounded bg-slate-100 px-1">ADMIN_BOOTSTRAP_SECRET</code> in your server
             environment (e.g. Vercel → Environment Variables → Production), redeploy, paste the same secret here,
@@ -767,7 +776,7 @@ export default function SuperAdminPage() {
                 <strong>Employee (admin)</strong> — view bookings and cancel slots.
               </li>
               <li>
-                <strong>Manager (superadmin)</strong> — same as employee, plus this page (invite staff, see staff
+                <strong>Manager</strong> — same as employee, plus this page (invite staff, see staff
                 list).
               </li>
             </ul>
@@ -788,7 +797,7 @@ export default function SuperAdminPage() {
                   onChange={(e) => setRole(e.target.value as "admin" | "superadmin")}
                 >
                   <option value="admin">Employee (admin)</option>
-                  <option value="superadmin">Manager (superadmin)</option>
+                  <option value="superadmin">Manager</option>
                 </select>
               </label>
             </div>

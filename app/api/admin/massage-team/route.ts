@@ -1,6 +1,5 @@
 import { Buffer } from "node:buffer";
 import { NextResponse } from "next/server";
-import type { Firestore } from "firebase-admin/firestore";
 import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
@@ -10,6 +9,7 @@ import {
   listMassageTeamMembers,
   MASSAGE_TEAM_CACHE_TAG,
   MASSAGE_TEAM_COLLECTION,
+  nextMassageTeamSortOrder,
   parseMassageTeamDoc,
 } from "@/lib/massage-team";
 import {
@@ -35,13 +35,6 @@ const createJsonSchema = z.object({
 const seedSchema = z.object({
   seedDefaults: z.literal(true),
 });
-
-async function nextSortOrder(db: Firestore): Promise<number> {
-  const snap = await db.collection(MASSAGE_TEAM_COLLECTION).orderBy("sortOrder", "desc").limit(1).get();
-  if (snap.empty) return 0;
-  const v = snap.docs[0].get("sortOrder");
-  return (typeof v === "number" && Number.isFinite(v) ? v : 0) + 10;
-}
 
 function bumpCache(): void {
   revalidateTag(MASSAGE_TEAM_CACHE_TAG);
@@ -83,7 +76,9 @@ export async function POST(req: Request) {
     const sortParsed =
       typeof sortRaw === "string" && sortRaw.length > 0 ? Number(sortRaw) : Number(sortRaw);
     const sortOrder =
-      typeof sortParsed === "number" && Number.isFinite(sortParsed) ? sortParsed : await nextSortOrder(db);
+      typeof sortParsed === "number" && Number.isFinite(sortParsed)
+        ? sortParsed
+        : await nextMassageTeamSortOrder(db);
 
     const file = form.get("photo");
     if (!name || !bio) {
@@ -174,7 +169,7 @@ export async function POST(req: Request) {
   const sortOrder =
     typeof body.sortOrder === "number" && Number.isFinite(body.sortOrder)
       ? body.sortOrder
-      : await nextSortOrder(db);
+      : await nextMassageTeamSortOrder(db);
   const ref = db.collection(MASSAGE_TEAM_COLLECTION).doc();
   await ref.set({
     name: body.name.trim(),

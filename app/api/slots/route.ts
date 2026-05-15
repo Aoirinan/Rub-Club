@@ -74,7 +74,7 @@ export async function GET(req: Request) {
         slots: [],
         providerMode,
         message:
-          "No providers are set up for this location and service yet. A manager can add bookable providers under Superadmin.",
+          "No providers are set up for this location and service yet. A manager can add bookable providers under Scheduler → Manager.",
       });
     }
 

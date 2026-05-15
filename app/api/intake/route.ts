@@ -210,7 +210,7 @@ export async function POST(req: Request) {
           `Location: ${String(body.location ?? "Not specified")}`,
           body.reasonForVisit ? `Reason: ${String(body.reasonForVisit)}` : "",
           hasDocs
-            ? "Attachments: patient uploaded one or more ID/insurance images (Superadmin → Intake documents with uploads)."
+            ? "Attachments: patient uploaded one or more ID/insurance images (Scheduler → Manager → Intake documents with uploads)."
             : "",
           "",
           `View in Firestore: intake_forms/${ref.id}`,

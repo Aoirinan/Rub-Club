@@ -62,7 +62,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
         const msg =
           apiError ??
           (res.status === 401
-            ? "Not authorized to load the team list. You need manager (superadmin) access."
+            ? "Not authorized to load the team list. You need manager access."
             : `Could not load team (HTTP ${res.status}).`);
         setSectionAlert({ kind: "error", text: msg });
         setMembers([]);

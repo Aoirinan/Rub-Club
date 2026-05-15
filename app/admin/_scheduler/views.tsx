@@ -113,8 +113,7 @@ export function DayView({
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
         <p className="font-semibold text-slate-900">No providers match this filter.</p>
         <p className="mt-2 text-sm text-slate-600">
-          Adjust the location, service, or provider filter — or add a provider in the
-          superadmin tools.
+          Adjust the location, service, or provider filter — or add a provider in Scheduler → Manager.
         </p>
       </div>
     );

@@ -16,6 +16,8 @@ function readDomainCookie(): "massage" | "chiro" | "default" {
 export function DomainSpecialsPopup() {
   const [open, setOpen] = useState(false);
   const [html, setHtml] = useState<string | null>(null);
+  const [modalTitle, setModalTitle] = useState("Specials");
+  const [closeLabel, setCloseLabel] = useState("Close");
 
   const ctx = useMemo(() => readDomainCookie(), []);
 
@@ -40,6 +42,10 @@ export function DomainSpecialsPopup() {
         if (!body || !body.trim()) return;
         if (cancelled) return;
         setHtml(body);
+        const t = typeof s.modalTitle === "string" && s.modalTitle.trim() ? s.modalTitle.trim() : "Specials";
+        const c = typeof s.closeLabel === "string" && s.closeLabel.trim() ? s.closeLabel.trim() : "Close";
+        setModalTitle(t);
+        setCloseLabel(c);
         setOpen(true);
       } catch {
         /* ignore */
@@ -70,7 +76,7 @@ export function DomainSpecialsPopup() {
     >
       <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl">
         <h2 id="specials-title" className="text-xl font-black text-[#173f3b]">
-          Specials
+          {modalTitle}
         </h2>
         <div
           className="prose prose-sm mt-4 max-w-none text-stone-800 prose-a:text-[#0f5f5c]"
@@ -81,7 +87,7 @@ export function DomainSpecialsPopup() {
           onClick={close}
           className="focus-ring mt-6 w-full rounded-full bg-[#0f5f5c] py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
         >
-          Close
+          {closeLabel}
         </button>
       </div>
     </div>

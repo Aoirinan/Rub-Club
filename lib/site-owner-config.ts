@@ -16,6 +16,10 @@ export type SpecialsConfig = {
   massageHtml: string;
   chiroHtml: string;
   generalHtml: string;
+  /** Shown above the HTML body; blank falls back to "Specials". */
+  modalTitle: string;
+  /** Primary button label; blank falls back to "Close". */
+  closeLabel: string;
 };
 
 export type TestimonialVideoItem = {
@@ -79,6 +83,8 @@ const DEFAULTS: SiteOwnerSingleton = {
     massageHtml: "<p>Welcome! Ask the front desk about current massage specials.</p>",
     chiroHtml: "<p>Welcome! Ask the front desk about chiropractic new-patient offers.</p>",
     generalHtml: "<p>See the front desk for current specials.</p>",
+    modalTitle: "Specials",
+    closeLabel: "Close",
   },
   testimonialVideos: [],
   doctorMedia: [],

@@ -189,7 +189,7 @@ export default function SlotInspectorPage() {
       <div className="mx-auto max-w-3xl px-4 py-10">
         <h1 className="text-2xl font-semibold text-slate-900">Slot Inspector</h1>
         <p className="mt-2 text-sm text-slate-600">
-          This tool is only available to managers (superadmin).
+          This tool is only available to staff managers.
         </p>
         <Link
           href="/admin"
@@ -206,7 +206,7 @@ export default function SlotInspectorPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Superadmin · Diagnostics
+            Manager · Diagnostics
           </p>
           <h1 className="text-2xl font-semibold text-slate-900">Slot Inspector</h1>
           <p className="mt-1 max-w-2xl text-sm text-slate-600">
@@ -221,7 +221,7 @@ export default function SlotInspectorPage() {
             href="/admin/super"
             className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
           >
-            Back to Superadmin
+            Back to Manager
           </Link>
         </div>
       </div>

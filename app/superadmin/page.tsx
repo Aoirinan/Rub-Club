@@ -88,7 +88,7 @@ export default function OwnerSuperAdminPage() {
     return d.toISOString().slice(0, 10);
   });
   const [appointments, setAppointments] = useState<OwnerAppointment[]>([]);
-  const [patientPhone, setPatientPhone] = useState("");
+  const [patientLookup, setPatientLookup] = useState("");
   const [patientRecord, setPatientRecord] = useState<{
     bookings: Record<string, unknown>[];
     intakes: PatientIntakeRow[];
@@ -251,12 +251,13 @@ export default function OwnerSuperAdminPage() {
 
   async function loadPatient() {
     setPatientRecord(null);
-    const digits = patientPhone.replace(/\D/g, "");
-    if (digits.length < 7) {
-      setMsg("Enter a phone number (7+ digits).");
+    const raw = patientLookup.trim();
+    const digits = raw.replace(/\D/g, "");
+    if (digits.length < 7 && raw.length < 2) {
+      setMsg("Enter a phone number (7+ digits) or a name (2+ letters).");
       return;
     }
-    const res = await fetch(`/api/superadmin/patient?phone=${encodeURIComponent(patientPhone)}`, {
+    const res = await fetch(`/api/superadmin/patient?q=${encodeURIComponent(patientLookup)}`, {
       credentials: "include",
     });
     if (!res.ok) {
@@ -304,6 +305,12 @@ export default function OwnerSuperAdminPage() {
       <div className="mx-auto max-w-md space-y-4 px-4 py-16">
         <h1 className="text-2xl font-black text-slate-900">Owner superadmin</h1>
         <p className="text-sm text-slate-600">Sign in with the owner password (not staff Firebase login).</p>
+        <p className="text-xs leading-relaxed text-slate-500">
+          This page is only at <span className="font-mono text-slate-700">/superadmin</span> — not the scheduler’s{" "}
+          <span className="font-mono text-slate-700">/admin/super</span> (staff <strong className="text-slate-700">Manager</strong>{" "}
+          tools). After you sign in, the tabs across the top include <strong className="text-slate-700">Specials</strong>{" "}
+          for the homepage specials popup, plus sales banner, videos, site info, and reports.
+        </p>
         <input
           type="password"
           className="w-full rounded-lg border border-slate-300 px-3 py-2"
@@ -459,13 +466,54 @@ export default function OwnerSuperAdminPage() {
       ) : null}
 
       {tab === "specials" ? (
-        <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold">Domain specials (HTML)</h2>
-          {(["massageHtml", "chiroHtml", "generalHtml"] as const).map((key) => (
-            <label key={key} className="block text-sm font-semibold">
-              {key}
+        <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div>
+            <h2 className="text-lg font-bold">Homepage specials popup</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              This is the modal visitors see once per browser session (until they dismiss it). Body copy supports
+              simple HTML (<code className="rounded bg-slate-100 px-1 font-mono text-xs">&lt;p&gt;</code>,{" "}
+              <code className="rounded bg-slate-100 px-1 font-mono text-xs">&lt;strong&gt;</code>, links). Which
+              variant loads depends on the site hostname / <code className="font-mono text-xs">utm_source</code>{" "}
+              (see middleware): massage-focused domains use the first block, Sulphur chiro domains the second, and the
+              main Rub Club site uses the default block.
+            </p>
+          </div>
+          <label className="block text-sm font-semibold text-slate-900">
+            Modal title
+            <input
+              type="text"
+              className="mt-1 w-full rounded border border-slate-300 px-2 py-2 text-sm"
+              value={config.specials.modalTitle}
+              onChange={(e) =>
+                setConfig({ ...config, specials: { ...config.specials, modalTitle: e.target.value } })
+              }
+              placeholder="Specials"
+            />
+          </label>
+          <label className="block text-sm font-semibold text-slate-900">
+            Close button label
+            <input
+              type="text"
+              className="mt-1 w-full rounded border border-slate-300 px-2 py-2 text-sm"
+              value={config.specials.closeLabel}
+              onChange={(e) =>
+                setConfig({ ...config, specials: { ...config.specials, closeLabel: e.target.value } })
+              }
+              placeholder="Close"
+            />
+          </label>
+          {(
+            [
+              ["massageHtml", "Massage-focused domain", "e.g. massageparistexas.com or ?utm_source=massage"],
+              ["chiroHtml", "Sulphur chiropractic domain", "e.g. chiropracticsulphursprings.com or ?utm_source=chiro"],
+              ["generalHtml", "Default (main Rub Club / Paris site)", "Shown when the domain cookie is not massage or chiro"],
+            ] as const
+          ).map(([key, title, hint]) => (
+            <label key={key} className="block text-sm">
+              <span className="font-semibold text-slate-900">{title}</span>
+              <span className="mt-0.5 block text-xs font-normal text-slate-500">{hint}</span>
               <textarea
-                className="mt-1 min-h-[100px] w-full rounded border px-2 py-2 font-mono text-xs"
+                className="mt-1 min-h-[100px] w-full rounded border border-slate-300 px-2 py-2 font-mono text-xs"
                 value={config.specials[key]}
                 onChange={(e) =>
                   setConfig({ ...config, specials: { ...config.specials, [key]: e.target.value } })
@@ -473,8 +521,12 @@ export default function OwnerSuperAdminPage() {
               />
             </label>
           ))}
-          <button type="button" onClick={() => void saveSpecials()} className="rounded-full bg-slate-900 px-5 py-2 text-sm font-bold text-white">
-            Save specials
+          <button
+            type="button"
+            onClick={() => void saveSpecials()}
+            className="rounded-full bg-slate-900 px-5 py-2 text-sm font-bold text-white"
+          >
+            Save specials popup
           </button>
         </section>
       ) : null}
@@ -604,7 +656,7 @@ export default function OwnerSuperAdminPage() {
                       <td className="p-2 font-medium">
                         {a.phone && a.phone.replace(/\D/g, "").length >= 7 ? (
                           <Link
-                            href={`/admin/patient?phone=${encodeURIComponent(a.phone)}`}
+                            href={`/admin/patient?q=${encodeURIComponent(String(a.phone ?? ""))}`}
                             className="text-sky-800 underline hover:text-sky-950"
                           >
                             {a.name ?? "—"}
@@ -671,13 +723,14 @@ export default function OwnerSuperAdminPage() {
               </tbody>
             </table>
           </div>
-          <h3 className="pt-6 text-base font-bold">Patient lookup (phone)</h3>
-          <div className="flex flex-wrap gap-2">
+          <h3 className="pt-6 text-base font-bold">Patient lookup</h3>
+          <p className="text-xs text-slate-600">Phone (7+ digits) or name prefix (2+ letters).</p>
+          <div className="mt-2 flex flex-wrap gap-2">
             <input
-              className="rounded border px-2 py-1"
-              placeholder="903-555-1234"
-              value={patientPhone}
-              onChange={(e) => setPatientPhone(e.target.value)}
+              className="rounded border px-2 py-1 min-w-[12rem]"
+              placeholder="903-555-1234 or Smith"
+              value={patientLookup}
+              onChange={(e) => setPatientLookup(e.target.value)}
             />
             <button type="button" onClick={() => void loadPatient()} className="rounded-full bg-slate-900 px-4 py-1 text-xs font-bold text-white">
               Lookup
@@ -690,7 +743,7 @@ export default function OwnerSuperAdminPage() {
                   Appointments ({patientRecord.bookings.length})
                 </p>
                 {patientRecord.bookings.length === 0 ? (
-                  <p className="px-3 py-4 text-xs text-slate-600">No bookings for this phone.</p>
+                  <p className="px-3 py-4 text-xs text-slate-600">No bookings matched this search.</p>
                 ) : (
                   <ul className="divide-y divide-slate-100">
                     {patientRecord.bookings.map((b) => {
@@ -729,7 +782,7 @@ export default function OwnerSuperAdminPage() {
                   Intake / insurance ({patientRecord.intakes.length})
                 </p>
                 {patientRecord.intakes.length === 0 ? (
-                  <p className="px-3 py-4 text-xs text-slate-600">No intake forms for this phone.</p>
+                  <p className="px-3 py-4 text-xs text-slate-600">No intake forms matched this search.</p>
                 ) : (
                   <ul className="divide-y divide-slate-100">
                     {patientRecord.intakes.map((row) => (

@@ -506,12 +506,21 @@ function AdminDashboard() {
               </Link>
             ) : null}
             {me?.role === "superadmin" ? (
-              <Link
-                href="/admin/super"
-                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
-              >
-                Superadmin
-              </Link>
+              <>
+                <Link
+                  href="/admin/super"
+                  className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
+                >
+                  Manager
+                </Link>
+                <Link
+                  href="/superadmin"
+                  title="Owner superadmin — separate password; banner, specials, videos, site copy"
+                  className="rounded-full border border-[#0f5f5c]/30 bg-[#f0faf9] px-4 py-2 text-sm font-semibold text-[#0b4a47] hover:bg-[#e2f5f3]"
+                >
+                  Website / view
+                </Link>
+              </>
             ) : null}
             <button
               type="button"

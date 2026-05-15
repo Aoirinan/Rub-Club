@@ -8,6 +8,7 @@ import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { TIME_ZONE } from "@/lib/constants";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import type { PatientIntakeRow } from "@/lib/patient-record-lookup";
+import { committedPatientSearchFromRaw } from "@/lib/patient-search-parse";
 
 type BookingDoc = Record<string, unknown> & { id?: string };
 
@@ -35,12 +36,11 @@ export default function AdminPatientPage() {
 function AdminPatientContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialPhone = searchParams.get("phone") ?? "";
-  const initialDigits = initialPhone.replace(/\D/g, "");
+  const initialRaw = searchParams.get("q") ?? searchParams.get("phone") ?? "";
 
   const [auth, setAuth] = useState<Auth | null>(null);
-  const [phoneDraft, setPhoneDraft] = useState(initialPhone);
-  const [phoneQuery, setPhoneQuery] = useState(initialDigits.length >= 7 ? initialPhone : "");
+  const [searchDraft, setSearchDraft] = useState(initialRaw);
+  const [searchQuery, setSearchQuery] = useState(() => committedPatientSearchFromRaw(initialRaw));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bookings, setBookings] = useState<BookingDoc[]>([]);
@@ -66,8 +66,7 @@ function AdminPatientContent() {
   }, [auth, router]);
 
   const load = useCallback(async () => {
-    const digits = phoneQuery.replace(/\D/g, "");
-    if (digits.length < 7) {
+    if (!searchQuery) {
       setBookings([]);
       setIntakes([]);
       setSmsLog([]);
@@ -79,7 +78,7 @@ function AdminPatientContent() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/patient?phone=${encodeURIComponent(phoneQuery)}`, {
+      const res = await fetch(`/api/admin/patient?q=${encodeURIComponent(searchQuery)}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = (await res.json()) as {
@@ -98,25 +97,23 @@ function AdminPatientContent() {
     } finally {
       setLoading(false);
     }
-  }, [getIdToken, phoneQuery]);
+  }, [getIdToken, searchQuery]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
   useEffect(() => {
-    const p = searchParams.get("phone") ?? "";
-    setPhoneDraft(p);
-    const d = p.replace(/\D/g, "");
-    setPhoneQuery(d.length >= 7 ? p : "");
+    const raw = searchParams.get("q") ?? searchParams.get("phone") ?? "";
+    setSearchDraft(raw);
+    setSearchQuery(committedPatientSearchFromRaw(raw));
   }, [searchParams]);
 
   function submitSearch(e: FormEvent) {
     e.preventDefault();
-    const q = phoneDraft.trim();
-    router.replace(q ? `/admin/patient?phone=${encodeURIComponent(q)}` : "/admin/patient");
-    const d = q.replace(/\D/g, "");
-    setPhoneQuery(d.length >= 7 ? q : "");
+    const q = searchDraft.trim();
+    router.replace(q ? `/admin/patient?q=${encodeURIComponent(q)}` : "/admin/patient");
+    setSearchQuery(committedPatientSearchFromRaw(q));
   }
 
   return (
@@ -125,7 +122,7 @@ function AdminPatientContent() {
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-4">
           <div>
             <h1 className="text-xl font-semibold text-slate-900">Patient record</h1>
-            <p className="text-xs text-slate-500">Bookings, intake, and SMS history by phone.</p>
+            <p className="text-xs text-slate-500">Bookings, intake, and SMS — search by phone or patient name.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
@@ -147,14 +144,14 @@ function AdminPatientContent() {
       <main className="mx-auto max-w-4xl space-y-6 px-4 py-6">
         <form onSubmit={submitSearch} className="flex flex-wrap items-end gap-2">
           <label className="min-w-[200px] flex-1 text-sm font-semibold text-slate-700">
-            Phone
+            Phone or name
             <input
-              type="tel"
-              value={phoneDraft}
-              onChange={(e) => setPhoneDraft(e.target.value)}
+              type="search"
+              value={searchDraft}
+              onChange={(e) => setSearchDraft(e.target.value)}
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-              placeholder="903-555-0100"
-              autoComplete="tel"
+              placeholder="903-555-0100 or e.g. Smith"
+              autoComplete="off"
             />
           </label>
           <button
@@ -171,7 +168,7 @@ function AdminPatientContent() {
 
         {loading ? <p className="text-sm text-slate-600">Loading…</p> : null}
 
-        {!loading && phoneQuery.replace(/\D/g, "").length >= 7 ? (
+        {!loading && searchQuery ? (
           <>
             <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
               <header className="border-b border-slate-200 px-4 py-3">
@@ -179,7 +176,7 @@ function AdminPatientContent() {
               </header>
               <ul className="divide-y divide-slate-100">
                 {bookings.length === 0 ? (
-                  <li className="px-4 py-6 text-sm text-slate-600">No bookings for this phone.</li>
+                  <li className="px-4 py-6 text-sm text-slate-600">No bookings matched this search.</li>
                 ) : (
                   bookings.map((b) => {
                     const name = typeof b.name === "string" ? b.name : "—";
@@ -217,7 +214,7 @@ function AdminPatientContent() {
                 <h2 className="text-sm font-semibold text-slate-900">Intake / insurance ({intakes.length})</h2>
               </header>
               {intakes.length === 0 ? (
-                <p className="px-4 py-6 text-sm text-slate-600">No intake forms for this phone.</p>
+                <p className="px-4 py-6 text-sm text-slate-600">No intake forms matched this search.</p>
               ) : (
                 <ul className="divide-y divide-slate-100">
                   {intakes.map((row) => (
@@ -275,7 +272,9 @@ function AdminPatientContent() {
             </section>
           </>
         ) : !loading ? (
-          <p className="text-sm text-slate-600">Enter at least 7 digits and choose Look up.</p>
+          <p className="text-sm text-slate-600">
+            Enter a phone number (at least 7 digits) or a patient name (at least 2 letters), then choose Look up.
+          </p>
         ) : null}
       </main>
     </div>
