@@ -378,6 +378,63 @@ export function AppointmentLookupSection({
                               <span className="whitespace-pre-line">{b.notes}</span>
                             </div>
                           ) : null}
+                          {typeof b.paidAmountCents === "number" && b.paidAmountCents > 0 ? (
+                            <div className="rounded-lg border border-emerald-100 bg-emerald-50/60 px-3 py-2">
+                              <p className="font-semibold text-emerald-950">Payment</p>
+                              <p className="mt-0.5 text-slate-800">
+                                Paid{" "}
+                                <span className="font-semibold">
+                                  ${(b.paidAmountCents / 100).toFixed(2)}
+                                </span>
+                                {typeof b.paidAtMs === "number" ? (
+                                  <span className="text-slate-600">
+                                    {" "}
+                                    ·{" "}
+                                    {DateTime.fromMillis(b.paidAtMs)
+                                      .setZone(TIME_ZONE)
+                                      .toFormat("LLL d yyyy · h:mm a")}
+                                  </span>
+                                ) : null}
+                              </p>
+                              {b.squarePaymentId ? (
+                                <p className="mt-1 font-mono text-[11px] text-slate-600" title={b.squarePaymentId}>
+                                  Square:{" "}
+                                  {b.squarePaymentId.length > 20
+                                    ? `${b.squarePaymentId.slice(0, 20)}…`
+                                    : b.squarePaymentId}
+                                </p>
+                              ) : null}
+                            </div>
+                          ) : b.paymentLinkUrl ? (
+                            <div className="rounded-lg border border-amber-100 bg-amber-50/50 px-3 py-2">
+                              <p className="font-semibold text-amber-950">Payment</p>
+                              <p className="mt-0.5 text-slate-800">
+                                Checkout link active
+                                {typeof b.paymentAmountCents === "number" ? (
+                                  <span>
+                                    {" "}
+                                    · expected{" "}
+                                    <span className="font-semibold">
+                                      ${(b.paymentAmountCents / 100).toFixed(2)}
+                                    </span>
+                                  </span>
+                                ) : null}
+                              </p>
+                              <a
+                                href={b.paymentLinkUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-1 inline-block text-xs font-semibold text-sky-800 underline"
+                              >
+                                Open Square checkout
+                              </a>
+                            </div>
+                          ) : b.prepaidOnline ? (
+                            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                              <p className="font-semibold text-slate-800">Payment</p>
+                              <p className="text-slate-700">Prepay expected — link appears when checkout is generated.</p>
+                            </div>
+                          ) : null}
                           <div>
                             <span className="font-semibold text-slate-800">Internal notes (staff)</span>
                             <textarea

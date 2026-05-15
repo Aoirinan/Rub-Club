@@ -131,7 +131,7 @@ export default function ReportsPage() {
             <h1 className="text-xl font-semibold text-slate-900">Reports & Analytics</h1>
             <p className="text-xs text-slate-500">Scheduling performance at a glance.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => void downloadCsv()}
@@ -140,6 +140,12 @@ export default function ReportsPage() {
             >
               Download CSV
             </button>
+            <Link
+              href="/admin/patient"
+              className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
+            >
+              Patient lookup
+            </Link>
             <Link
               href="/admin"
               className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"

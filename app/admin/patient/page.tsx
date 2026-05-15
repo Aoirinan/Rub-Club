@@ -127,12 +127,20 @@ function AdminPatientContent() {
             <h1 className="text-xl font-semibold text-slate-900">Patient record</h1>
             <p className="text-xs text-slate-500">Bookings, intake, and SMS history by phone.</p>
           </div>
-          <Link
-            href="/admin"
-            className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
-          >
-            Scheduler
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/reports"
+              className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
+            >
+              Reports
+            </Link>
+            <Link
+              href="/admin"
+              className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
+            >
+              Scheduler
+            </Link>
+          </div>
         </div>
       </header>
 
