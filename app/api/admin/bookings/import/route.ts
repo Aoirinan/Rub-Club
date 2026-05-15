@@ -4,6 +4,7 @@ import { getFirestore } from "@/lib/firebase-admin";
 import type { DurationMin, LocationId, ServiceLine } from "@/lib/constants";
 import { TIME_ZONE } from "@/lib/constants";
 import { requireStaff } from "@/lib/staff-auth";
+import { buildColMap, parseColumnMapJson } from "@/lib/csv-import-columns";
 import { parseCsvRows } from "@/lib/csv-parse";
 import { isAlignedToSlotGrid, parseStartIsoToDateTime } from "@/lib/slots-luxon";
 import { insertAdminBookingInTransaction } from "@/lib/admin-booking-insert";
@@ -12,93 +13,6 @@ export const runtime = "nodejs";
 
 const MAX_DATA_ROWS = 500;
 const MAX_ERRORS_RETURNED = 80;
-
-type ColMap = {
-  date: number;
-  time: number;
-  startIso: number;
-  name: number;
-  phone: number;
-  email: number;
-  service: number;
-  duration: number;
-  provider: number;
-  providerId: number;
-  location: number;
-  status: number;
-  notes: number;
-  bookingId: number;
-};
-
-function normHeader(h: string): string {
-  return h.trim().toLowerCase().replace(/\s+/g, " ");
-}
-
-/** Map normalized header string -> column index. */
-function buildHeaderMap(headerRow: string[]): Map<string, number> {
-  const m = new Map<string, number>();
-  headerRow.forEach((cell, i) => {
-    m.set(normHeader(cell), i);
-  });
-  return m;
-}
-
-function col(m: Map<string, number>, ...names: string[]): number {
-  for (const n of names) {
-    const i = m.get(normHeader(n));
-    if (i !== undefined) return i;
-  }
-  return -1;
-}
-
-function buildColMap(m: Map<string, number>): ColMap | { error: string } {
-  const date = col(m, "Date", "date", "start_date", "appointment date");
-  const time = col(m, "Time", "time", "start_time");
-  const startIso = col(m, "start_iso", "start iso", "startIso");
-  const name = col(m, "Patient Name", "patient name", "name", "customer name", "client name");
-  const phone = col(m, "Phone", "phone", "phone number");
-  const email = col(m, "Email", "email");
-  const service = col(m, "Service", "service line", "service_line");
-  const duration = col(m, "Duration (min)", "duration (min)", "duration", "duration_min", "duration min");
-  const provider = col(m, "Provider", "provider name", "therapist", "doctor");
-  const providerId = col(m, "provider_id", "provider id", "Provider ID");
-  const location = col(m, "Location", "location", "office");
-  const status = col(m, "Status", "status");
-  const notes = col(m, "Notes", "notes");
-  const bookingId = col(m, "Booking ID", "booking id", "booking_id", "id");
-
-  if (name < 0) return { error: 'Missing required column: use "Patient Name" (or "name").' };
-  if (service < 0) return { error: 'Missing required column: "Service" (massage or chiropractic).' };
-  if (duration < 0) return { error: 'Missing required column: "Duration (min)" (30 or 60).' };
-  if (provider < 0 && providerId < 0) {
-    return { error: 'Missing provider: add "Provider" or "provider_id".' };
-  }
-  if (location < 0) return { error: 'Missing required column: "Location".' };
-  const hasWhen = startIso >= 0 || (date >= 0 && time >= 0);
-  if (!hasWhen) {
-    return { error: 'Missing time columns: need "Date" + "Time", or "start_iso" (UTC ISO).' };
-  }
-  if (startIso < 0 && (date < 0 || time < 0)) {
-    return { error: 'Missing "Date" or "Time" column.' };
-  }
-
-  return {
-    date,
-    time,
-    startIso,
-    name,
-    phone,
-    email,
-    service,
-    duration,
-    provider,
-    providerId,
-    location,
-    status,
-    notes,
-    bookingId,
-  };
-}
 
 function parseLocationId(raw: string): LocationId | null {
   const t = raw.trim().toLowerCase();
@@ -224,8 +138,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "CSV must include a header row and at least one data row." }, { status: 400 });
   }
 
-  const headerNorm = buildHeaderMap(grid[0]!);
-  const colMap = buildColMap(headerNorm);
+  const headerRow = grid[0]!;
+  const columnMapRaw = form.get("columnMap");
+  const parsedOverrides = parseColumnMapJson(columnMapRaw);
+  if ("error" in parsedOverrides) {
+    return NextResponse.json({ error: parsedOverrides.error }, { status: 400 });
+  }
+  const hasOverrides = Object.keys(parsedOverrides).length > 0;
+  const colMap = buildColMap(headerRow, hasOverrides ? parsedOverrides : undefined);
   if ("error" in colMap) {
     return NextResponse.json({ error: colMap.error }, { status: 400 });
   }
