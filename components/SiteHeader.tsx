@@ -1,98 +1,126 @@
 import Image from "next/image";
 import Link from "next/link";
 import { IMAGES } from "@/lib/home-images";
-import { FACEBOOK_URL, GIFT_CARD_ORDER_URL, WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
+import { FACEBOOK_URL, WELLNESS_CARE_PLANS_PATH, telHref, type LocationInfo } from "@/lib/constants";
 import { MobileNav } from "@/components/MobileNav";
 import { DesktopNav, type NavItem } from "@/components/DesktopNav";
 
-const NAV_ITEMS: NavItem[] = [
-  { href: "/services/massage", label: "Massage" },
-  {
-    href: "/services/chiropractic",
-    label: "Chiropractic",
-    children: [
-      { href: "/services/chiropractic", label: "Chiropractic care" },
-      { href: WELLNESS_CARE_PLANS_PATH, label: "Wellness care plans" },
-    ],
-  },
-  { href: "/sulphur-springs", label: "Sulphur Springs" },
-  {
-    href: "/locations/paris",
-    label: "Locations",
-    children: [
-      { href: "/locations/paris", label: "Paris, TX" },
-      { href: "/locations/sulphur-springs", label: "Sulphur Springs, TX" },
-    ],
-  },
-  { href: "/about", label: "About" },
-  { href: "/faq", label: "FAQ" },
-  {
-    href: GIFT_CARD_ORDER_URL,
-    label: "Gift cards",
-    external: true,
-  },
-  { href: "/patient-forms", label: "Patient forms" },
-  { href: "/contact", label: "Contact" },
-];
+function buildNavItems(giftCardHref: string): NavItem[] {
+  return [
+    { href: "/services/massage", label: "Massage" },
+    {
+      href: "/services/chiropractic",
+      label: "Chiropractic",
+      children: [
+        { href: "/services/chiropractic", label: "Chiropractic care" },
+        { href: WELLNESS_CARE_PLANS_PATH, label: "Wellness care plans" },
+      ],
+    },
+    { href: "/sulphur-springs", label: "Sulphur Springs" },
+    {
+      href: "/locations/paris",
+      label: "Locations",
+      children: [
+        { href: "/locations/paris", label: "Paris, TX" },
+        { href: "/locations/sulphur-springs", label: "Sulphur Springs, TX" },
+      ],
+    },
+    { href: "/about", label: "About" },
+    { href: "/faq", label: "FAQ" },
+    {
+      href: giftCardHref,
+      label: "Gift cards",
+      external: true,
+    },
+    { href: "/patient-forms", label: "Patient forms" },
+    { href: "/contact", label: "Contact" },
+  ];
+}
 
-export function SiteHeader() {
+export function SiteHeader({
+  paris,
+  sulphur,
+  giftCardHref,
+}: {
+  paris: LocationInfo;
+  sulphur: LocationInfo;
+  giftCardHref: string;
+}) {
+  const navItems = buildNavItems(giftCardHref);
+  const rub = paris.phoneSecondary?.trim();
+
   return (
     <header className="sticky top-0 z-40">
       {/* Top bar — phone numbers */}
-      <div className="bg-[#0c2d3a] px-4 py-2 text-center text-xs font-bold text-white sm:text-sm">
-        <a className="hover:underline" href={telHref("903-785-5551")}>
-          Paris 903-785-5551
+      <div className="bg-[#0c2d3a] px-4 py-1.5 text-center text-xs font-bold text-white sm:text-sm">
+        <a className="hover:underline" href={telHref(paris.phonePrimary)}>
+          Paris {paris.phonePrimary}
         </a>
         <span className="mx-3 hidden text-white/40 sm:inline" aria-hidden>
           |
         </span>
         <a
           className="mt-1 inline-block hover:underline sm:mt-0"
-          href={telHref("903-919-5020")}
+          href={telHref(sulphur.phonePrimary)}
         >
-          Sulphur Springs 903-919-5020
+          Sulphur Springs {sulphur.phonePrimary}
         </a>
-        <span className="mx-3 hidden text-white/40 md:inline" aria-hidden>
-          |
-        </span>
-        <a
-          className="mt-1 block text-[#f2d25d] hover:underline md:mt-0 md:inline"
-          href={telHref("903-739-9959")}
-        >
-          The Rub Club: 903-739-9959
-        </a>
+        {rub ? (
+          <>
+            <span className="mx-3 hidden text-white/40 md:inline" aria-hidden>
+              |
+            </span>
+            <a
+              className="mt-1 block text-[#f2d25d] hover:underline md:mt-0 md:inline"
+              href={telHref(rub)}
+            >
+              The Rub Club: {rub}
+            </a>
+          </>
+        ) : null}
       </div>
 
       {/* Logo row */}
-      <div className="bg-white px-4 py-4">
+      <div className="bg-white px-4 py-2.5">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <Link
             href="/"
             className="flex flex-wrap items-center gap-3 lg:gap-4"
-            aria-label="Home"
+            aria-label="The Rub Club and Chiropractic Associates home"
           >
             <Image
               src={IMAGES.rubClubLogo}
               alt="The Rub Club"
               width={216}
               height={44}
-              className="h-9 w-auto max-w-[180px] object-contain sm:h-10 lg:h-11"
+              className="h-8 w-auto max-w-[180px] object-contain sm:h-9 lg:h-10"
               priority
             />
-            <span
-              className="hidden text-[#0f5f5c]/30 sm:inline"
-              aria-hidden
-            >
-              |
-            </span>
-            <Image
-              src={IMAGES.chiroLogo}
-              alt="Chiropractic Associates"
-              width={220}
-              height={62}
-              className="h-9 w-auto max-w-[190px] object-contain sm:h-10 lg:h-11"
-              priority
-            />
+            {/* CDN chiro lockup is too low-contrast on white; vector + type reads clearly. */}
+            <div className="ml-0.5 flex min-w-0 items-center gap-2 border-l-2 border-[#e6c13d] pl-2.5 sm:ml-0 sm:gap-2.5 sm:pl-3 lg:pl-4">
+              <svg
+                className="h-7 w-[14px] shrink-0 text-[#d4a82a] sm:h-8 sm:w-4 lg:h-9 lg:w-[18px]"
+                viewBox="0 0 24 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden
+              >
+                <path
+                  d="M20 6C8 20 8 44 20 58"
+                  stroke="currentColor"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="min-w-0 flex flex-col leading-none">
+                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-[#9a7a12] sm:text-[9px] lg:text-[10px]">
+                  Chiropractic
+                </span>
+                <span className="mt-1 text-[10px] font-black uppercase tracking-[0.06em] text-[#0c2d3a] sm:text-[11px] lg:text-xs">
+                  Associates
+                </span>
+              </div>
+            </div>
           </Link>
 
           <div className="hidden items-center justify-end gap-2 text-xs lg:flex">
@@ -118,12 +146,12 @@ export function SiteHeader() {
             </a>
           </div>
 
-          <MobileNav items={NAV_ITEMS} />
+          <MobileNav items={navItems} giftCardHref={giftCardHref} paris={paris} sulphur={sulphur} />
         </div>
       </div>
 
       {/* Blue navigation bar */}
-      <DesktopNav items={NAV_ITEMS} />
+      <DesktopNav items={navItems} />
     </header>
   );
 }

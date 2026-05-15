@@ -169,7 +169,7 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
               {hasChildren ? (
                 <button
                   type="button"
-                  className="focus-ring inline-flex items-center gap-1 px-4 py-3 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm"
+                  className="focus-ring inline-flex items-center gap-1 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm"
                   onClick={() => setOpenIdx(isOpen ? null : idx)}
                   aria-expanded={isOpen}
                 >
@@ -193,7 +193,7 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
                 </button>
               ) : item.external ? (
                 <a
-                  className="focus-ring block px-4 py-3 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm"
+                  className="focus-ring block px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm"
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -202,7 +202,7 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
                 </a>
               ) : (
                 <Link
-                  className="focus-ring block px-4 py-3 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm"
+                  className="focus-ring block px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm"
                   href={item.href}
                 >
                   {item.label}
@@ -219,7 +219,7 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
           );
         })}
         <Link
-          className="focus-ring ml-2 bg-[#f2d25d] px-5 py-2.5 text-xs font-black uppercase tracking-wide text-[#0c2d3a] shadow-sm hover:bg-[#e6c13d] xl:text-sm"
+          className="focus-ring ml-2 bg-[#f2d25d] px-5 py-2 text-xs font-black uppercase tracking-wide text-[#0c2d3a] shadow-sm hover:bg-[#e6c13d] xl:text-sm"
           href="/book"
         >
           Book Now

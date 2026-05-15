@@ -39,11 +39,33 @@ export type DoctorMediaItem = {
   sortOrder: number;
 };
 
+/** Owner-editable phones, links, and short HTML snippets (blank field = use code default). */
+export type SiteEditableCopy = {
+  parisChiroPhone: string;
+  sulphurChiroPhone: string;
+  rubClubMassagePhone: string;
+  giftCardOrderUrl: string;
+  /** Homepage amber strip under hero (HTML). */
+  awardsStripHtml: string;
+  /** Footer intro column (HTML). */
+  footerBlurbHtml: string;
+};
+
+export const DEFAULT_EDITABLE_COPY: SiteEditableCopy = {
+  parisChiroPhone: "",
+  sulphurChiroPhone: "",
+  rubClubMassagePhone: "",
+  giftCardOrderUrl: "",
+  awardsStripHtml: "",
+  footerBlurbHtml: "",
+};
+
 export type SiteOwnerSingleton = {
   banner: BannerConfig;
   specials: SpecialsConfig;
   testimonialVideos: TestimonialVideoItem[];
   doctorMedia: DoctorMediaItem[];
+  editableCopy: SiteEditableCopy;
 };
 
 const DEFAULTS: SiteOwnerSingleton = {
@@ -60,6 +82,7 @@ const DEFAULTS: SiteOwnerSingleton = {
   },
   testimonialVideos: [],
   doctorMedia: [],
+  editableCopy: DEFAULT_EDITABLE_COPY,
 };
 
 function mergeDefaults(partial: Partial<SiteOwnerSingleton> | undefined): SiteOwnerSingleton {
@@ -70,6 +93,10 @@ function mergeDefaults(partial: Partial<SiteOwnerSingleton> | undefined): SiteOw
       ? partial!.testimonialVideos!
       : DEFAULTS.testimonialVideos,
     doctorMedia: Array.isArray(partial?.doctorMedia) ? partial!.doctorMedia! : DEFAULTS.doctorMedia,
+    editableCopy: {
+      ...DEFAULT_EDITABLE_COPY,
+      ...(partial?.editableCopy ?? {}),
+    },
   };
 }
 

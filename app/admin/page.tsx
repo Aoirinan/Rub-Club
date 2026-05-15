@@ -36,6 +36,8 @@ import { NewBookingDrawer } from "./_scheduler/NewBookingDrawer";
 import { BlockTimeDrawer } from "./_scheduler/BlockTimeDrawer";
 import { HoldsTray, type HoldRow } from "./_scheduler/HoldsTray";
 import { DayView, ListView, WeekView } from "./_scheduler/views";
+import { CsvImportModal, type CsvImportDraft } from "./_scheduler/CsvImportModal";
+import { parseCsvRows } from "@/lib/csv-parse";
 
 type Me = {
   authenticated: boolean;
@@ -72,6 +74,7 @@ function AdminDashboard() {
   const [blockTimeOpen, setBlockTimeOpen] = useState(false);
   const [csvImportSkipConflict, setCsvImportSkipConflict] = useState(false);
   const [csvImportBusy, setCsvImportBusy] = useState(false);
+  const [csvImportDraft, setCsvImportDraft] = useState<CsvImportDraft | null>(null);
   const csvImportInputRef = useRef<HTMLInputElement>(null);
   const seenBookingIdsRef = useRef<Set<string> | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -450,40 +453,18 @@ function AdminDashboard() {
                       setError("Sign in to import.");
                       return;
                     }
-                    setCsvImportBusy(true);
                     setError(null);
+                    setCsvImportBusy(true);
                     try {
-                      const fd = new FormData();
-                      fd.append("file", f);
-                      if (csvImportSkipConflict) fd.append("skipConflictCheck", "true");
-                      const res = await fetch("/api/admin/bookings/import", {
-                        method: "POST",
-                        headers: { Authorization: `Bearer ${token}` },
-                        body: fd,
-                      });
-                      const data = (await res.json().catch(() => ({}))) as {
-                        error?: string;
-                        created?: number;
-                        totalRows?: number;
-                        errors?: { row: number; message: string }[];
-                        skipped?: { row: number; reason: string }[];
-                      };
-                      if (!res.ok) {
-                        setError(typeof data.error === "string" ? data.error : "CSV import failed.");
+                      const text = await f.text();
+                      const grid = parseCsvRows(text);
+                      if (grid.length < 2) {
+                        setError("CSV must include a header row and at least one data row.");
                         return;
                       }
-                      const errLines =
-                        data.errors?.slice(0, 12).map((x) => `Row ${x.row}: ${x.message}`) ?? [];
-                      const skipN = data.skipped?.length ?? 0;
-                      const msg = [
-                        `Imported ${data.created ?? 0} of ${data.totalRows ?? 0} row(s).`,
-                        skipN ? `Skipped ${skipN} row(s) (e.g. existing booking IDs).` : "",
-                        errLines.length ? `Issues:\n${errLines.join("\n")}` : "",
-                      ]
-                        .filter(Boolean)
-                        .join("\n");
-                      window.alert(msg);
-                      await refreshBookings();
+                      setCsvImportDraft({ file: f, headers: grid[0]!.map((c) => c.trim()) });
+                    } catch {
+                      setError("Could not read CSV file.");
                     } finally {
                       setCsvImportBusy(false);
                     }
@@ -741,6 +722,17 @@ function AdminDashboard() {
           </div>
         </div>
       ) : null}
+
+      <CsvImportModal
+        draft={csvImportDraft}
+        skipConflict={csvImportSkipConflict}
+        busy={csvImportBusy}
+        onBusy={setCsvImportBusy}
+        getIdToken={getIdToken}
+        onDismiss={() => setCsvImportDraft(null)}
+        onImported={refreshBookings}
+        setParentError={setError}
+      />
     </div>
   );
 }

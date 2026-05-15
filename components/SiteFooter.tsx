@@ -1,9 +1,23 @@
 import Link from "next/link";
-import { LOCATION_LIST, GIFT_CARD_ORDER_URL, WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
+import {
+  GIFT_CARD_ORDER_URL,
+  LOCATION_LIST,
+  WELLNESS_CARE_PLANS_PATH,
+  telHref,
+  type LocationInfo,
+} from "@/lib/constants";
 import { MASSAGE } from "@/lib/home-verbatim";
 import { siteShortName } from "@/lib/site-content";
 
-export function SiteFooter() {
+export function SiteFooter({
+  locations = LOCATION_LIST,
+  giftCardHref = GIFT_CARD_ORDER_URL,
+  footerBlurbHtml,
+}: {
+  locations?: readonly LocationInfo[];
+  giftCardHref?: string;
+  footerBlurbHtml?: string | null;
+} = {}) {
   const label = process.env.NEXT_PUBLIC_APP_VERSION ?? "dev";
   const year = new Date().getFullYear();
 
@@ -12,13 +26,20 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <p className="text-base font-black tracking-tight text-white">{siteShortName}</p>
-          <p className="mt-2 text-sm text-white/70">
-            Family-owned wellness in Northeast Texas. Two practices, one address in Paris — plus
-            chiropractic care in Sulphur Springs.
-          </p>
+          {footerBlurbHtml?.trim() ? (
+            <div
+              className="prose prose-invert prose-sm mt-2 max-w-none text-white/80 prose-a:text-[#f2d25d] prose-a:font-bold prose-p:my-1"
+              dangerouslySetInnerHTML={{ __html: footerBlurbHtml }}
+            />
+          ) : (
+            <p className="mt-2 text-sm text-white/70">
+              Family-owned wellness in Northeast Texas. Two practices, one address in Paris — plus
+              chiropractic care in Sulphur Springs.
+            </p>
+          )}
         </div>
         <div className="space-y-4 text-sm">
-          {LOCATION_LIST.map((loc) => (
+          {locations.map((loc) => (
             <div key={loc.id}>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f2d25d]">
                 {loc.shortName}
@@ -63,7 +84,7 @@ export function SiteFooter() {
             <li>
               <a
                 className="hover:underline"
-                href={GIFT_CARD_ORDER_URL}
+                href={giftCardHref}
                 target="_blank"
                 rel="noopener noreferrer"
               >

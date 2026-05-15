@@ -83,8 +83,8 @@ export function chiropractorJsonLd(location: LocationInfo): JsonLd {
 }
 
 /** Massage therapy business JSON-LD (Paris only). */
-export function massageJsonLd(): JsonLd {
-  const loc = LOCATIONS.paris;
+export function massageJsonLd(parisOverride?: LocationInfo): JsonLd {
+  const loc = parisOverride ?? LOCATIONS.paris;
   const url = siteUrl(`/locations/${loc.slug}`);
   return {
     "@context": "https://schema.org",
@@ -108,7 +108,7 @@ export function massageJsonLd(): JsonLd {
 }
 
 /** Top-level Organization linking the two brands. */
-export function organizationJsonLd(): JsonLd {
+export function organizationJsonLd(locations: readonly LocationInfo[] = LOCATION_LIST): JsonLd {
   const origin = getSiteOrigin();
   return {
     "@context": "https://schema.org",
@@ -119,7 +119,7 @@ export function organizationJsonLd(): JsonLd {
     logo: siteUrl("/og/og-default.svg"),
     description: siteDescription,
     sameAs: getSocialProfiles(),
-    contactPoint: LOCATION_LIST.map((loc) => ({
+    contactPoint: locations.map((loc) => ({
       "@type": "ContactPoint",
       contactType: "Reservations",
       telephone: `+1-${loc.phonePrimary}`,

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { bannerIsActivePublic, getSiteOwnerConfig } from "@/lib/site-owner-config";
+import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
 
 export const runtime = "nodejs";
 
@@ -8,6 +9,7 @@ export async function GET() {
   try {
     const c = await getSiteOwnerConfig();
     const bannerActive = bannerIsActivePublic(c.banner);
+    const displayLocations = mergedDisplayLocations(c.editableCopy);
     return NextResponse.json(
       {
         banner: {
@@ -18,6 +20,10 @@ export async function GET() {
         specials: c.specials,
         testimonialVideos: c.testimonialVideos,
         doctorMedia: [...c.doctorMedia].sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id)),
+        giftCardHref: effectiveGiftCardUrl(c.editableCopy),
+        displayLocations,
+        awardsStripHtml: c.editableCopy.awardsStripHtml,
+        footerBlurbHtml: c.editableCopy.footerBlurbHtml,
       },
       { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } },
     );

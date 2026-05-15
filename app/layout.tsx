@@ -21,6 +21,7 @@ import {
   websiteJsonLd,
 } from "@/lib/structured-data";
 import { getSiteOwnerConfig, bannerIsActivePublic } from "@/lib/site-owner-config";
+import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -76,8 +77,15 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let salesBanner: SalesBannerPayload | null = null;
+  let displayLocs = mergedDisplayLocations(undefined);
+  let giftCardHref = effectiveGiftCardUrl(undefined);
+  let footerBlurbHtml: string | null = null;
   try {
     const cfg = await getSiteOwnerConfig();
+    displayLocs = mergedDisplayLocations(cfg.editableCopy);
+    giftCardHref = effectiveGiftCardUrl(cfg.editableCopy);
+    const fb = cfg.editableCopy.footerBlurbHtml.trim();
+    footerBlurbHtml = fb.length > 0 ? fb : null;
     if (bannerIsActivePublic(cfg.banner) && cfg.banner.showOnHomepage && cfg.banner.html.trim()) {
       salesBanner = {
         html: cfg.banner.html,
@@ -87,6 +95,8 @@ export default async function RootLayout({
   } catch {
     salesBanner = null;
   }
+
+  const schemaLocations = [displayLocs.paris, displayLocs.sulphur_springs];
 
   return (
     <html lang="en">
@@ -99,13 +109,21 @@ export default async function RootLayout({
         >
           Skip to content
         </a>
-        <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
-        <SiteHeader />
+        <JsonLd data={[organizationJsonLd(schemaLocations), websiteJsonLd()]} />
+        <SiteHeader
+          paris={displayLocs.paris}
+          sulphur={displayLocs.sulphur_springs}
+          giftCardHref={giftCardHref}
+        />
         {salesBanner ? <SalesBannerBar payload={salesBanner} /> : null}
         <main id="main" tabIndex={-1} className="outline-none">
           {children}
         </main>
-        <SiteFooter />
+        <SiteFooter
+          locations={schemaLocations}
+          giftCardHref={giftCardHref}
+          footerBlurbHtml={footerBlurbHtml}
+        />
         <DomainSpecialsPopup />
         <Analytics />
       </body>

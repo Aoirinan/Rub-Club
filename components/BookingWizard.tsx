@@ -5,8 +5,10 @@ import { DateTime } from "luxon";
 import {
   LOCATIONS,
   TIME_ZONE,
+  telHref,
   type DurationMin,
   type LocationId,
+  type LocationInfo,
   type ServiceLine,
 } from "@/lib/constants";
 import { track } from "@/lib/analytics";
@@ -55,9 +57,12 @@ export type BookingWizardInitial = {
   service?: string | null;
   duration?: string | null;
   date?: string | null;
+  /** When set (from server), phone labels match owner-configured numbers site-wide. */
+  locations?: Record<LocationId, LocationInfo>;
 };
 
 export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = {}) {
+  const locById = initial?.locations ?? LOCATIONS;
   const serviceLine: ServiceLine = "massage";
   const [locationId, setLocationId] = useState<LocationId>(
     readInitialLocation(initial?.location ?? null),
@@ -308,7 +313,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
   }
 
   const canPickSlots = Boolean(payMode === "cash" && providers?.length);
-  const loc = LOCATIONS[locationId];
+  const loc = locById[locationId];
 
   const stepDone = {
     one: Boolean(payMode === "cash" && locationId && durationMin && date),
@@ -467,12 +472,12 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                     <p className="font-bold">Insurance patients please call us to book:</p>
                     <p className="mt-2">
                       Paris{" "}
-                      <a className="font-bold underline" href="tel:+19037855551">
-                        903-785-5551
+                      <a className="font-bold underline" href={telHref(locById.paris.phonePrimary)}>
+                        {locById.paris.phonePrimary}
                       </a>{" "}
                       | Sulphur Springs{" "}
-                      <a className="font-bold underline" href="tel:+19039195020">
-                        903-919-5020
+                      <a className="font-bold underline" href={telHref(locById.sulphur_springs.phonePrimary)}>
+                        {locById.sulphur_springs.phonePrimary}
                       </a>
                     </p>
                     <p className="mt-2 text-xs">
@@ -498,8 +503,8 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                   setSlotsHint(null);
                 }}
               >
-                <option value="paris">{LOCATIONS.paris.name}</option>
-                <option value="sulphur_springs">{LOCATIONS.sulphur_springs.name}</option>
+                <option value="paris">{locById.paris.name}</option>
+                <option value="sulphur_springs">{locById.sulphur_springs.name}</option>
               </select>
             </label>
 

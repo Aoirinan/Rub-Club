@@ -5,11 +5,11 @@ import Link from "next/link";
 import { DateTime } from "luxon";
 import { TIME_ZONE } from "@/lib/constants";
 import type { PatientIntakeRow } from "@/lib/patient-record-lookup";
-import type { BannerConfig, DoctorMediaItem, SiteOwnerSingleton, TestimonialVideoItem } from "@/lib/site-owner-config";
+import type { BannerConfig, DoctorMediaItem, SiteEditableCopy, SiteOwnerSingleton, TestimonialVideoItem } from "@/lib/site-owner-config";
 import { paymentStatusShort } from "@/app/admin/_scheduler/helpers";
 import type { BookingRow } from "@/app/admin/_scheduler/types";
 
-type Tab = "banner" | "videos" | "specials" | "doctor" | "reports" | "settings";
+type Tab = "banner" | "videos" | "specials" | "doctor" | "siteinfo" | "reports" | "settings";
 
 type OwnerAppointment = {
   id: string;
@@ -168,6 +168,23 @@ export default function OwnerSuperAdminPage() {
     setMsg("Specials saved.");
   }
 
+  async function saveEditableCopy() {
+    if (!config) return;
+    const res = await fetch("/api/superadmin/config", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ editableCopy: config.editableCopy }),
+      credentials: "include",
+    });
+    const data = (await res.json()) as { config?: SiteOwnerSingleton; error?: string };
+    if (!res.ok) {
+      setMsg(data.error ?? "Save failed");
+      return;
+    }
+    setConfig(data.config!);
+    setMsg("Site info saved.");
+  }
+
   async function uploadVideo(fd: FormData) {
     setMsg(null);
     setLoading(true);
@@ -311,6 +328,7 @@ export default function OwnerSuperAdminPage() {
     { id: "videos", label: "Testimonial videos" },
     { id: "specials", label: "Specials" },
     { id: "doctor", label: "Doctor media" },
+    { id: "siteinfo", label: "Site info" },
     { id: "reports", label: "Bookings & patients" },
     { id: "settings", label: "Shortcuts" },
   ];
@@ -467,6 +485,71 @@ export default function OwnerSuperAdminPage() {
           onReload={loadConfig}
           onMessage={setMsg}
         />
+      ) : null}
+
+      {tab === "siteinfo" ? (
+        <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-bold">Site-wide phones & snippets</h2>
+          <p className="text-sm text-slate-600">
+            Leave a field blank to keep the built-in default from the codebase. Gift card URL must start with{" "}
+            <code className="font-mono text-xs">http://</code> or <code className="font-mono text-xs">https://</code>.
+          </p>
+          {(
+            [
+              ["parisChiroPhone", "Paris chiropractic main line"],
+              ["sulphurChiroPhone", "Sulphur Springs chiropractic line"],
+              ["rubClubMassagePhone", "Paris massage desk (shown as “The Rub Club” in the header)"],
+              ["giftCardOrderUrl", "Square gift card order URL"],
+            ] as const satisfies ReadonlyArray<readonly [keyof SiteEditableCopy, string]>
+          ).map(([key, label]) => (
+            <label key={key} className="block text-sm">
+              <span className="font-semibold">{label}</span>
+              <input
+                className="mt-1 w-full rounded border border-slate-300 px-2 py-1 font-mono text-sm"
+                value={config.editableCopy[key]}
+                onChange={(e) =>
+                  setConfig({
+                    ...config,
+                    editableCopy: { ...config.editableCopy, [key]: e.target.value },
+                  })
+                }
+              />
+            </label>
+          ))}
+          <label className="block text-sm">
+            <span className="font-semibold">Homepage awards strip (HTML)</span>
+            <textarea
+              className="mt-1 min-h-[72px] w-full rounded border border-slate-300 px-2 py-2 font-mono text-xs"
+              value={config.editableCopy.awardsStripHtml}
+              onChange={(e) =>
+                setConfig({
+                  ...config,
+                  editableCopy: { ...config.editableCopy, awardsStripHtml: e.target.value },
+                })
+              }
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="font-semibold">Footer intro column (HTML)</span>
+            <textarea
+              className="mt-1 min-h-[100px] w-full rounded border border-slate-300 px-2 py-2 font-mono text-xs"
+              value={config.editableCopy.footerBlurbHtml}
+              onChange={(e) =>
+                setConfig({
+                  ...config,
+                  editableCopy: { ...config.editableCopy, footerBlurbHtml: e.target.value },
+                })
+              }
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => void saveEditableCopy()}
+            className="rounded-full bg-slate-900 px-5 py-2 text-sm font-bold text-white"
+          >
+            Save site info
+          </button>
+        </section>
       ) : null}
 
       {tab === "reports" ? (
@@ -771,9 +854,9 @@ export default function OwnerSuperAdminPage() {
             </li>
           </ul>
           <p className="text-xs text-slate-500">
-            If your Cursor build script listed extra owner tools (gift cards, SEO fields, etc.), paste that list into a
-            chat or issue and we can add matching tabs and APIs. This panel currently covers banner, videos, specials,
-            doctor media, bookings export, and patient lookup.
+            This panel covers banner, videos, specials, doctor media, site-wide phones and HTML snippets, bookings
+            export, and patient lookup. Ask your developer if you need deeper page-by-page SEO or insurance copy
+            changes.
           </p>
         </section>
       ) : null}

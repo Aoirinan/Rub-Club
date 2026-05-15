@@ -2,11 +2,21 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { FACEBOOK_URL, GIFT_CARD_ORDER_URL, telHref } from "@/lib/constants";
+import { FACEBOOK_URL, telHref, type LocationInfo } from "@/lib/constants";
 import { track } from "@/lib/analytics";
 import type { NavItem } from "@/components/DesktopNav";
 
-export function MobileNav({ items }: { items: readonly NavItem[] }) {
+export function MobileNav({
+  items,
+  giftCardHref,
+  paris,
+  sulphur,
+}: {
+  items: readonly NavItem[];
+  giftCardHref: string;
+  paris: LocationInfo;
+  sulphur: LocationInfo;
+}) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -37,7 +47,7 @@ export function MobileNav({ items }: { items: readonly NavItem[] }) {
     <>
       <button
         type="button"
-        className="focus-ring inline-flex items-center justify-center gap-2 rounded border border-[#0f5f5c]/30 bg-white px-3 py-2 text-xs font-black uppercase tracking-wide text-[#173f3b] lg:hidden"
+        className="focus-ring inline-flex items-center justify-center gap-2 rounded border border-[#0f5f5c]/30 bg-white px-3 py-1.5 text-xs font-black uppercase tracking-wide text-[#173f3b] lg:hidden"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
         aria-expanded={open}
@@ -162,7 +172,7 @@ export function MobileNav({ items }: { items: readonly NavItem[] }) {
                 );
               })}
               <a
-                href={GIFT_CARD_ORDER_URL}
+                href={giftCardHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="focus-ring mx-4 mb-2 block border border-[#0f5f5c]/30 bg-white px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-stone-50"
@@ -183,24 +193,26 @@ export function MobileNav({ items }: { items: readonly NavItem[] }) {
                 </p>
                 <a
                   className="block py-1 font-bold text-[#0f5f5c] underline"
-                  href={telHref("903-785-5551")}
+                  href={telHref(paris.phonePrimary)}
                   onClick={() => track("phone_click", { location: "paris" })}
                 >
-                  Paris 903-785-5551
+                  Paris {paris.phonePrimary}
                 </a>
+                {paris.phoneSecondary?.trim() ? (
+                  <a
+                    className="block py-1 font-bold text-[#0f5f5c] underline"
+                    href={telHref(paris.phoneSecondary)}
+                    onClick={() => track("phone_click", { location: "rub_club" })}
+                  >
+                    The Rub Club {paris.phoneSecondary}
+                  </a>
+                ) : null}
                 <a
                   className="block py-1 font-bold text-[#0f5f5c] underline"
-                  href={telHref("903-739-9959")}
-                  onClick={() => track("phone_click", { location: "rub_club" })}
-                >
-                  The Rub Club 903-739-9959
-                </a>
-                <a
-                  className="block py-1 font-bold text-[#0f5f5c] underline"
-                  href={telHref("903-919-5020")}
+                  href={telHref(sulphur.phonePrimary)}
                   onClick={() => track("phone_click", { location: "sulphur_springs" })}
                 >
-                  Sulphur Springs 903-919-5020
+                  Sulphur Springs {sulphur.phonePrimary}
                 </a>
                 <a
                   className="mt-3 inline-flex items-center gap-2 font-bold text-[#0f5f5c] underline"

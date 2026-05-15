@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { LOCATION_LIST, telHref } from "@/lib/constants";
+import { telHref } from "@/lib/constants";
 import { IMAGES } from "@/lib/home-images";
 import {
   CHIRO,
@@ -9,7 +9,6 @@ import {
   DOCTORS,
   MASSAGE,
 } from "@/lib/home-verbatim";
-import { GIFT_CARD_ORDER_URL } from "@/lib/constants";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { JsonLd } from "@/components/JsonLd";
 import { HomeVideo } from "@/components/HomeVideo";
@@ -22,9 +21,10 @@ import {
   faqPageJsonLd,
   massageJsonLd,
 } from "@/lib/structured-data";
-import { LOCATIONS } from "@/lib/constants";
 import { TESTIMONIALS } from "@/lib/testimonials";
 import { HOME_FAQS } from "@/lib/faqs";
+import { getSiteOwnerConfig } from "@/lib/site-owner-config";
+import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
 import { siteDescription, siteTitle } from "@/lib/site-content";
 
 export const metadata: Metadata = {
@@ -40,14 +40,30 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
+  let displayLocs = mergedDisplayLocations(undefined);
+  let giftHref = effectiveGiftCardUrl(undefined);
+  let awardsHtml: string | null = null;
+  try {
+    const cfg = await getSiteOwnerConfig();
+    displayLocs = mergedDisplayLocations(cfg.editableCopy);
+    giftHref = effectiveGiftCardUrl(cfg.editableCopy);
+    const a = cfg.editableCopy.awardsStripHtml.trim();
+    if (a) awardsHtml = a;
+  } catch {
+    /* keep defaults */
+  }
+  const homeLocList = [displayLocs.paris, displayLocs.sulphur_springs] as const;
+  const massageHeroPhone =
+    displayLocs.paris.phoneSecondary?.trim() || displayLocs.paris.phonePrimary;
+
   const massageTeam = await getMassageTeamForMarketing();
   return (
     <div className="bg-[#f4f2ea]">
       <JsonLd
         data={[
-          chiropractorJsonLd(LOCATIONS.paris),
-          chiropractorJsonLd(LOCATIONS.sulphur_springs),
-          massageJsonLd(),
+          chiropractorJsonLd(displayLocs.paris),
+          chiropractorJsonLd(displayLocs.sulphur_springs),
+          massageJsonLd(displayLocs.paris),
           faqPageJsonLd(HOME_FAQS),
         ]}
       />
@@ -78,16 +94,25 @@ export default async function Home() {
             </Link>
             <a
               className="focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#173f3b]"
-              href={telHref("903-739-9959")}
+              href={telHref(massageHeroPhone)}
             >
-              Call 903-739-9959
+              Call {massageHeroPhone}
             </a>
           </div>
         </div>
       </section>
 
       <div className="bg-[#fff7d7] py-3 text-center text-sm text-[#5a4a15]">
-        <strong>Voted Best Chiropractic Center &amp; Best Massage</strong> &mdash; The Paris News reader polls.
+        {awardsHtml ? (
+          <div
+            className="mx-auto max-w-4xl px-2 [&_a]:font-bold [&_a]:text-[#5a4a15] [&_a]:underline"
+            dangerouslySetInnerHTML={{ __html: awardsHtml }}
+          />
+        ) : (
+          <>
+            <strong>Voted Best Chiropractic Center &amp; Best Massage</strong> &mdash; The Paris News reader polls.
+          </>
+        )}
       </div>
 
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
@@ -119,7 +144,7 @@ export default async function Home() {
             },
             {
               label: "GIFT CARDS",
-              href: GIFT_CARD_ORDER_URL,
+              href: giftHref,
               img: IMAGES.rubClubLogo,
               alt: "The Rub Club gift cards",
               external: true,
@@ -394,7 +419,7 @@ export default async function Home() {
             </div>
             <div className="space-y-6 text-sm text-white/85">
               <h3 className="text-lg font-black text-[#f2d25d]">{MASSAGE.locationTitle}</h3>
-              {LOCATION_LIST.map((loc) => (
+              {homeLocList.map((loc) => (
                 <div key={loc.id}>
                   <p className="text-base font-black text-white">{loc.name}</p>
                   <p className="mt-1">

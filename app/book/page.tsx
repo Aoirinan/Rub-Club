@@ -3,6 +3,8 @@ import Link from "next/link";
 import { BookingWizard } from "@/components/BookingWizard";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
+import { getSiteOwnerConfig } from "@/lib/site-owner-config";
+import { mergedDisplayLocations } from "@/lib/site-display-overrides";
 
 export const metadata: Metadata = {
   title: "Book an Appointment",
@@ -30,6 +32,13 @@ export default async function BookPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
+  let displayLocs = mergedDisplayLocations(undefined);
+  try {
+    const cfg = await getSiteOwnerConfig();
+    displayLocs = mergedDisplayLocations(cfg.editableCopy);
+  } catch {
+    /* defaults */
+  }
   return (
     <>
       <JsonLd
@@ -55,6 +64,7 @@ export default async function BookPage({
           service: params.service ?? null,
           duration: params.duration ?? null,
           date: params.date ?? null,
+          locations: displayLocs,
         }}
       />
     </>

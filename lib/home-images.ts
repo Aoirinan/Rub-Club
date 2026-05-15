@@ -3,6 +3,7 @@
 export const IMAGES = {
   rubClubLogo:
     "https://cdcssl.ibsrv.net/ibimg/smb/768x156_80/webmgr/1w/3/z/ple/RC-logo2.png.webp?2d7b966d7ecb9dae0791ca79bceae7b8",
+  /** Legacy Sedona CDN lockup (very low contrast on white). Kept for reference; header uses SVG + type instead. */
   chiroLogo:
     "https://cdcssl.ibsrv.net/ibimg/smb/768x90_80/webmgr/1x/5/c/sedona/logo1_g2b15gukTcuMWaVGgkCA-566x161-377w.png.webp?9937e103856e4c581bdc303dc0e48633",
   massageHeroBanner:
