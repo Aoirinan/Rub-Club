@@ -32,6 +32,7 @@ export async function GET(req: Request) {
     return {
       id: d.id,
       startIso: typeof x.startIso === "string" ? x.startIso : null,
+      startAtMs: x.startAt instanceof Timestamp ? x.startAt.toMillis() : null,
       name: typeof x.name === "string" ? x.name : "",
       phone: typeof x.phone === "string" ? x.phone : "",
       email: typeof x.email === "string" ? x.email : "",
@@ -44,6 +45,12 @@ export async function GET(req: Request) {
       locationId: typeof x.locationId === "string" ? x.locationId : "",
       providerDisplayName:
         typeof x.providerDisplayName === "string" ? x.providerDisplayName : "",
+      prepaidOnline: x.prepaidOnline === true,
+      paymentLinkUrl: typeof x.paymentLinkUrl === "string" ? x.paymentLinkUrl : "",
+      paymentAmountCents: typeof x.paymentAmountCents === "number" ? x.paymentAmountCents : null,
+      paidAmountCents: typeof x.paidAmountCents === "number" ? x.paidAmountCents : null,
+      paidAtMs: x.paidAt instanceof Timestamp ? x.paidAt.toMillis() : null,
+      squarePaymentId: typeof x.squarePaymentId === "string" ? x.squarePaymentId : "",
     };
   });
 

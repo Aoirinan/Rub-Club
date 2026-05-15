@@ -6,8 +6,59 @@ import { DateTime } from "luxon";
 import { TIME_ZONE } from "@/lib/constants";
 import type { PatientIntakeRow } from "@/lib/patient-record-lookup";
 import type { BannerConfig, DoctorMediaItem, SiteOwnerSingleton, TestimonialVideoItem } from "@/lib/site-owner-config";
+import { paymentStatusShort } from "@/app/admin/_scheduler/helpers";
+import type { BookingRow } from "@/app/admin/_scheduler/types";
 
 type Tab = "banner" | "videos" | "specials" | "doctor" | "reports" | "settings";
+
+type OwnerAppointment = {
+  id: string;
+  startIso?: string | null;
+  startAtMs?: number | null;
+  name?: string;
+  phone?: string;
+  email?: string;
+  serviceLine?: string;
+  visitKind?: string;
+  durationMin?: number | null;
+  status?: string;
+  confirmationStatus?: string;
+  internalNotes?: string;
+  locationId?: string;
+  providerDisplayName?: string;
+  prepaidOnline?: boolean;
+  paymentLinkUrl?: string;
+  paymentAmountCents?: number | null;
+  paidAmountCents?: number | null;
+  paidAtMs?: number | null;
+  squarePaymentId?: string;
+};
+
+function schedHrefOwner(a: OwnerAppointment): string | null {
+  if (typeof a.startAtMs === "number") {
+    const dt = DateTime.fromMillis(a.startAtMs).setZone(TIME_ZONE);
+    if (!dt.isValid) return null;
+    return `/admin?date=${encodeURIComponent(dt.toFormat("yyyy-LL-dd"))}&focus=${encodeURIComponent(a.id)}`;
+  }
+  const iso = a.startIso;
+  if (typeof iso === "string" && iso.length > 0) {
+    const dt = DateTime.fromISO(iso, { zone: "utc" }).setZone(TIME_ZONE);
+    if (!dt.isValid) return null;
+    return `/admin?date=${encodeURIComponent(dt.toFormat("yyyy-LL-dd"))}&focus=${encodeURIComponent(a.id)}`;
+  }
+  return null;
+}
+
+function whenChicago(a: OwnerAppointment): string {
+  if (typeof a.startAtMs === "number") {
+    return DateTime.fromMillis(a.startAtMs).setZone(TIME_ZONE).toFormat("ccc LLL d yyyy · h:mm a");
+  }
+  if (typeof a.startIso === "string" && a.startIso.length > 0) {
+    const dt = DateTime.fromISO(a.startIso, { zone: "utc" }).setZone(TIME_ZONE);
+    return dt.isValid ? dt.toFormat("ccc LLL d yyyy · h:mm a") : "—";
+  }
+  return "—";
+}
 
 type BookingDoc = Record<string, unknown> & { id?: string };
 
@@ -28,6 +79,7 @@ export default function OwnerSuperAdminPage() {
   const [tab, setTab] = useState<Tab>("banner");
   const [msg, setMsg] = useState<string | null>(null);
   const [config, setConfig] = useState<SiteOwnerSingleton | null>(null);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [reportsFrom, setReportsFrom] = useState(() => new Date().toISOString().slice(0, 10));
   const [reportsTo, setReportsTo] = useState(() => {
@@ -35,23 +87,7 @@ export default function OwnerSuperAdminPage() {
     d.setDate(d.getDate() + 30);
     return d.toISOString().slice(0, 10);
   });
-  const [appointments, setAppointments] = useState<
-    {
-      id: string;
-      startIso?: string | null;
-      name?: string;
-      phone?: string;
-      email?: string;
-      serviceLine?: string;
-      visitKind?: string;
-      durationMin?: number | null;
-      status?: string;
-      confirmationStatus?: string;
-      internalNotes?: string;
-      locationId?: string;
-      providerDisplayName?: string;
-    }[]
-  >([]);
+  const [appointments, setAppointments] = useState<OwnerAppointment[]>([]);
   const [patientPhone, setPatientPhone] = useState("");
   const [patientRecord, setPatientRecord] = useState<{
     bookings: Record<string, unknown>[];
@@ -65,8 +101,9 @@ export default function OwnerSuperAdminPage() {
       setAuthed(false);
       return;
     }
-    const data = (await res.json()) as { config: SiteOwnerSingleton };
+    const data = (await res.json()) as { config: SiteOwnerSingleton; appVersion?: string };
     setConfig(data.config);
+    setAppVersion(typeof data.appVersion === "string" ? data.appVersion : null);
     setAuthed(true);
   }, []);
 
@@ -174,23 +211,7 @@ export default function OwnerSuperAdminPage() {
       setMsg("Could not load appointments.");
       return;
     }
-    const data = (await res.json()) as {
-      appointments: {
-        id: string;
-        startIso?: string | null;
-        name?: string;
-        phone?: string;
-        email?: string;
-        serviceLine?: string;
-        visitKind?: string;
-        durationMin?: number | null;
-        status?: string;
-        confirmationStatus?: string;
-        internalNotes?: string;
-        locationId?: string;
-        providerDisplayName?: string;
-      }[];
-    };
+    const data = (await res.json()) as { appointments: OwnerAppointment[] };
     setAppointments(data.appointments ?? []);
   }, [reportsFrom, reportsTo]);
 
@@ -238,6 +259,29 @@ export default function OwnerSuperAdminPage() {
     setMsg(null);
   }
 
+  async function downloadOwnerCsv() {
+    setMsg(null);
+    const res = await fetch(
+      `/api/superadmin/bookings-export?from=${encodeURIComponent(reportsFrom)}&to=${encodeURIComponent(reportsTo)}`,
+      { credentials: "include" },
+    );
+    if (!res.ok) {
+      setMsg("CSV export failed.");
+      return;
+    }
+    const blob = await res.blob();
+    const cd = res.headers.get("content-disposition");
+    const m = cd?.match(/filename="([^"]+)"/);
+    const filename = m?.[1] ?? "bookings-export.csv";
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    setMsg("CSV downloaded.");
+  }
+
   if (!authed || !config) {
     return (
       <div className="mx-auto max-w-md space-y-4 px-4 py-16">
@@ -267,12 +311,12 @@ export default function OwnerSuperAdminPage() {
     { id: "videos", label: "Testimonial videos" },
     { id: "specials", label: "Specials" },
     { id: "doctor", label: "Doctor media" },
-    { id: "reports", label: "Reports" },
-    { id: "settings", label: "Settings" },
+    { id: "reports", label: "Bookings & patients" },
+    { id: "settings", label: "Shortcuts" },
   ];
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-10">
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-black text-slate-900">Owner superadmin</h1>
         <button type="button" onClick={() => void logout()} className="text-sm font-bold text-[#0f5f5c] underline">
@@ -428,21 +472,33 @@ export default function OwnerSuperAdminPage() {
       {tab === "reports" ? (
         <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold">Appointments</h2>
-          <div className="flex flex-wrap gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
             <input type="date" value={reportsFrom} onChange={(e) => setReportsFrom(e.target.value)} className="rounded border px-2 py-1" />
             <input type="date" value={reportsTo} onChange={(e) => setReportsTo(e.target.value)} className="rounded border px-2 py-1" />
-            <button type="button" onClick={() => void loadReports()} className="rounded-full bg-slate-900 px-4 py-1 text-xs font-bold text-white">
+            <button
+              type="button"
+              onClick={() => void loadReports()}
+              className="rounded-full bg-slate-900 px-4 py-1 text-xs font-bold text-white"
+            >
               Load
+            </button>
+            <button
+              type="button"
+              onClick={() => void downloadOwnerCsv()}
+              className="rounded-full border border-slate-300 bg-white px-4 py-1 text-xs font-bold text-slate-900 hover:bg-slate-50"
+            >
+              Download CSV
             </button>
           </div>
           <p className="text-xs text-slate-600">
-            Adjust the date range and use Load, or change dates — the list refreshes while you stay on this tab.
+            Times are shown in Chicago. CSV matches staff export columns (notes, pay status, Square id, etc.). Adjust
+            dates and use Load, or switch away from this tab and back to refresh.
           </p>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-xs">
               <thead>
                 <tr>
-                  <th className="p-2">When (UTC)</th>
+                  <th className="p-2">When (Chicago)</th>
                   <th className="p-2">Patient</th>
                   <th className="p-2">Phone</th>
                   <th className="p-2">Service</th>
@@ -450,42 +506,85 @@ export default function OwnerSuperAdminPage() {
                   <th className="p-2">Location</th>
                   <th className="p-2">Status</th>
                   <th className="p-2">Online</th>
+                  <th className="p-2">Pay</th>
                   <th className="p-2">Internal notes</th>
+                  <th className="p-2">Open</th>
                 </tr>
               </thead>
               <tbody>
-                {appointments.map((a) => (
-                  <tr key={a.id} className="border-t border-slate-100">
-                    <td className="max-w-[140px] p-2 whitespace-pre-wrap break-all">{a.startIso ?? "—"}</td>
-                    <td className="p-2 font-medium">{a.name}</td>
-                    <td className="p-2 whitespace-nowrap">{a.phone || "—"}</td>
-                    <td className="p-2 capitalize">{a.serviceLine || "—"}</td>
-                    <td className="p-2">{a.providerDisplayName || "—"}</td>
-                    <td className="p-2">
-                      {a.locationId === "paris"
-                        ? "Paris"
-                        : a.locationId === "sulphur_springs"
-                          ? "Sulphur Springs"
-                          : a.locationId || "—"}
-                    </td>
-                    <td className="p-2">{a.status}</td>
-                    <td className="p-2">
-                      {a.confirmationStatus === "confirmed_online" ? "Yes" : a.status === "pending" || a.status === "confirmed" ? "No" : "—"}
-                    </td>
-                    <td className="p-2">
-                      <textarea
-                        key={`${a.id}-${a.internalNotes ?? ""}`}
-                        defaultValue={a.internalNotes ?? ""}
-                        className="min-w-[12rem] max-w-xs rounded border px-1 py-1"
-                        maxLength={2000}
-                        rows={2}
-                        onBlur={(e) => {
-                          if (e.target.value !== (a.internalNotes ?? "")) void saveNotes(a.id, e.target.value);
-                        }}
-                      />
-                    </td>
-                  </tr>
-                ))}
+                {appointments.map((a) => {
+                  const sched = schedHrefOwner(a);
+                  const pay = paymentStatusShort(a as BookingRow);
+                  return (
+                    <tr key={a.id} className="border-t border-slate-100">
+                      <td className="max-w-[160px] p-2 whitespace-pre-wrap text-slate-800">{whenChicago(a)}</td>
+                      <td className="p-2 font-medium">
+                        {a.phone && a.phone.replace(/\D/g, "").length >= 7 ? (
+                          <Link
+                            href={`/admin/patient?phone=${encodeURIComponent(a.phone)}`}
+                            className="text-sky-800 underline hover:text-sky-950"
+                          >
+                            {a.name ?? "—"}
+                          </Link>
+                        ) : (
+                          a.name ?? "—"
+                        )}
+                      </td>
+                      <td className="p-2 whitespace-nowrap">{a.phone || "—"}</td>
+                      <td className="p-2 capitalize">{a.serviceLine || "—"}</td>
+                      <td className="p-2">{a.providerDisplayName || "—"}</td>
+                      <td className="p-2">
+                        {a.locationId === "paris"
+                          ? "Paris"
+                          : a.locationId === "sulphur_springs"
+                            ? "Sulphur Springs"
+                            : a.locationId || "—"}
+                      </td>
+                      <td className="p-2">{a.status}</td>
+                      <td className="p-2">
+                        {a.confirmationStatus === "confirmed_online"
+                          ? "Yes"
+                          : a.status === "pending" || a.status === "confirmed"
+                            ? "No"
+                            : "—"}
+                      </td>
+                      <td className="p-2 whitespace-nowrap">{pay}</td>
+                      <td className="p-2">
+                        <textarea
+                          key={`${a.id}-${a.internalNotes ?? ""}`}
+                          defaultValue={a.internalNotes ?? ""}
+                          className="min-w-[10rem] max-w-[14rem] rounded border px-1 py-1"
+                          maxLength={2000}
+                          rows={2}
+                          onBlur={(e) => {
+                            if (e.target.value !== (a.internalNotes ?? "")) void saveNotes(a.id, e.target.value);
+                          }}
+                        />
+                      </td>
+                      <td className="space-y-1 p-2 align-top">
+                        {sched ? (
+                          <Link href={sched} className="block text-sky-800 underline">
+                            Scheduler
+                          </Link>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                        <button
+                          type="button"
+                          className="block text-left text-[10px] font-semibold text-slate-600 underline"
+                          onClick={() =>
+                            void navigator.clipboard.writeText(a.id).then(
+                              () => setMsg("Booking ID copied."),
+                              () => setMsg("Could not copy ID."),
+                            )
+                          }
+                        >
+                          Copy ID
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -608,12 +707,74 @@ export default function OwnerSuperAdminPage() {
       ) : null}
 
       {tab === "settings" ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-700 shadow-sm">
-          <p>
-            Staff scheduling and Firebase tools remain at <code className="rounded bg-slate-100 px-1">/admin</code>{" "}
-            and <code className="rounded bg-slate-100 px-1">/admin/super</code>.
+        <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-700 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-900">Shortcuts</h2>
+          {appVersion ? (
+            <p className="text-xs text-slate-600">
+              Deployed app version: <span className="font-mono font-semibold text-slate-900">{appVersion}</span>
+            </p>
+          ) : null}
+          <p>Staff tools use Firebase login (not this owner password):</p>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            <li>
+              <Link href="/admin" className="font-semibold text-sky-800 underline">
+                Staff scheduler
+              </Link>
+            </li>
+            <li>
+              <Link href="/admin/reports" className="font-semibold text-sky-800 underline">
+                Staff reports & appointment lookup
+              </Link>
+            </li>
+            <li>
+              <Link href="/admin/patient" className="font-semibold text-sky-800 underline">
+                Staff patient record
+              </Link>
+            </li>
+            <li>
+              <Link href="/admin/super" className="font-semibold text-sky-800 underline">
+                Staff super (invites, etc.)
+              </Link>
+            </li>
+          </ul>
+          <p className="border-t border-slate-100 pt-3">Public site (opens in same tab):</p>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            <li>
+              <Link href="/" className="font-semibold text-sky-800 underline">
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link href="/book" className="font-semibold text-sky-800 underline">
+                Book massage / stretch
+              </Link>
+            </li>
+            <li>
+              <Link href="/reviews" className="font-semibold text-sky-800 underline">
+                Reviews
+              </Link>
+            </li>
+            <li>
+              <Link href="/patient-forms" className="font-semibold text-sky-800 underline">
+                Patient forms
+              </Link>
+            </li>
+            <li>
+              <Link href="/services/chiropractic" className="font-semibold text-sky-800 underline">
+                Chiropractic services
+              </Link>
+            </li>
+            <li>
+              <Link href="/services/massage" className="font-semibold text-sky-800 underline">
+                Massage services
+              </Link>
+            </li>
+          </ul>
+          <p className="text-xs text-slate-500">
+            If your Cursor build script listed extra owner tools (gift cards, SEO fields, etc.), paste that list into a
+            chat or issue and we can add matching tabs and APIs. This panel currently covers banner, videos, specials,
+            doctor media, bookings export, and patient lookup.
           </p>
-          <p className="mt-2">This page is for marketing content, testimonials, and owner-only reports.</p>
         </section>
       ) : null}
     </div>

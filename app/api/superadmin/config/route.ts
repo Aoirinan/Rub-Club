@@ -1,3 +1,5 @@
+import { readFileSync } from "fs";
+import { join } from "path";
 import { NextResponse } from "next/server";
 import { getSiteOwnerConfig, setSiteOwnerConfigPatch, type SiteOwnerSingleton } from "@/lib/site-owner-config";
 import { isSuperadminRequest } from "@/lib/superadmin-auth";
@@ -9,7 +11,15 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const config = await getSiteOwnerConfig();
-  return NextResponse.json({ config });
+  let appVersion = "";
+  try {
+    const raw = readFileSync(join(process.cwd(), "package.json"), "utf8");
+    const pkg = JSON.parse(raw) as { version?: string };
+    appVersion = typeof pkg.version === "string" ? pkg.version : "";
+  } catch {
+    /* ignore */
+  }
+  return NextResponse.json({ config, appVersion });
 }
 
 export async function PATCH(req: Request) {
