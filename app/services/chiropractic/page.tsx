@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
+import { AdjustmentsInActionSection } from "@/components/AdjustmentsInActionSection";
 import { IMAGES } from "@/lib/home-images";
 import { CHIRO, DOCTORS } from "@/lib/home-verbatim";
 import { LOCATIONS, WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
@@ -113,6 +114,8 @@ export default function ChiropracticServicePage() {
           </div>
         </section>
 
+        <AdjustmentsInActionSection />
+
         <section className="grid gap-6 sm:grid-cols-2">
           <div className="bg-white p-6 shadow ring-1 ring-[#0f5f5c]/15">
             <h3 className="text-base font-black uppercase tracking-wide text-[#173f3b]">
@@ -163,7 +166,7 @@ export default function ChiropracticServicePage() {
         <CtaCard
           title="Ready for relief?"
           body="Book a chiropractic appointment online, or call the office and we will fit you in."
-          primary={{ label: "Book chiropractic online", href: "/book?service=chiropractic" }}
+          primary={{ label: "Book massage or stretch online", href: "/book" }}
           secondary={{ label: "Call Paris 903-785-5551", href: telHref("903-785-5551") }}
         />
       </div>

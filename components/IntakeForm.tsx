@@ -21,7 +21,8 @@ function formatPhone(input: string): string {
 }
 
 export function IntakeForm() {
-  const [insuranceCardFile, setInsuranceCardFile] = useState<File | null>(null);
+  const [insuranceCardFrontFile, setInsuranceCardFrontFile] = useState<File | null>(null);
+  const [insuranceCardBackFile, setInsuranceCardBackFile] = useState<File | null>(null);
   const [driversLicenseFile, setDriversLicenseFile] = useState<File | null>(null);
   const [form, setForm] = useState({
     firstName: "",
@@ -96,7 +97,8 @@ export function IntakeForm() {
       }
       fd.append("pregnant", form.pregnant ? "true" : "false");
       fd.append("pacemaker", form.pacemaker ? "true" : "false");
-      if (insuranceCardFile) fd.append("insuranceCard", insuranceCardFile);
+      if (insuranceCardFrontFile) fd.append("insuranceCardFront", insuranceCardFrontFile);
+      if (insuranceCardBackFile) fd.append("insuranceCardBack", insuranceCardBackFile);
       if (driversLicenseFile) fd.append("driversLicense", driversLicenseFile);
 
       const res = await fetch("/api/intake", {
@@ -284,24 +286,36 @@ export function IntakeForm() {
           Insurance card and ID (optional)
         </legend>
         <p className="text-sm text-stone-600">
-          You may upload a photo or scan of your insurance card and your driver&apos;s license or
-          government-issued ID to speed up intake. This is optional. Accepted formats: JPG, PNG,
-          WebP, or PDF (max 10 MB each).
+          Upload the front and back of your insurance card plus your driver&apos;s license or
+          government-issued ID to speed up intake. All uploads are optional. Accepted formats: JPG,
+          PNG, WebP, or PDF (max 10 MB each).
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="space-y-1 text-sm">
-            <span className="font-bold text-[#173f3b]">Insurance card</span>
+            <span className="font-bold text-[#173f3b]">Insurance card — front</span>
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp,application/pdf"
               className="focus-ring w-full border border-stone-300 bg-white px-2 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-[#0f5f5c] file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white"
-              onChange={(e) => setInsuranceCardFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => setInsuranceCardFrontFile(e.target.files?.[0] ?? null)}
             />
-            {insuranceCardFile ? (
-              <span className="text-xs text-stone-500">{insuranceCardFile.name}</span>
+            {insuranceCardFrontFile ? (
+              <span className="text-xs text-stone-500">{insuranceCardFrontFile.name}</span>
             ) : null}
           </label>
           <label className="space-y-1 text-sm">
+            <span className="font-bold text-[#173f3b]">Insurance card — back</span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+              className="focus-ring w-full border border-stone-300 bg-white px-2 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-[#0f5f5c] file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white"
+              onChange={(e) => setInsuranceCardBackFile(e.target.files?.[0] ?? null)}
+            />
+            {insuranceCardBackFile ? (
+              <span className="text-xs text-stone-500">{insuranceCardBackFile.name}</span>
+            ) : null}
+          </label>
+          <label className="space-y-1 text-sm sm:col-span-2">
             <span className="font-bold text-[#173f3b]">Driver&apos;s license or ID</span>
             <input
               type="file"

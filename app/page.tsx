@@ -9,11 +9,14 @@ import {
   DOCTORS,
   MASSAGE,
 } from "@/lib/home-verbatim";
+import { GIFT_CARD_ORDER_URL } from "@/lib/constants";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { JsonLd } from "@/components/JsonLd";
 import { HomeVideo } from "@/components/HomeVideo";
 import { FaqList } from "@/components/FaqList";
 import { MassageTeamGrid } from "@/components/marketing/MassageTeamGrid";
+import { TestimonialVideosSection } from "@/components/TestimonialVideosSection";
+import { AdjustmentsInActionSection } from "@/components/AdjustmentsInActionSection";
 import {
   chiropractorJsonLd,
   faqPageJsonLd,
@@ -88,7 +91,7 @@ export default async function Home() {
       </div>
 
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
-        <section aria-label="Featured services" className="grid gap-4 md:grid-cols-4">
+        <section aria-label="Featured services" className="grid gap-4 md:grid-cols-5">
           {[
             {
               label: "DEEP TISSUE MASSAGE",
@@ -114,27 +117,59 @@ export default async function Home() {
               img: IMAGES.serviceSports,
               alt: "Sports massage at The Rub Club",
             },
-          ].map((tile) => (
-            <Link
-              key={tile.label}
-              href={tile.href}
-              className="focus-ring group relative flex min-h-[220px] flex-col justify-end overflow-hidden bg-[#173f3b] p-5 text-white shadow-lg"
-            >
-              <Image
-                src={tile.img}
-                alt={tile.alt}
-                fill
-                className="object-cover transition duration-300 group-hover:scale-105"
-                sizes="(max-width: 768px) 100vw, 25vw"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-              <span className="relative text-base font-black tracking-wide">{tile.label}</span>
-              <span className="relative mt-1 text-xs font-black uppercase tracking-wide text-[#f2d25d] group-hover:underline">
-                LEARN MORE
-              </span>
-            </Link>
-          ))}
+            {
+              label: "GIFT CARDS",
+              href: GIFT_CARD_ORDER_URL,
+              img: IMAGES.rubClubLogo,
+              alt: "The Rub Club gift cards",
+              external: true,
+            },
+          ].map((tile) =>
+            tile.external ? (
+              <a
+                key={tile.label}
+                href={tile.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="focus-ring group relative flex min-h-[220px] flex-col justify-end overflow-hidden bg-[#173f3b] p-5 text-white shadow-lg"
+              >
+                <Image
+                  src={tile.img}
+                  alt={tile.alt}
+                  fill
+                  className="object-contain p-8 transition duration-300 group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, 25vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                <span className="relative text-base font-black tracking-wide">{tile.label}</span>
+                <span className="relative mt-1 text-xs font-black uppercase tracking-wide text-[#f2d25d] group-hover:underline">
+                  BUY ON SQUARE
+                </span>
+              </a>
+            ) : (
+              <Link
+                key={tile.label}
+                href={tile.href}
+                className="focus-ring group relative flex min-h-[220px] flex-col justify-end overflow-hidden bg-[#173f3b] p-5 text-white shadow-lg"
+              >
+                <Image
+                  src={tile.img}
+                  alt={tile.alt}
+                  fill
+                  className="object-cover transition duration-300 group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, 25vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                <span className="relative text-base font-black tracking-wide">{tile.label}</span>
+                <span className="relative mt-1 text-xs font-black uppercase tracking-wide text-[#f2d25d] group-hover:underline">
+                  LEARN MORE
+                </span>
+              </Link>
+            ),
+          )}
         </section>
+
+        <TestimonialVideosSection />
 
         <section
           id="the-rub-club"
@@ -266,6 +301,8 @@ export default async function Home() {
             ))}
           </div>
         </section>
+
+        <AdjustmentsInActionSection />
 
         <MassageTeamGrid
           members={massageTeam}

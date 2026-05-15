@@ -87,14 +87,26 @@ export async function POST(req: Request) {
   const isMultipart = contentTypeHeader.includes("multipart/form-data");
 
   let body: Record<string, unknown>;
-  let insuranceFile: Awaited<ReturnType<typeof readOptionalIntakeFile>> | null = null;
+  let insuranceLegacy: Awaited<ReturnType<typeof readOptionalIntakeFile>> | null = null;
+  let insuranceFrontFile: Awaited<ReturnType<typeof readOptionalIntakeFile>> | null = null;
+  let insuranceBackFile: Awaited<ReturnType<typeof readOptionalIntakeFile>> | null = null;
   let driversFile: Awaited<ReturnType<typeof readOptionalIntakeFile>> | null = null;
 
   try {
     if (isMultipart) {
       const fd = await req.formData();
       body = parseFormDataFields(fd);
-      insuranceFile = await readOptionalIntakeFile(fd.get("insuranceCard"), "Insurance card", "insurance");
+      insuranceLegacy = await readOptionalIntakeFile(fd.get("insuranceCard"), "Insurance card", "insurance");
+      insuranceFrontFile = await readOptionalIntakeFile(
+        fd.get("insuranceCardFront"),
+        "Insurance card (front)",
+        "insurance_front",
+      );
+      insuranceBackFile = await readOptionalIntakeFile(
+        fd.get("insuranceCardBack"),
+        "Insurance card (back)",
+        "insurance_back",
+      );
       driversFile = await readOptionalIntakeFile(
         fd.get("driversLicense"),
         "Driver's license or ID",
@@ -130,13 +142,33 @@ export async function POST(req: Request) {
 
   const fileUpdates: Record<string, unknown> = {};
   try {
-    if (insuranceFile) {
+    if (insuranceFrontFile) {
+      const meta = await uploadIntakeFileBuffer({
+        intakeId: ref.id,
+        kind: "insurance_front",
+        buffer: insuranceFrontFile.buffer,
+        contentType: insuranceFrontFile.contentType,
+        originalFilename: insuranceFrontFile.originalFilename,
+      });
+      fileUpdates.insuranceCardFront = { ...meta, uploadedAt: FieldValue.serverTimestamp() };
+    }
+    if (insuranceBackFile) {
+      const meta = await uploadIntakeFileBuffer({
+        intakeId: ref.id,
+        kind: "insurance_back",
+        buffer: insuranceBackFile.buffer,
+        contentType: insuranceBackFile.contentType,
+        originalFilename: insuranceBackFile.originalFilename,
+      });
+      fileUpdates.insuranceCardBack = { ...meta, uploadedAt: FieldValue.serverTimestamp() };
+    }
+    if (insuranceLegacy && !insuranceFrontFile && !insuranceBackFile) {
       const meta = await uploadIntakeFileBuffer({
         intakeId: ref.id,
         kind: "insurance",
-        buffer: insuranceFile.buffer,
-        contentType: insuranceFile.contentType,
-        originalFilename: insuranceFile.originalFilename,
+        buffer: insuranceLegacy.buffer,
+        contentType: insuranceLegacy.contentType,
+        originalFilename: insuranceLegacy.originalFilename,
       });
       fileUpdates.insuranceCard = { ...meta, uploadedAt: FieldValue.serverTimestamp() };
     }
@@ -164,7 +196,7 @@ export async function POST(req: Request) {
   try {
     const officeEmail = process.env.OFFICE_NOTIFICATION_EMAIL?.trim();
     if (officeEmail) {
-      const hasDocs = Boolean(insuranceFile || driversFile);
+      const hasDocs = Boolean(insuranceLegacy || insuranceFrontFile || insuranceBackFile || driversFile);
       await sendBookingNotification({
         to: officeEmail,
         subject: `New intake form: ${firstName} ${lastName}`,

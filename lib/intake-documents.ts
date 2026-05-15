@@ -9,7 +9,7 @@ export const INTAKE_ALLOWED_MIME: Record<string, string> = {
 
 export const INTAKE_MAX_FILE_BYTES = 10 * 1024 * 1024;
 
-export type IntakeFileKind = "insurance" | "drivers_license";
+export type IntakeFileKind = "insurance" | "insurance_front" | "insurance_back" | "drivers_license";
 
 export type IntakeStoredFileMeta = {
   storagePath: string;
@@ -19,7 +19,16 @@ export type IntakeStoredFileMeta = {
 };
 
 export function intakeStorageObjectName(kind: IntakeFileKind): string {
-  return kind === "insurance" ? "insurance_card" : "drivers_license";
+  switch (kind) {
+    case "insurance":
+      return "insurance_card";
+    case "insurance_front":
+      return "insurance_card_front";
+    case "insurance_back":
+      return "insurance_card_back";
+    default:
+      return "drivers_license";
+  }
 }
 
 export async function uploadIntakeFileBuffer(opts: {

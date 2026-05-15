@@ -23,7 +23,19 @@ export type BookingRow = {
   phone?: string;
   email?: string;
   notes?: string;
+  internalNotes?: string;
+  /** Patient tapped /confirm link (SMS). */
+  confirmationStatus?: string;
+  checkedInAtMs?: number;
+  needsReschedule?: boolean;
   status?: BookingStatus;
+  /** Online prepay flow (public booking). */
+  prepaidOnline?: boolean;
+  paymentLinkUrl?: string;
+  paymentAmountCents?: number;
+  paidAtMs?: number;
+  paidAmountCents?: number;
+  squarePaymentId?: string;
   accepted?: StaffActor;
   declined?: StaffActor;
   cancelled?: StaffActor;

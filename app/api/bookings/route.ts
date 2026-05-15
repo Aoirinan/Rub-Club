@@ -1,10 +1,11 @@
+import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { FieldValue, Timestamp, type DocumentReference } from "firebase-admin/firestore";
 import { DateTime } from "luxon";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
 import type { DurationMin, LocationId, ServiceLine } from "@/lib/constants";
-import { TIME_ZONE } from "@/lib/constants";
+import { LOCATIONS, TIME_ZONE } from "@/lib/constants";
 import { assertRateLimitOk, getClientIp } from "@/lib/rate-limit";
 import {
   fetchActiveProvidersForService,
@@ -26,6 +27,9 @@ import {
 } from "@/lib/email-templates";
 import { recordBookingEventInTx, recordBookingEvent } from "@/lib/booking-events";
 import { resolvePublicBookingPrepayCents } from "@/lib/public-booking-prepay";
+import { sendSms } from "@/lib/twilio";
+import { logSmsSent } from "@/lib/sms-audit";
+import { getSiteOrigin } from "@/lib/site-content";
 
 export const runtime = "nodejs";
 
@@ -33,6 +37,8 @@ const bodySchema = z
   .object({
     locationId: z.enum(["paris", "sulphur_springs"]),
     serviceLine: z.enum(["massage", "chiropractic"]),
+    visitKind: z.enum(["massage", "stretch"]).optional(),
+    paymentType: z.enum(["cash", "insurance"]).optional(),
     durationMin: z.union([z.literal(30), z.literal(60)]),
     startIso: z.string().min(8),
     name: z.string().min(2).max(120),
@@ -89,6 +95,26 @@ export async function POST(req: Request) {
   }
   const body = parsed.data;
 
+  if (body.serviceLine === "chiropractic") {
+    return NextResponse.json(
+      {
+        error:
+          "Chiropractic is not available for online booking. Insurance patients: please call Paris 903-785-5551 or Sulphur Springs 903-919-5020 to schedule.",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (body.paymentType === "insurance") {
+    return NextResponse.json(
+      {
+        error:
+          "Insurance patients please call us to book: Paris 903-785-5551 | Sulphur Springs 903-919-5020",
+      },
+      { status: 400 },
+    );
+  }
+
   if (body.website && body.website.trim().length > 0) {
     return NextResponse.json({ ok: true }, { status: 201 });
   }
@@ -117,7 +143,9 @@ export async function POST(req: Request) {
 
   const locationId = body.locationId as LocationId;
   const durationMin = body.durationMin as DurationMin;
-  const serviceLine = body.serviceLine as ServiceLine;
+  const visitKind = body.visitKind === "stretch" ? "stretch" : "massage";
+  /** Online booking is massage slots only (stretch uses the same schedule). */
+  const serviceLine: ServiceLine = "massage";
 
   const db = getFirestore();
   const eligible = await fetchActiveProvidersForService(db, locationId, serviceLine, {
@@ -228,6 +256,8 @@ export async function POST(req: Request) {
             phone: body.phone.trim(),
             email: body.email.trim().toLowerCase(),
             notes: body.notes?.trim() || "",
+            visitKind,
+            paymentType: body.paymentType ?? "cash",
             status: "pending",
             sourceIp: getClientIp(req.headers),
             createdAt: FieldValue.serverTimestamp(),
@@ -317,6 +347,8 @@ export async function POST(req: Request) {
             phone: body.phone.trim(),
             email: body.email.trim().toLowerCase(),
             notes: body.notes?.trim() || "",
+            visitKind,
+            paymentType: body.paymentType ?? "cash",
             status: "pending",
             sourceIp: getClientIp(req.headers),
             createdAt: FieldValue.serverTimestamp(),
@@ -429,7 +461,7 @@ export async function POST(req: Request) {
         amountCents: cents,
         patientName: body.name.trim(),
         bookingId: primaryId,
-        description: `${serviceLine === "massage" ? "Massage" : "Chiropractic"} · ${durationMin} min (online booking)`,
+        description: `${visitKind === "stretch" ? "Stretch" : "Massage"} · ${durationMin} min (online booking)`,
       });
       if (linkResult.created) {
         const ref = db.collection("bookings").doc(primaryId);
@@ -437,7 +469,7 @@ export async function POST(req: Request) {
           paymentLinkUrl: linkResult.url,
           paymentLinkId: linkResult.paymentLinkId,
           paymentAmountCents: cents,
-          paymentDescription: `${serviceLine === "massage" ? "Massage" : "Chiropractic"} · ${durationMin} min (online booking)`,
+          paymentDescription: `${visitKind === "stretch" ? "Stretch" : "Massage"} · ${durationMin} min (online booking)`,
           paymentRequestedAt: FieldValue.serverTimestamp(),
           paymentRequestedByUid: null,
           prepaidOnline: true,
@@ -456,6 +488,31 @@ export async function POST(req: Request) {
         }).catch((e) => console.error("prepay event log failed", e));
       }
     }
+  }
+
+  const primaryId = createdIds[0]!;
+  const confirmToken = randomBytes(18).toString("hex");
+  await db.collection("bookings").doc(primaryId).update({ confirmToken });
+
+  const origin = getSiteOrigin();
+  const confirmUrl = `${origin}/api/confirm?token=${encodeURIComponent(confirmToken)}`;
+  const locOffice = LOCATIONS[locationId];
+  const firstName = body.name.trim().split(/\s+/)[0] || body.name.trim();
+  const when = firstStart.setZone(TIME_ZONE).toFormat("LLLL d yyyy 'at' h:mm a");
+  const biz = "The Rub Club";
+  let smsBody = `Hi ${firstName}, your appointment at ${biz} is scheduled for ${when}. To cancel or reschedule, please call us at ${locOffice.phonePrimary}. Do not reply to this text. Confirm: ${confirmUrl}`;
+  if (paymentUrl) {
+    smsBody += ` Pay online: ${paymentUrl}`;
+  } else {
+    smsBody += ` A payment link may be texted separately once prepay is enabled for this visit type.`;
+  }
+  const smsResult = await sendSms(body.phone.trim(), smsBody.slice(0, 1550));
+  if (smsResult.sent) {
+    await logSmsSent({
+      phone: body.phone.trim(),
+      message: smsBody,
+      bookingId: primaryId,
+    }).catch(() => {});
   }
 
   return NextResponse.json(

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getFirestore } from "@/lib/firebase-admin";
 import type { LocationId, ServiceLine } from "@/lib/constants";
+import { massageTeamMemberMatchKey, massageTeamPhotoByMatchKey } from "@/lib/massage-team-provider-match";
+import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { fetchActiveProvidersForService } from "@/lib/providers-db";
 
 export const runtime = "nodejs";
@@ -25,13 +27,24 @@ export async function GET(req: Request) {
     const rows = await fetchActiveProvidersForService(db, locationId, serviceLine, {
       publicBooking: true,
     });
-    const providers = rows.map((p) => ({
-      id: p.id,
-      displayName: p.displayName,
-      sortOrder: p.sortOrder,
-      photoUrl: p.photoUrl ?? null,
-      about: p.about ?? null,
-    }));
+
+    const teamPhotoByKey =
+      serviceLine === "massage"
+        ? massageTeamPhotoByMatchKey(await getMassageTeamForMarketing())
+        : null;
+
+    const providers = rows.map((p) => {
+      const key = teamPhotoByKey ? massageTeamMemberMatchKey(p.displayName) : "";
+      const teamPhoto = key && teamPhotoByKey ? teamPhotoByKey.get(key) : undefined;
+      const hasPhoto = typeof p.photoUrl === "string" && p.photoUrl.trim().length > 0;
+      return {
+        id: p.id,
+        displayName: p.displayName,
+        sortOrder: p.sortOrder,
+        photoUrl: hasPhoto ? p.photoUrl : (teamPhoto ?? null),
+        about: p.about ?? null,
+      };
+    });
 
     return NextResponse.json({ providers }, { headers: noStore });
   } catch (e) {

@@ -9,6 +9,14 @@
       ]
     },
     {
+      "collectionGroup": "sms_send_log",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "phoneDigits", "order": "ASCENDING" },
+        { "fieldPath": "sentAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "slot_holds",
       "queryScope": "COLLECTION",
       "fields": [

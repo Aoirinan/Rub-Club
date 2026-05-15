@@ -14,8 +14,12 @@ import {
   formatChicagoTime,
   formatGutterHour,
   groupBookingsForList,
+  patientKeyFromBooking,
+  paymentHintSuffix,
   relativeDayLabel,
+  sortedColumnRowsWithStackMeta,
 } from "./helpers";
+import type { SameDayStackMeta } from "./helpers";
 import type { BookingRow, FilterState, ProviderRow } from "./types";
 
 const DAY_OPEN_HOUR = 8;
@@ -49,6 +53,10 @@ function startIsoUtcFromDayColumnDrop(
   return start.toUTC().toISO()!;
 }
 
+function intervalsOverlap(a0: number, a1: number, b0: number, b1: number): boolean {
+  return a0 < b1 && b0 < a1;
+}
+
 type ViewProps = {
   bookings: BookingRow[];
   providers: ProviderRow[];
@@ -56,6 +64,10 @@ type ViewProps = {
   onSelect: (id: string) => void;
   /** Day view: drag a block to another time (same provider column). */
   onRescheduleBooking?: (bookingId: string, startIso: string) => Promise<void>;
+  /** Dropped on another provider column (reschedule API does not move providers). */
+  onInvalidCrossProviderDrop?: () => void;
+  /** Proposed time overlaps another patient’s visit in the same column. */
+  onInvalidCrossPatientTimeDrop?: () => void;
 };
 
 function bookingsForDayProvider(
@@ -84,7 +96,15 @@ function unassignedBookingsForDay(rows: BookingRow[], dayStart: DateTime): Booki
 
 /* ---------------- Day view ---------------- */
 
-export function DayView({ bookings, providers, filters, onSelect, onRescheduleBooking }: ViewProps) {
+export function DayView({
+  bookings,
+  providers,
+  filters,
+  onSelect,
+  onRescheduleBooking,
+  onInvalidCrossProviderDrop,
+  onInvalidCrossPatientTimeDrop,
+}: ViewProps) {
   const dayStart = chicagoDayStart(filters.date);
   const unassigned = unassignedBookingsForDay(bookings, dayStart);
 
@@ -140,7 +160,8 @@ export function DayView({ bookings, providers, filters, onSelect, onRescheduleBo
           </div>
 
           {providers.map((p) => {
-            const rows = bookingsForDayProvider(bookings, p.id, dayStart);
+            const rowsRaw = bookingsForDayProvider(bookings, p.id, dayStart);
+            const { sortedRows, stackMeta } = sortedColumnRowsWithStackMeta(rowsRaw);
             return (
               <div
                 key={p.id}
@@ -154,8 +175,12 @@ export function DayView({ bookings, providers, filters, onSelect, onRescheduleBo
                   e.preventDefault();
                   const rawId = e.dataTransfer.getData("application/x-booking-id");
                   if (!rawId) return;
-                  const b = rows.find((x) => x.id === rawId);
-                  if (!b || b.providerId !== p.id) return;
+                  const b = bookings.find((x) => x.id === rawId);
+                  if (!b?.providerId) return;
+                  if (b.providerId !== p.id) {
+                    onInvalidCrossProviderDrop?.();
+                    return;
+                  }
                   const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
                   const y = e.clientY - rect.top;
                   const startIso = startIsoUtcFromDayColumnDrop(
@@ -165,6 +190,22 @@ export function DayView({ bookings, providers, filters, onSelect, onRescheduleBo
                     DAY_CLOSE_HOUR,
                     SLOT_PX,
                   );
+                  const newStartMs = Date.parse(startIso);
+                  const dur = typeof b.durationMin === "number" ? b.durationMin : 0;
+                  const newEndMs = newStartMs + dur * 60 * 1000;
+                  if (Number.isFinite(newStartMs) && dur > 0) {
+                    const selfKey = patientKeyFromBooking(b);
+                    for (const o of sortedRows) {
+                      if (o.id === b.id) continue;
+                      if (typeof o.startAtMs !== "number" || typeof o.durationMin !== "number") continue;
+                      const oEnd = o.startAtMs + o.durationMin * 60 * 1000;
+                      if (!intervalsOverlap(newStartMs, newEndMs, o.startAtMs, oEnd)) continue;
+                      if (patientKeyFromBooking(o) !== selfKey) {
+                        onInvalidCrossPatientTimeDrop?.();
+                        return;
+                      }
+                    }
+                  }
                   void onRescheduleBooking(b.id, startIso);
                 }}
               >
@@ -183,10 +224,11 @@ export function DayView({ bookings, providers, filters, onSelect, onRescheduleBo
                   />,
                 ])}
 
-                {rows.map((b) => (
+                {sortedRows.map((b) => (
                   <CalendarBlock
                     key={b.id}
                     booking={b}
+                    stackMeta={stackMeta.get(b.id)}
                     onSelect={onSelect}
                     onRescheduleBooking={onRescheduleBooking}
                     openHour={DAY_OPEN_HOUR}
@@ -236,8 +278,43 @@ export function DayView({ bookings, providers, filters, onSelect, onRescheduleBo
   );
 }
 
+function DeskStatusIcons({ booking }: { booking: BookingRow }) {
+  const status = booking.status ?? "pending";
+  const live = status === "pending" || status === "confirmed";
+  const online = booking.confirmationStatus === "confirmed_online";
+  return (
+    <div
+      className="pointer-events-none absolute right-0.5 top-0.5 flex items-center gap-0.5 text-[10px] leading-none"
+      aria-hidden
+    >
+      {booking.needsReschedule ? (
+        <span className="font-bold text-amber-700" title="Needs reschedule">
+          ✕
+        </span>
+      ) : null}
+      {typeof booking.checkedInAtMs === "number" ? (
+        <span className="text-sky-600" title="Checked in at office">
+          ★
+        </span>
+      ) : null}
+      {live ? (
+        online ? (
+          <span className="font-bold text-emerald-700" title="Confirmed online (SMS link)">
+            ✓
+          </span>
+        ) : (
+          <span className="text-slate-500" title="Not confirmed online yet">
+            ○
+          </span>
+        )
+      ) : null}
+    </div>
+  );
+}
+
 function CalendarBlock({
   booking,
+  stackMeta,
   onSelect,
   onRescheduleBooking,
   openHour,
@@ -245,6 +322,7 @@ function CalendarBlock({
   slotPx,
 }: {
   booking: BookingRow;
+  stackMeta?: SameDayStackMeta;
   onSelect: (id: string) => void;
   onRescheduleBooking?: (bookingId: string, startIso: string) => Promise<void>;
   openHour: number;
@@ -263,6 +341,10 @@ function CalendarBlock({
     Boolean(onRescheduleBooking) &&
     (status === "confirmed" || status === "pending") &&
     Boolean(booking.providerId);
+  const multi = stackMeta && stackMeta.sameDayCount > 1;
+  const cont = stackMeta && stackMeta.indexInPatient > 1;
+  const ringClass =
+    multi && cont ? "ring-1 ring-slate-400 ring-offset-1 ring-offset-transparent" : "";
   return (
     <button
       type="button"
@@ -271,15 +353,31 @@ function CalendarBlock({
         if (!dragEnabled) return;
         e.stopPropagation();
         e.dataTransfer.setData("application/x-booking-id", booking.id);
+        if (booking.providerId) {
+          e.dataTransfer.setData("application/x-booking-provider-id", booking.providerId);
+        }
         e.dataTransfer.effectAllowed = "move";
       }}
       onClick={() => onSelect(booking.id)}
-      className={`absolute left-1 right-1 overflow-hidden rounded-md px-2 py-1 text-left text-xs shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-500 ${bookingStatusBlockClasses(status)} ${svcColor.borderClass}`}
+      className={`absolute left-1 right-1 overflow-hidden rounded-md px-2 py-1 text-left text-xs shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-500 ${bookingStatusBlockClasses(status)} ${svcColor.borderClass} ${ringClass}`}
       style={{ top: `${geom.topPx}px`, height: `${geom.heightPx}px` }}
-      title={`${booking.name ?? ""} · ${booking.serviceLine ?? ""} · ${booking.durationMin}m · ${providerLabel}`}
+      title={`${booking.name ?? ""} · ${booking.serviceLine ?? ""} · ${booking.durationMin}m · ${providerLabel}${multi ? ` · ${stackMeta!.sameDayCount} visits this day` : ""}${paymentHintSuffix(booking)}`}
     >
-      <div className="truncate font-semibold">
-        {formatChicagoTime(booking.startAtMs)} · {booking.name ?? "Unknown"}
+      <DeskStatusIcons booking={booking} />
+      <div className={`truncate pr-6 font-semibold ${cont ? "text-[11px]" : ""}`}>
+        {cont ? (
+          <>
+            <span className="text-slate-600">↳</span> {formatChicagoTime(booking.startAtMs)}
+            <span className="text-slate-700"> · {booking.name ?? "Unknown"}</span>
+          </>
+        ) : (
+          <>
+            {formatChicagoTime(booking.startAtMs)} · {booking.name ?? "Unknown"}
+            {multi ? (
+              <span className="ml-1 font-normal text-slate-600">({stackMeta!.sameDayCount}×)</span>
+            ) : null}
+          </>
+        )}
       </div>
       <div className="truncate text-[11px] font-medium opacity-90">
         {providerLabel} · {booking.serviceLine} · {booking.durationMin}m
@@ -342,7 +440,8 @@ export function WeekView({ bookings, providers, filters, onSelect }: ViewProps) 
           </div>
 
           {days.map((d) => {
-            const rows = bookingsForDayProvider(bookings, provider.id, d);
+            const rowsRaw = bookingsForDayProvider(bookings, provider.id, d);
+            const { sortedRows, stackMeta } = sortedColumnRowsWithStackMeta(rowsRaw);
             return (
               <div
                 key={d.toISO()}
@@ -356,10 +455,11 @@ export function WeekView({ bookings, providers, filters, onSelect }: ViewProps) 
                     style={{ top: `${(r.hour - DAY_OPEN_HOUR) * 2 * SLOT_PX}px` }}
                   />
                 ))}
-                {rows.map((b) => (
+                {sortedRows.map((b) => (
                   <CalendarBlock
                     key={b.id}
                     booking={b}
+                    stackMeta={stackMeta.get(b.id)}
                     onSelect={onSelect}
                     openHour={DAY_OPEN_HOUR}
                     closeHour={DAY_CLOSE_HOUR}
@@ -427,6 +527,7 @@ function AllProvidersWeekSummary({
                       <button
                         type="button"
                         onClick={() => onSelect(b.id)}
+                        title={`${b.name ?? ""} · ${b.serviceLine ?? ""} · ${b.durationMin}m · ${b.providerDisplayName || "First avail"}${paymentHintSuffix(b)}`}
                         className={`w-full rounded-md px-2 py-1.5 text-left text-xs ${bookingStatusBlockClasses(b.status ?? "pending")} ${serviceLineColor(b.serviceLine).borderClass}`}
                       >
                         <div className="font-semibold">
@@ -435,6 +536,7 @@ function AllProvidersWeekSummary({
                         </div>
                         <div className="text-[11px] opacity-90">
                           {b.providerDisplayName || "First avail"} · {b.serviceLine} · {b.durationMin}m
+                          {paymentHintSuffix(b)}
                         </div>
                       </button>
                     </li>
@@ -503,6 +605,7 @@ export function ListView({ bookings, onSelect }: ViewProps) {
                     </div>
                     <div className="mt-0.5 text-xs text-slate-600">
                       {b.serviceLine} · {prettyLoc(b.locationId ?? "")} · {b.providerDisplayName || "First available"}
+                      {paymentHintSuffix(b)}
                     </div>
                     {b.phone || b.email ? (
                       <div className="mt-0.5 text-xs text-slate-500">

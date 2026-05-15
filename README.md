@@ -37,6 +37,8 @@ Other scripts:
 | `NEXT_PUBLIC_FIREBASE_API_KEY` | Yes (client) | Web SDK config — staff sign-in only. |
 | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Yes (client) | Must be allow-listed in Firebase Auth → Settings → Authorized domains. |
 | `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Yes (client) | Web SDK config. |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Recommended | Exact `storageBucket` from Firebase web app config. Admin uploads use it when `FIREBASE_STORAGE_BUCKET` is unset; avoids wrong default bucket hostname. |
+| `FIREBASE_STORAGE_BUCKET` | Optional | Overrides inferred Storage bucket on the server (use if your project still uses a legacy `*.appspot.com` default bucket). |
 | `NEXT_PUBLIC_APP_URL` | Yes | Canonical site origin (no trailing slash). Drives `metadataBase`, OG, canonical, sitemap, and Firebase password-reset return links. |
 | `SENDGRID_API_KEY` | Recommended | Enables booking confirmation, office notification, contact form, and staff-invite emails. |
 | `SENDGRID_FROM_EMAIL` | Recommended | Verified Single Sender in SendGrid. Plain email only (no JSON, no quotes). |

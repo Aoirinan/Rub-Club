@@ -1,20 +1,35 @@
 import admin from "firebase-admin";
 
+/**
+ * Resolves the GCS bucket used by Firebase Admin Storage.
+ *
+ * Order: explicit server env → same value from web SDK config (`storageBucket` in Firebase console)
+ * → inferred default for the project.
+ *
+ * Firebase default buckets created after Sept 2024 use `{projectId}.firebasestorage.app`.
+ * Older projects often use `{projectId}.appspot.com` — set `FIREBASE_STORAGE_BUCKET` (or paste
+ * `storageBucket` into `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`) if uploads say the bucket does not exist.
+ */
 function resolveStorageBucket(): string | undefined {
-  const explicit = process.env.FIREBASE_STORAGE_BUCKET?.trim();
+  const explicit =
+    process.env.FIREBASE_STORAGE_BUCKET?.trim() || process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET?.trim();
   if (explicit) return explicit;
   const rawJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
   if (rawJson) {
     try {
       const creds = JSON.parse(normalizeServiceAccountJson(rawJson)) as { project_id?: string };
-      if (creds.project_id) return `${creds.project_id}.appspot.com`;
+      if (creds.project_id) return defaultFirebaseStorageBucketForProject(creds.project_id);
     } catch {
       /* ignore */
     }
   }
   const pub = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim();
-  if (pub) return `${pub}.appspot.com`;
+  if (pub) return defaultFirebaseStorageBucketForProject(pub);
   return undefined;
+}
+
+function defaultFirebaseStorageBucketForProject(projectId: string): string {
+  return `${projectId}.firebasestorage.app`;
 }
 
 function normalizeServiceAccountJson(raw: string): string {

@@ -8,6 +8,10 @@ export const FACEBOOK_URL =
 export const WELLNESS_CARE_PLANS_PATH =
   "/services/chiropractic/wellness-care-plans" as const;
 
+/** Square-hosted gift cards (opens in a new tab from nav/footer). */
+export const GIFT_CARD_ORDER_URL =
+  "https://squareup.com/gift/3N2XB71C5T20N/order" as const;
+
 export const BUSINESS = {
   openHour: 9,
   openMinute: 0,

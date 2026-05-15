@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { FACEBOOK_URL, telHref } from "@/lib/constants";
+import { FACEBOOK_URL, GIFT_CARD_ORDER_URL, telHref } from "@/lib/constants";
 import { track } from "@/lib/analytics";
 import type { NavItem } from "@/components/DesktopNav";
 
@@ -83,6 +83,20 @@ export function MobileNav({ items }: { items: readonly NavItem[] }) {
                 const isExpanded = expanded === item.label;
 
                 if (!hasChildren) {
+                  if (item.external) {
+                    return (
+                      <a
+                        key={item.href}
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="focus-ring border-b border-stone-100 px-4 py-3 text-sm font-bold uppercase tracking-wide text-[#173f3b] hover:bg-stone-50"
+                        onClick={close}
+                      >
+                        {item.label}
+                      </a>
+                    );
+                  }
                   return (
                     <Link
                       key={item.href}
@@ -147,6 +161,15 @@ export function MobileNav({ items }: { items: readonly NavItem[] }) {
                   </div>
                 );
               })}
+              <a
+                href={GIFT_CARD_ORDER_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="focus-ring mx-4 mb-2 block border border-[#0f5f5c]/30 bg-white px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-stone-50"
+                onClick={close}
+              >
+                Gift cards
+              </a>
               <Link
                 href="/book"
                 className="focus-ring m-4 bg-[#f2d25d] px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]"

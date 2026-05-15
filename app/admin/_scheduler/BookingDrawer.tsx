@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { DateTime } from "luxon";
 import { TIME_ZONE } from "@/lib/constants";
 import {
@@ -54,6 +55,13 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken }
   const [emailSubject, setEmailSubject] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
 
+  const [notesDraft, setNotesDraft] = useState("");
+  const [visitBusy, setVisitBusy] = useState(false);
+
+  useEffect(() => {
+    setNotesDraft(booking?.internalNotes ?? "");
+  }, [booking?.id, booking?.internalNotes]);
+
   useEffect(() => {
     setEvents([]);
     setAction(null);
@@ -89,6 +97,61 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken }
       cancelled = true;
     };
   }, [booking, getIdToken]);
+
+  async function pushDeskFlags(patch: { checkedIn?: boolean; needsReschedule?: boolean }) {
+    const b = booking;
+    if (!b) return;
+    setVisitBusy(true);
+    setError(null);
+    try {
+      const token = await getIdToken();
+      if (!token) {
+        setError("Not signed in.");
+        return;
+      }
+      const res = await fetch(`/api/admin/bookings/${encodeURIComponent(b.id)}/visit-state`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setError(data.error ?? "Could not update visit flags.");
+        return;
+      }
+      onActionComplete();
+    } finally {
+      setVisitBusy(false);
+    }
+  }
+
+  async function saveVisitNotes() {
+    const b = booking;
+    if (!b) return;
+    setVisitBusy(true);
+    setError(null);
+    try {
+      const token = await getIdToken();
+      if (!token) {
+        setError("Not signed in.");
+        return;
+      }
+      const res = await fetch(`/api/admin/bookings/${encodeURIComponent(b.id)}/visit-state`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ internalNotes: notesDraft }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setError(data.error ?? "Could not save notes.");
+        return;
+      }
+      setSuccessMsg("Notes saved.");
+      onActionComplete();
+    } finally {
+      setVisitBusy(false);
+    }
+  }
 
   if (!booking) return null;
 
@@ -327,6 +390,54 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken }
               </div>
             ) : null}
           </DetailRow>
+          <DetailRow label="Payment">
+            {typeof booking.paidAmountCents === "number" && booking.paidAmountCents > 0 ? (
+              <>
+                <p className="font-medium text-emerald-800">
+                  Paid ${(booking.paidAmountCents / 100).toFixed(2)}
+                  {typeof booking.paidAtMs === "number" ? (
+                    <span className="font-normal text-slate-700">
+                      {" "}
+                      ·{" "}
+                      {DateTime.fromMillis(booking.paidAtMs)
+                        .setZone(TIME_ZONE)
+                        .toFormat("LLL d yyyy · h:mm a")}
+                    </span>
+                  ) : null}
+                </p>
+                {booking.squarePaymentId ? (
+                  <p className="text-xs text-slate-500" title={booking.squarePaymentId}>
+                    Square ID: {booking.squarePaymentId.length > 14
+                      ? `${booking.squarePaymentId.slice(0, 14)}…`
+                      : booking.squarePaymentId}
+                  </p>
+                ) : null}
+              </>
+            ) : booking.paymentLinkUrl ? (
+              <>
+                <p className="text-slate-800">Checkout link active</p>
+                {typeof booking.paymentAmountCents === "number" ? (
+                  <p className="text-xs text-slate-600">
+                    Amount: ${(booking.paymentAmountCents / 100).toFixed(2)}
+                  </p>
+                ) : null}
+                <a
+                  href={booking.paymentLinkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 inline-block text-xs font-semibold text-sky-800 underline"
+                >
+                  Open Square checkout
+                </a>
+              </>
+            ) : booking.prepaidOnline ? (
+              <p className="text-sm text-amber-900">
+                Prepay expected for this booking; payment link is created when checkout is generated.
+              </p>
+            ) : (
+              <span className="text-slate-500">No online prepayment on file.</span>
+            )}
+          </DetailRow>
         </section>
 
         <section className="space-y-3 border-b border-slate-200 px-6 py-4 text-sm">
@@ -340,18 +451,97 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken }
                 {booking.phone}
               </a>
             ) : null}
+            {booking.phone && booking.phone.replace(/\D/g, "").length >= 7 ? (
+              <Link
+                href={`/admin/patient?phone=${encodeURIComponent(booking.phone)}`}
+                className="mt-1 inline-block text-xs font-semibold text-sky-800 underline"
+              >
+                Patient record
+              </Link>
+            ) : null}
             {booking.email ? (
               <a href={`mailto:${booking.email}`} className="block break-all text-slate-600 hover:underline">
                 {booking.email}
               </a>
             ) : null}
           </DetailRow>
-          {booking.notes ? (
-            <DetailRow label="Notes">
-              <p className="whitespace-pre-line text-slate-700">{booking.notes}</p>
-            </DetailRow>
-          ) : null}
         </section>
+
+        {status === "pending" || status === "confirmed" ? (
+          <section className="space-y-4 border-b border-slate-200 px-6 py-4 text-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Visit / front desk
+            </p>
+            {booking.notes ? (
+              <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                <p className="text-xs font-semibold text-slate-600">Patient booking message</p>
+                <p className="mt-1 whitespace-pre-line text-sm text-slate-700">{booking.notes}</p>
+              </div>
+            ) : null}
+            {booking.confirmationStatus === "confirmed_online" ? (
+              <p className="text-xs font-medium text-emerald-800">Confirmed online (SMS link used).</p>
+            ) : (
+              <p className="text-xs text-slate-600">
+                Patient has not confirmed online yet (gray circle on calendar).
+              </p>
+            )}
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                className="rounded border-slate-300"
+                checked={Boolean(booking.checkedInAtMs)}
+                disabled={visitBusy || working}
+                onChange={(e) => void pushDeskFlags({ checkedIn: e.target.checked })}
+              />
+              <span>Checked in at office (★)</span>
+            </label>
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                className="rounded border-slate-300"
+                checked={Boolean(booking.needsReschedule)}
+                disabled={visitBusy || working}
+                onChange={(e) => void pushDeskFlags({ needsReschedule: e.target.checked })}
+              />
+              <span>Needs reschedule (✕)</span>
+            </label>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-600" htmlFor="visit-notes">
+                Internal visit notes (staff only, max 2000 characters)
+              </label>
+              <textarea
+                id="visit-notes"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                rows={4}
+                maxLength={2000}
+                value={notesDraft}
+                onChange={(e) => setNotesDraft(e.target.value)}
+                disabled={visitBusy || working}
+              />
+              <button
+                type="button"
+                disabled={visitBusy || working || notesDraft === (booking.internalNotes ?? "")}
+                onClick={() => void saveVisitNotes()}
+                className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-40"
+              >
+                {visitBusy ? "Saving…" : "Save notes"}
+              </button>
+            </div>
+          </section>
+        ) : booking.notes || booking.internalNotes ? (
+          <section className="space-y-3 border-b border-slate-200 px-6 py-4 text-sm">
+            {booking.notes ? (
+              <DetailRow label="Patient booking message">
+                <p className="whitespace-pre-line text-slate-700">{booking.notes}</p>
+              </DetailRow>
+            ) : null}
+            {booking.internalNotes ? (
+              <DetailRow label="Internal visit notes">
+                <p className="whitespace-pre-line text-slate-700">{booking.internalNotes}</p>
+              </DetailRow>
+            ) : null}
+          </section>
+        ) : null}
 
         <section className="space-y-3 border-b border-slate-200 px-6 py-4 text-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">History</p>

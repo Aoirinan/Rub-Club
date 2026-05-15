@@ -191,6 +191,9 @@ export async function POST(req: Request) {
  */
 function extractBookingId(note?: string): string | null {
   if (!note) return null;
-  const match = note.match(/^Booking\s+(\S+)/);
-  return match ? match[1] : null;
+  const m1 = note.match(/^Booking\s+(\S+)/);
+  if (m1) return m1[1] ?? null;
+  const m2 = note.match(/bookingId=([^&\s]+)/i);
+  if (m2) return m2[1] ?? null;
+  return null;
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
+import { TestimonialVideosSection } from "@/components/TestimonialVideosSection";
 import { TESTIMONIALS } from "@/lib/testimonials";
 import { LOCATION_LIST, reviewUrlForLocation } from "@/lib/constants";
 
@@ -25,6 +26,7 @@ export default function ReviewsPage() {
         lede="Voted Best Chiropractic Center and Best Massage in The Paris News reader polls. Below are paraphrased stories from real patient reviews."
       />
       <div className="mx-auto max-w-6xl space-y-10 px-4 pb-16">
+        <TestimonialVideosSection />
         <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {TESTIMONIALS.map((t) => (
             <figure

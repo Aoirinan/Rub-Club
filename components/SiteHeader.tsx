@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { IMAGES } from "@/lib/home-images";
-import { FACEBOOK_URL, WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
+import { FACEBOOK_URL, GIFT_CARD_ORDER_URL, WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
 import { MobileNav } from "@/components/MobileNav";
 import { DesktopNav, type NavItem } from "@/components/DesktopNav";
 
@@ -26,6 +26,11 @@ const NAV_ITEMS: NavItem[] = [
   },
   { href: "/about", label: "About" },
   { href: "/faq", label: "FAQ" },
+  {
+    href: GIFT_CARD_ORDER_URL,
+    label: "Gift cards",
+    external: true,
+  },
   { href: "/patient-forms", label: "Patient forms" },
   { href: "/contact", label: "Contact" },
 ];

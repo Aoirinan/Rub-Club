@@ -73,6 +73,14 @@ function AdminDashboard() {
   const [csvImportSkipConflict, setCsvImportSkipConflict] = useState(false);
   const [csvImportBusy, setCsvImportBusy] = useState(false);
   const csvImportInputRef = useRef<HTMLInputElement>(null);
+  const seenBookingIdsRef = useRef<Set<string> | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const [reminderPreview, setReminderPreview] = useState<{
+    count: number;
+    rows: { bookingId: string; name: string; phone: string; when: string }[];
+  } | null>(null);
+  const [reminderBusy, setReminderBusy] = useState<"preview" | "send" | null>(null);
 
   useEffect(() => {
     setAuth(getFirebaseClientAuth());
@@ -95,26 +103,60 @@ function AdminDashboard() {
     [filters, router],
   );
 
-  const refreshBookings = useCallback(async () => {
-    const token = await getIdToken();
-    if (!token) return;
-    setLoading(true);
-    try {
-      const { qs } = bookingsApiQuery(filters);
-      const res = await fetch(`/api/admin/bookings?${qs}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        setError("Could not load bookings.");
-        return;
+  const bookingsQueryKey = useMemo(
+    () =>
+      [
+        filters.view,
+        filters.date,
+        filters.locationId,
+        filters.providerId,
+        filters.statuses.join(","),
+        filters.q.trim(),
+      ].join("|"),
+    [
+      filters.view,
+      filters.date,
+      filters.locationId,
+      filters.providerId,
+      filters.statuses,
+      filters.q,
+    ],
+  );
+
+  useEffect(() => {
+    seenBookingIdsRef.current = null;
+  }, [bookingsQueryKey]);
+
+  const refreshBookings = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      const token = await getIdToken();
+      if (!token) return;
+      if (!opts?.silent) setLoading(true);
+      try {
+        const { qs } = bookingsApiQuery(filters);
+        const res = await fetch(`/api/admin/bookings?${qs}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          if (!opts?.silent) setError("Could not load bookings.");
+          return;
+        }
+        const payload = (await res.json()) as { bookings: BookingRow[] };
+        const next = payload.bookings;
+        if (opts?.silent && seenBookingIdsRef.current !== null) {
+          const prev = seenBookingIdsRef.current;
+          const added = next.some((b) => !prev.has(b.id));
+          if (added) setToastMessage("New booking added");
+        }
+        seenBookingIdsRef.current = new Set(next.map((b) => b.id));
+        setBookings(next);
+        setError(null);
+      } finally {
+        if (!opts?.silent) setLoading(false);
       }
-      const payload = (await res.json()) as { bookings: BookingRow[] };
-      setBookings(payload.bookings);
-      setError(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters, getIdToken]);
+    },
+    [filters, getIdToken],
+  );
 
   const refreshProviders = useCallback(async () => {
     const token = await getIdToken();
@@ -226,6 +268,99 @@ function AdminDashboard() {
     [selectedId, viewBookings, bookings],
   );
 
+  const handleInvalidCrossProviderDrop = useCallback(() => {
+    setToastMessage(
+      "You cannot move a visit to another provider’s column. Use Add appointment if the guest needs a different provider.",
+    );
+  }, []);
+
+  const handleInvalidCrossPatientTimeDrop = useCallback(() => {
+    setToastMessage(
+      "Please use Add Appointment to create a new booking for this patient.",
+    );
+  }, []);
+
+  const loadReminderPreview = useCallback(async () => {
+    const token = await getIdToken();
+    if (!token) return;
+    setReminderBusy("preview");
+    try {
+      const res = await fetch("/api/admin/reminders/preview", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json()) as {
+        count?: number;
+        rows?: { bookingId: string; name: string; phone: string; when: string }[];
+        error?: string;
+      };
+      if (!res.ok) {
+        setError(typeof data.error === "string" ? data.error : "Could not load reminder preview.");
+        setReminderPreview(null);
+        return;
+      }
+      setReminderPreview({
+        count: data.count ?? 0,
+        rows: Array.isArray(data.rows) ? data.rows : [],
+      });
+      setError(null);
+    } finally {
+      setReminderBusy(null);
+    }
+  }, [getIdToken]);
+
+  const sendReminderBatch = useCallback(async () => {
+    const n = reminderPreview?.count ?? 0;
+    if (n === 0) return;
+    if (
+      !window.confirm(
+        `Send reminder email/SMS for ${n} patient visit(s)? Each phone/day receives one reminder for the earliest appointment.`,
+      )
+    ) {
+      return;
+    }
+    const token = await getIdToken();
+    if (!token) return;
+    setReminderBusy("send");
+    try {
+      const res = await fetch("/api/admin/reminders/send", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        sent?: number;
+        errors?: string[];
+        error?: string;
+      };
+      if (!res.ok) {
+        setError(typeof data.error === "string" ? data.error : "Send reminders failed.");
+        return;
+      }
+      setReminderOpen(false);
+      setReminderPreview(null);
+      setError(null);
+      const extra = data.errors?.length ? ` Some issues: ${data.errors.slice(0, 3).join("; ")}` : "";
+      setToastMessage(`Reminders processed (${data.sent ?? 0} sent).${extra}`);
+      await refreshBookings();
+    } finally {
+      setReminderBusy(null);
+    }
+  }, [getIdToken, refreshBookings, reminderPreview?.count]);
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const t = setTimeout(() => setToastMessage(null), 4500);
+    return () => clearTimeout(t);
+  }, [toastMessage]);
+
+  useEffect(() => {
+    if (!me?.role) return;
+    const id = setInterval(() => {
+      void refreshBookings({ silent: true });
+    }, 15_000);
+    return () => clearInterval(id);
+  }, [me?.role, refreshBookings]);
+
   async function logout() {
     if (!auth) return;
     await signOut(auth);
@@ -259,6 +394,19 @@ function AdminDashboard() {
                 className="rounded-full border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50"
               >
                 Block time
+              </button>
+            ) : null}
+            {me?.role ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setReminderOpen(true);
+                  setReminderPreview(null);
+                  void loadReminderPreview();
+                }}
+                className="rounded-full border border-sky-300 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-900 hover:bg-sky-100"
+              >
+                Send reminders
               </button>
             ) : null}
             {me?.role ? (
@@ -368,6 +516,14 @@ function AdminDashboard() {
                 Reports
               </Link>
             ) : null}
+            {me?.role ? (
+              <Link
+                href="/admin/patient"
+                className="rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-900 hover:bg-violet-100"
+              >
+                Patient lookup
+              </Link>
+            ) : null}
             {me?.role === "superadmin" ? (
               <Link
                 href="/admin/super"
@@ -378,7 +534,7 @@ function AdminDashboard() {
             ) : null}
             <button
               type="button"
-              onClick={refreshBookings}
+              onClick={() => void refreshBookings()}
               disabled={loading}
               className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400 disabled:opacity-50"
             >
@@ -417,6 +573,16 @@ function AdminDashboard() {
               onChange={updateFilters}
             />
 
+            {filters.view === "day" ? (
+              <p className="text-xs text-slate-500">
+                Day view markers: <span className="font-bold text-emerald-700">✓</span> confirmed online ·{" "}
+                <span className="text-slate-500">○</span> not yet online ·{" "}
+                <span className="text-sky-600">★</span> checked in ·{" "}
+                <span className="font-bold text-amber-700">✕</span> needs reschedule · Same patient, multiple
+                visits: <span className="font-semibold">(2×)</span> and ↳ on later times.
+              </p>
+            ) : null}
+
             {pendingRows.length > 0 ? (
               <PendingTray rows={pendingRows} onSelect={setSelectedId} />
             ) : null}
@@ -438,6 +604,8 @@ function AdminDashboard() {
                 filters={filters}
                 onSelect={setSelectedId}
                 onRescheduleBooking={handleRescheduleBooking}
+                onInvalidCrossProviderDrop={handleInvalidCrossProviderDrop}
+                onInvalidCrossPatientTimeDrop={handleInvalidCrossPatientTimeDrop}
               />
             ) : null}
             {filters.view === "week" ? (
@@ -489,6 +657,90 @@ function AdminDashboard() {
         getIdToken={getIdToken}
         defaultDate={filters.date}
       />
+
+      {reminderOpen ? (
+        <div
+          className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reminder-dialog-title"
+        >
+          <div className="max-h-[85vh] w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+            <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-3">
+              <div>
+                <h2 id="reminder-dialog-title" className="text-lg font-semibold text-slate-900">
+                  SMS / email reminders
+                </h2>
+                <p className="mt-1 text-xs text-slate-600">
+                  Patients in the ~24h window (22–26h from now) who have not yet received a reminder.
+                  One reminder per phone per day (earliest appointment only).
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setReminderOpen(false);
+                  setReminderPreview(null);
+                }}
+                className="rounded-full px-2 py-1 text-sm text-slate-500 hover:bg-slate-100"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="max-h-[55vh] overflow-y-auto px-4 py-3">
+              {reminderBusy === "preview" && !reminderPreview ? (
+                <p className="text-sm text-slate-600">Loading preview…</p>
+              ) : null}
+              {reminderPreview && reminderPreview.count === 0 ? (
+                <p className="text-sm text-slate-600">No patients are due for a manual reminder right now.</p>
+              ) : null}
+              {reminderPreview && reminderPreview.count > 0 ? (
+                <ul className="space-y-2 text-sm">
+                  {reminderPreview.rows.map((r) => (
+                    <li
+                      key={r.bookingId}
+                      className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
+                    >
+                      <span className="font-semibold text-slate-900">{r.name}</span>
+                      <span className="block text-xs text-slate-600">{r.phone}</span>
+                      <span className="block text-xs text-slate-600">{r.when}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap justify-end gap-2 border-t border-slate-200 bg-slate-50 px-4 py-3">
+              <button
+                type="button"
+                onClick={() => void loadReminderPreview()}
+                disabled={reminderBusy !== null}
+                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400 disabled:opacity-50"
+              >
+                Refresh preview
+              </button>
+              <button
+                type="button"
+                onClick={() => void sendReminderBatch()}
+                disabled={
+                  reminderBusy !== null || !reminderPreview || reminderPreview.count === 0
+                }
+                className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
+              >
+                {reminderBusy === "send" ? "Sending…" : "Confirm send"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {toastMessage ? (
+        <div className="pointer-events-none fixed bottom-6 left-1/2 z-50 max-w-md -translate-x-1/2 px-4">
+          <div className="pointer-events-auto rounded-full border border-slate-800 bg-slate-900 px-5 py-3 text-center text-sm font-medium text-white shadow-lg">
+            {toastMessage}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

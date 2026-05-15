@@ -253,3 +253,58 @@ export function relativeDayLabel(startMs: number): string {
   if (dt.hasSame(now.minus({ days: 1 }), "day")) return "Yesterday";
   return dt.toFormat("ccc LLL d");
 }
+
+/** Group multi-visit patients in a column: same-day same patient, chronological order. */
+export function patientKeyFromBooking(b: Pick<BookingRow, "id" | "phone" | "email" | "name">): string {
+  const raw = typeof b.phone === "string" ? b.phone.replace(/\D/g, "") : "";
+  const ten =
+    raw.length >= 11 && raw.startsWith("1")
+      ? raw.slice(-10)
+      : raw.length >= 10
+        ? raw.slice(-10)
+        : raw;
+  if (ten.length >= 10) return `ph:${ten}`;
+  const n = (b.name ?? "").trim().toLowerCase();
+  const e = (b.email ?? "").trim().toLowerCase();
+  if (n || e) return `id:${n}|${e}`;
+  return `bid:${b.id}`;
+}
+
+export type SameDayStackMeta = { indexInPatient: number; sameDayCount: number };
+
+/** Earliest visit first; stack meta counts visits per patient in this column/day. */
+export function sortedColumnRowsWithStackMeta(rows: BookingRow[]): {
+  sortedRows: BookingRow[];
+  stackMeta: Map<string, SameDayStackMeta>;
+} {
+  const sortedRows = [...rows].sort((a, b) => (a.startAtMs ?? 0) - (b.startAtMs ?? 0));
+  const counts = new Map<string, number>();
+  for (const b of sortedRows) {
+    const k = patientKeyFromBooking(b);
+    counts.set(k, (counts.get(k) ?? 0) + 1);
+  }
+  const seen = new Map<string, number>();
+  const stackMeta = new Map<string, SameDayStackMeta>();
+  for (const b of sortedRows) {
+    const k = patientKeyFromBooking(b);
+    const n = (seen.get(k) ?? 0) + 1;
+    seen.set(k, n);
+    stackMeta.set(b.id, { indexInPatient: n, sameDayCount: counts.get(k) ?? 1 });
+  }
+  return { sortedRows, stackMeta };
+}
+
+/** Tooltip or inline suffix: ` · Paid` or ` · Pay link`. */
+export function paymentHintSuffix(b: BookingRow): string {
+  if (typeof b.paidAmountCents === "number" && b.paidAmountCents > 0) return " · Paid";
+  if (b.paymentLinkUrl) return " · Pay link";
+  return "";
+}
+
+/** Compact label for tables (reports, etc.). */
+export function paymentStatusShort(b: BookingRow): string {
+  if (typeof b.paidAmountCents === "number" && b.paidAmountCents > 0) return "Paid";
+  if (b.paymentLinkUrl) return "Pay link";
+  if (b.prepaidOnline) return "Prepay";
+  return "—";
+}

@@ -8,6 +8,7 @@ export type NavChild = { href: string; label: string; group?: string };
 export type NavItem = {
   href: string;
   label: string;
+  external?: boolean;
   children?: NavChild[];
   mega?: boolean;
 };
@@ -190,6 +191,15 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
                     />
                   </svg>
                 </button>
+              ) : item.external ? (
+                <a
+                  className="focus-ring block px-4 py-3 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm"
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {item.label}
+                </a>
               ) : (
                 <Link
                   className="focus-ring block px-4 py-3 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm"

@@ -1,12 +1,16 @@
+import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { DateTime } from "luxon";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
 import type { DurationMin, LocationId, ServiceLine } from "@/lib/constants";
-import { TIME_ZONE } from "@/lib/constants";
+import { LOCATIONS, TIME_ZONE } from "@/lib/constants";
 import { requireStaff } from "@/lib/staff-auth";
 import { isAlignedToSlotGrid, parseStartIsoToDateTime } from "@/lib/slots-luxon";
 import { insertAdminBookingInTransaction } from "@/lib/admin-booking-insert";
+import { sendSms } from "@/lib/twilio";
+import { logSmsSent } from "@/lib/sms-audit";
+import { getSiteOrigin } from "@/lib/site-content";
 
 export const runtime = "nodejs";
 
@@ -123,6 +127,27 @@ export async function POST(req: Request) {
     } catch (e) {
       console.error("[admin/bookings/create]", e);
       return NextResponse.json({ error: "Could not create booking" }, { status: 500 });
+    }
+  }
+
+  if (createdIds.length > 0 && body.phone?.trim()) {
+    const phone = body.phone.trim();
+    const primaryId = createdIds[0]!;
+    const confirmToken = randomBytes(18).toString("hex");
+    await db.collection("bookings").doc(primaryId).update({ confirmToken });
+    const origin = getSiteOrigin();
+    const confirmUrl = `${origin}/api/confirm?token=${encodeURIComponent(confirmToken)}`;
+    const locOffice = LOCATIONS[locationId];
+    const firstName = body.name.trim().split(/\s+/)[0] || body.name.trim();
+    const when = starts[0]!.setZone(TIME_ZONE).toFormat("LLLL d yyyy 'at' h:mm a");
+    const biz = "The Rub Club";
+    const smsBody = `Hi ${firstName}, your appointment at ${biz} is scheduled for ${when}. To cancel or reschedule, please call us at ${locOffice.phonePrimary}. Do not reply to this text. Confirm: ${confirmUrl}`.slice(
+      0,
+      1550,
+    );
+    const smsResult = await sendSms(phone, smsBody);
+    if (smsResult.sent) {
+      await logSmsSent({ phone, message: smsBody, bookingId: primaryId }).catch(() => {});
     }
   }
 

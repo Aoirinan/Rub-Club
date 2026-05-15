@@ -1,26 +1,11 @@
 import { NextResponse } from "next/server";
-import { Timestamp } from "firebase-admin/firestore";
-import { getFirestore } from "@/lib/firebase-admin";
-import { bookingDocToEmailContext } from "@/lib/booking-doc";
-import { patientReminderEmail } from "@/lib/email-templates";
-import { sendBookingNotification } from "@/lib/sendgrid";
-import { sendSms } from "@/lib/twilio";
-import { recordBookingEvent } from "@/lib/booking-events";
-import { formatChicagoDateTimeLong } from "@/lib/chicago-datetime-format";
-import { LOCATIONS } from "@/lib/constants";
 
 export const runtime = "nodejs";
 
 /**
- * Automated reminder cron — sends reminders for confirmed appointments
- * starting between 22 and 26 hours from now. Intended to run hourly via
- * Vercel Cron (requires Pro or equivalent; Hobby is limited to daily crons).
- *
- * On Vercel **production** (`VERCEL_ENV === "production"`), `CRON_SECRET` must
- * be set and requests must send `Authorization: Bearer <CRON_SECRET>` (Vercel
- * Cron does this automatically when the env var exists). Elsewhere, if
- * `CRON_SECRET` is set, the same header is required; if unset, local calls work
- * without a header for development only.
+ * Legacy hourly cron entrypoint. Automated reminder email/SMS is intentionally disabled —
+ * staff use **Scheduler → Send reminders** (`POST /api/admin/reminders/send`) so messages
+ * are never fired on a silent timer.
  */
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
@@ -41,88 +26,13 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const db = getFirestore();
-  const now = Date.now();
-  const windowStart = Timestamp.fromMillis(now + 22 * 60 * 60 * 1000);
-  const windowEnd = Timestamp.fromMillis(now + 26 * 60 * 60 * 1000);
-
-  const snap = await db
-    .collection("bookings")
-    .where("status", "==", "confirmed")
-    .where("startAt", ">=", windowStart)
-    .where("startAt", "<=", windowEnd)
-    .limit(200)
-    .get();
-
-  let sent = 0;
-  let skipped = 0;
-  const errors: string[] = [];
-
-  for (const doc of snap.docs) {
-    const events = await db
-      .collection("bookings")
-      .doc(doc.id)
-      .collection("events")
-      .where("type", "==", "reminder_sent")
-      .limit(1)
-      .get();
-
-    if (!events.empty) {
-      skipped++;
-      continue;
-    }
-
-    const emailCtx = bookingDocToEmailContext(doc);
-    if (!emailCtx) {
-      skipped++;
-      continue;
-    }
-
-    let emailSent = false;
-    let smsSent = false;
-
-    try {
-      const { subject, text, html } = patientReminderEmail(emailCtx);
-      await sendBookingNotification({
-        to: emailCtx.email,
-        subject,
-        text,
-        html,
-        fromName: "The Rub Club & Chiropractic Associates",
-      });
-      emailSent = true;
-    } catch (err) {
-      errors.push(`email-${doc.id}: ${err instanceof Error ? err.message : String(err)}`);
-    }
-
-    if (emailCtx.phone) {
-      const loc = LOCATIONS[emailCtx.locationId];
-      const smsBody = [
-        `Reminder: Your ${emailCtx.serviceLine === "massage" ? "massage" : "chiropractic"} appointment is on ${formatChicagoDateTimeLong(emailCtx.start)}.`,
-        `Provider: ${emailCtx.providerDisplayName || "First available"}`,
-        `Location: ${loc.shortName} — ${loc.streetAddress}`,
-        `To reschedule or cancel, call ${loc.phonePrimary}.`,
-      ].join("\n");
-
-      const result = await sendSms(emailCtx.phone, smsBody);
-      smsSent = result.sent;
-    }
-
-    await recordBookingEvent(db, doc.id, {
-      type: "reminder_sent",
-      byUid: null,
-      byEmail: "system/auto-reminder",
-      meta: { emailSent, smsSent, automated: true },
-    }).catch(() => {});
-
-    if (emailSent || smsSent) sent++;
-  }
-
   return NextResponse.json({
     ok: true,
-    total: snap.size,
-    sent,
-    skipped,
-    errors: errors.length > 0 ? errors : undefined,
+    disabled: true,
+    message:
+      "Automatic reminder sends are turned off. Use the admin scheduler “Send reminders” action (manual) instead.",
+    total: 0,
+    sent: 0,
+    skipped: 0,
   });
 }

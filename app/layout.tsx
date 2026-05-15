@@ -5,6 +5,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { JsonLd } from "@/components/JsonLd";
 import { Analytics } from "@/components/Analytics";
+import { DomainSpecialsPopup } from "@/components/DomainSpecialsPopup";
+import { SalesBannerBar, type SalesBannerPayload } from "@/components/SalesBannerBar";
 import {
   getSiteOrigin,
   siteDescription,
@@ -18,6 +20,7 @@ import {
   organizationJsonLd,
   websiteJsonLd,
 } from "@/lib/structured-data";
+import { getSiteOwnerConfig, bannerIsActivePublic } from "@/lib/site-owner-config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -67,11 +70,24 @@ export const viewport: Viewport = {
   colorScheme: "light",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  let salesBanner: SalesBannerPayload | null = null;
+  try {
+    const cfg = await getSiteOwnerConfig();
+    if (bannerIsActivePublic(cfg.banner) && cfg.banner.showOnHomepage && cfg.banner.html.trim()) {
+      salesBanner = {
+        html: cfg.banner.html,
+        dismissKey: `${cfg.banner.html.length}_${cfg.banner.expiresAt ?? "x"}`,
+      };
+    }
+  } catch {
+    salesBanner = null;
+  }
+
   return (
     <html lang="en">
       <body
@@ -85,10 +101,12 @@ export default function RootLayout({
         </a>
         <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
         <SiteHeader />
+        {salesBanner ? <SalesBannerBar payload={salesBanner} /> : null}
         <main id="main" tabIndex={-1} className="outline-none">
           {children}
         </main>
         <SiteFooter />
+        <DomainSpecialsPopup />
         <Analytics />
       </body>
     </html>

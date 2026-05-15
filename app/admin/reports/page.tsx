@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
+import { AppointmentLookupSection } from "./AppointmentLookupSection";
 
 type Summary = {
   totalBookings: number;
@@ -187,6 +188,8 @@ export default function ReportsPage() {
             {loading ? "Loading…" : "Refresh"}
           </button>
         </div>
+
+        {authed ? <AppointmentLookupSection getIdToken={getIdToken} /> : null}
 
         {error ? (
           <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">{error}</p>

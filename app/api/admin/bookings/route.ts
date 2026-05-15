@@ -29,7 +29,17 @@ type BookingRowDto = {
   phone?: string;
   email?: string;
   notes?: string;
+  internalNotes?: string;
+  confirmationStatus?: string;
+  checkedInAtMs?: number;
+  needsReschedule?: boolean;
   status?: BookingStatus;
+  prepaidOnline?: boolean;
+  paymentLinkUrl?: string;
+  paymentAmountCents?: number;
+  paidAtMs?: number;
+  paidAmountCents?: number;
+  squarePaymentId?: string;
   accepted?: StaffActor;
   declined?: StaffActor;
   cancelled?: StaffActor;
@@ -71,7 +81,16 @@ function actor(
 function matchesQuery(row: BookingRowDto, q: string): boolean {
   const needle = q.trim().toLowerCase();
   if (!needle) return true;
-  const hay = [row.name, row.phone, row.email, row.providerDisplayName, row.id]
+  const hay = [
+    row.name,
+    row.phone,
+    row.email,
+    row.providerDisplayName,
+    row.id,
+    row.notes,
+    row.internalNotes,
+    row.squarePaymentId,
+  ]
     .filter((s): s is string => typeof s === "string")
     .join(" ")
     .toLowerCase();
@@ -91,6 +110,7 @@ export async function GET(req: Request) {
   const locationId = searchParams.get("locationId");
   const providerId = searchParams.get("providerId");
   const q = searchParams.get("q") ?? "";
+  const confirmationStatus = searchParams.get("confirmationStatus")?.trim() ?? "";
 
   const from = fromStr
     ? Timestamp.fromMillis(Date.parse(fromStr))
@@ -123,6 +143,12 @@ export async function GET(req: Request) {
     if (locationId && data.locationId !== locationId) continue;
     if (providerId && data.providerId !== providerId) continue;
 
+    if (confirmationStatus === "confirmed_online") {
+      if (data.confirmationStatus !== "confirmed_online") continue;
+    } else if (confirmationStatus === "not_online") {
+      if (data.confirmationStatus === "confirmed_online") continue;
+    }
+
     const row: BookingRowDto = {
       id: d.id,
       startIso: typeof data.startIso === "string" ? data.startIso : undefined,
@@ -143,7 +169,21 @@ export async function GET(req: Request) {
       name: typeof data.name === "string" ? data.name : undefined,
       phone: typeof data.phone === "string" ? data.phone : undefined,
       email: typeof data.email === "string" ? data.email : undefined,
-      notes: typeof data.notes === "string" && data.notes.length ? data.notes : undefined,
+      notes: typeof data.notes === "string" ? data.notes : undefined,
+      internalNotes: typeof data.internalNotes === "string" ? data.internalNotes : undefined,
+      confirmationStatus:
+        typeof data.confirmationStatus === "string" && data.confirmationStatus.length
+          ? data.confirmationStatus
+          : undefined,
+      checkedInAtMs: timestampToMs(data.checkedInAt),
+      needsReschedule: typeof data.needsReschedule === "boolean" ? data.needsReschedule : undefined,
+      prepaidOnline: typeof data.prepaidOnline === "boolean" ? data.prepaidOnline : undefined,
+      paymentLinkUrl: typeof data.paymentLinkUrl === "string" ? data.paymentLinkUrl : undefined,
+      paymentAmountCents:
+        typeof data.paymentAmountCents === "number" ? data.paymentAmountCents : undefined,
+      paidAtMs: timestampToMs(data.paidAt),
+      paidAmountCents: typeof data.paidAmountCents === "number" ? data.paidAmountCents : undefined,
+      squarePaymentId: typeof data.squarePaymentId === "string" ? data.squarePaymentId : undefined,
       status,
       accepted: actor(data.acceptedByUid, data.acceptedByEmail, data.acceptedAt, undefined),
       declined: actor(

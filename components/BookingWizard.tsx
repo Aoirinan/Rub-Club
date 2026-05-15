@@ -43,8 +43,8 @@ function readInitialLocation(value: string | null): LocationId {
     ? "sulphur_springs"
     : "paris";
 }
-function readInitialService(value: string | null): ServiceLine {
-  return value === "chiropractic" ? "chiropractic" : "massage";
+function readInitialVisitKind(value: string | null): "massage" | "stretch" {
+  return value === "stretch" ? "stretch" : "massage";
 }
 function readInitialDuration(value: string | null): DurationMin {
   return value === "60" ? 60 : 30;
@@ -58,12 +58,14 @@ export type BookingWizardInitial = {
 };
 
 export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = {}) {
+  const serviceLine: ServiceLine = "massage";
   const [locationId, setLocationId] = useState<LocationId>(
     readInitialLocation(initial?.location ?? null),
   );
-  const [serviceLine, setServiceLine] = useState<ServiceLine>(
-    readInitialService(initial?.service ?? null),
+  const [visitKind, setVisitKind] = useState<"massage" | "stretch">(
+    readInitialVisitKind(initial?.service ?? null),
   );
+  const [payMode, setPayMode] = useState<"unset" | "cash" | "insurance">("unset");
   const [durationMin, setDurationMin] = useState<DurationMin>(
     readInitialDuration(initial?.duration ?? null),
   );
@@ -104,14 +106,20 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
   useEffect(() => {
     track("booking_started", {
       service: serviceLine,
+      visitKind,
       location: locationId,
       duration: durationMin,
     });
-  }, [serviceLine, locationId, durationMin]);
+  }, [visitKind, locationId, durationMin, serviceLine]);
 
   useEffect(() => {
     let cancelled = false;
     async function loadProviders() {
+      if (payMode !== "cash") {
+        setProvidersError(null);
+        setProviders([]);
+        return;
+      }
       setProvidersError(null);
       setProviders(null);
       try {
@@ -135,7 +143,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
     return () => {
       cancelled = true;
     };
-  }, [locationId, serviceLine]);
+  }, [locationId, payMode, serviceLine]);
 
   async function loadSlots() {
     setSlotsError(null);
@@ -206,6 +214,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
     setSubmitting(true);
     track("booking_submitted", {
       service: serviceLine,
+      visitKind,
       location: locationId,
       duration: durationMin,
       providerMode,
@@ -214,6 +223,8 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
       const body: Record<string, unknown> = {
         locationId,
         serviceLine,
+        visitKind,
+        paymentType: "cash",
         durationMin,
         startIso: selectedSlot.startIso,
         name: name.trim(),
@@ -296,11 +307,11 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
     }
   }
 
-  const canPickSlots = Boolean(providers?.length);
+  const canPickSlots = Boolean(payMode === "cash" && providers?.length);
   const loc = LOCATIONS[locationId];
 
   const stepDone = {
-    one: Boolean(locationId && serviceLine && durationMin && date),
+    one: Boolean(payMode === "cash" && locationId && durationMin && date),
     two: Boolean(selectedSlot),
     three: Boolean(name.trim() && phone.trim() && email.trim()),
   };
@@ -374,7 +385,104 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                 </p>
               </div>
 
-              <div className="mt-5 grid gap-4 sm:mt-6 sm:grid-cols-2 sm:gap-5">
+              <div className="mt-5 space-y-6 sm:mt-6">
+                <div className="space-y-2">
+                  <span className={fieldLabel}>Visit type</span>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <button
+                      type="button"
+                      className={`focus-ring min-h-[48px] flex-1 rounded-xl border px-4 py-3 text-sm font-bold ${
+                        visitKind === "massage"
+                          ? "border-[#0f5f5c] bg-[#0f5f5c] text-white"
+                          : "border-stone-300 bg-white text-[#173f3b]"
+                      }`}
+                      onClick={() => {
+                        setVisitKind("massage");
+                        setSlots(null);
+                        setSelectedSlot(null);
+                      }}
+                    >
+                      Massage
+                    </button>
+                    <button
+                      type="button"
+                      className={`focus-ring min-h-[48px] flex-1 rounded-xl border px-4 py-3 text-sm font-bold ${
+                        visitKind === "stretch"
+                          ? "border-[#0f5f5c] bg-[#0f5f5c] text-white"
+                          : "border-stone-300 bg-white text-[#173f3b]"
+                      }`}
+                      onClick={() => {
+                        setVisitKind("stretch");
+                        setSlots(null);
+                        setSelectedSlot(null);
+                      }}
+                    >
+                      Stretch
+                    </button>
+                  </div>
+                  <p className="text-xs leading-relaxed text-stone-600">
+                    Stretch sessions are by appointment only. Walk-ins are welcome for massage when we have
+                    availability.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <span className={fieldLabel}>How will you be paying?</span>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <button
+                      type="button"
+                      className={`focus-ring min-h-[48px] flex-1 rounded-xl border px-4 py-3 text-sm font-bold ${
+                        payMode === "cash"
+                          ? "border-[#0f5f5c] bg-[#0f5f5c] text-white"
+                          : "border-stone-300 bg-white text-[#173f3b]"
+                      }`}
+                      onClick={() => {
+                        setPayMode("cash");
+                        setSlots(null);
+                        setSelectedSlot(null);
+                      }}
+                    >
+                      Cash / Debit Card
+                    </button>
+                    <button
+                      type="button"
+                      className={`focus-ring min-h-[48px] flex-1 rounded-xl border px-4 py-3 text-sm font-bold ${
+                        payMode === "insurance"
+                          ? "border-amber-600 bg-amber-600 text-white"
+                          : "border-stone-300 bg-white text-[#173f3b]"
+                      }`}
+                      onClick={() => {
+                        setPayMode("insurance");
+                        setSlots(null);
+                        setSelectedSlot(null);
+                      }}
+                    >
+                      Insurance
+                    </button>
+                  </div>
+                </div>
+
+                {payMode === "insurance" ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+                    <p className="font-bold">Insurance patients please call us to book:</p>
+                    <p className="mt-2">
+                      Paris{" "}
+                      <a className="font-bold underline" href="tel:+19037855551">
+                        903-785-5551
+                      </a>{" "}
+                      | Sulphur Springs{" "}
+                      <a className="font-bold underline" href="tel:+19039195020">
+                        903-919-5020
+                      </a>
+                    </p>
+                    <p className="mt-2 text-xs">
+                      Chiropractic with insurance is not available through this online scheduler.
+                    </p>
+                  </div>
+                ) : null}
+
+                {payMode === "cash" ? (
+                  <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
             <label className="block space-y-1.5 text-sm">
               <span className={fieldLabel}>Location</span>
               <select
@@ -396,24 +504,6 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
             </label>
 
             <label className="block space-y-1.5 text-sm">
-              <span className={fieldLabel}>Service</span>
-              <select
-                className={fieldControl}
-                value={serviceLine}
-                onChange={(e) => {
-                  const value = e.target.value as ServiceLine;
-                  setServiceLine(value);
-                  setSelectedSlot(null);
-                  setSlots(null);
-                  track("service_selected", { service: value });
-                }}
-              >
-                <option value="massage">Massage therapy</option>
-                <option value="chiropractic">Chiropractic</option>
-              </select>
-            </label>
-
-            <label className="block space-y-1.5 text-sm">
               <span className={fieldLabel}>Duration</span>
               <select
                 className={fieldControl}
@@ -429,7 +519,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
               </select>
             </label>
 
-            <label className="block space-y-1.5 text-sm">
+            <label className="block space-y-1.5 text-sm sm:col-span-2">
               <span className={fieldLabel}>Date ({TIME_ZONE})</span>
               <input
                 type="date"
@@ -445,7 +535,11 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
               />
             </label>
           </div>
+                ) : null}
+              </div>
 
+          {payMode === "cash" ? (
+          <>
           <div className="mt-6 space-y-4 rounded-2xl border border-stone-200/80 bg-gradient-to-b from-[#faf8f3] to-[#f0ebe0] p-4 shadow-inner sm:mt-8 sm:space-y-5 sm:p-6">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -668,6 +762,8 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
               </div>
             ) : null}
           </div>
+          </>
+          ) : null}
         </section>
 
         <section
@@ -798,7 +894,7 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
               <div className="flex justify-between gap-3">
                 <dt className="text-stone-500">Service</dt>
                 <dd className="font-semibold text-[#173f3b]">
-                  {serviceLine === "massage" ? "Massage" : "Chiropractic"}
+                  {visitKind === "stretch" ? "Stretch" : "Massage"}
                 </dd>
               </div>
               <div className="flex justify-between gap-3">

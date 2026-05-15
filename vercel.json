@@ -1,5 +1,27 @@
 {
   "framework": "nextjs",
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "massageparistexas.com" }],
+      "destination": "/massage-landing"
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.massageparistexas.com" }],
+      "destination": "/massage-landing"
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "chiropracticsulphursprings.com" }],
+      "destination": "/sulphur-springs"
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.chiropracticsulphursprings.com" }],
+      "destination": "/sulphur-springs"
+    }
+  ],
   "crons": [
     {
       "path": "/api/cron/reminders",
