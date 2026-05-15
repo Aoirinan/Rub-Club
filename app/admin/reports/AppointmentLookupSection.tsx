@@ -142,13 +142,40 @@ export function AppointmentLookupSection({
     });
   }
 
+  const saveInternalNotes = useCallback(
+    async (bookingId: string, internalNotes: string) => {
+      const token = await getIdToken();
+      if (!token) {
+        setError("Sign in again to save notes.");
+        return;
+      }
+      const res = await fetch(`/api/admin/bookings/${encodeURIComponent(bookingId)}/visit-state`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ internalNotes }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; internalNotes?: string };
+      if (!res.ok) {
+        setError(typeof data.error === "string" ? data.error : "Could not save internal notes.");
+        return;
+      }
+      setError(null);
+      const saved = typeof data.internalNotes === "string" ? data.internalNotes : internalNotes;
+      setRows((prev) => prev.map((r) => (r.id === bookingId ? { ...r, internalNotes: saved } : r)));
+    },
+    [getIdToken],
+  );
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
       <header className="border-b border-slate-200 px-5 py-4">
         <h2 className="text-base font-semibold text-slate-900">Appointment lookup</h2>
         <p className="mt-1 text-xs text-slate-600">
-          Future and past visits with filters. Staff notes stay in the scheduler drawer; expand a row for
-          a preview.
+          Future and past visits with filters. Expand a row to read the patient message and edit staff
+          internal notes (same field as the scheduler drawer).
         </p>
       </header>
 
@@ -351,14 +378,23 @@ export function AppointmentLookupSection({
                               <span className="whitespace-pre-line">{b.notes}</span>
                             </div>
                           ) : null}
-                          {b.internalNotes ? (
-                            <div>
-                              <span className="font-semibold text-slate-800">Internal notes: </span>
-                              <span className="whitespace-pre-line">{b.internalNotes}</span>
-                            </div>
-                          ) : (
-                            <span className="text-slate-500">No internal notes on file.</span>
-                          )}
+                          <div>
+                            <span className="font-semibold text-slate-800">Internal notes (staff)</span>
+                            <textarea
+                              key={`${b.id}-${b.internalNotes ?? ""}`}
+                              defaultValue={b.internalNotes ?? ""}
+                              maxLength={2000}
+                              rows={4}
+                              placeholder="Optional — staff only"
+                              className="mt-1 block w-full max-w-xl rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-800"
+                              onBlur={(e) => {
+                                const v = e.target.value;
+                                if (v === (b.internalNotes ?? "")) return;
+                                void saveInternalNotes(b.id, v);
+                              }}
+                            />
+                            <p className="mt-1 text-[11px] text-slate-500">Saves when you leave this field.</p>
+                          </div>
                         </div>
                       </td>
                     </tr>
