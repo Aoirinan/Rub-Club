@@ -8,6 +8,7 @@ import {
 import { DateTime } from "luxon";
 import { getFirestore } from "@/lib/firebase-admin";
 import { TIME_ZONE } from "@/lib/constants";
+import { deletePatientStorage } from "@/lib/patient-insurance-upload";
 import { phoneVariantsForLookup, normalizeSmsDigits } from "@/lib/patient-record-lookup";
 
 export const PATIENTS_COLLECTION = "patients";
@@ -551,4 +552,20 @@ export async function recalculatePatientStats(db: Firestore, patientId: string):
 export function inferBookingPatientSource(data: DocumentData): PatientSource {
   if (typeof data.sourceIp === "string" && data.sourceIp.trim()) return "online_booking";
   return "manual";
+}
+
+/** Remove patient record, insurance files, and booking links. */
+export async function deletePatientPermanently(db: Firestore, patientId: string): Promise<void> {
+  const bookingsSnap = await db.collection("bookings").where("patientId", "==", patientId).get();
+  const batchSize = 400;
+  for (let i = 0; i < bookingsSnap.docs.length; i += batchSize) {
+    const batch = db.batch();
+    for (const doc of bookingsSnap.docs.slice(i, i + batchSize)) {
+      batch.update(doc.ref, { patientId: FieldValue.delete() });
+    }
+    await batch.commit();
+  }
+
+  await deletePatientStorage(patientId).catch(() => {});
+  await db.collection(PATIENTS_COLLECTION).doc(patientId).delete();
 }

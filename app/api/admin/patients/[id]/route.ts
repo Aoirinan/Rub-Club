@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
 import { requireStaff } from "@/lib/staff-auth";
 import {
+  deletePatientPermanently,
   getPatientBookings,
   normalizePatientPhone,
   parsePatientDoc,
@@ -144,11 +145,7 @@ export async function DELETE(req: Request, ctx: Params) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  await ref.update({
-    deleted: true,
-    deletedAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
-  });
+  await deletePatientPermanently(db, id);
 
   return NextResponse.json({ ok: true });
 }

@@ -28,3 +28,9 @@ export async function uploadPatientInsuranceCard(opts: {
   const publicUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
   return publicUrl;
 }
+
+export async function deletePatientStorage(patientId: string): Promise<void> {
+  const bucket = getStorageBucket();
+  const [files] = await bucket.getFiles({ prefix: `patients/${patientId}/` });
+  await Promise.all(files.map((f) => f.delete({ ignoreNotFound: true })));
+}

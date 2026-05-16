@@ -117,14 +117,24 @@ function PatientsListContent() {
     void load();
   }
 
-  async function softDelete(id: string) {
-    if (!confirm("Soft-delete this patient?")) return;
+  async function deletePatient(id: string) {
+    if (
+      !confirm(
+        "Permanently delete this patient? Their profile and insurance files will be removed. This cannot be undone.",
+      )
+    ) {
+      return;
+    }
     const token = await getIdToken();
     if (!token) return;
-    await fetch(`/api/admin/patients/${encodeURIComponent(id)}`, {
+    const res = await fetch(`/api/admin/patients/${encodeURIComponent(id)}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
+    if (!res.ok) {
+      alert("Could not delete patient. Try again or contact support.");
+      return;
+    }
     void load();
   }
 
@@ -222,7 +232,7 @@ function PatientsListContent() {
                         <button
                           type="button"
                           className="text-xs font-semibold text-rose-700"
-                          onClick={() => void softDelete(p.id)}
+                          onClick={() => void deletePatient(p.id)}
                         >
                           Delete
                         </button>
