@@ -1,6 +1,6 @@
 {
   "name": "wellness-paris-tx",
-  "version": "0.8.2",
+  "version": "0.9.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -13,6 +13,7 @@
     "verify:quick": "npm run lint && npx tsc --noEmit && npm run test",
     "verify:massage-team": "npx tsx scripts/verify-massage-team.ts",
     "storage:apply-cors": "npx tsx scripts/apply-storage-cors.ts",
+    "seed:content": "npx tsx scripts/seedContentBlocks.ts",
     "vercel:login": "npx vercel@50 login",
     "vercel:link": "npx vercel@50 link",
     "deploy:vercel": "npx vercel@50 deploy --prod --yes"

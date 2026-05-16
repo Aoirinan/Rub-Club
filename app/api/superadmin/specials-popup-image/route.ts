@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { deleteOwnerMarketingObject } from "@/lib/owner-marketing-upload";
 import { getSiteOwnerConfig, setSiteOwnerConfigPatch, type SpecialsConfig, type SpecialsPopupVariant } from "@/lib/site-owner-config";
-import { isSuperadminRequest } from "@/lib/superadmin-auth";
+import { authorizeOwnerMarketing, unauthorizedOwnerMarketing } from "@/lib/owner-marketing-auth";
 
 export const runtime = "nodejs";
 
@@ -22,9 +22,8 @@ function parseVariant(raw: string | null): SpecialsPopupVariant | null {
 }
 
 export async function DELETE(req: Request) {
-  if (!(await isSuperadminRequest(req.headers.get("cookie")))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const marketingAuth = await authorizeOwnerMarketing(req);
+  if (!marketingAuth.ok) return unauthorizedOwnerMarketing();
   const url = new URL(req.url);
   const variant = parseVariant(url.searchParams.get("variant"));
   if (!variant) {

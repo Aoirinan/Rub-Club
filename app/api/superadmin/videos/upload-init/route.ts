@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { issueOwnerTestimonialVideoUploadSignedUrl } from "@/lib/owner-marketing-upload";
 import { assertCanAddTestimonialVideo } from "@/lib/owner-upload-quota";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
-import { isSuperadminRequest } from "@/lib/superadmin-auth";
+import { authorizeOwnerMarketing, unauthorizedOwnerMarketing } from "@/lib/owner-marketing-auth";
 
 export const runtime = "nodejs";
 
@@ -18,9 +18,8 @@ export const runtime = "nodejs";
  * Optional: `STORAGE_CORS_ORIGINS=https://a.com,https://b.com` (comma-separated; default is `*`).
  */
 export async function POST(req: Request) {
-  if (!(await isSuperadminRequest(req.headers.get("cookie")))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const marketingAuth = await authorizeOwnerMarketing(req);
+  if (!marketingAuth.ok) return unauthorizedOwnerMarketing();
   let body: unknown;
   try {
     body = await req.json();

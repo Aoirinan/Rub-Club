@@ -5,14 +5,13 @@ import { MASSAGE_TEAM_COLLECTION } from "@/lib/massage-team-data";
 import { assertCanAddTestimonialVideo } from "@/lib/owner-upload-quota";
 import { getFirestore } from "@/lib/firebase-admin";
 import { getSiteOwnerConfig, setSiteOwnerConfigPatch, type TestimonialVideoItem } from "@/lib/site-owner-config";
-import { isSuperadminRequest } from "@/lib/superadmin-auth";
+import { authorizeOwnerMarketing, unauthorizedOwnerMarketing } from "@/lib/owner-marketing-auth";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  if (!(await isSuperadminRequest(req.headers.get("cookie")))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const marketingAuth = await authorizeOwnerMarketing(req);
+  if (!marketingAuth.ok) return unauthorizedOwnerMarketing();
   let body: unknown;
   try {
     body = await req.json();

@@ -590,7 +590,7 @@ export default function SuperAdminPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
-            {isSuper ? "Manager" : needsBootstrap ? "Staff setup" : "Access"}
+            {isSuper ? "Operations" : needsBootstrap ? "Staff setup" : "Access"}
           </h1>
           <p className="mt-1 text-xs text-slate-400">
             Build {process.env.NEXT_PUBLIC_APP_VERSION ?? "unknown"}
@@ -598,25 +598,13 @@ export default function SuperAdminPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           {isSuper ? (
-            <>
-              <Link
-                href="/superadmin"
-                title="Owner superadmin — separate password; banner, specials, videos, site copy"
-                className="text-sm font-semibold text-[#0f5f5c] hover:underline"
-              >
-                Website / view
-              </Link>
-              <Link
-                href="/admin/super/slot-inspector"
-                className="text-sm font-semibold text-slate-900 hover:underline"
-              >
-                Slot Inspector
-              </Link>
-            </>
+            <Link
+              href="/admin/super/slot-inspector"
+              className="text-sm font-semibold text-slate-600 hover:underline"
+            >
+              Slot inspector
+            </Link>
           ) : null}
-          <Link href="/admin" className="text-sm font-semibold text-slate-900 hover:underline">
-            Back to bookings
-          </Link>
         </div>
       </div>
 

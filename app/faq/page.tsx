@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { FaqList } from "@/components/FaqList";
-import { FAQS } from "@/lib/faqs";
+import { getContentMany } from "@/lib/cms";
+import { getActiveFaqs } from "@/lib/site-faqs";
 import { faqPageJsonLd } from "@/lib/structured-data";
 import { publicBookingHref } from "@/lib/public-booking";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Frequently Asked Questions",
@@ -19,19 +22,22 @@ export const metadata: Metadata = {
   },
 };
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const c = await getContentMany(["faq_heading", "faq_intro"]);
+  const faqs = await getActiveFaqs();
+
   return (
     <>
-      <JsonLd data={faqPageJsonLd(FAQS)} />
+      <JsonLd data={faqPageJsonLd(faqs)} />
       <Breadcrumbs items={[{ name: "Home", url: "/" }, { name: "FAQ", url: "/faq" }]} />
       <PageHero
         eyebrow="Good to know"
-        title="Frequently asked questions"
-        lede="Insurance, scheduling, pricing, and first-visit answers. Can't find your question? Send us a message and we'll help."
+        title={c.faq_heading}
+        lede={c.faq_intro}
       />
       <div className="mx-auto max-w-3xl space-y-8 px-4 pb-16">
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <FaqList entries={FAQS} />
+          <FaqList entries={faqs} />
         </section>
         <CtaCard
           title="Still have a question?"

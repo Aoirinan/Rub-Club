@@ -206,7 +206,7 @@ export default function SlotInspectorPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Manager · Diagnostics
+            Operations · Diagnostics
           </p>
           <h1 className="text-2xl font-semibold text-slate-900">Slot Inspector</h1>
           <p className="mt-1 max-w-2xl text-sm text-slate-600">
@@ -221,7 +221,7 @@ export default function SlotInspectorPage() {
             href="/admin/super"
             className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
           >
-            Back to Manager
+            Back to operations
           </Link>
         </div>
       </div>

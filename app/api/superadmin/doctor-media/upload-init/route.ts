@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { issueOwnerDoctorMediaUploadSignedUrl } from "@/lib/owner-marketing-upload";
 import { assertCanAddDoctorVideo } from "@/lib/owner-upload-quota";
 import { getSiteOwnerConfig, type DoctorMediaItem } from "@/lib/site-owner-config";
-import { isSuperadminRequest } from "@/lib/superadmin-auth";
+import { authorizeOwnerMarketing, unauthorizedOwnerMarketing } from "@/lib/owner-marketing-auth";
 
 export const runtime = "nodejs";
 
@@ -10,9 +10,8 @@ const DOCTOR_KEYS = new Set(["greg", "sean", "brandy"]);
 
 /** Same bucket CORS as testimonial videos; see `videos/upload-init` route comment. */
 export async function POST(req: Request) {
-  if (!(await isSuperadminRequest(req.headers.get("cookie")))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const marketingAuth = await authorizeOwnerMarketing(req);
+  if (!marketingAuth.ok) return unauthorizedOwnerMarketing();
   let body: unknown;
   try {
     body = await req.json();

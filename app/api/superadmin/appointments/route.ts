@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
 import { getFirestore } from "@/lib/firebase-admin";
-import { isSuperadminRequest } from "@/lib/superadmin-auth";
+import { authorizeOwnerMarketing, unauthorizedOwnerMarketing } from "@/lib/owner-marketing-auth";
 
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
-  if (!(await isSuperadminRequest(req.headers.get("cookie")))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const marketingAuth = await authorizeOwnerMarketing(req);
+  if (!marketingAuth.ok) return unauthorizedOwnerMarketing();
   const { searchParams } = new URL(req.url);
   const fromStr = searchParams.get("from");
   const toStr = searchParams.get("to");

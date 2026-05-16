@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { deleteOwnerMarketingObject, uploadOwnerSpecialsPopupImage } from "@/lib/owner-marketing-upload";
 import { getSiteOwnerConfig, setSiteOwnerConfigPatch, type SpecialsConfig, type SpecialsPopupVariant } from "@/lib/site-owner-config";
-import { isSuperadminRequest } from "@/lib/superadmin-auth";
+import { authorizeOwnerMarketing, unauthorizedOwnerMarketing } from "@/lib/owner-marketing-auth";
 
 export const runtime = "nodejs";
 
@@ -25,9 +25,8 @@ function parseVariant(raw: string): SpecialsPopupVariant | null {
 }
 
 export async function POST(req: Request) {
-  if (!(await isSuperadminRequest(req.headers.get("cookie")))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const marketingAuth = await authorizeOwnerMarketing(req);
+  if (!marketingAuth.ok) return unauthorizedOwnerMarketing();
   const fd = await req.formData();
   const file = fd.get("file");
   const variant = parseVariant(String(fd.get("variant") ?? ""));

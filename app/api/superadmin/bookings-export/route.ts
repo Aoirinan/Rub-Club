@@ -5,15 +5,14 @@ import { Timestamp } from "firebase-admin/firestore";
 import { DateTime } from "luxon";
 import { buildBookingsExportCsv } from "@/lib/bookings-export-csv";
 import { getFirestore } from "@/lib/firebase-admin";
-import { isSuperadminRequest } from "@/lib/superadmin-auth";
+import { authorizeOwnerMarketing, unauthorizedOwnerMarketing } from "@/lib/owner-marketing-auth";
 import { TIME_ZONE } from "@/lib/constants";
 
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
-  if (!(await isSuperadminRequest(req.headers.get("cookie")))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const marketingAuth = await authorizeOwnerMarketing(req);
+  if (!marketingAuth.ok) return unauthorizedOwnerMarketing();
 
   const { searchParams } = new URL(req.url);
   const fromStr = searchParams.get("from");

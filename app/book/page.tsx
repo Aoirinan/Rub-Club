@@ -3,8 +3,7 @@ import Link from "next/link";
 import { BookingWizard } from "@/components/BookingWizard";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
-import { getSiteOwnerConfig } from "@/lib/site-owner-config";
-import { mergedDisplayLocations } from "@/lib/site-display-overrides";
+import { getDisplayLocations } from "@/lib/cms-display";
 
 export const metadata: Metadata = {
   title: "Book an Appointment",
@@ -32,13 +31,7 @@ export default async function BookPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  let displayLocs = mergedDisplayLocations(undefined);
-  try {
-    const cfg = await getSiteOwnerConfig();
-    displayLocs = mergedDisplayLocations(cfg.editableCopy);
-  } catch {
-    /* defaults */
-  }
+  const displayLocs = await getDisplayLocations();
   return (
     <>
       <JsonLd

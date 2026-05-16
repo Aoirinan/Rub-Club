@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { getSiteOwnerConfig, setSiteOwnerConfigPatch } from "@/lib/site-owner-config";
-import { isSuperadminRequest } from "@/lib/superadmin-auth";
+import { authorizeOwnerMarketing, unauthorizedOwnerMarketing } from "@/lib/owner-marketing-auth";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  if (!(await isSuperadminRequest(req.headers.get("cookie")))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const marketingAuth = await authorizeOwnerMarketing(req);
+  if (!marketingAuth.ok) return unauthorizedOwnerMarketing();
   let body: { orderedIds?: string[] };
   try {
     body = (await req.json()) as { orderedIds?: string[] };

@@ -6,7 +6,10 @@ import { ContactForm } from "@/components/ContactForm";
 import { LOCATION_LIST, telHref } from "@/lib/constants";
 import { organizationJsonLd } from "@/lib/structured-data";
 import { MASSAGE } from "@/lib/home-verbatim";
+import { getContentMany } from "@/lib/cms";
 import { contactAppointmentCopy } from "@/lib/public-booking";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Contact us — Paris & Sulphur Springs offices",
@@ -21,15 +24,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const c = await getContentMany(["contact_heading", "contact_subtext"]);
+
   return (
     <>
       <JsonLd data={organizationJsonLd()} />
       <Breadcrumbs items={[{ name: "Home", url: "/" }, { name: "Contact", url: "/contact" }]} />
       <PageHero
         eyebrow="We're here to help"
-        title="Contact us"
-        lede="Call the office that's most convenient, or send us a message and we will follow up during office hours."
+        title={c.contact_heading}
+        lede={c.contact_subtext}
       />
 
       <div className="mx-auto max-w-6xl space-y-10 px-4 pb-16">

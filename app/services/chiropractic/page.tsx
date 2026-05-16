@@ -6,7 +6,9 @@ import { JsonLd } from "@/components/JsonLd";
 import { AdjustmentsInActionSection } from "@/components/AdjustmentsInActionSection";
 import { ChiropracticDoctorCard } from "@/components/ChiropracticDoctorCard";
 import { IMAGES } from "@/lib/home-images";
-import { CHIRO, DOCTORS } from "@/lib/home-verbatim";
+import { getContentMany, parseConditionsList, renderRichText } from "@/lib/cms";
+import { getDoctorsForMarketing } from "@/lib/cms-doctors";
+import { CHIRO } from "@/lib/home-verbatim";
 import { LOCATIONS, WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
 import { chiropractorJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
@@ -24,23 +26,7 @@ export const metadata: Metadata = {
   },
 };
 
-const CHIRO_TESTIMONIALS = [
-  {
-    quote:
-      "After a car accident I could barely turn my head. A few weeks with Dr. Welborn plus deep-tissue work from The Rub Club and I was back to normal.",
-    label: "Sulphur Springs patient · Auto injury recovery",
-  },
-  {
-    quote:
-      "Dr. Thompson and the team have kept me moving for years. I always leave feeling looked after — and they never push extra visits I do not need.",
-    label: "Long-time Paris patient · Chiropractic",
-  },
-  {
-    quote:
-      "I had sciatica so bad I couldn't sit through a workday. Dr. Collins found the problem fast and had me feeling better within two weeks.",
-    label: "Paris patient · Sciatica",
-  },
-] as const;
+export const revalidate = 60;
 
 const TREATMENT_CARDS = [
   {
@@ -143,7 +129,30 @@ const TREATMENT_CARDS = [
   },
 ] as const;
 
-export default function ChiropracticServicePage() {
+export default async function ChiropracticServicePage() {
+  const c = await getContentMany([
+    "chiro_hero_heading",
+    "chiro_hero_subheading",
+    "chiro_intro_body",
+    "chiro_conditions_list",
+    "chiro_cta_heading",
+    "chiro_cta_subtext",
+    "chiro_testimonial_1_text",
+    "chiro_testimonial_1_attr",
+    "chiro_testimonial_2_text",
+    "chiro_testimonial_2_attr",
+    "chiro_testimonial_3_text",
+    "chiro_testimonial_3_attr",
+  ]);
+  const doctors = await getDoctorsForMarketing();
+  const conditions = parseConditionsList(c.chiro_conditions_list ?? "");
+  const introParagraphs = (c.chiro_intro_body ?? "").split(/\n\n+/).filter(Boolean);
+  const testimonials = [
+    { quote: c.chiro_testimonial_1_text, label: c.chiro_testimonial_1_attr },
+    { quote: c.chiro_testimonial_2_text, label: c.chiro_testimonial_2_attr },
+    { quote: c.chiro_testimonial_3_text, label: c.chiro_testimonial_3_attr },
+  ];
+
   return (
     <>
       <JsonLd
@@ -169,20 +178,25 @@ export default function ChiropracticServicePage() {
 
       <PageHero
         eyebrow="Chiropractic Associates · Family-owned since 1998"
-        title="Efficient, evidence-informed chiropractic care"
-        lede="Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins serve patients across Northeast Texas from Paris and Sulphur Springs."
+        title={c.chiro_hero_heading}
+        lede={c.chiro_hero_subheading}
       />
 
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
         <section className="grid gap-10 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-2">
           <div className="space-y-4">
             <h2 className="text-3xl font-black text-[#173f3b]">{CHIRO.chooseTitle}</h2>
-            <p className="leading-relaxed text-stone-700">{CHIRO.chooseLead}</p>
-            <p className="leading-relaxed text-stone-700">{CHIRO.chooseP2}</p>
+            {introParagraphs.map((p) => (
+              <p
+                key={p.slice(0, 40)}
+                className="leading-relaxed text-stone-700"
+                dangerouslySetInnerHTML={{ __html: renderRichText(p) }}
+              />
+            ))}
             <p className="leading-relaxed text-stone-700">{CHIRO.chooseP3}</p>
             <ul className="list-disc space-y-2 pl-6 text-stone-700">
-              {CHIRO.conditions.map((c) => (
-                <li key={c}>{c}</li>
+              {conditions.map((item) => (
+                <li key={item}>{item}</li>
               ))}
             </ul>
           </div>
@@ -219,14 +233,14 @@ export default function ChiropracticServicePage() {
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
           <h2 className="text-2xl font-black text-[#173f3b]">Our chiropractors</h2>
           <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {DOCTORS.map((member) => (
+            {doctors.map((member) => (
               <ChiropracticDoctorCard
                 key={member.name}
                 name={member.name}
                 role={member.role}
                 bio={member.bio}
-                imageSrc={IMAGES[member.imageKey]}
-                videoFile={member.videoFile}
+                imageSrc={member.imageSrc}
+                videoUrl={member.videoUrl}
               />
             ))}
           </div>
@@ -282,7 +296,7 @@ export default function ChiropracticServicePage() {
         <section className="bg-[#f8f8f6] px-4 py-12 sm:px-8">
           <h2 className="text-center text-2xl font-black text-[#173f3b]">What Our Chiropractic Patients Say</h2>
           <div className="mx-auto mt-10 grid max-w-6xl gap-8 lg:grid-cols-3">
-            {CHIRO_TESTIMONIALS.map((t) => (
+            {testimonials.map((t) => (
               <blockquote
                 key={t.label}
                 className="flex flex-col border-b-4 border-[#0f5f5c] bg-white p-6 shadow-sm"
@@ -290,7 +304,10 @@ export default function ChiropracticServicePage() {
                 <p className="font-serif text-5xl leading-none text-[#0f5f5c]" aria-hidden>
                   &ldquo;
                 </p>
-                <p className="mt-2 flex-1 text-stone-700">{t.quote}</p>
+                <p
+                  className="mt-2 flex-1 text-stone-700"
+                  dangerouslySetInnerHTML={{ __html: renderRichText(t.quote) }}
+                />
                 <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-stone-500">{t.label}</p>
               </blockquote>
             ))}
@@ -298,11 +315,8 @@ export default function ChiropracticServicePage() {
         </section>
 
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">Ready for Relief?</h2>
-          <p className="mt-3 max-w-3xl text-stone-700">
-            Chiropractic appointments are booked by phone. Call either office and we will fit you in —
-            same-day appointments are often available.
-          </p>
+          <h2 className="text-2xl font-black text-[#173f3b]">{c.chiro_cta_heading}</h2>
+          <p className="mt-3 max-w-3xl text-stone-700">{c.chiro_cta_subtext}</p>
           <div className="mt-6 flex min-h-[56px] flex-col gap-3 sm:flex-row">
             <a
               href={telHref("903-785-5551")}

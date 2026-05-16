@@ -21,7 +21,10 @@ import {
   websiteJsonLd,
 } from "@/lib/structured-data";
 import { getSiteOwnerConfig, bannerIsActivePublic } from "@/lib/site-owner-config";
+import { getLayoutCmsContent } from "@/lib/cms-display";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
+
+export const revalidate = 60;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -77,13 +80,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let salesBanner: SalesBannerPayload | null = null;
-  let displayLocs = mergedDisplayLocations(undefined);
-  let giftCardHref = effectiveGiftCardUrl(undefined);
+  const cms = await getLayoutCmsContent();
+  let displayLocs = mergedDisplayLocations(undefined, cms);
+  let giftCardHref = effectiveGiftCardUrl(undefined, cms);
   let footerBlurbHtml: string | null = null;
   try {
     const cfg = await getSiteOwnerConfig();
-    displayLocs = mergedDisplayLocations(cfg.editableCopy);
-    giftCardHref = effectiveGiftCardUrl(cfg.editableCopy);
+    displayLocs = mergedDisplayLocations(cfg.editableCopy, cms);
+    giftCardHref = effectiveGiftCardUrl(cfg.editableCopy, cms);
     const fb = cfg.editableCopy.footerBlurbHtml.trim();
     footerBlurbHtml = fb.length > 0 ? fb : null;
     if (bannerIsActivePublic(cfg.banner) && cfg.banner.showOnHomepage && cfg.banner.html.trim()) {
@@ -123,6 +127,8 @@ export default async function RootLayout({
           locations={schemaLocations}
           giftCardHref={giftCardHref}
           footerBlurbHtml={footerBlurbHtml}
+          footerTagline={cms.footer_tagline}
+          footerCopyright={cms.footer_copyright}
         />
         <DomainSpecialsPopup />
         <Analytics />

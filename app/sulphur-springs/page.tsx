@@ -5,6 +5,7 @@ import { CtaCard } from "@/components/PageChrome";
 import { BookingCta } from "@/components/BookingCta";
 import { telHref, LOCATIONS } from "@/lib/constants";
 import { publicBookingHref } from "@/lib/public-booking";
+import { getContentMany, renderRichText } from "@/lib/cms";
 import {
   SS_STAFF,
   SS_SERVICE_NAV,
@@ -13,6 +14,8 @@ import {
 
 const ss = LOCATIONS.sulphur_springs;
 const doctor = SS_STAFF[0];
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Sulphur Springs, TX Chiropractor — Chiropractic Associates",
@@ -64,7 +67,11 @@ const SS_NAV: SSNavEntry[] = [
   { href: "/contact", label: "Contact Us" },
 ];
 
-export default function SulphurSpringsPage() {
+export default async function SulphurSpringsPage() {
+  const c = await getContentMany(["ss_hero_heading", "ss_intro_body", "ss_hours"]);
+  const introParagraphs = (c.ss_intro_body ?? "").split(/\n\n+/).filter(Boolean);
+  const hoursLines = (c.ss_hours ?? "").split(/\n/).filter(Boolean);
+
   return (
     <div className="bg-[#f4f2ea]">
       {/* SS Header with logo and phone */}
@@ -147,7 +154,7 @@ export default function SulphurSpringsPage() {
             Your Spine Health Specialists
           </p>
           <h1 className="mt-3 max-w-xl text-4xl font-black leading-tight drop-shadow sm:text-5xl">
-            Chiropractic Care Created Precisely For You
+            {c.ss_hero_heading}
           </h1>
           <p className="mt-4 max-w-lg text-lg text-white/90">
             Your pain-free life, just around the corner.
@@ -192,15 +199,14 @@ export default function SulphurSpringsPage() {
         {/* Intro content */}
         <section className="grid gap-10 border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[2fr_1fr]">
           <div className="space-y-4">
-            <h2 className="text-3xl font-black text-[#173f3b]">
-              Chiropractic Care Created Precisely For You
-            </h2>
-            <p className="leading-relaxed text-stone-700">
-              Welcome to our practice! We hope that you will find this website helpful in learning more about our office, our chiropractic care, and how chiropractic care can improve your quality of life.
-            </p>
-            <p className="leading-relaxed text-stone-700">
-              We understand that although our patients may be diagnosed with the same condition, they may respond differently to treatments. For this reason, we tailor a specific plan of action to meet your needs, goals and unique condition.
-            </p>
+            <h2 className="text-3xl font-black text-[#173f3b]">{c.ss_hero_heading}</h2>
+            {introParagraphs.map((p) => (
+              <p
+                key={p.slice(0, 40)}
+                className="leading-relaxed text-stone-700"
+                dangerouslySetInnerHTML={{ __html: renderRichText(p) }}
+              />
+            ))}
             <p className="leading-relaxed text-stone-700">
               Upon your initial examination, we will discuss with you our findings and what they mean. We will create a custom treatment plan to get you to where you want to be, whether that means less pain, better performance, or just better overall health.
             </p>
@@ -219,20 +225,18 @@ export default function SulphurSpringsPage() {
             <div>
               <h3 className="text-sm font-black uppercase tracking-wide text-[#2980b9]">Office Hours</h3>
               <dl className="mt-2 space-y-1 text-sm text-stone-700">
-                {[
-                  ["Monday", "9:00 AM – 5:00 PM"],
-                  ["Tuesday", "9:00 AM – 5:00 PM"],
-                  ["Wednesday", "9:00 AM – 5:00 PM"],
-                  ["Thursday", "9:00 AM – 5:00 PM"],
-                  ["Friday", "9:00 AM – 5:00 PM"],
-                  ["Saturday", "Closed"],
-                  ["Sunday", "Closed"],
-                ].map(([day, hours]) => (
-                  <div key={day} className="flex justify-between gap-3 border-b border-stone-100 py-1">
-                    <dt className="font-medium">{day}</dt>
-                    <dd className={hours === "Closed" ? "text-stone-400" : ""}>{hours}</dd>
-                  </div>
-                ))}
+                {hoursLines.map((line) => {
+                  const sep = line.includes(":") ? ":" : "–";
+                  const parts = line.split(sep);
+                  const day = parts[0]?.trim() ?? line;
+                  const hours = parts.slice(1).join(sep).trim() || line;
+                  return (
+                    <div key={line} className="flex justify-between gap-3 border-b border-stone-100 py-1">
+                      <dt className="font-medium">{day}</dt>
+                      <dd className={/closed/i.test(hours) ? "text-stone-400" : ""}>{hours}</dd>
+                    </div>
+                  );
+                })}
               </dl>
             </div>
             <a

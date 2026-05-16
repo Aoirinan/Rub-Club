@@ -34,6 +34,16 @@ const nextConfig: NextConfig = {
         hostname: "cdcssl.ibsrv.net",
         pathname: "/ibimg/**",
       },
+      {
+        protocol: "https",
+        hostname: "storage.googleapis.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "firebasestorage.googleapis.com",
+        pathname: "/**",
+      },
     ],
   },
   env: {

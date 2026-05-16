@@ -6,12 +6,15 @@ import { JsonLd } from "@/components/JsonLd";
 import { MassageTeamGrid } from "@/components/marketing/MassageTeamGrid";
 import { BookingCta } from "@/components/BookingCta";
 import { IMAGES } from "@/lib/home-images";
+import { getContentMany, renderRichText } from "@/lib/cms";
 import { MASSAGE } from "@/lib/home-verbatim";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { LOCATIONS, telHref } from "@/lib/constants";
 import { publicBookingHref } from "@/lib/public-booking";
 import { massageJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Massage Therapy in Paris, TX — The Rub Club",
@@ -50,8 +53,17 @@ const SERVICES = [
 ];
 
 export default async function MassageServicePage() {
+  const c = await getContentMany([
+    "massage_hero_heading",
+    "massage_hero_subheading",
+    "massage_intro_body",
+    "massage_services_list",
+    "massage_cta_heading",
+  ]);
   const massageTeam = await getMassageTeamForMarketing();
   const paris = LOCATIONS.paris;
+  const introParagraphs = (c.massage_intro_body ?? "").split(/\n\n+/).filter(Boolean);
+  const serviceLines = (c.massage_services_list ?? "").split(/\n\n+/).filter(Boolean);
   return (
     <>
       <JsonLd
@@ -77,18 +89,20 @@ export default async function MassageServicePage() {
 
       <PageHero
         eyebrow="The Rub Club · Paris, TX"
-        title="Therapeutic massage that meets you where you are"
-        lede="Licensed therapists. Honest treatment plans. Coordinated with chiropractic care when it helps. Call 903-739-9959 or book online below."
+        title={c.massage_hero_heading}
+        lede={c.massage_hero_subheading}
       />
 
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
         <section className="grid gap-10 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-5">
             <h2 className="text-3xl font-black text-[#173f3b]">{MASSAGE.stressTitle}</h2>
-            {MASSAGE.stressParas.map((p) => (
-              <p key={p} className="leading-relaxed text-stone-700">
-                {p}
-              </p>
+            {introParagraphs.map((p) => (
+              <p
+                key={p.slice(0, 40)}
+                className="leading-relaxed text-stone-700"
+                dangerouslySetInnerHTML={{ __html: renderRichText(p) }}
+              />
             ))}
           </div>
           <div className="relative aspect-[4/3] overflow-hidden shadow-md lg:min-h-[360px]">
@@ -104,14 +118,25 @@ export default async function MassageServicePage() {
 
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
           <h2 className="text-2xl font-black text-[#173f3b]">Services we offer</h2>
-          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {SERVICES.map((s) => (
-              <article key={s.name} className="border border-stone-200 bg-stone-50 p-5 shadow-sm">
-                <h3 className="text-lg font-black text-[#173f3b]">{s.name}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-stone-700">{s.body}</p>
-              </article>
-            ))}
-          </div>
+          {serviceLines.length > 0 ? (
+            <div className="mt-6 space-y-4 text-sm leading-relaxed text-stone-700">
+              {serviceLines.map((line) => (
+                <p
+                  key={line.slice(0, 48)}
+                  dangerouslySetInnerHTML={{ __html: renderRichText(line) }}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {SERVICES.map((s) => (
+                <article key={s.name} className="border border-stone-200 bg-stone-50 p-5 shadow-sm">
+                  <h3 className="text-lg font-black text-[#173f3b]">{s.name}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-stone-700">{s.body}</p>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">

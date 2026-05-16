@@ -23,14 +23,16 @@ import {
   massageJsonLd,
 } from "@/lib/structured-data";
 import { TESTIMONIALS } from "@/lib/testimonials";
-import { HOME_FAQS } from "@/lib/faqs";
+import { getContentMany, renderRichText } from "@/lib/cms";
+import { HOME_INTRO } from "@/lib/home-verbatim";
+import { getLayoutCmsContent } from "@/lib/cms-display";
+import { getActiveFaqs } from "@/lib/site-faqs";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
 import { siteDescription, siteTitle } from "@/lib/site-content";
 import { homeBookingFooterCopy } from "@/lib/public-booking";
 
-/** Homepage reads owner config (banner, testimonials, doctor media) from Firestore at request time. */
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: { absolute: siteTitle },
@@ -45,13 +47,24 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  let displayLocs = mergedDisplayLocations(undefined);
-  let giftHref = effectiveGiftCardUrl(undefined);
+  const cmsLayout = await getLayoutCmsContent();
+  const c = await getContentMany([
+    "home_hero_heading",
+    "home_hero_subheading",
+    "home_hero_cta_label",
+    "home_awards_text",
+    "home_about_blurb",
+    "home_testimonials_heading",
+  ]);
+  const homeFaqs = (await getActiveFaqs()).slice(0, 5);
+
+  let displayLocs = mergedDisplayLocations(undefined, cmsLayout);
+  let giftHref = effectiveGiftCardUrl(undefined, cmsLayout);
   let awardsHtml: string | null = null;
   try {
     const cfg = await getSiteOwnerConfig();
-    displayLocs = mergedDisplayLocations(cfg.editableCopy);
-    giftHref = effectiveGiftCardUrl(cfg.editableCopy);
+    displayLocs = mergedDisplayLocations(cfg.editableCopy, cmsLayout);
+    giftHref = effectiveGiftCardUrl(cfg.editableCopy, cmsLayout);
     const a = cfg.editableCopy.awardsStripHtml.trim();
     if (a) awardsHtml = a;
   } catch {
@@ -69,7 +82,7 @@ export default async function Home() {
           chiropractorJsonLd(displayLocs.paris),
           chiropractorJsonLd(displayLocs.sulphur_springs),
           massageJsonLd(displayLocs.paris),
-          faqPageJsonLd(HOME_FAQS),
+          faqPageJsonLd(homeFaqs),
         ]}
       />
       <section className="relative min-h-[440px] overflow-hidden bg-[#0f5f5c]">
@@ -87,11 +100,11 @@ export default async function Home() {
             {CHIRO.spineHeadline}
           </p>
           <h1 className="mt-3 max-w-2xl text-4xl font-black leading-tight drop-shadow sm:text-5xl">
-            Massage Therapy &amp; Chiropractic Care in Paris &amp; Sulphur Springs, TX
+            {c.home_hero_heading}
           </h1>
-          <p className="mt-4 max-w-xl text-xl font-semibold text-white/95">{CHIRO.spineSub}</p>
+          <p className="mt-4 max-w-xl text-xl font-semibold text-white/95">{c.home_hero_subheading}</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <BookingCta label="Book Online" />
+            <BookingCta label={c.home_hero_cta_label || "Book Online"} />
             <a
               className="focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#173f3b]"
               href={telHref(massageHeroPhone)}
@@ -110,12 +123,20 @@ export default async function Home() {
           />
         ) : (
           <>
-            <strong>Voted Best Chiropractic Center &amp; Best Massage</strong> &mdash; The Paris News reader polls.
+            {c.home_awards_text}
           </>
         )}
       </div>
 
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
+        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-2xl font-black text-[#173f3b]">{HOME_INTRO.title}</h2>
+          <p
+            className="mt-4 max-w-3xl leading-relaxed text-stone-700"
+            dangerouslySetInnerHTML={{ __html: renderRichText(c.home_about_blurb) }}
+          />
+        </section>
+
         <section aria-label="Featured services" className="grid gap-4 md:grid-cols-5">
           {[
             {
@@ -267,7 +288,7 @@ export default async function Home() {
           className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10"
         >
           <h2 id="testimonials" className="text-3xl font-black text-[#173f3b]">
-            What our patients say
+            {c.home_testimonials_heading}
           </h2>
           <p className="mt-2 text-sm text-stone-600">
             Paraphrased from public reviews — read more or leave your own on{" "}
@@ -370,7 +391,7 @@ export default async function Home() {
             </Link>
           </div>
           <div className="mt-4">
-            <FaqList entries={HOME_FAQS} />
+            <FaqList entries={homeFaqs} />
           </div>
         </section>
 

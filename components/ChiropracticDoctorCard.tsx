@@ -9,7 +9,9 @@ export type ChiropracticDoctorCardProps = {
   bio: string;
   imageSrc: string;
   /** When set, shows “Meet the doctor” and opens a lightbox with `/media/doctors/[videoFile]`. */
-  videoFile: string | null;
+  videoFile?: string | null;
+  /** Full URL from CMS Storage — takes precedence over videoFile when set. */
+  videoUrl?: string | null;
 };
 
 function meetButtonLabel(fullName: string): string {
@@ -23,8 +25,16 @@ export function ChiropracticDoctorCard({
   role,
   bio,
   imageSrc,
-  videoFile,
+  videoFile = null,
+  videoUrl = null,
 }: ChiropracticDoctorCardProps) {
+  const hasVideo = Boolean(videoUrl?.trim() || videoFile);
+  const playbackSrc = videoUrl?.trim()
+    ? videoUrl.trim()
+    : videoFile
+      ? `/media/doctors/${videoFile}`
+      : null;
+  const remoteImage = /^https?:\/\//i.test(imageSrc);
   const [open, setOpen] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -90,13 +100,14 @@ export function ChiropracticDoctorCard({
             fill
             className="object-cover object-top"
             sizes="(max-width: 640px) 100vw, 33vw"
+            unoptimized={remoteImage}
           />
         </div>
         <div className="flex flex-1 flex-col p-5">
           <h3 className="text-lg font-black text-[#173f3b]">{name}</h3>
           <p className="text-sm font-bold text-stone-600">{role}</p>
           <p className="mt-3 flex-1 text-sm leading-relaxed text-stone-700">{bio}</p>
-          {videoFile ? (
+          {hasVideo ? (
             <button
               type="button"
               className="focus-ring mt-4 inline-flex items-center gap-1 self-start border-2 border-[#0f5f5c] px-4 py-2 text-sm font-black text-[#0f5f5c] hover:bg-[#0f5f5c]/10"
@@ -108,7 +119,7 @@ export function ChiropracticDoctorCard({
         </div>
       </article>
 
-      {open && videoFile ? (
+      {open && playbackSrc ? (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
           role="presentation"
@@ -134,7 +145,7 @@ export function ChiropracticDoctorCard({
             </button>
             <video
               ref={videoRef}
-              src={`/media/doctors/${videoFile}`}
+              src={playbackSrc}
               className="max-h-[85vh] w-full rounded-md"
               controls
               playsInline

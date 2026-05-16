@@ -14,13 +14,22 @@ export function SiteFooter({
   locations = LOCATION_LIST,
   giftCardHref = GIFT_CARD_ORDER_URL,
   footerBlurbHtml,
+  footerTagline,
+  footerCopyright,
 }: {
   locations?: readonly LocationInfo[];
   giftCardHref?: string;
   footerBlurbHtml?: string | null;
+  footerTagline?: string | null;
+  footerCopyright?: string | null;
 } = {}) {
   const label = process.env.NEXT_PUBLIC_APP_VERSION ?? "dev";
   const year = new Date().getFullYear();
+  const tagline =
+    footerTagline?.trim() ||
+    "Family-owned wellness in Northeast Texas. Two practices, one address in Paris — plus chiropractic care in Sulphur Springs.";
+  const copyrightLine =
+    footerCopyright?.trim() || `© ${year} ${siteShortName}. All rights reserved.`;
 
   return (
     <footer className="mt-12 border-t-4 border-[#0f5f5c] bg-[#23312e] text-white/85">
@@ -33,10 +42,7 @@ export function SiteFooter({
               dangerouslySetInnerHTML={{ __html: footerBlurbHtml }}
             />
           ) : (
-            <p className="mt-2 text-sm text-white/70">
-              Family-owned wellness in Northeast Texas. Two practices, one address in Paris — plus
-              chiropractic care in Sulphur Springs.
-            </p>
+            <p className="mt-2 text-sm text-white/70">{tagline}</p>
           )}
         </div>
         <div className="space-y-4 text-sm">
@@ -164,7 +170,7 @@ export function SiteFooter({
       </div>
       <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-white/60">
         <p>
-          © {year} {siteShortName}. All rights reserved. ·{" "}
+          {copyrightLine} ·{" "}
           <Link className="hover:underline" href="/admin/login">
             Staff
           </Link>
