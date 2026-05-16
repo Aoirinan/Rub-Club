@@ -3,6 +3,7 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
 import { requireStaff } from "@/lib/staff-auth";
+import { onBookingCheckedIn } from "@/lib/patients-db";
 
 export const runtime = "nodejs";
 
@@ -70,9 +71,19 @@ export async function POST(req: Request, ctx: Params) {
     updates.internalNotes = parsed.data.internalNotes.trim();
   }
 
+  const hadCheckedIn = snap.get("checkedInAt") instanceof Timestamp;
   await ref.update(updates);
 
   const next = await ref.get();
+  if (parsed.data.checkedIn === true && !hadCheckedIn) {
+    const patientId = typeof snap.get("patientId") === "string" ? snap.get("patientId") : null;
+    if (patientId) {
+      const at = next.get("checkedInAt");
+      if (at instanceof Timestamp) {
+        await onBookingCheckedIn(db, patientId, at).catch(() => {});
+      }
+    }
+  }
   const d = next.data() ?? {};
   const checkedInAt = d.checkedInAt instanceof Timestamp ? d.checkedInAt.toMillis() : undefined;
 

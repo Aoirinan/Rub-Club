@@ -37,6 +37,8 @@ import { BlockTimeDrawer } from "./_scheduler/BlockTimeDrawer";
 import { HoldsTray, type HoldRow } from "./_scheduler/HoldsTray";
 import { DayView, ListView, WeekView } from "./_scheduler/views";
 import { CsvImportModal, type CsvImportDraft } from "./_scheduler/CsvImportModal";
+import { PatientCsvImportModal } from "./_scheduler/PatientCsvImportModal";
+import { PatientLookupPanel } from "./_scheduler/PatientLookupPanel";
 import { parseCsvRows } from "@/lib/csv-parse";
 
 type Me = {
@@ -84,6 +86,9 @@ function AdminDashboard() {
     rows: { bookingId: string; name: string; phone: string; when: string }[];
   } | null>(null);
   const [reminderBusy, setReminderBusy] = useState<"preview" | "send" | null>(null);
+  const [patientLookupOpen, setPatientLookupOpen] = useState(false);
+  const [patientCsvImportOpen, setPatientCsvImportOpen] = useState(false);
+  const [patientCsvImportBusy, setPatientCsvImportBusy] = useState(false);
 
   useEffect(() => {
     setAuth(getFirebaseClientAuth());
@@ -420,26 +425,70 @@ function AdminDashboard() {
                 onClick={async () => {
                   const token = await getIdToken();
                   if (!token) return;
-                  const { qs } = bookingsApiQuery(filters);
-                  const res = await fetch(`/api/admin/bookings/export?${qs}`, {
+                  setToastMessage("Preparing patient export…");
+                  const res = await fetch("/api/admin/patients/export", {
                     headers: { Authorization: `Bearer ${token}` },
                   });
-                  if (!res.ok) return;
+                  if (!res.ok) {
+                    setToastMessage("Patient export failed.");
+                    return;
+                  }
                   const blob = await res.blob();
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = url;
-                  a.download = `bookings-export.csv`;
+                  const date = new Date().toISOString().slice(0, 10);
+                  a.download = `patients_${date}.csv`;
                   a.click();
                   URL.revokeObjectURL(url);
+                  setToastMessage("Patient export started");
                 }}
                 className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
+                title="Download all patient profiles"
               >
-                Export CSV
+                Export patients
+              </button>
+            ) : null}
+            {isManager ? (
+              <button
+                type="button"
+                disabled={patientCsvImportBusy}
+                onClick={() => setPatientCsvImportOpen(true)}
+                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400 disabled:opacity-50"
+                title="Import patient profiles from CSV"
+              >
+                {patientCsvImportBusy ? "Importing…" : "Import patients"}
               </button>
             ) : null}
             {isManager ? (
               <>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const token = await getIdToken();
+                    if (!token) return;
+                    const { qs } = bookingsApiQuery(filters);
+                    const res = await fetch(`/api/admin/bookings/export?${qs}`, {
+                      headers: { Authorization: `Bearer ${token}` },
+                    });
+                    if (!res.ok) {
+                      setToastMessage("Appointment export failed.");
+                      return;
+                    }
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `appointments-export.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    setToastMessage("Appointment export started");
+                  }}
+                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-100"
+                  title="Export appointments in the current date range"
+                >
+                  Export appts
+                </button>
                 <input
                   ref={csvImportInputRef}
                   type="file"
@@ -472,22 +521,26 @@ function AdminDashboard() {
                     }
                   }}
                 />
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:border-slate-400">
+                <label
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                  title="Allow importing appointments on top of existing slots"
+                >
                   <input
                     type="checkbox"
                     checked={csvImportSkipConflict}
                     onChange={(e) => setCsvImportSkipConflict(e.target.checked)}
                     className="rounded border-slate-300"
                   />
-                  Import overlaps
+                  Overlap
                 </label>
                 <button
                   type="button"
                   disabled={csvImportBusy}
                   onClick={() => csvImportInputRef.current?.click()}
-                  className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400 disabled:opacity-50"
+                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-50"
+                  title="Import appointments from CSV"
                 >
-                  {csvImportBusy ? "Importing…" : "Import CSV"}
+                  {csvImportBusy ? "Importing…" : "Import appts"}
                 </button>
               </>
             ) : null}
@@ -500,11 +553,20 @@ function AdminDashboard() {
               </Link>
             ) : null}
             {me?.role ? (
-              <Link
-                href="/admin/patient"
+              <button
+                type="button"
+                onClick={() => setPatientLookupOpen(true)}
                 className="rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-900 hover:bg-violet-100"
               >
                 Patient lookup
+              </button>
+            ) : null}
+            {isManager ? (
+              <Link
+                href="/admin/patients"
+                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
+              >
+                Patients
               </Link>
             ) : null}
             {isManager ? (
@@ -737,6 +799,18 @@ function AdminDashboard() {
         onDismiss={() => setCsvImportDraft(null)}
         onImported={refreshBookings}
         setParentError={setError}
+      />
+      <PatientCsvImportModal
+        open={patientCsvImportOpen}
+        getIdToken={getIdToken}
+        onDismiss={() => setPatientCsvImportOpen(false)}
+        onBusy={setPatientCsvImportBusy}
+      />
+      <PatientLookupPanel
+        open={patientLookupOpen}
+        getIdToken={getIdToken}
+        isSuperadmin={me?.role === "superadmin"}
+        onClose={() => setPatientLookupOpen(false)}
       />
     </div>
   );

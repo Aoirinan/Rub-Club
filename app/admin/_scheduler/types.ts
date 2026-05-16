@@ -28,6 +28,7 @@ export type BookingRow = {
   confirmationStatus?: string;
   checkedInAtMs?: number;
   needsReschedule?: boolean;
+  patientId?: string;
   status?: BookingStatus;
   /** Online prepay flow (public booking). */
   prepaidOnline?: boolean;

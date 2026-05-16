@@ -175,9 +175,7 @@ export function SiteFooter({
             Staff
           </Link>
         </p>
-        {process.env.NODE_ENV === "development" || process.env.SHOW_BUILD_INFO === "true" ? (
-          <p className="mt-1">Build {label}</p>
-        ) : null}
+        <p className="mt-1 tabular-nums text-white/45">v{label}</p>
       </div>
     </footer>
   );

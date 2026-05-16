@@ -30,6 +30,7 @@ import { resolvePublicBookingPrepayCents } from "@/lib/public-booking-prepay";
 import { sendSms } from "@/lib/twilio";
 import { logSmsSent } from "@/lib/sms-audit";
 import { getSiteOrigin } from "@/lib/site-content";
+import { linkBookingAfterCreate } from "@/lib/patients-db";
 
 export const runtime = "nodejs";
 
@@ -362,6 +363,9 @@ export async function POST(req: Request) {
         });
       }
       createdIds.push(bookingRef.id);
+      await linkBookingAfterCreate(db, bookingRef.id, "online_booking").catch((err) =>
+        console.error("[patients] link after public booking", err),
+      );
     } catch (e) {
       if (e instanceof Error && e.message === "slot_taken") {
         if (multiVisit) {

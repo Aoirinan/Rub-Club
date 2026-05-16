@@ -9,6 +9,7 @@ import { sendBookingNotification } from "@/lib/sendgrid";
 import { buildIcs } from "@/lib/ics";
 import { generatePatientPortalToken, hashPatientPortalToken } from "@/lib/patient-portal-token";
 import { siteUrl } from "@/lib/site-content";
+import { linkBookingAfterCreate, onBookingStatusChange } from "@/lib/patients-db";
 
 export const runtime = "nodejs";
 
@@ -26,6 +27,7 @@ export async function POST(req: Request, ctx: Params) {
   const portalPlain = generatePatientPortalToken();
   const portalHash = hashPatientPortalToken(portalPlain);
   let acceptedNow = false;
+  let prevStatus: string | undefined;
 
   try {
     await db.runTransaction(async (tx) => {
@@ -34,6 +36,7 @@ export async function POST(req: Request, ctx: Params) {
         throw new Error("not_found");
       }
       const prev = snap.get("status");
+      prevStatus = typeof prev === "string" ? prev : undefined;
       if (prev === "confirmed") {
         return;
       }
@@ -69,11 +72,24 @@ export async function POST(req: Request, ctx: Params) {
     return NextResponse.json({ error: "Could not accept" }, { status: 500 });
   }
 
+  let freshAfter = await bookingRef.get();
+  let linkedPatientId =
+    typeof freshAfter.get("patientId") === "string" ? freshAfter.get("patientId") : null;
+  if (!linkedPatientId) {
+    await linkBookingAfterCreate(db, id, "manual").catch(() => {});
+    freshAfter = await bookingRef.get();
+    linkedPatientId =
+      typeof freshAfter.get("patientId") === "string" ? freshAfter.get("patientId") : null;
+  }
+  if (linkedPatientId && acceptedNow) {
+    await onBookingStatusChange(db, linkedPatientId, prevStatus, "confirmed").catch(() => {});
+  }
+
   try {
     if (!acceptedNow) {
       return NextResponse.json({ ok: true });
     }
-    const fresh = await bookingRef.get();
+    const fresh = freshAfter;
     const emailCtx = bookingDocToEmailContext(fresh);
     if (emailCtx) {
       const manageUrl = siteUrl(`/book/manage?token=${encodeURIComponent(portalPlain)}`);

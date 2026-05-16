@@ -40,6 +40,7 @@ type BookingRowDto = {
   paidAtMs?: number;
   paidAmountCents?: number;
   squarePaymentId?: string;
+  patientId?: string;
   accepted?: StaffActor;
   declined?: StaffActor;
   cancelled?: StaffActor;
@@ -184,6 +185,7 @@ export async function GET(req: Request) {
       paidAtMs: timestampToMs(data.paidAt),
       paidAmountCents: typeof data.paidAmountCents === "number" ? data.paidAmountCents : undefined,
       squarePaymentId: typeof data.squarePaymentId === "string" ? data.squarePaymentId : undefined,
+      patientId: typeof data.patientId === "string" ? data.patientId : undefined,
       status,
       accepted: actor(data.acceptedByUid, data.acceptedByEmail, data.acceptedAt, undefined),
       declined: actor(

@@ -7,6 +7,7 @@ import { recordBookingEventInTx } from "@/lib/booking-events";
 import { bookingDocToEmailContext } from "@/lib/booking-doc";
 import { patientCancelledEmail } from "@/lib/email-templates";
 import { sendBookingNotification } from "@/lib/sendgrid";
+import { linkBookingAfterCreate, onBookingStatusChange } from "@/lib/patients-db";
 
 export const runtime = "nodejs";
 
@@ -42,6 +43,7 @@ export async function POST(req: Request, ctx: Params) {
   const { id } = await ctx.params;
   const db = getFirestore();
   const bookingRef = db.collection("bookings").doc(id);
+  let prevStatus: string | undefined;
 
   try {
     await db.runTransaction(async (tx) => {
@@ -50,6 +52,7 @@ export async function POST(req: Request, ctx: Params) {
         throw new Error("not_found");
       }
       const prev = snap.get("status");
+      prevStatus = typeof prev === "string" ? prev : undefined;
       if (prev === "cancelled") {
         return;
       }
@@ -96,8 +99,21 @@ export async function POST(req: Request, ctx: Params) {
     return NextResponse.json({ error: "Could not cancel" }, { status: 500 });
   }
 
+  const freshCancel = await bookingRef.get();
+  let cancelPatientId =
+    typeof freshCancel.get("patientId") === "string" ? freshCancel.get("patientId") : null;
+  if (!cancelPatientId) {
+    await linkBookingAfterCreate(db, id, "manual").catch(() => {});
+    const again = await bookingRef.get();
+    cancelPatientId =
+      typeof again.get("patientId") === "string" ? again.get("patientId") : null;
+  }
+  if (cancelPatientId) {
+    await onBookingStatusChange(db, cancelPatientId, prevStatus, "cancelled").catch(() => {});
+  }
+
   try {
-    const fresh = await bookingRef.get();
+    const fresh = freshCancel;
     const emailCtx = bookingDocToEmailContext(fresh);
     // Only email the patient if they previously saw a confirmation. The transaction
     // already updated the booking, so read prevStatus from the last event we wrote.

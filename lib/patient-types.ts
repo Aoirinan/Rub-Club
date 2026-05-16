@@ -1,0 +1,31 @@
+export type PatientPaymentType = "cash" | "insurance" | "mixed";
+
+export type PatientApiRow = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  phoneNormalized: string;
+  email: string;
+  dateOfBirth?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  paymentType: PatientPaymentType;
+  insuranceCarrier?: string;
+  insuranceMemberId?: string;
+  insuranceCardFront?: string;
+  insuranceCardBack?: string;
+  notes?: string;
+  source: "online_booking" | "manual" | "csv_import";
+  totalVisits: number;
+  totalCanceled: number;
+  totalNoShow: number;
+  totalConfirmed: number;
+  totalPaid: number;
+  createdAtMs: number | null;
+  updatedAtMs: number | null;
+  lastVisitDateMs: number | null;
+  nextAppointmentDateMs: number | null;
+};

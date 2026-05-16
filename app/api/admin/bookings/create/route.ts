@@ -8,6 +8,7 @@ import { LOCATIONS, TIME_ZONE } from "@/lib/constants";
 import { requireStaff } from "@/lib/staff-auth";
 import { isAlignedToSlotGrid, parseStartIsoToDateTime } from "@/lib/slots-luxon";
 import { insertAdminBookingInTransaction } from "@/lib/admin-booking-insert";
+import { linkBookingAfterCreate } from "@/lib/patients-db";
 import { sendSms } from "@/lib/twilio";
 import { logSmsSent } from "@/lib/sms-audit";
 import { getSiteOrigin } from "@/lib/site-content";
@@ -105,6 +106,9 @@ export async function POST(req: Request) {
 
       if (result === "ok") {
         createdIds.push(bookingRef.id);
+        await linkBookingAfterCreate(db, bookingRef.id, "manual").catch((e) =>
+          console.error("[patients] link after admin create", e),
+        );
         continue;
       }
 

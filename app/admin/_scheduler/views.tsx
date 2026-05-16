@@ -73,7 +73,8 @@ type ViewProps = {
   onInvalidCrossPatientTimeDrop?: () => void;
 };
 
-function patientLookupHref(b: BookingRow): string | null {
+function patientProfileHref(b: BookingRow): string | null {
+  if (b.patientId) return `/admin/patients/${encodeURIComponent(b.patientId)}`;
   const q = (b.phone ?? b.email ?? b.name ?? "").trim();
   if (!q) return null;
   return `/admin/patient?q=${encodeURIComponent(q)}`;
@@ -89,7 +90,7 @@ function SchedulerListRow({
   onSelect: (id: string) => void;
 }) {
   const timeLabel = b.startAtMs ? formatChicagoTime(b.startAtMs) : "—";
-  const patientHref = patientLookupHref(b);
+  const patientHref = patientProfileHref(b);
 
   if (!isManager) {
     return (
@@ -508,10 +509,22 @@ function CalendarBlock({
         e.dataTransfer.effectAllowed = "move";
       }}
       onClick={() => onSelect(booking.id)}
-      className={`absolute left-1 right-1 overflow-hidden rounded-md px-2 py-1 text-left text-xs shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-500 ${bookingStatusBlockClasses(status)} ${svcColor.borderClass} ${ringClass}`}
+      className={`group absolute left-1 right-1 overflow-hidden rounded-md px-2 py-1 text-left text-xs shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-500 ${bookingStatusBlockClasses(status)} ${svcColor.borderClass} ${ringClass}`}
       style={{ top: `${geom.topPx}px`, height: `${geom.heightPx}px` }}
       title={`${booking.name ?? ""} · ${booking.serviceLine ?? ""} · ${booking.durationMin}m · ${providerLabel}${multi ? ` · ${stackMeta!.sameDayCount} visits this day` : ""}${paymentHintSuffix(booking)}`}
     >
+      {booking.patientId ? (
+        <a
+          href={`/admin/patients/${encodeURIComponent(booking.patientId)}`}
+          target="_blank"
+          rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="absolute right-1 top-1 rounded bg-white/80 px-1 py-0.5 text-[10px] font-semibold text-violet-800 opacity-0 shadow hover:opacity-100 focus:opacity-100 group-hover:opacity-100"
+          title="Patient profile"
+        >
+          👤
+        </a>
+      ) : null}
       <DeskStatusIcons booking={booking} />
       <div className={`truncate pr-6 font-semibold ${cont ? "text-[11px]" : ""}`}>
         {cont ? (
