@@ -16,6 +16,8 @@ type Props = {
   onClose: () => void;
   onActionComplete: () => void;
   getIdToken: () => Promise<string | null>;
+  /** Massage therapists and other read-only roles: view details only. */
+  readOnly?: boolean;
 };
 
 const DECLINE_QUICK_REASONS = [
@@ -39,7 +41,7 @@ type DrawerAction =
   | "email"
   | null;
 
-export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken }: Props) {
+export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken, readOnly = false }: Props) {
   const [events, setEvents] = useState<BookingEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [eventsError, setEventsError] = useState<string | null>(null);
@@ -576,7 +578,7 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken }
           )}
         </section>
 
-        {status === "confirmed" && action === null ? (
+        {!readOnly && status === "confirmed" && action === null ? (
           <section className="space-y-3 border-b border-slate-200 px-6 py-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</p>
             <div className="flex flex-wrap gap-2">
@@ -624,6 +626,7 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken }
           </section>
         ) : null}
 
+        {!readOnly ? (
         <footer className="mt-auto space-y-3 px-6 py-4">
           {error ? (
             <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
@@ -730,6 +733,7 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken }
             />
           ) : null}
         </footer>
+        ) : null}
       </aside>
     </>
   );

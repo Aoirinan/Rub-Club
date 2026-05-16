@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
+import { DateTime } from "luxon";
 import { getFirestore } from "@/lib/firebase-admin";
 import { requireStaff } from "@/lib/staff-auth";
 import { isBookingStatus, type BookingStatus } from "@/lib/booking-status";
+import { TIME_ZONE } from "@/lib/constants";
 
 export const runtime = "nodejs";
 
@@ -99,7 +101,7 @@ function matchesQuery(row: BookingRowDto, q: string): boolean {
 }
 
 export async function GET(req: Request) {
-  const staff = await requireStaff(req.headers.get("authorization"), "admin");
+  const staff = await requireStaff(req.headers.get("authorization"), "massage_therapist");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -109,16 +111,39 @@ export async function GET(req: Request) {
   const toStr = searchParams.get("to");
   const statusStr = searchParams.get("status");
   const locationId = searchParams.get("locationId");
-  const providerId = searchParams.get("providerId");
+  let providerId = searchParams.get("providerId");
   const q = searchParams.get("q") ?? "";
   const confirmationStatus = searchParams.get("confirmationStatus")?.trim() ?? "";
 
+  if (staff.role === "massage_therapist") {
+    if (!staff.linkedProviderId) {
+      return NextResponse.json(
+        { error: "Your account is not linked to a bookable provider. Ask a manager to set this up." },
+        { status: 403 },
+      );
+    }
+    providerId = staff.linkedProviderId;
+  }
+
+  const nowChicago = DateTime.now().setZone(TIME_ZONE);
+  const todayStart = nowChicago.startOf("day");
+  const todayEnd = todayStart.plus({ days: 1 }).minus({ milliseconds: 1 });
+
+  const defaultFrom =
+    staff.role === "massage_therapist"
+      ? todayStart.toMillis()
+      : Date.now() - 24 * 60 * 60 * 1000;
+  const defaultTo =
+    staff.role === "massage_therapist"
+      ? todayEnd.toMillis()
+      : Date.now() + 30 * 24 * 60 * 60 * 1000;
+
   const from = fromStr
     ? Timestamp.fromMillis(Date.parse(fromStr))
-    : Timestamp.fromMillis(Date.now() - 24 * 60 * 60 * 1000);
+    : Timestamp.fromMillis(defaultFrom);
   const to = toStr
     ? Timestamp.fromMillis(Date.parse(toStr))
-    : Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    : Timestamp.fromMillis(defaultTo);
 
   const statuses: BookingStatus[] = statusStr
     ? statusStr

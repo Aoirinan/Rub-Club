@@ -1,7 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { onAuthStateChanged } from "firebase/auth";
+import { getFirebaseClientAuth } from "@/lib/firebase-client";
 
 const TABS = [
   {
@@ -10,23 +13,54 @@ const TABS = [
     description: "Staff, providers, massage team",
     match: (path: string) =>
       path === "/admin/super" || path.startsWith("/admin/super/slot-inspector"),
+    capability: "operations" as const,
   },
   {
     href: "/admin/super/site-content",
     label: "Site content",
     description: "Page copy, photos, FAQs",
     match: (path: string) => path.startsWith("/admin/super/site-content"),
+    capability: "siteContent" as const,
   },
   {
     href: "/admin/super/marketing",
     label: "Banners & promos",
     description: "Banner bar, pop-ups, videos",
     match: (path: string) => path.startsWith("/admin/super/marketing"),
+    capability: "marketing" as const,
   },
 ] as const;
 
+type Capabilities = {
+  operations: boolean;
+  siteContent: boolean;
+  marketing: boolean;
+};
+
 export function ManagerHubNav() {
   const pathname = usePathname() ?? "";
+  const [caps, setCaps] = useState<Capabilities | null>(null);
+
+  useEffect(() => {
+    const auth = getFirebaseClientAuth();
+    if (!auth) return;
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setCaps(null);
+        return;
+      }
+      const token = await user.getIdToken();
+      const res = await fetch("/api/admin/me", { headers: { Authorization: `Bearer ${token}` } });
+      const data = (await res.json()) as { capabilities?: Capabilities };
+      setCaps(data.capabilities ?? { operations: true, siteContent: false, marketing: false });
+    });
+    return () => unsub();
+  }, []);
+
+  const visibleTabs = TABS.filter((tab) => {
+    if (!caps) return tab.capability === "operations";
+    return caps[tab.capability];
+  });
 
   return (
     <nav
@@ -34,7 +68,7 @@ export function ManagerHubNav() {
       className="border-b border-slate-200 bg-white shadow-sm"
     >
       <div className="mx-auto flex max-w-6xl flex-wrap items-stretch gap-1 px-4 py-2">
-        {TABS.map((tab) => {
+        {visibleTabs.map((tab) => {
           const active = tab.match(pathname);
           return (
             <Link

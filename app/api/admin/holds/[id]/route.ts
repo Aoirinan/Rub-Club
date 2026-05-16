@@ -5,7 +5,7 @@ import { requireStaff } from "@/lib/staff-auth";
 export const runtime = "nodejs";
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const staff = await requireStaff(req.headers.get("authorization"), "admin");
+  const staff = await requireStaff(req.headers.get("authorization"), "front_desk");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

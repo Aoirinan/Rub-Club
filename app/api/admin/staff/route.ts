@@ -3,13 +3,31 @@ import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getAuth, getFirestore } from "@/lib/firebase-admin";
 import { requireStaff } from "@/lib/staff-auth";
+import {
+  STAFF_ROLES,
+  canAssignRole,
+  normalizeStaffRole,
+  staffMeetsMin,
+  type StaffRole,
+} from "@/lib/staff-roles";
 
 export const runtime = "nodejs";
 
-const bodySchema = z.object({
-  email: z.string().email(),
-  role: z.enum(["admin", "superadmin"]),
-});
+const bodySchema = z
+  .object({
+    email: z.string().email(),
+    role: z.enum(STAFF_ROLES as [StaffRole, ...StaffRole[]]),
+    linkedProviderId: z.string().min(1).max(200).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.role === "massage_therapist" && !data.linkedProviderId?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "linkedProviderId is required for massage therapists",
+        path: ["linkedProviderId"],
+      });
+    }
+  });
 
 function authErrorCode(e: unknown): string {
   if (typeof e !== "object" || e === null) return "";
@@ -18,7 +36,7 @@ function authErrorCode(e: unknown): string {
 }
 
 export async function POST(req: Request) {
-  const staff = await requireStaff(req.headers.get("authorization"), "superadmin");
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -35,6 +53,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
+  if (!canAssignRole(staff.role, parsed.data.role)) {
+    return NextResponse.json({ error: "You cannot assign that role." }, { status: 403 });
+  }
+
   const email = parsed.data.email.trim().toLowerCase();
   let uid: string;
   try {
@@ -47,6 +69,9 @@ export async function POST(req: Request) {
     );
   }
 
+  const linkedProviderId =
+    parsed.data.role === "massage_therapist" ? parsed.data.linkedProviderId!.trim() : undefined;
+
   await getFirestore()
     .collection("staff")
     .doc(uid)
@@ -56,15 +81,20 @@ export async function POST(req: Request) {
         email,
         updatedAt: FieldValue.serverTimestamp(),
         updatedByUid: staff.uid,
+        ...(linkedProviderId ? { linkedProviderId } : {}),
       },
       { merge: true },
     );
+
+  if (parsed.data.role !== "massage_therapist") {
+    await getFirestore().collection("staff").doc(uid).update({ linkedProviderId: FieldValue.delete() });
+  }
 
   return NextResponse.json({ ok: true, uid, role: parsed.data.role });
 }
 
 export async function GET(req: Request) {
-  const staff = await requireStaff(req.headers.get("authorization"), "superadmin");
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -78,7 +108,7 @@ export async function GET(req: Request) {
  * Deletes `staff/{uid}` and removes the Firebase Auth user (sign-in account).
  */
 export async function DELETE(req: Request) {
-  const actor = await requireStaff(req.headers.get("authorization"), "superadmin");
+  const actor = await requireStaff(req.headers.get("authorization"), "manager");
   if (!actor) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -102,12 +132,25 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Staff document not found." }, { status: 404 });
   }
 
-  const targetRole = targetSnap.get("role") as string | undefined;
+  const targetRole = normalizeStaffRole(targetSnap.get("role"));
   if (targetRole === "superadmin") {
     const superadmins = await db.collection("staff").where("role", "==", "superadmin").limit(50).get();
     if (superadmins.size <= 1) {
       return NextResponse.json(
-        { error: "Cannot remove the last manager (superadmin). Promote another manager first." },
+        { error: "Cannot remove the last superadmin. Promote another superadmin first." },
+        { status: 400 },
+      );
+    }
+  }
+  if (targetRole === "manager") {
+    const allStaff = await db.collection("staff").limit(200).get();
+    const managerPlusCount = allStaff.docs.filter((d) => {
+      const r = normalizeStaffRole(d.get("role"));
+      return r && staffMeetsMin(r, "manager");
+    }).length;
+    if (managerPlusCount <= 1) {
+      return NextResponse.json(
+        { error: "Cannot remove the last manager. Promote another manager first." },
         { status: 400 },
       );
     }

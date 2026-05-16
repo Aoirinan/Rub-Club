@@ -129,6 +129,17 @@ flowchart LR
 4. Remove `ADMIN_BOOTSTRAP_SECRET` from your environment.
 5. New staff are added via `/admin/super` (invite email link generation goes through SendGrid).
 
+**Staff roles migration (existing projects):** If any `staff/{uid}` documents still have
+`role: "admin"`, run once after deploy (dry run first):
+
+```bash
+npx tsx scripts/migrate-staff-roles.ts
+npx tsx scripts/migrate-staff-roles.ts --apply
+```
+
+Roles are `massage_therapist`, `front_desk`, `manager`, and `superadmin`. Legacy `admin` is
+still accepted at read time as `front_desk` until migrated.
+
 ---
 
 ## SEO checklist (after deploy)

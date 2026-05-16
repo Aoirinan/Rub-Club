@@ -40,12 +40,20 @@ import { CsvImportModal, type CsvImportDraft } from "./_scheduler/CsvImportModal
 import { PatientCsvImportModal } from "./_scheduler/PatientCsvImportModal";
 import { PatientLookupPanel } from "./_scheduler/PatientLookupPanel";
 import { parseCsvRows } from "@/lib/csv-parse";
+import { staffMeetsMin, staffRoleLabel, type StaffRole } from "@/lib/staff-roles";
 
 type Me = {
   authenticated: boolean;
   uid?: string;
   email?: string | null;
-  role?: "admin" | "superadmin" | null;
+  role?: StaffRole | null;
+  linkedProviderId?: string | null;
+  capabilities?: {
+    operations: boolean;
+    siteContent: boolean;
+    marketing: boolean;
+    deskWrite: boolean;
+  };
 };
 
 export default function AdminDashboardPage() {
@@ -247,6 +255,13 @@ function AdminDashboard() {
   }, [filters, me?.role, refreshBookings, refreshHolds]);
 
   useEffect(() => {
+    if (me?.role !== "massage_therapist" || !me.linkedProviderId) return;
+    if (filters.providerId !== me.linkedProviderId) {
+      updateFilters({ providerId: me.linkedProviderId });
+    }
+  }, [me?.role, me?.linkedProviderId, filters.providerId, updateFilters]);
+
+  useEffect(() => {
     const focus = searchParams.get("focus");
     if (focus) {
       setSelectedId(focus);
@@ -375,8 +390,8 @@ function AdminDashboard() {
     router.replace("/admin/login");
   }
 
-  const isManager = me?.role === "superadmin";
-
+  const isOperationsManager = me?.role ? staffMeetsMin(me.role, "manager") : false;
+  const isDeskWrite = me?.capabilities?.deskWrite ?? (me?.role ? staffMeetsMin(me.role, "front_desk") : false);
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
@@ -384,11 +399,12 @@ function AdminDashboard() {
           <div>
             <h1 className="text-xl font-semibold text-slate-900">Scheduler</h1>
             <p className="text-xs text-slate-500">
-              Signed in as {me?.email ?? "…"} {me?.role ? `(${me.role})` : ""}
+              Signed in as {me?.email ?? "…"}{" "}
+              {me?.role ? `(${staffRoleLabel(me.role)})` : ""}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {me?.role ? (
+            {isDeskWrite ? (
               <button
                 type="button"
                 onClick={() => setNewBookingOpen(true)}
@@ -397,7 +413,7 @@ function AdminDashboard() {
                 + New appointment
               </button>
             ) : null}
-            {isManager ? (
+            {isOperationsManager ? (
               <button
                 type="button"
                 onClick={() => setBlockTimeOpen(true)}
@@ -406,7 +422,7 @@ function AdminDashboard() {
                 Block time
               </button>
             ) : null}
-            {isManager ? (
+            {isOperationsManager ? (
               <button
                 type="button"
                 onClick={() => {
@@ -419,7 +435,7 @@ function AdminDashboard() {
                 Send reminders
               </button>
             ) : null}
-            {isManager ? (
+            {isOperationsManager ? (
               <button
                 type="button"
                 onClick={async () => {
@@ -449,7 +465,7 @@ function AdminDashboard() {
                 Export patients
               </button>
             ) : null}
-            {isManager ? (
+            {isOperationsManager ? (
               <button
                 type="button"
                 disabled={patientCsvImportBusy}
@@ -460,7 +476,7 @@ function AdminDashboard() {
                 {patientCsvImportBusy ? "Importing…" : "Import patients"}
               </button>
             ) : null}
-            {isManager ? (
+            {isOperationsManager ? (
               <>
                 <button
                   type="button"
@@ -544,7 +560,7 @@ function AdminDashboard() {
                 </button>
               </>
             ) : null}
-            {isManager ? (
+            {isOperationsManager ? (
               <Link
                 href="/admin/reports"
                 className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
@@ -552,7 +568,7 @@ function AdminDashboard() {
                 Reports
               </Link>
             ) : null}
-            {me?.role ? (
+            {isDeskWrite ? (
               <button
                 type="button"
                 onClick={() => setPatientLookupOpen(true)}
@@ -561,7 +577,7 @@ function AdminDashboard() {
                 Patient lookup
               </button>
             ) : null}
-            {isManager ? (
+            {isDeskWrite ? (
               <Link
                 href="/admin/patients"
                 className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
@@ -569,7 +585,7 @@ function AdminDashboard() {
                 Patients
               </Link>
             ) : null}
-            {isManager ? (
+            {isOperationsManager ? (
               <Link
                 href="/admin/super"
                 title="Staff, site copy, banners, and promos"
@@ -648,9 +664,9 @@ function AdminDashboard() {
                 bookings={viewBookings}
                 providers={columnProviders}
                 filters={filters}
-                isManager={isManager}
+                isManager={isOperationsManager}
                 onSelect={setSelectedId}
-                onRescheduleBooking={isManager ? handleRescheduleBooking : undefined}
+                onRescheduleBooking={isOperationsManager ? handleRescheduleBooking : undefined}
                 onInvalidCrossProviderDrop={handleInvalidCrossProviderDrop}
                 onInvalidCrossPatientTimeDrop={handleInvalidCrossPatientTimeDrop}
               />
@@ -668,7 +684,7 @@ function AdminDashboard() {
                 bookings={viewBookings}
                 providers={providers}
                 filters={filters}
-                isManager={isManager}
+                isManager={isOperationsManager}
                 onSelect={setSelectedId}
               />
             ) : null}
@@ -683,6 +699,7 @@ function AdminDashboard() {
           await refreshBookings();
         }}
         getIdToken={getIdToken}
+        readOnly={!isDeskWrite}
       />
 
       <NewBookingDrawer
@@ -809,7 +826,7 @@ function AdminDashboard() {
       <PatientLookupPanel
         open={patientLookupOpen}
         getIdToken={getIdToken}
-        isSuperadmin={me?.role === "superadmin"}
+        isSuperadmin={me?.role ? staffMeetsMin(me.role, "manager") : false}
         onClose={() => setPatientLookupOpen(false)}
       />
     </div>

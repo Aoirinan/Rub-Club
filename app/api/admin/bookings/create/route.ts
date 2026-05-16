@@ -35,7 +35,7 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const staff = await requireStaff(req.headers.get("authorization"), "admin");
+  const staff = await requireStaff(req.headers.get("authorization"), "front_desk");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

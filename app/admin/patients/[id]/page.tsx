@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import { PatientProfileBody } from "@/app/admin/patients/_components/PatientProfileBody";
+import { staffMeetsMin, type StaffRole } from "@/lib/staff-roles";
 
 export default function PatientProfilePage() {
   return (
@@ -22,7 +23,7 @@ function PatientProfilePageContent() {
   const router = useRouter();
   const patientId = typeof params.id === "string" ? params.id : "";
   const [auth, setAuth] = useState<Auth | null>(null);
-  const [isSuperadmin, setIsSuperadmin] = useState(false);
+  const [canEdit, setCanEdit] = useState(false);
 
   useEffect(() => {
     setAuth(getFirebaseClientAuth());
@@ -43,8 +44,12 @@ function PatientProfilePageContent() {
       }
       const token = await user.getIdToken();
       const res = await fetch("/api/admin/me", { headers: { Authorization: `Bearer ${token}` } });
-      const data = (await res.json()) as { role?: string };
-      setIsSuperadmin(data.role === "superadmin");
+      const data = (await res.json()) as { role?: StaffRole | null };
+      if (!data.role || !staffMeetsMin(data.role, "front_desk")) {
+        router.replace("/admin");
+        return;
+      }
+      setCanEdit(staffMeetsMin(data.role, "manager"));
     });
     return () => unsub();
   }, [auth, router]);
@@ -75,7 +80,7 @@ function PatientProfilePageContent() {
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">
-        <PatientProfileBody patientId={patientId} getIdToken={getIdToken} isSuperadmin={isSuperadmin} />
+        <PatientProfileBody patientId={patientId} getIdToken={getIdToken} isSuperadmin={canEdit} />
       </main>
     </div>
   );

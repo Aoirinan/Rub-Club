@@ -13,7 +13,7 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const staff = await requireStaff(req.headers.get("authorization"), "superadmin");
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (!staff) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

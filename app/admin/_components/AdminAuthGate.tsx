@@ -4,20 +4,31 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
+import { staffMeetsMin, type StaffRole } from "@/lib/staff-roles";
 
 type Me = {
   authenticated: boolean;
-  role?: "admin" | "superadmin" | null;
+  role?: StaffRole | null;
   email?: string | null;
+  capabilities?: {
+    operations: boolean;
+    siteContent: boolean;
+    marketing: boolean;
+    deskWrite: boolean;
+  };
 };
 
 export function AdminAuthGate({
   children,
+  requireMinRole,
+  /** @deprecated Use requireMinRole="superadmin" */
   requireSuperadmin = false,
 }: {
   children: ReactNode;
+  requireMinRole?: StaffRole;
   requireSuperadmin?: boolean;
 }) {
+  const minRole: StaffRole | undefined = requireMinRole ?? (requireSuperadmin ? "superadmin" : undefined);
   const router = useRouter();
   const [auth, setAuth] = useState<Auth | null>(null);
   const [me, setMe] = useState<Me | null>(null);
@@ -44,14 +55,14 @@ export function AdminAuthGate({
         setReady(true);
         return;
       }
-      if (requireSuperadmin && data.role !== "superadmin") {
+      if (minRole && !staffMeetsMin(data.role, minRole)) {
         router.replace("/admin");
         return;
       }
       setReady(true);
     });
     return () => unsub();
-  }, [auth, router, requireSuperadmin]);
+  }, [auth, router, minRole]);
 
   if (!ready) {
     return (
@@ -67,7 +78,7 @@ export function AdminAuthGate({
     );
   }
 
-  if (requireSuperadmin && me.role !== "superadmin") {
+  if (minRole && !staffMeetsMin(me.role, minRole)) {
     return null;
   }
 

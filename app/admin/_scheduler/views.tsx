@@ -63,7 +63,7 @@ type ViewProps = {
   providers: ProviderRow[];
   filters: FilterState;
   onSelect: (id: string) => void;
-  /** Firebase superadmin (manager); `admin` is front-desk staff with a slimmer UI. */
+  /** Manager or superadmin: reschedule and expanded list rows. */
   isManager?: boolean;
   /** Day view: drag a block to another time (same provider column). */
   onRescheduleBooking?: (bookingId: string, startIso: string) => Promise<void>;

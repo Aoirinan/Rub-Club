@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { verifyBearerUid, getStaffRole } from "@/lib/staff-auth";
+import { verifyBearerUid, getStaffProfile } from "@/lib/staff-auth";
+import { staffCapabilities } from "@/lib/staff-roles";
 
 export const runtime = "nodejs";
 
@@ -8,11 +9,21 @@ export async function GET(req: Request) {
   if (!decoded?.uid) {
     return NextResponse.json({ authenticated: false }, { status: 200 });
   }
-  const role = await getStaffRole(decoded.uid);
+  const profile = await getStaffProfile(decoded.uid);
+  if (!profile) {
+    return NextResponse.json({
+      authenticated: true,
+      uid: decoded.uid,
+      email: decoded.email ?? null,
+      role: null,
+    });
+  }
   return NextResponse.json({
     authenticated: true,
     uid: decoded.uid,
     email: decoded.email ?? null,
-    role,
+    role: profile.role,
+    linkedProviderId: profile.linkedProviderId ?? null,
+    capabilities: staffCapabilities(profile.role),
   });
 }

@@ -6,7 +6,7 @@ import { parsePatientLookupSearchParams } from "@/lib/patient-search-parse";
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
-  const staff = await requireStaff(req.headers.get("authorization"), "admin");
+  const staff = await requireStaff(req.headers.get("authorization"), "front_desk");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

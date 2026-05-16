@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default function SuperAdminLayout({ children }: { children: ReactNode }) {
   return (
-    <AdminAuthGate requireSuperadmin>
+    <AdminAuthGate requireMinRole="manager">
       <ManagerHubNav />
       {children}
     </AdminAuthGate>

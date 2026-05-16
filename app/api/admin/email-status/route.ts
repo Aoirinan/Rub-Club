@@ -10,7 +10,7 @@ export const runtime = "nodejs";
  * Does not expose keys or addresses.
  */
 export async function GET(req: Request) {
-  const staff = await requireStaff(req.headers.get("authorization"), "superadmin");
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

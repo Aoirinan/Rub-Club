@@ -7,11 +7,23 @@ import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import { IntakePhiSection } from "./IntakePhiSection";
 import { MassageTeamAdminSection } from "./_components/MassageTeamAdminSection";
+import {
+  STAFF_ROLE_OPTIONS,
+  staffMeetsMin,
+  staffRoleLabel,
+  type StaffRole,
+} from "@/lib/staff-roles";
 
 type Me = {
   authenticated: boolean;
-  role?: "admin" | "superadmin" | null;
+  role?: StaffRole | null;
   email?: string | null;
+  capabilities?: {
+    operations: boolean;
+    siteContent: boolean;
+    marketing: boolean;
+    deskWrite: boolean;
+  };
 };
 
 type StaffRow = { uid: string; role?: string; email?: string };
@@ -194,7 +206,8 @@ export default function SuperAdminPage() {
   const [meReady, setMeReady] = useState(false);
   const [staff, setStaff] = useState<StaffRow[]>([]);
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"admin" | "superadmin">("admin");
+  const [role, setRole] = useState<StaffRole>("front_desk");
+  const [linkedProviderId, setLinkedProviderId] = useState("");
   const [bootstrapSecret, setBootstrapSecret] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [deletingUid, setDeletingUid] = useState<string | null>(null);
@@ -302,7 +315,7 @@ export default function SuperAdminPage() {
       const data = (await res.json()) as Me;
       setMe(data);
       setMeReady(true);
-      if (data.role === "superadmin") {
+      if (data.role && staffMeetsMin(data.role, "manager")) {
         await loadStaff(token);
         await loadEmailStatus(token);
         await loadBookableProviders(token);
@@ -327,7 +340,11 @@ export default function SuperAdminPage() {
         Authorization: `Bearer ${token}`,
         "content-type": "application/json",
       },
-      body: JSON.stringify({ email: email.trim(), role }),
+      body: JSON.stringify({
+        email: email.trim(),
+        role,
+        ...(role === "massage_therapist" ? { linkedProviderId: linkedProviderId.trim() } : {}),
+      }),
     });
     const data = (await res.json().catch(() => ({}))) as InviteStaffResponse;
     if (!res.ok) {
@@ -561,7 +578,7 @@ export default function SuperAdminPage() {
       setMessage(typeof data.error === "string" ? data.error : "Bootstrap failed.");
       return;
     }
-    setMessage("Bootstrap complete. You are now a manager.");
+    setMessage("Bootstrap complete. You are now a superadmin.");
     setBootstrapSecret("");
     const fresh = await user.getIdToken(true);
     const meRes = await fetch("/api/admin/me", {
@@ -581,23 +598,27 @@ export default function SuperAdminPage() {
     );
   }
 
-  const isSuper = me?.role === "superadmin";
-  const isEmployee = me?.role === "admin";
+  const isOperations = me?.role ? staffMeetsMin(me.role, "manager") : false;
+  const isDeskOnly =
+    me?.role === "front_desk" || me?.role === "massage_therapist";
   const needsBootstrap = !me?.role;
+  const assignableRoles = STAFF_ROLE_OPTIONS.filter(
+    (o) => me?.role === "superadmin" || o.value !== "superadmin",
+  );
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-10">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
-            {isSuper ? "Operations" : needsBootstrap ? "Staff setup" : "Access"}
+            {isOperations ? "Operations" : needsBootstrap ? "Staff setup" : "Access"}
           </h1>
           <p className="mt-1 text-xs text-slate-400">
             Build {process.env.NEXT_PUBLIC_APP_VERSION ?? "unknown"}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {isSuper ? (
+          {isOperations ? (
             <Link
               href="/admin/super/slot-inspector"
               className="text-sm font-semibold text-slate-600 hover:underline"
@@ -610,23 +631,24 @@ export default function SuperAdminPage() {
 
       {message ? <p className="text-sm text-slate-800">{message}</p> : null}
 
-      {isEmployee ? (
+      {isDeskOnly && !isOperations ? (
         <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-950">
-          <p className="font-medium">Employee access</p>
+          <p className="font-medium">{staffRoleLabel(me?.role)} access</p>
           <p className="mt-2">
-            Your account is <strong>admin</strong> (employee): you can use <Link href="/admin" className="font-semibold underline">Bookings</Link>{" "}
-            but not this management page. Ask a <strong>manager</strong> to promote you if you need to invite staff.
+            You can use <Link href="/admin" className="font-semibold underline">Bookings</Link> but not
+            this management page. Ask a <strong>manager</strong> to promote you if you need Operations
+            access.
           </p>
         </section>
       ) : null}
 
       {needsBootstrap ? (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
-          <h2 className="text-lg font-semibold text-slate-900">Become manager (first on this project)</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Become superadmin (first on this project)</h2>
           <p className="text-sm text-slate-600">
             Put <code className="rounded bg-slate-100 px-1">ADMIN_BOOTSTRAP_SECRET</code> in your server
             environment (e.g. Vercel → Environment Variables → Production), redeploy, paste the same secret here,
-            and run once. Then you can grant <strong>employee</strong> or <strong>manager</strong> roles below.
+            and run once. Then you can grant staff roles below.
           </p>
           <input
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -644,7 +666,7 @@ export default function SuperAdminPage() {
         </section>
       ) : null}
 
-      {isSuper ? (
+      {isOperations ? (
         <>
           {emailStatus?.fromEnvInvalidFormat ? (
             <section className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-950">
@@ -760,13 +782,11 @@ export default function SuperAdminPage() {
               in Firestore.
             </p>
             <ul className="list-disc pl-5 text-sm text-slate-600">
-              <li>
-                <strong>Employee (admin)</strong> — view bookings and cancel slots.
-              </li>
-              <li>
-                <strong>Manager</strong> — same as employee, plus this page (invite staff, see staff
-                list).
-              </li>
+              {STAFF_ROLE_OPTIONS.map((opt) => (
+                <li key={opt.value}>
+                  <strong>{opt.label}</strong> — {opt.description}
+                </li>
+              ))}
             </ul>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="space-y-1 text-sm sm:col-span-2">
@@ -782,12 +802,34 @@ export default function SuperAdminPage() {
                 <select
                   className="w-full rounded-lg border border-slate-300 px-3 py-2"
                   value={role}
-                  onChange={(e) => setRole(e.target.value as "admin" | "superadmin")}
+                  onChange={(e) => setRole(e.target.value as StaffRole)}
                 >
-                  <option value="admin">Employee (admin)</option>
-                  <option value="superadmin">Manager</option>
+                  {assignableRoles.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </label>
+              {role === "massage_therapist" ? (
+                <label className="space-y-1 text-sm sm:col-span-2">
+                  <span className="font-medium text-slate-800">Linked bookable provider</span>
+                  <select
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                    value={linkedProviderId}
+                    onChange={(e) => setLinkedProviderId(e.target.value)}
+                  >
+                    <option value="">Select provider…</option>
+                    {bookableProviders
+                      .filter((p) => p.active)
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.displayName}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              ) : null}
             </div>
             <button
               type="button"
@@ -1289,7 +1331,7 @@ export default function SuperAdminPage() {
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="font-semibold text-slate-900">{s.email ?? s.uid}</div>
                       <div>uid: {s.uid}</div>
-                      <div>role: {s.role}</div>
+                      <div>role: {staffRoleLabel(s.role)}</div>
                       {isSelf ? (
                         <div className="font-sans text-[11px] text-slate-500">
                           You cannot remove yourself here; another manager must revoke your access.

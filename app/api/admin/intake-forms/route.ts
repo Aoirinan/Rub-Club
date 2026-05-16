@@ -15,7 +15,7 @@ function isoFromFirestoreTime(v: unknown): string | null {
 }
 
 export async function GET(req: Request) {
-  const staff = await requireStaff(req.headers.get("authorization"), "superadmin");
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (!staff) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

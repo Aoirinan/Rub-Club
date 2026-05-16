@@ -6,13 +6,25 @@ import { getAuth, getFirestore } from "@/lib/firebase-admin";
 import { getPublicAppOrigin } from "@/lib/app-origin";
 import { requireStaff } from "@/lib/staff-auth";
 import { sendStaffInviteEmail } from "@/lib/sendgrid";
+import { STAFF_ROLES, canAssignRole, type StaffRole } from "@/lib/staff-roles";
 
 export const runtime = "nodejs";
 
-const bodySchema = z.object({
-  email: z.string().email(),
-  role: z.enum(["admin", "superadmin"]),
-});
+const bodySchema = z
+  .object({
+    email: z.string().email(),
+    role: z.enum(STAFF_ROLES as [StaffRole, ...StaffRole[]]),
+    linkedProviderId: z.string().min(1).max(200).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.role === "massage_therapist" && !data.linkedProviderId?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "linkedProviderId is required for massage therapists",
+        path: ["linkedProviderId"],
+      });
+    }
+  });
 
 function authErrorCode(e: unknown): string {
   if (typeof e !== "object" || e === null) return "";
@@ -21,7 +33,7 @@ function authErrorCode(e: unknown): string {
 }
 
 export async function POST(req: Request) {
-  const actor = await requireStaff(req.headers.get("authorization"), "superadmin");
+  const actor = await requireStaff(req.headers.get("authorization"), "manager");
   if (!actor) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -40,6 +52,13 @@ export async function POST(req: Request) {
 
   const email = parsed.data.email.trim().toLowerCase();
   const role = parsed.data.role;
+  if (!canAssignRole(actor.role, role)) {
+    return NextResponse.json({ error: "You cannot assign that role." }, { status: 403 });
+  }
+
+  const linkedProviderId =
+    role === "massage_therapist" ? parsed.data.linkedProviderId!.trim() : undefined;
+
   const auth = getAuth();
   const db = getFirestore();
 
@@ -87,9 +106,14 @@ export async function POST(req: Request) {
         updatedAt: FieldValue.serverTimestamp(),
         updatedByUid: actor.uid,
         ...(createdNewAuthUser ? { invitedAt: FieldValue.serverTimestamp() } : {}),
+        ...(linkedProviderId ? { linkedProviderId } : {}),
       },
       { merge: true },
     );
+
+  if (role !== "massage_therapist") {
+    await db.collection("staff").doc(uid).update({ linkedProviderId: FieldValue.delete() });
+  }
 
   let emailedReset = false;
   let inviteEmailIssue: "missing_env" | "sendgrid_error" | "reset_link_failed" | null = null;

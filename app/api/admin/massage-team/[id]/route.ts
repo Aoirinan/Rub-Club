@@ -35,7 +35,7 @@ function bumpCache(): void {
 }
 
 export async function PATCH(req: Request, ctx: Params) {
-  const staff = await requireStaff(req.headers.get("authorization"), "superadmin");
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -173,7 +173,7 @@ export async function PATCH(req: Request, ctx: Params) {
 }
 
 export async function DELETE(_req: Request, ctx: Params) {
-  const staff = await requireStaff(_req.headers.get("authorization"), "superadmin");
+  const staff = await requireStaff(_req.headers.get("authorization"), "manager");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

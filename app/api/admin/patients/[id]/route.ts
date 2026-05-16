@@ -35,7 +35,7 @@ const patchSchema = z.object({
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(req: Request, ctx: Params) {
-  const staff = await requireStaff(req.headers.get("authorization"), "admin");
+  const staff = await requireStaff(req.headers.get("authorization"), "front_desk");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -57,7 +57,7 @@ export async function GET(req: Request, ctx: Params) {
 }
 
 export async function PATCH(req: Request, ctx: Params) {
-  const staff = await requireStaff(req.headers.get("authorization"), "superadmin");
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -132,7 +132,7 @@ export async function PATCH(req: Request, ctx: Params) {
 }
 
 export async function DELETE(req: Request, ctx: Params) {
-  const staff = await requireStaff(req.headers.get("authorization"), "superadmin");
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

@@ -7,8 +7,9 @@ import { DateTime } from "luxon";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { TIME_ZONE } from "@/lib/constants";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
+import { staffMeetsMin, type StaffRole } from "@/lib/staff-roles";
 
-type Me = { authenticated: boolean; role?: "admin" | "superadmin" | null; email?: string | null };
+type Me = { authenticated: boolean; role?: StaffRole | null; email?: string | null };
 
 type Slot = { startIso: string; label: string };
 
@@ -170,13 +171,13 @@ export default function SlotInspectorPage() {
   }, [date, locationId, serviceLine, durationMin, providerMode, providerId, getIdToken]);
 
   useEffect(() => {
-    if (!meReady || me?.role !== "superadmin") return;
+    if (!meReady || !me?.role || !staffMeetsMin(me.role, "manager")) return;
     runInspect();
     // run once on first ready; users press "Refresh" or change inputs + button after that
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meReady, me?.role]);
 
-  const isSuper = me?.role === "superadmin";
+  const isOperations = me?.role ? staffMeetsMin(me.role, "manager") : false;
 
   const slotTimes = useMemo(() => new Set((slots ?? []).map((s) => s.startIso)), [slots]);
 
@@ -184,7 +185,7 @@ export default function SlotInspectorPage() {
     return <div className="px-4 py-16 text-center text-sm text-slate-600">Checking permissions…</div>;
   }
 
-  if (!isSuper) {
+  if (!isOperations) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-10">
         <h1 className="text-2xl font-semibold text-slate-900">Slot Inspector</h1>

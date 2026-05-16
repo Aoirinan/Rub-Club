@@ -8,6 +8,7 @@ import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { TIME_ZONE } from "@/lib/constants";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import type { PatientApiRow, PatientPaymentType } from "@/lib/patient-types";
+import { staffMeetsMin, type StaffRole } from "@/lib/staff-roles";
 
 function formatDate(ms: number | null): string {
   if (!ms) return "—";
@@ -25,7 +26,7 @@ export default function PatientsListPage() {
 function PatientsListContent() {
   const router = useRouter();
   const [auth, setAuth] = useState<Auth | null>(null);
-  const [meRole, setMeRole] = useState<"admin" | "superadmin" | null>(null);
+  const [meRole, setMeRole] = useState<StaffRole | null>(null);
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [paymentFilter, setPaymentFilter] = useState<PatientPaymentType | "all">("all");
@@ -66,8 +67,9 @@ function PatientsListContent() {
       }
       const token = await user.getIdToken();
       const res = await fetch("/api/admin/me", { headers: { Authorization: `Bearer ${token}` } });
-      const data = (await res.json()) as { role?: string };
-      if (data.role === "admin" || data.role === "superadmin") setMeRole(data.role);
+      const data = (await res.json()) as { role?: StaffRole | null };
+      if (data.role && staffMeetsMin(data.role, "front_desk")) setMeRole(data.role);
+      else if (data.role === "massage_therapist") router.replace("/admin");
     });
     return () => unsub();
   }, [auth, router]);
@@ -96,7 +98,7 @@ function PatientsListContent() {
     void load();
   }, [load]);
 
-  const isSuperadmin = meRole === "superadmin";
+  const isManagerPlus = meRole ? staffMeetsMin(meRole, "manager") : false;
 
   async function createPatient() {
     setAddError(null);
@@ -150,7 +152,7 @@ function PatientsListContent() {
             <Link href="/admin" className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold">
               Scheduler
             </Link>
-            {isSuperadmin ? (
+            {isManagerPlus ? (
               <button
                 type="button"
                 onClick={() => setAddOpen(true)}
@@ -224,7 +226,7 @@ function PatientsListContent() {
                     <td className="px-4 py-3">{p.totalVisits}</td>
                     <td className="px-4 py-3 hidden md:table-cell">{formatDate(p.lastVisitDateMs)}</td>
                     <td className="px-4 py-3 hidden md:table-cell">{formatDate(p.nextAppointmentDateMs)}</td>
-                    {isSuperadmin ? (
+                    {isManagerPlus ? (
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <Link href={`/admin/patients/${p.id}`} className="mr-2 text-xs font-semibold text-[#0f5f5c]">
                           View

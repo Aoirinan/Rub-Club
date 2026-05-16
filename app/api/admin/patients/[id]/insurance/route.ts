@@ -14,7 +14,7 @@ function isFile(v: FormDataEntryValue | null): v is File {
 }
 
 export async function POST(req: Request, ctx: Params) {
-  const staff = await requireStaff(req.headers.get("authorization"), "superadmin");
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

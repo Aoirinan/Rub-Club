@@ -14,7 +14,7 @@ export const runtime = "nodejs";
 type Params = { params: Promise<{ id: string }> };
 
 export async function POST(req: Request, ctx: Params) {
-  const staff = await requireStaff(req.headers.get("authorization"), "admin");
+  const staff = await requireStaff(req.headers.get("authorization"), "front_desk");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
