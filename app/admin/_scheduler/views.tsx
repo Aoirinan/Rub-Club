@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { DateTime } from "luxon";
 import {
   bookingStatusBlockClasses,
@@ -62,6 +63,8 @@ type ViewProps = {
   providers: ProviderRow[];
   filters: FilterState;
   onSelect: (id: string) => void;
+  /** Firebase superadmin (manager); `admin` is front-desk staff with a slimmer UI. */
+  isManager?: boolean;
   /** Day view: drag a block to another time (same provider column). */
   onRescheduleBooking?: (bookingId: string, startIso: string) => Promise<void>;
   /** Dropped on another provider column (reschedule API does not move providers). */
@@ -69,6 +72,136 @@ type ViewProps = {
   /** Proposed time overlaps another patient’s visit in the same column. */
   onInvalidCrossPatientTimeDrop?: () => void;
 };
+
+function patientLookupHref(b: BookingRow): string | null {
+  const q = (b.phone ?? b.email ?? b.name ?? "").trim();
+  if (!q) return null;
+  return `/admin/patient?q=${encodeURIComponent(q)}`;
+}
+
+function SchedulerListRow({
+  booking: b,
+  isManager,
+  onSelect,
+}: {
+  booking: BookingRow;
+  isManager: boolean;
+  onSelect: (id: string) => void;
+}) {
+  const timeLabel = b.startAtMs ? formatChicagoTime(b.startAtMs) : "—";
+  const patientHref = patientLookupHref(b);
+
+  if (!isManager) {
+    return (
+      <button
+        type="button"
+        onClick={() => onSelect(b.id)}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50"
+      >
+        <DeskStatusIcons booking={b} layout="inline" />
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-semibold text-slate-900">{b.name ?? "Unknown"}</div>
+          <div className="truncate text-xs text-slate-600">
+            {b.serviceLine ?? "—"} · {timeLabel}
+          </div>
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex w-full items-center gap-2 px-4 py-3 hover:bg-slate-50">
+      <button type="button" onClick={() => onSelect(b.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+        <DeskStatusIcons booking={b} layout="inline" />
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-semibold text-slate-900">{b.name ?? "Unknown"}</div>
+          <div className="truncate text-xs text-slate-600">
+            {b.serviceLine ?? "—"} · {timeLabel}
+          </div>
+        </div>
+      </button>
+      <details className="relative shrink-0">
+        <summary
+          className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full border border-slate-200 bg-white text-lg font-bold text-slate-600 hover:bg-slate-100 [&::-webkit-details-marker]:hidden"
+          aria-label="Appointment actions"
+        >
+          ···
+        </summary>
+        <div className="absolute right-0 z-20 mt-1 w-52 rounded-lg border border-slate-200 bg-white py-1 text-sm shadow-lg">
+          <button
+            type="button"
+            className="block w-full px-3 py-2 text-left text-slate-800 hover:bg-slate-50"
+            onClick={() => onSelect(b.id)}
+          >
+            Add note
+          </button>
+          <button
+            type="button"
+            className="block w-full px-3 py-2 text-left text-slate-800 hover:bg-slate-50"
+            onClick={() => onSelect(b.id)}
+          >
+            Reschedule
+          </button>
+          <button
+            type="button"
+            className="block w-full px-3 py-2 text-left text-slate-800 hover:bg-slate-50"
+            onClick={() => onSelect(b.id)}
+          >
+            Cancel
+          </button>
+          {patientHref ? (
+            <Link
+              href={patientHref}
+              className="block px-3 py-2 text-left text-slate-800 hover:bg-slate-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              View patient record
+            </Link>
+          ) : (
+            <span className="block px-3 py-2 text-left text-slate-400">View patient record</span>
+          )}
+        </div>
+      </details>
+    </div>
+  );
+}
+
+function MobileDayAgenda({
+  bookings,
+  filters,
+  isManager,
+  onSelect,
+}: {
+  bookings: BookingRow[];
+  filters: FilterState;
+  isManager: boolean;
+  onSelect: (id: string) => void;
+}) {
+  const dayStart = chicagoDayStart(filters.date);
+  const dayStartMs = dayStart.toMillis();
+  const dayEndMs = dayStart.plus({ days: 1 }).toMillis();
+  const rows = bookings
+    .filter((b) => typeof b.startAtMs === "number" && b.startAtMs >= dayStartMs && b.startAtMs < dayEndMs)
+    .sort((a, b) => (a.startAtMs ?? 0) - (b.startAtMs ?? 0));
+
+  return (
+    <div className="space-y-2 md:hidden">
+      {rows.length === 0 ? (
+        <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-600">
+          No appointments this day.
+        </p>
+      ) : (
+        <ul className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm divide-y divide-slate-100">
+          {rows.map((b) => (
+            <li key={b.id}>
+              <SchedulerListRow booking={b} isManager={isManager} onSelect={onSelect} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function bookingsForDayProvider(
   rows: BookingRow[],
@@ -101,6 +234,7 @@ export function DayView({
   providers,
   filters,
   onSelect,
+  isManager = false,
   onRescheduleBooking,
   onInvalidCrossProviderDrop,
   onInvalidCrossPatientTimeDrop,
@@ -120,7 +254,14 @@ export function DayView({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <>
+      <MobileDayAgenda
+        bookings={bookings}
+        filters={filters}
+        isManager={isManager}
+        onSelect={onSelect}
+      />
+      <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
       <div className="overflow-x-auto">
         <div
           className="grid min-w-full"
@@ -275,6 +416,7 @@ export function DayView({
         </div>
       ) : null}
     </div>
+    </>
   );
 }
 
@@ -561,7 +703,7 @@ function AllProvidersWeekSummary({
 
 /* ---------------- List view ---------------- */
 
-export function ListView({ bookings, onSelect }: ViewProps) {
+export function ListView({ bookings, onSelect, isManager = false }: ViewProps) {
   const groups = groupBookingsForList(bookings).filter((g) => g.rows.length > 0);
 
   if (groups.length === 0) {
@@ -588,43 +730,7 @@ export function ListView({ bookings, onSelect }: ViewProps) {
           <ul className="divide-y divide-slate-100">
             {g.rows.map((b) => (
               <li key={b.id}>
-                <button
-                  type="button"
-                  onClick={() => onSelect(b.id)}
-                  className="flex w-full flex-wrap items-start gap-3 px-4 py-3 text-left hover:bg-slate-50"
-                >
-                  <div className="min-w-[140px] flex-shrink-0">
-                    <div className="text-sm font-semibold text-slate-900">
-                      {b.startAtMs ? relativeDayLabel(b.startAtMs) : "—"}
-                    </div>
-                    <div className="text-xs text-slate-600">
-                      {b.startAtMs ? formatChicagoTime(b.startAtMs) : ""}
-                      {typeof b.durationMin === "number" ? ` · ${b.durationMin} min` : ""}
-                    </div>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <DeskStatusIcons booking={b} layout="inline" />
-                      <span className="font-semibold text-slate-900">{b.name ?? "Unknown"}</span>
-                      <span
-                        className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${bookingStatusPillClasses(b.status ?? "pending")}`}
-                      >
-                        {bookingStatusLabel(b.status ?? "pending")}
-                      </span>
-                    </div>
-                    <div className="mt-0.5 text-xs text-slate-600">
-                      {b.serviceLine} · {prettyLoc(b.locationId ?? "")} · {b.providerDisplayName || "First available"}
-                      {paymentHintSuffix(b)}
-                    </div>
-                    {b.phone || b.email ? (
-                      <div className="mt-0.5 text-xs text-slate-500">
-                        {b.phone ?? ""}
-                        {b.phone && b.email ? " · " : ""}
-                        {b.email ?? ""}
-                      </div>
-                    ) : null}
-                  </div>
-                </button>
+                <SchedulerListRow booking={b} isManager={isManager} onSelect={onSelect} />
               </li>
             ))}
           </ul>

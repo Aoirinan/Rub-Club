@@ -54,13 +54,6 @@ const nextConfig: NextConfig = {
         headers: SECURITY_HEADERS,
       },
       {
-        source: "/spine-simulator/:path*",
-        headers: [
-          ...SECURITY_HEADERS,
-          { key: "X-Robots-Tag", value: "noindex, follow" },
-        ],
-      },
-      {
         source: "/admin/:path*",
         headers: [
           ...SECURITY_HEADERS,

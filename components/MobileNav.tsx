@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { FACEBOOK_URL, telHref, type LocationInfo } from "@/lib/constants";
 import { track } from "@/lib/analytics";
 import type { NavItem } from "@/components/DesktopNav";
+import { BookingCta } from "@/components/BookingCta";
 
 export function MobileNav({
   items,
@@ -180,13 +181,10 @@ export function MobileNav({
               >
                 Gift cards
               </a>
-              <Link
-                href="/book"
+              <BookingCta
+                label="Book online"
                 className="focus-ring m-4 bg-[#f2d25d] px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]"
-                onClick={close}
-              >
-                Book online
-              </Link>
+              />
               <div className="border-t border-stone-200 p-4 text-sm">
                 <p className="mb-2 text-xs font-black uppercase tracking-wide text-stone-600">
                   Call us

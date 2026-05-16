@@ -1,7 +1,7 @@
-import Link from "next/link";
 import type { LocationInfo } from "@/lib/constants";
 import { telHref, reviewUrlForLocation } from "@/lib/constants";
 import { MASSAGE } from "@/lib/home-verbatim";
+import { BookingCta } from "@/components/BookingCta";
 
 export function LocationDetail({ location }: { location: LocationInfo }) {
   const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(
@@ -71,12 +71,10 @@ export function LocationDetail({ location }: { location: LocationInfo }) {
               </div>
             ))}
           </dl>
-          <Link
-            href={`/book?location=${location.id}`}
-            className="focus-ring inline-flex bg-[#f2d25d] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]"
-          >
-            Book at this location
-          </Link>
+          <BookingCta
+            label="Book at this location"
+            query={`location=${location.id}`}
+          />
         </div>
       </section>
 

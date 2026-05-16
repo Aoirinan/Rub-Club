@@ -6,6 +6,7 @@ import { ContactForm } from "@/components/ContactForm";
 import { LOCATION_LIST, telHref } from "@/lib/constants";
 import { organizationJsonLd } from "@/lib/structured-data";
 import { MASSAGE } from "@/lib/home-verbatim";
+import { contactAppointmentCopy } from "@/lib/public-booking";
 
 export const metadata: Metadata = {
   title: "Contact us — Paris & Sulphur Springs offices",
@@ -89,8 +90,7 @@ export default function ContactPage() {
           <div>
             <h2 className="text-2xl font-black text-[#173f3b]">Send us a message</h2>
             <p className="mt-2 text-sm text-stone-700">
-              For appointments, please use our online booking page so we can see availability live.
-              Use this form for everything else.
+              {contactAppointmentCopy()}
             </p>
             <div className="mt-6">
               <ContactForm />

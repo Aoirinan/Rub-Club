@@ -22,8 +22,6 @@ export const IMAGES = {
     "https://cdcssl.ibsrv.net/ibimg/smb/1400x1227_80/webmgr/1x/5/c/sedona/637d483367b61_blade.jpg.webp?f4d8fdfeaf0d5752ef0b4d328a1456af",
   chiroBg:
     "https://cdcssl.ibsrv.net/ibimg/smb/1400x934_80/webmgr/1x/5/c/sedona/638660a05d69e_chirobg.jpg.webp?20e761e45f85550c3bd062f087af0e56",
-  spine3d:
-    "https://cdcssl.ibsrv.net/ibimg/smb/1023x1023_80/webmgr/1w/3/z/ple/638785567e288_3dspine.jpg.webp?a9059e2eb31cbe18994a89fa0f09c77d",
   /** Doctor portraits — Baystone CDN (same assets as chiropracticparistexas.com) so deploys work without local binaries in git. */
   doctorGreg:
     "https://cdcssl.ibsrv.net/ibimg/smb/250x296_80/webmgr/1x/5/c/sedona/Dr-250x296.-Greg-Thompson-1920w.webp?7be6bcf9f8af51aa716aff29d066121d",

@@ -11,6 +11,7 @@ import {
   formatChicagoDateTimeShort,
 } from "@/lib/chicago-datetime-format";
 import { siteShortName, siteUrl } from "@/lib/site-content";
+import { publicBookingEmailUrl, publicBookingRebookText } from "@/lib/public-booking";
 
 export type BookingEmailContext = {
   bookingId: string;
@@ -305,7 +306,7 @@ export function patientDeclinedEmail(
     "",
     cleanReason ? `Reason from the office: ${cleanReason}` : "",
     cleanReason ? "" : "",
-    `We'd love to fit you in another time. Pick a new time at ${siteUrl("/book")} or call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
+    `We'd love to fit you in another time. ${publicBookingRebookText(loc)}`,
     "",
     `Reference: ${ctx.bookingId}`,
   ]
@@ -339,7 +340,7 @@ export function patientDeclinedEmail(
     heading: "We couldn't confirm your appointment",
     body,
     ctaText: "Pick another time",
-    ctaHref: siteUrl("/book"),
+    ctaHref: publicBookingEmailUrl(),
   });
 
   return { subject, text, html };
@@ -375,7 +376,7 @@ export function patientCancelledEmail(
     "",
     cleanReason ? `${reasonLabel}: ${cleanReason}` : "",
     cleanReason ? "" : "",
-    `To rebook: ${siteUrl("/book")} or call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
+    `To rebook: ${publicBookingRebookText(loc)}`,
     "",
     `Reference: ${ctx.bookingId}`,
   ]
@@ -413,7 +414,7 @@ export function patientCancelledEmail(
     heading: "Your appointment was cancelled",
     body,
     ctaText: "Pick another time",
-    ctaHref: siteUrl("/book"),
+    ctaHref: publicBookingEmailUrl(),
   });
 
   return { subject, text, html };

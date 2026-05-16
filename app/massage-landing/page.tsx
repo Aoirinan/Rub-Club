@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHero } from "@/components/PageChrome";
+import { BookingCta } from "@/components/BookingCta";
 
 export const metadata: Metadata = {
   title: "Massage Therapy — Paris, TX",
@@ -25,12 +26,7 @@ export default function MassageLandingPage() {
             availability — call ahead if you are unsure.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/book"
-              className="focus-ring inline-flex bg-[#0f5f5c] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
-            >
-              Book online
-            </Link>
+            <BookingCta label="Book online" variant="teal" />
             <Link
               href="/services/massage"
               className="focus-ring inline-flex border-2 border-[#0f5f5c] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-[#0f5f5c]/5"

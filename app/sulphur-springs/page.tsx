@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { CtaCard } from "@/components/PageChrome";
+import { BookingCta } from "@/components/BookingCta";
 import { telHref, LOCATIONS } from "@/lib/constants";
+import { publicBookingHref } from "@/lib/public-booking";
 import {
   SS_STAFF,
   SS_SERVICE_NAV,
@@ -151,12 +153,7 @@ export default function SulphurSpringsPage() {
             Your pain-free life, just around the corner.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/book"
-              className="focus-ring bg-[#2980b9] px-6 py-3 text-sm font-black uppercase tracking-wide text-white shadow hover:bg-[#1a6da3]"
-            >
-              Request Appointment
-            </Link>
+            <BookingCta label="Request Appointment" variant="ss" />
             <a
               className="focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#173f3b]"
               href={telHref(ss.phonePrimary)}
@@ -336,7 +333,7 @@ export default function SulphurSpringsPage() {
         <CtaCard
           title="Ready for relief?"
           body="Book an appointment online or give us a call — we're here to help you feel better and move better."
-          primary={{ label: "Request appointment", href: "/book" }}
+          primary={{ label: "Request appointment", href: publicBookingHref() }}
           secondary={{ label: "Call (903) 919-5020", href: telHref(ss.phonePrimary) }}
         />
       </div>

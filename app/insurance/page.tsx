@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
 import { telHref } from "@/lib/constants";
+import { publicBookingHref } from "@/lib/public-booking";
 
 export const metadata: Metadata = {
   title: "Insurance & Billing",
@@ -74,7 +75,7 @@ export default function InsurancePage() {
         <CtaCard
           title="Have benefits to use before year-end?"
           body="Book a visit while you still have flexible-spending or out-of-pocket dollars to use."
-          primary={{ label: "Book online", href: "/book" }}
+          primary={{ label: "Book online", href: publicBookingHref() }}
           secondary={{ label: "Talk to billing", href: "/contact" }}
         />
       </div>

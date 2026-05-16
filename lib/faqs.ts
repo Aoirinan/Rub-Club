@@ -1,3 +1,5 @@
+import { bookingAvailabilityCopy } from "./public-booking";
+
 export type FaqEntry = { q: string; a: string };
 
 export const FAQS: readonly FaqEntry[] = [
@@ -27,7 +29,7 @@ export const FAQS: readonly FaqEntry[] = [
   },
   {
     q: "Do you offer same-day appointments?",
-    a: "Often, yes. Use the online booking page to see live openings, or call the office and we will do our best to fit you in.",
+    a: `Often, yes. ${bookingAvailabilityCopy()}`,
   },
   {
     q: "Is parking available?",

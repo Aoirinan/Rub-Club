@@ -15,7 +15,8 @@ function readDomainCookie(): "massage" | "chiro" | "default" {
 
 export function DomainSpecialsPopup() {
   const [open, setOpen] = useState(false);
-  const [html, setHtml] = useState<string | null>(null);
+  const [bodyHtml, setBodyHtml] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [modalTitle, setModalTitle] = useState("Specials");
   const [closeLabel, setCloseLabel] = useState("Close");
 
@@ -39,9 +40,18 @@ export function DomainSpecialsPopup() {
         if (!s) return;
         const body =
           ctx === "massage" ? s.massageHtml : ctx === "chiro" ? s.chiroHtml : s.generalHtml;
-        if (!body || !body.trim()) return;
+        const bodyStr = typeof body === "string" ? body.trim() : "";
+        const imgRaw =
+          ctx === "massage"
+            ? s.massageImageUrl
+            : ctx === "chiro"
+              ? s.chiroImageUrl
+              : s.generalImageUrl;
+        const imgStr = typeof imgRaw === "string" ? imgRaw.trim() : "";
+        if (!bodyStr && !imgStr) return;
         if (cancelled) return;
-        setHtml(body);
+        setBodyHtml(bodyStr);
+        setImageUrl(imgStr);
         const t = typeof s.modalTitle === "string" && s.modalTitle.trim() ? s.modalTitle.trim() : "Specials";
         const c = typeof s.closeLabel === "string" && s.closeLabel.trim() ? s.closeLabel.trim() : "Close";
         setModalTitle(t);
@@ -65,7 +75,7 @@ export function DomainSpecialsPopup() {
     setOpen(false);
   }
 
-  if (!open || !html) return null;
+  if (!open || (!bodyHtml && !imageUrl)) return null;
 
   return (
     <div
@@ -78,10 +88,22 @@ export function DomainSpecialsPopup() {
         <h2 id="specials-title" className="text-xl font-black text-[#173f3b]">
           {modalTitle}
         </h2>
-        <div
-          className="prose prose-sm mt-4 max-w-none text-stone-800 prose-a:text-[#0f5f5c]"
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
+        <div className="mt-4 space-y-4">
+          {imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- public marketing URL from owner storage
+            <img
+              src={imageUrl}
+              alt=""
+              className="max-h-[min(50vh,420px)] w-full rounded-lg border border-stone-100 object-contain"
+            />
+          ) : null}
+          {bodyHtml ? (
+            <div
+              className="prose prose-sm max-w-none text-stone-800 prose-a:text-[#0f5f5c]"
+              dangerouslySetInnerHTML={{ __html: bodyHtml }}
+            />
+          ) : null}
+        </div>
         <button
           type="button"
           onClick={close}

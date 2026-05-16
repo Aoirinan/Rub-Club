@@ -6,7 +6,7 @@ import { isSuperadminRequest } from "@/lib/superadmin-auth";
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
-  if (!isSuperadminRequest(req.headers.get("cookie"))) {
+  if (!(await isSuperadminRequest(req.headers.get("cookie")))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { searchParams } = new URL(req.url);

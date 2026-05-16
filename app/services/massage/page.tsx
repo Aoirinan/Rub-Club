@@ -4,10 +4,12 @@ import Link from "next/link";
 import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { MassageTeamGrid } from "@/components/marketing/MassageTeamGrid";
+import { BookingCta } from "@/components/BookingCta";
 import { IMAGES } from "@/lib/home-images";
 import { MASSAGE } from "@/lib/home-verbatim";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { LOCATIONS, telHref } from "@/lib/constants";
+import { publicBookingHref } from "@/lib/public-booking";
 import { massageJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
 
@@ -136,12 +138,11 @@ export default async function MassageServicePage() {
             </a>
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/book?service=massage&location=paris"
-              className="focus-ring bg-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-white shadow hover:bg-[#0f817b]"
-            >
-              Book massage online
-            </Link>
+            <BookingCta
+              label="Book massage online"
+              query="service=massage&location=paris"
+              variant="teal"
+            />
             <Link
               href="/patient-forms"
               className="focus-ring border-2 border-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-[#0f5f5c]/5"
@@ -154,7 +155,7 @@ export default async function MassageServicePage() {
         <CtaCard
           title="Have a question first?"
           body="The massage desk can verify available times and answer questions about specific conditions."
-          primary={{ label: "Book online", href: "/book?service=massage" }}
+          primary={{ label: "Book online", href: publicBookingHref("service=massage") }}
           secondary={{ label: "Call 903-739-9959", href: telHref("903-739-9959") }}
         />
       </div>

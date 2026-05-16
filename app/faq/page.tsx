@@ -4,6 +4,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { FaqList } from "@/components/FaqList";
 import { FAQS } from "@/lib/faqs";
 import { faqPageJsonLd } from "@/lib/structured-data";
+import { publicBookingHref } from "@/lib/public-booking";
 
 export const metadata: Metadata = {
   title: "Frequently Asked Questions",
@@ -36,7 +37,7 @@ export default function FaqPage() {
           title="Still have a question?"
           body="The fastest way to reach us is by phone during office hours, or send a message and we'll respond as soon as we can."
           primary={{ label: "Contact us", href: "/contact" }}
-          secondary={{ label: "Book online", href: "/book" }}
+          secondary={{ label: "Book online", href: publicBookingHref() }}
         />
       </div>
     </>

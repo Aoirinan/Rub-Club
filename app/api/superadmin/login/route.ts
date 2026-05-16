@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   if (!got || got !== want) {
     return NextResponse.json({ error: "Invalid password" }, { status: 401 });
   }
-  const token = signSuperadminSession();
+  const token = await signSuperadminSession();
   if (!token) {
     return NextResponse.json({ error: "Could not create session" }, { status: 500 });
   }

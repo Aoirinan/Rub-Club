@@ -5,9 +5,30 @@ import Link from "next/link";
 import { DateTime } from "luxon";
 import { TIME_ZONE } from "@/lib/constants";
 import type { PatientIntakeRow } from "@/lib/patient-record-lookup";
-import type { BannerConfig, DoctorMediaItem, SiteEditableCopy, SiteOwnerSingleton, TestimonialVideoItem } from "@/lib/site-owner-config";
+import type {
+  BannerConfig,
+  DoctorMediaItem,
+  SiteEditableCopy,
+  SiteOwnerSingleton,
+  SpecialsPopupVariant,
+  TestimonialVideoItem,
+} from "@/lib/site-owner-config";
 import { paymentStatusShort } from "@/app/admin/_scheduler/helpers";
 import type { BookingRow } from "@/app/admin/_scheduler/types";
+import {
+  OWNER_IMAGE_MAX_BYTES,
+  OWNER_MAX_TOTAL_VIDEOS,
+  OWNER_MAX_VIDEOS_PER_DOCTOR,
+  OWNER_MAX_VIDEOS_PER_MASSAGE_MEMBER,
+  OWNER_VIDEO_MAX_BYTES,
+  resolveOwnerDoctorMediaContentType,
+  resolveOwnerTestimonialVideoContentType,
+} from "@/lib/owner-marketing-limits";
+import {
+  assertCanAddDoctorVideo,
+  assertCanAddTestimonialVideo,
+  type OwnerVideoQuotaSnapshot,
+} from "@/lib/owner-upload-quota";
 
 type Tab = "banner" | "videos" | "specials" | "doctor" | "siteinfo" | "reports" | "settings";
 
@@ -79,6 +100,8 @@ export default function OwnerSuperAdminPage() {
   const [tab, setTab] = useState<Tab>("banner");
   const [msg, setMsg] = useState<string | null>(null);
   const [config, setConfig] = useState<SiteOwnerSingleton | null>(null);
+  const [massageTeamMembers, setMassageTeamMembers] = useState<{ id: string; name: string }[]>([]);
+  const [videoQuota, setVideoQuota] = useState<OwnerVideoQuotaSnapshot | null>(null);
   const [appVersion, setAppVersion] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [reportsFrom, setReportsFrom] = useState(() => new Date().toISOString().slice(0, 10));
@@ -101,8 +124,15 @@ export default function OwnerSuperAdminPage() {
       setAuthed(false);
       return;
     }
-    const data = (await res.json()) as { config: SiteOwnerSingleton; appVersion?: string };
+    const data = (await res.json()) as {
+      config: SiteOwnerSingleton;
+      appVersion?: string;
+      massageTeamMembers?: { id: string; name: string }[];
+      videoQuota?: OwnerVideoQuotaSnapshot;
+    };
     setConfig(data.config);
+    setMassageTeamMembers(data.massageTeamMembers ?? []);
+    setVideoQuota(data.videoQuota ?? null);
     setAppVersion(typeof data.appVersion === "string" ? data.appVersion : null);
     setAuthed(true);
   }, []);
@@ -185,22 +215,87 @@ export default function OwnerSuperAdminPage() {
     setMsg("Site info saved.");
   }
 
-  async function uploadVideo(fd: FormData) {
+  async function uploadVideo(form: HTMLFormElement) {
     setMsg(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/superadmin/videos/upload", {
+      const fd = new FormData(form);
+      const file = fd.get("file");
+      if (!(file instanceof File) || file.size === 0) {
+        setMsg("Choose a video file.");
+        return;
+      }
+      if (file.size > OWNER_VIDEO_MAX_BYTES) {
+        setMsg("Video is too large (max 50 MB).");
+        return;
+      }
+      const title = String(fd.get("title") ?? "").trim();
+      const label = String(fd.get("label") ?? "").trim();
+      const massageMemberId = String(fd.get("massageMemberId") ?? "").trim() || undefined;
+      const contentType = resolveOwnerTestimonialVideoContentType(file);
+      if (!contentType) {
+        setMsg("Unsupported video type. Use MP4, MOV, or WebM.");
+        return;
+      }
+      if (!config) {
+        setMsg("Not loaded yet. Try again.");
+        return;
+      }
+      try {
+        assertCanAddTestimonialVideo(config, { massageMemberId });
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : "Video limit reached.");
+        return;
+      }
+
+      const initRes = await fetch("/api/superadmin/videos/upload-init", {
         method: "POST",
-        body: fd,
+        headers: { "content-type": "application/json" },
         credentials: "include",
+        body: JSON.stringify({ contentType, sizeBytes: file.size, massageMemberId }),
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) {
-        setMsg(data.error ?? "Upload failed");
+      const initData = (await initRes.json().catch(() => ({}))) as {
+        error?: string;
+        uploadUrl?: string;
+        storagePath?: string;
+        requiredHeaders?: Record<string, string>;
+      };
+      if (!initRes.ok) {
+        setMsg(initData.error ?? "Could not start upload");
+        return;
+      }
+      const { uploadUrl, storagePath, requiredHeaders } = initData;
+      if (!uploadUrl || !storagePath) {
+        setMsg("Could not start upload");
+        return;
+      }
+
+      const putRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: requiredHeaders ?? { "Content-Type": contentType },
+        body: file,
+      });
+      if (!putRes.ok) {
+        setMsg(
+          `Upload to storage failed (${putRes.status}). If the browser console shows a CORS error, add this site's origin to your Firebase Storage bucket CORS (PUT, Content-Type).`,
+        );
+        return;
+      }
+
+      const completeRes = await fetch("/api/superadmin/videos/upload-complete", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ storagePath, title, label, massageMemberId }),
+      });
+      const completeData = (await completeRes.json().catch(() => ({}))) as { error?: string };
+      if (!completeRes.ok) {
+        setMsg(completeData.error ?? "Registering video failed");
         return;
       }
       await loadConfig();
       setMsg("Video uploaded.");
+      form.reset();
     } finally {
       setLoading(false);
     }
@@ -421,18 +516,40 @@ export default function OwnerSuperAdminPage() {
       {tab === "videos" ? (
         <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold">Testimonial videos</h2>
+          <p className="text-sm text-slate-600">
+            Site total: {videoQuota?.total ?? config.testimonialVideos.length} / {OWNER_MAX_TOTAL_VIDEOS} videos
+            (includes doctor adjustment videos). Per massage therapist: max {OWNER_MAX_VIDEOS_PER_MASSAGE_MEMBER}{" "}
+            when tagged below.
+          </p>
           <form
             className="grid gap-2 sm:grid-cols-2"
             onSubmit={(e) => {
               e.preventDefault();
-              const fd = new FormData(e.currentTarget);
-              void uploadVideo(fd);
-              e.currentTarget.reset();
+              void uploadVideo(e.currentTarget);
             }}
           >
             <label className="text-sm sm:col-span-2">
-              Video file (mp4/mov/webm, max 200MB)
+              Video file (mp4/mov/webm, max 50 MB)
               <input name="file" type="file" accept="video/mp4,video/quicktime,video/webm" required className="mt-1 block w-full text-sm" />
+            </label>
+            <label className="text-sm sm:col-span-2">
+              Massage therapist (optional — counts toward their {OWNER_MAX_VIDEOS_PER_MASSAGE_MEMBER}-video cap)
+              <select name="massageMemberId" className="mt-1 w-full rounded border px-2 py-1" defaultValue="">
+                <option value="">Not tied to a therapist</option>
+                {massageTeamMembers.map((m) => {
+                  const used = videoQuota?.perMassageMember[m.id]?.count ?? 0;
+                  return (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({used}/{OWNER_MAX_VIDEOS_PER_MASSAGE_MEMBER})
+                    </option>
+                  );
+                })}
+              </select>
+              {massageTeamMembers.length === 0 ? (
+                <span className="mt-1 block text-xs text-amber-800">
+                  No massage team in Firestore yet — seed the team in Admin → Super → Massage team first.
+                </span>
+              ) : null}
             </label>
             <label className="text-sm">
               Title (optional)
@@ -451,16 +568,22 @@ export default function OwnerSuperAdminPage() {
             </button>
           </form>
           <ul className="divide-y divide-slate-100 text-sm">
-            {config.testimonialVideos.map((v: TestimonialVideoItem) => (
+            {config.testimonialVideos.map((v: TestimonialVideoItem) => {
+              const therapist = v.massageMemberId
+                ? massageTeamMembers.find((m) => m.id === v.massageMemberId)?.name
+                : null;
+              return (
               <li key={v.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <span>
                   {v.title || "Untitled"} — {v.label || "—"}
+                  {therapist ? ` · ${therapist}` : ""}
                 </span>
                 <button type="button" className="text-red-700 underline" onClick={() => void deleteVideo(v.id)}>
                   Delete
                 </button>
               </li>
-            ))}
+            );
+            })}
           </ul>
         </section>
       ) : null}
@@ -470,12 +593,13 @@ export default function OwnerSuperAdminPage() {
           <div>
             <h2 className="text-lg font-bold">Homepage specials popup</h2>
             <p className="mt-2 text-sm text-slate-600">
-              This is the modal visitors see once per browser session (until they dismiss it). Body copy supports
-              simple HTML (<code className="rounded bg-slate-100 px-1 font-mono text-xs">&lt;p&gt;</code>,{" "}
-              <code className="rounded bg-slate-100 px-1 font-mono text-xs">&lt;strong&gt;</code>, links). Which
-              variant loads depends on the site hostname / <code className="font-mono text-xs">utm_source</code>{" "}
-              (see middleware): massage-focused domains use the first block, Sulphur chiro domains the second, and the
-              main Rub Club site uses the default block.
+              This is the modal visitors see once per browser session (until they dismiss it). You can upload an
+              image for each variant (shown above the text). Body copy supports simple HTML (
+              <code className="rounded bg-slate-100 px-1 font-mono text-xs">&lt;p&gt;</code>,{" "}
+              <code className="rounded bg-slate-100 px-1 font-mono text-xs">&lt;strong&gt;</code>, links). Which variant
+              loads depends on the site hostname / <code className="font-mono text-xs">utm_source</code> (see
+              middleware): massage-focused domains use the first block, Sulphur chiro domains the second, and the main
+              Rub Club site uses the default block.
             </p>
           </div>
           <label className="block text-sm font-semibold text-slate-900">
@@ -504,22 +628,36 @@ export default function OwnerSuperAdminPage() {
           </label>
           {(
             [
-              ["massageHtml", "Massage-focused domain", "e.g. massageparistexas.com or ?utm_source=massage"],
-              ["chiroHtml", "Sulphur chiropractic domain", "e.g. chiropracticsulphursprings.com or ?utm_source=chiro"],
-              ["generalHtml", "Default (main Rub Club / Paris site)", "Shown when the domain cookie is not massage or chiro"],
+              ["massage", "massageHtml", "massageImageUrl", "Massage-focused domain", "e.g. massageparistexas.com or ?utm_source=massage"],
+              ["chiro", "chiroHtml", "chiroImageUrl", "Sulphur chiropractic domain", "e.g. chiropracticsulphursprings.com or ?utm_source=chiro"],
+              [
+                "general",
+                "generalHtml",
+                "generalImageUrl",
+                "Default (main Rub Club / Paris site)",
+                "Shown when the domain cookie is not massage or chiro",
+              ],
             ] as const
-          ).map(([key, title, hint]) => (
-            <label key={key} className="block text-sm">
-              <span className="font-semibold text-slate-900">{title}</span>
-              <span className="mt-0.5 block text-xs font-normal text-slate-500">{hint}</span>
-              <textarea
-                className="mt-1 min-h-[100px] w-full rounded border border-slate-300 px-2 py-2 font-mono text-xs"
-                value={config.specials[key]}
-                onChange={(e) =>
-                  setConfig({ ...config, specials: { ...config.specials, [key]: e.target.value } })
-                }
+          ).map(([variant, htmlKey, imageUrlKey, title, hint]) => (
+            <div key={variant} className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+              <label className="block text-sm">
+                <span className="font-semibold text-slate-900">{title}</span>
+                <span className="mt-0.5 block text-xs font-normal text-slate-500">{hint}</span>
+                <textarea
+                  className="mt-1 min-h-[100px] w-full rounded border border-slate-300 bg-white px-2 py-2 font-mono text-xs"
+                  value={config.specials[htmlKey]}
+                  onChange={(e) =>
+                    setConfig({ ...config, specials: { ...config.specials, [htmlKey]: e.target.value } })
+                  }
+                />
+              </label>
+              <SpecialsPopupImageControls
+                variant={variant}
+                imageUrl={config.specials[imageUrlKey]}
+                onReload={loadConfig}
+                onMessage={setMsg}
               />
-            </label>
+            </div>
           ))}
           <button
             type="button"
@@ -533,7 +671,9 @@ export default function OwnerSuperAdminPage() {
 
       {tab === "doctor" ? (
         <DoctorMediaTab
+          config={config}
           items={config.doctorMedia}
+          videoQuota={videoQuota}
           onReload={loadConfig}
           onMessage={setMsg}
         />
@@ -917,12 +1057,120 @@ export default function OwnerSuperAdminPage() {
   );
 }
 
-function DoctorMediaTab({
-  items,
+function SpecialsPopupImageControls({
+  variant,
+  imageUrl,
   onReload,
   onMessage,
 }: {
+  variant: SpecialsPopupVariant;
+  imageUrl: string;
+  onReload: () => Promise<void>;
+  onMessage: (s: string | null) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+
+  async function onUpload(e: React.FormEvent) {
+    e.preventDefault();
+    if (!file) {
+      onMessage("Choose an image file first.");
+      return;
+    }
+    setBusy(true);
+    onMessage(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("variant", variant);
+      const res = await fetch("/api/superadmin/specials-popup-image/upload", {
+        method: "POST",
+        body: fd,
+        credentials: "include",
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        onMessage(data.error ?? "Upload failed");
+        return;
+      }
+      onMessage("Image saved.");
+      setFile(null);
+      await onReload();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onRemove() {
+    onMessage(null);
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/superadmin/specials-popup-image?variant=${encodeURIComponent(variant)}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        onMessage(data.error ?? "Remove failed");
+        return;
+      }
+      onMessage("Image removed.");
+      await onReload();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 border-t border-slate-200 pt-3">
+      <p className="text-xs font-semibold text-slate-800">Popup image (optional)</p>
+      <p className="mt-0.5 text-xs text-slate-500">JPEG, PNG, or WebP. Shown above the HTML on the live site.</p>
+      {imageUrl.trim() ? (
+        <div className="mt-2 flex flex-wrap items-end gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element -- owner-uploaded Firebase URL */}
+          <img src={imageUrl.trim()} alt="" className="max-h-36 rounded border border-slate-200 object-contain" />
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void onRemove()}
+            className="text-sm font-semibold text-red-700 underline disabled:opacity-50"
+          >
+            Remove image
+          </button>
+        </div>
+      ) : null}
+      <form onSubmit={onUpload} className="mt-2 flex flex-wrap items-end gap-2">
+        <label className="text-xs text-slate-700">
+          <span className="sr-only">Image file</span>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="block max-w-full text-xs"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          />
+        </label>
+        <button
+          type="submit"
+          disabled={busy}
+          className="rounded-full bg-slate-800 px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+        >
+          {busy ? "…" : "Upload image"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function DoctorMediaTab({
+  config,
+  items,
+  videoQuota,
+  onReload,
+  onMessage,
+}: {
+  config: SiteOwnerSingleton;
   items: DoctorMediaItem[];
+  videoQuota: OwnerVideoQuotaSnapshot | null;
   onReload: () => Promise<void>;
   onMessage: (s: string | null) => void;
 }) {
@@ -932,28 +1180,83 @@ function DoctorMediaTab({
   const [busy, setBusy] = useState(false);
   const [file, setFile] = useState<File | null>(null);
 
+  const doctorVideoCount = videoQuota?.perDoctor[doctorKey]?.count ?? items.filter((m) => m.doctorKey === doctorKey && m.mediaType === "video").length;
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!file) {
       onMessage("Choose a file first.");
       return;
     }
+    const max = mediaType === "video" ? OWNER_VIDEO_MAX_BYTES : OWNER_IMAGE_MAX_BYTES;
+    if (file.size > max) {
+      onMessage(mediaType === "video" ? "Video is too large (max 50 MB)." : "Image is too large (max 25 MB).");
+      return;
+    }
+    const contentType = resolveOwnerDoctorMediaContentType(file, mediaType);
+    if (!contentType) {
+      onMessage(
+        mediaType === "video"
+          ? "Unsupported video type. Use MP4, MOV, or WebM."
+          : "Unsupported image type. Use JPEG, PNG, or WebP.",
+      );
+      return;
+    }
+    if (mediaType === "video") {
+      try {
+        assertCanAddDoctorVideo(config, doctorKey);
+      } catch (err) {
+        onMessage(err instanceof Error ? err.message : "Video limit reached.");
+        return;
+      }
+    }
+
     setBusy(true);
     onMessage(null);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("doctorKey", doctorKey);
-      fd.append("mediaType", mediaType);
-      fd.append("caption", caption);
-      const res = await fetch("/api/superadmin/doctor-media/upload", {
+      const initRes = await fetch("/api/superadmin/doctor-media/upload-init", {
         method: "POST",
-        body: fd,
+        headers: { "content-type": "application/json" },
         credentials: "include",
+        body: JSON.stringify({ contentType, mediaType, sizeBytes: file.size, doctorKey }),
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) {
-        onMessage(data.error ?? "Upload failed");
+      const initData = (await initRes.json().catch(() => ({}))) as {
+        error?: string;
+        uploadUrl?: string;
+        storagePath?: string;
+        requiredHeaders?: Record<string, string>;
+      };
+      if (!initRes.ok) {
+        onMessage(initData.error ?? "Could not start upload");
+        return;
+      }
+      const { uploadUrl, storagePath, requiredHeaders } = initData;
+      if (!uploadUrl || !storagePath) {
+        onMessage("Could not start upload");
+        return;
+      }
+
+      const putRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: requiredHeaders ?? { "Content-Type": contentType },
+        body: file,
+      });
+      if (!putRes.ok) {
+        onMessage(
+          `Upload to storage failed (${putRes.status}). If the browser console shows a CORS error, configure Storage bucket CORS (see npm run storage:apply-cors).`,
+        );
+        return;
+      }
+
+      const completeRes = await fetch("/api/superadmin/doctor-media/upload-complete", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ storagePath, doctorKey, caption, mediaType }),
+      });
+      const completeData = (await completeRes.json().catch(() => ({}))) as { error?: string };
+      if (!completeRes.ok) {
+        onMessage(completeData.error ?? "Registering media failed");
         return;
       }
       onMessage("Uploaded.");
@@ -986,6 +1289,12 @@ function DoctorMediaTab({
   return (
     <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <h2 className="text-lg font-bold">Doctor media (adjustments)</h2>
+      <p className="text-sm text-slate-600">
+        Site total: {videoQuota?.total ?? 0} / {OWNER_MAX_TOTAL_VIDEOS} videos (testimonials + doctor videos).
+        {mediaType === "video"
+          ? ` Selected doctor: ${doctorVideoCount} / ${OWNER_MAX_VIDEOS_PER_DOCTOR} videos.`
+          : " Photos are not counted toward video limits."}
+      </p>
       <form onSubmit={onSubmit} className="grid gap-2 sm:grid-cols-2">
         <label className="text-sm">
           Doctor
@@ -1019,7 +1328,7 @@ function DoctorMediaTab({
           />
         </label>
         <label className="text-sm sm:col-span-2">
-          File
+          File (photos max 25 MB, videos max 50 MB)
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"

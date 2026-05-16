@@ -88,12 +88,6 @@ export const MASSAGE = {
     "Ready to feel better in your own skin? We are honored to care for Paris-area families who want dependable, down-to-earth massage. Stop by 3305 NE Loop 286, Suite A, or dial (903) 739-9959 and we will reserve a time that fits your calendar.",
     "All ages are welcome in our locally owned clinic. We are Paris Chamber of Commerce members, and local readers have recognized us as the top massage spot in Paris, TX, for nine years running.",
   ],
-  spineTitle: "3D Spine Simulator",
-  spineBody:
-    "Every voluntary movement, organ response, and sensory signal travels through the nervous system. Irritation along any segment of the spine can show up in surprising places. Use the interactive chart to see how each region connects with nerves and organs—and why balanced spinal motion matters for overall wellness.",
-  spineCta: "LAUNCH THE SIMULATOR",
-  /** Self-hosted nerve chart under `public/spine-simulator/nerve_chart/`. */
-  spineHref: "/spine-simulator",
   contactTitle: "CONTACT US",
   hoursTitle: "Office Hours",
   hoursSubtitle: "Find Out When We Are Open",
@@ -118,18 +112,21 @@ export const DOCTORS = [
     role: "Chiropractor",
     imageKey: "doctorGreg" as const,
     bio: "A Dallas native and Parker College of Chiropractic graduate, Dr. Thompson has led Chiropractic Associates in Paris since the late 1990s. He focuses on efficient, patient-centered care and founded The Rub Club so on-site therapeutic massage could support the same treatment goals.",
+    videoFile: null as string | null,
   },
   {
     name: "Dr. Sean Welborn",
     role: "Chiropractor",
     imageKey: "doctorSean" as const,
     bio: "Dr. Welborn earned his doctorate from Parker University and brings experience in high-volume chiropractic and rehab settings plus acupuncture for muscle and joint complaints. He is fluent in Spanish and welcomes patients who have struggled to find lasting relief elsewhere.",
+    videoFile: null as string | null,
   },
   {
     name: "Dr. Brandy Collins",
     role: "Chiropractor",
     imageKey: "doctorCollins" as const,
     bio: "Originally from Kentucky, Dr. Collins graduated from Parker Chiropractic College and cares for the whole family—from infants to seniors. She blends gentle low-force options with traditional adjustments, myofascial release, instrument-assisted care, and pregnancy-focused visits when appropriate.",
+    videoFile: null as string | null,
   },
 ] as const;
 

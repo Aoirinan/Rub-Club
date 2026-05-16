@@ -9,7 +9,7 @@ export async function DELETE(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  if (!isSuperadminRequest(req.headers.get("cookie"))) {
+  if (!(await isSuperadminRequest(req.headers.get("cookie")))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await ctx.params;

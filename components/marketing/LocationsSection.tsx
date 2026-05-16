@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LOCATIONS } from "@/lib/constants";
 import { MASSAGE } from "@/lib/home-verbatim";
+import { BookingCta } from "@/components/BookingCta";
 
 type Props = {
   titleAs?: "h1" | "h2";
@@ -102,12 +103,7 @@ export function LocationsSection({ titleAs = "h2", compact = false }: Props) {
       )}
 
       <div className="flex flex-wrap gap-3 border-t border-white/15 pt-6">
-        <Link
-          href="/book"
-          className="bg-[#f2d25d] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#173f3b] shadow hover:bg-[#e6c13d]"
-        >
-          Book online
-        </Link>
+        <BookingCta label="Book online" />
       </div>
     </section>
   );

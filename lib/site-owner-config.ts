@@ -12,10 +12,19 @@ export type BannerConfig = {
   expiresAt: string | null;
 };
 
+export type SpecialsPopupVariant = "massage" | "chiro" | "general";
+
 export type SpecialsConfig = {
   massageHtml: string;
   chiroHtml: string;
   generalHtml: string;
+  /** Optional image above the HTML body for the massage-domain popup. */
+  massageImageUrl: string;
+  massageImageStoragePath: string;
+  chiroImageUrl: string;
+  chiroImageStoragePath: string;
+  generalImageUrl: string;
+  generalImageStoragePath: string;
   /** Shown above the HTML body; blank falls back to "Specials". */
   modalTitle: string;
   /** Primary button label; blank falls back to "Close". */
@@ -26,6 +35,8 @@ export type TestimonialVideoItem = {
   id: string;
   title: string;
   label: string;
+  /** When set, counts toward per-therapist testimonial video quota. */
+  massageMemberId?: string;
   /** Public HTTPS URL (Firebase Storage or /public path) */
   url: string;
   /** When stored in Firebase Storage — used for delete */
@@ -83,6 +94,12 @@ const DEFAULTS: SiteOwnerSingleton = {
     massageHtml: "<p>Welcome! Ask the front desk about current massage specials.</p>",
     chiroHtml: "<p>Welcome! Ask the front desk about chiropractic new-patient offers.</p>",
     generalHtml: "<p>See the front desk for current specials.</p>",
+    massageImageUrl: "",
+    massageImageStoragePath: "",
+    chiroImageUrl: "",
+    chiroImageStoragePath: "",
+    generalImageUrl: "",
+    generalImageStoragePath: "",
     modalTitle: "Specials",
     closeLabel: "Close",
   },

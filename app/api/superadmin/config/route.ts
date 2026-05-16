@@ -1,16 +1,27 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 import { NextResponse } from "next/server";
+import { listMassageTeamMembers } from "@/lib/massage-team-data";
+import { buildOwnerVideoQuotaSnapshot } from "@/lib/owner-upload-quota";
+import { getFirestore } from "@/lib/firebase-admin";
 import { getSiteOwnerConfig, setSiteOwnerConfigPatch, type SiteOwnerSingleton } from "@/lib/site-owner-config";
 import { isSuperadminRequest } from "@/lib/superadmin-auth";
 
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
-  if (!isSuperadminRequest(req.headers.get("cookie"))) {
+  if (!(await isSuperadminRequest(req.headers.get("cookie")))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const config = await getSiteOwnerConfig();
+  let massageTeamMembers: { id: string; name: string }[] = [];
+  try {
+    const rows = await listMassageTeamMembers(getFirestore());
+    massageTeamMembers = rows.map((m) => ({ id: m.id, name: m.name }));
+  } catch {
+    massageTeamMembers = [];
+  }
+  const videoQuota = buildOwnerVideoQuotaSnapshot(config);
   let appVersion = "";
   try {
     const raw = readFileSync(join(process.cwd(), "package.json"), "utf8");
@@ -19,11 +30,11 @@ export async function GET(req: Request) {
   } catch {
     /* ignore */
   }
-  return NextResponse.json({ config, appVersion });
+  return NextResponse.json({ config, appVersion, massageTeamMembers, videoQuota });
 }
 
 export async function PATCH(req: Request) {
-  if (!isSuperadminRequest(req.headers.get("cookie"))) {
+  if (!(await isSuperadminRequest(req.headers.get("cookie")))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   let patch: Partial<SiteOwnerSingleton>;

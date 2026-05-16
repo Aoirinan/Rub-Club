@@ -5,6 +5,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { CHIRO, DOCTORS } from "@/lib/home-verbatim";
 import { IMAGES } from "@/lib/home-images";
 import { organizationJsonLd } from "@/lib/structured-data";
+import { publicBookingHref } from "@/lib/public-booking";
 
 export const metadata: Metadata = {
   title: "About Us — Family-owned wellness in Northeast Texas",
@@ -91,7 +92,7 @@ export default function AboutPage() {
         <CtaCard
           title="Ready to start care?"
           body="Book online in under a minute, or call the office and we will help fit you in."
-          primary={{ label: "Book online", href: "/book" }}
+          primary={{ label: "Book online", href: publicBookingHref() }}
           secondary={{ label: "Contact us", href: "/contact" }}
         />
       </div>

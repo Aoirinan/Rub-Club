@@ -3,6 +3,7 @@ import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
 import { FaqList } from "@/components/FaqList";
 import { SS_QA } from "@/lib/sulphur-springs-content";
 import { telHref } from "@/lib/constants";
+import { publicBookingHref } from "@/lib/public-booking";
 
 export const metadata: Metadata = {
   title: "Q & A — Sulphur Springs Chiropractic",
@@ -38,7 +39,7 @@ export default function QAndAPage() {
         <CtaCard
           title="Still have questions?"
           body="Contact our Sulphur Springs office — we're happy to help."
-          primary={{ label: "Book online", href: "/book" }}
+          primary={{ label: "Book online", href: publicBookingHref() }}
           secondary={{ label: "Call 903-919-5020", href: telHref("903-919-5020") }}
         />
       </div>

@@ -12,6 +12,7 @@ import {
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { JsonLd } from "@/components/JsonLd";
 import { HomeVideo } from "@/components/HomeVideo";
+import { BookingCta } from "@/components/BookingCta";
 import { FaqList } from "@/components/FaqList";
 import { MassageTeamGrid } from "@/components/marketing/MassageTeamGrid";
 import { TestimonialVideosSection } from "@/components/TestimonialVideosSection";
@@ -26,6 +27,10 @@ import { HOME_FAQS } from "@/lib/faqs";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
 import { siteDescription, siteTitle } from "@/lib/site-content";
+import { homeBookingFooterCopy } from "@/lib/public-booking";
+
+/** Homepage reads owner config (banner, testimonials, doctor media) from Firestore at request time. */
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: { absolute: siteTitle },
@@ -86,12 +91,7 @@ export default async function Home() {
           </h1>
           <p className="mt-4 max-w-xl text-xl font-semibold text-white/95">{CHIRO.spineSub}</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/book"
-              className="focus-ring bg-[#f2d25d] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#173f3b] shadow hover:bg-[#e6c13d]"
-            >
-              Book Online
-            </Link>
+            <BookingCta label="Book Online" />
             <a
               className="focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#173f3b]"
               href={telHref(massageHeroPhone)}
@@ -336,28 +336,6 @@ export default async function Home() {
           variant="home"
         />
 
-        <section className="grid gap-8 overflow-hidden border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md lg:grid-cols-2 lg:items-center sm:p-10">
-          <div>
-            <h2 className="text-2xl font-black text-[#173f3b]">{MASSAGE.spineTitle}</h2>
-            <p className="mt-4 leading-relaxed text-stone-700">{MASSAGE.spineBody}</p>
-            <Link
-              href={MASSAGE.spineHref}
-              className="focus-ring mt-6 inline-flex bg-[#0f5f5c] px-6 py-3 text-sm font-black uppercase tracking-wide text-white shadow hover:bg-[#0f817b]"
-            >
-              {MASSAGE.spineCta}
-            </Link>
-          </div>
-          <div className="relative mx-auto aspect-square w-full max-w-md">
-            <Image
-              src={IMAGES.spine3d}
-              alt="3D Spine Simulator preview"
-              fill
-              className="object-cover shadow-md ring-1 ring-black/10"
-              sizes="(max-width: 1024px) 100vw, 400px"
-            />
-          </div>
-        </section>
-
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -457,12 +435,7 @@ export default async function Home() {
             </div>
           </div>
           <div className="flex flex-wrap gap-3 border-t border-white/15 pt-6">
-            <Link
-              href="/book"
-              className="focus-ring bg-[#f2d25d] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#173f3b] shadow hover:bg-[#e6c13d]"
-            >
-              Book online
-            </Link>
+            <BookingCta label="Book online" />
             <Link
               href="/contact"
               className="focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#173f3b]"
@@ -473,9 +446,7 @@ export default async function Home() {
         </section>
 
         <p className="border-t border-stone-300 pt-8 text-center text-xs text-stone-600">
-          Online booking on this site collects only your contact details and preferred visit time so
-          the office can confirm your appointment. We do not collect insurance or medical records
-          here. Please do not share protected health information through the contact form.
+          {homeBookingFooterCopy()}
         </p>
       </div>
     </div>

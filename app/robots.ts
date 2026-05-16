@@ -13,7 +13,6 @@ export default function robots(): MetadataRoute.Robots {
           "/admin/",
           "/api/admin/",
           "/auth/",
-          "/spine-simulator/nerve_chart/",
         ],
       },
     ],

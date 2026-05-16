@@ -370,6 +370,8 @@ function AdminDashboard() {
     router.replace("/admin/login");
   }
 
+  const isManager = me?.role === "superadmin";
+
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
@@ -390,7 +392,7 @@ function AdminDashboard() {
                 + New appointment
               </button>
             ) : null}
-            {me?.role ? (
+            {isManager ? (
               <button
                 type="button"
                 onClick={() => setBlockTimeOpen(true)}
@@ -399,7 +401,7 @@ function AdminDashboard() {
                 Block time
               </button>
             ) : null}
-            {me?.role ? (
+            {isManager ? (
               <button
                 type="button"
                 onClick={() => {
@@ -412,7 +414,7 @@ function AdminDashboard() {
                 Send reminders
               </button>
             ) : null}
-            {me?.role ? (
+            {isManager ? (
               <button
                 type="button"
                 onClick={async () => {
@@ -436,7 +438,7 @@ function AdminDashboard() {
                 Export CSV
               </button>
             ) : null}
-            {me?.role ? (
+            {isManager ? (
               <>
                 <input
                   ref={csvImportInputRef}
@@ -489,7 +491,7 @@ function AdminDashboard() {
                 </button>
               </>
             ) : null}
-            {me?.role ? (
+            {isManager ? (
               <Link
                 href="/admin/reports"
                 className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
@@ -505,7 +507,7 @@ function AdminDashboard() {
                 Patient lookup
               </Link>
             ) : null}
-            {me?.role === "superadmin" ? (
+            {isManager ? (
               <>
                 <Link
                   href="/admin/super"
@@ -592,8 +594,9 @@ function AdminDashboard() {
                 bookings={viewBookings}
                 providers={columnProviders}
                 filters={filters}
+                isManager={isManager}
                 onSelect={setSelectedId}
-                onRescheduleBooking={handleRescheduleBooking}
+                onRescheduleBooking={isManager ? handleRescheduleBooking : undefined}
                 onInvalidCrossProviderDrop={handleInvalidCrossProviderDrop}
                 onInvalidCrossPatientTimeDrop={handleInvalidCrossPatientTimeDrop}
               />
@@ -611,6 +614,7 @@ function AdminDashboard() {
                 bookings={viewBookings}
                 providers={providers}
                 filters={filters}
+                isManager={isManager}
                 onSelect={setSelectedId}
               />
             ) : null}

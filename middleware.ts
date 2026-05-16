@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { isSuperadminRequest } from "@/lib/superadmin-auth";
 
 const DOMAIN_CTX_COOKIE = "rub_domain_ctx";
 
@@ -27,7 +28,22 @@ function resolveDomainContext(host: string, utm: string | null): DomainContextVa
   return "default";
 }
 
-export function middleware(request: NextRequest) {
+async function blockSuperadminApi(request: NextRequest): Promise<NextResponse | null> {
+  const { pathname } = request.nextUrl;
+  if (!pathname.startsWith("/api/superadmin")) return null;
+  if (pathname === "/api/superadmin/login" && request.method === "POST") return null;
+  if (pathname === "/api/superadmin/logout" && request.method === "POST") return null;
+  const cookieHeader = request.headers.get("cookie");
+  if (!(await isSuperadminRequest(cookieHeader))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return null;
+}
+
+export async function middleware(request: NextRequest) {
+  const apiBlock = await blockSuperadminApi(request);
+  if (apiBlock) return apiBlock;
+
   const res = NextResponse.next();
   const host = request.headers.get("host")?.split(":")[0] ?? "";
   const utmRaw = request.nextUrl.searchParams.get("utm_source");

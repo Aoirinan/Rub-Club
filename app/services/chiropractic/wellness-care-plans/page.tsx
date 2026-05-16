@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
 import { WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
+import { publicBookingHref } from "@/lib/public-booking";
 import {
   WELLNESS_CLOSING_HEADLINE,
   WELLNESS_CLOSING_LINES,
@@ -90,7 +91,7 @@ export default function WellnessCarePlansPage() {
         <CtaCard
           title="Start your wellness plan"
           body="Book online or call our Paris office to set up monthly wellness care."
-          primary={{ label: "Book chiropractic online", href: "/book?service=chiropractic" }}
+          primary={{ label: "Book chiropractic online", href: publicBookingHref("service=chiropractic") }}
           secondary={{ label: "Call Paris 903-785-5551", href: telHref("903-785-5551") }}
         />
       </div>

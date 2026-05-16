@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { BookingCta } from "@/components/BookingCta";
 
 export type NavChild = { href: string; label: string; group?: string };
 
@@ -218,12 +219,7 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
             </div>
           );
         })}
-        <Link
-          className="focus-ring ml-2 bg-[#f2d25d] px-5 py-2 text-xs font-black uppercase tracking-wide text-[#0c2d3a] shadow-sm hover:bg-[#e6c13d] xl:text-sm"
-          href="/book"
-        >
-          Book Now
-        </Link>
+        <BookingCta label="Book Now" variant="nav" />
       </div>
     </nav>
   );

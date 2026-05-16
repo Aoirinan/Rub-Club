@@ -8,6 +8,7 @@ import {
 } from "@/lib/constants";
 import { MASSAGE } from "@/lib/home-verbatim";
 import { siteShortName } from "@/lib/site-content";
+import { BookingCta } from "@/components/BookingCta";
 
 export function SiteFooter({
   locations = LOCATION_LIST,
@@ -158,12 +159,7 @@ export function SiteFooter({
               </div>
             ))}
           </dl>
-          <Link
-            href="/book"
-            className="focus-ring mt-4 inline-flex bg-[#f2d25d] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]"
-          >
-            Book online
-          </Link>
+          <BookingCta label="Book online" variant="compact" className="focus-ring mt-4 inline-flex bg-[#f2d25d] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]" />
         </div>
       </div>
       <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-white/60">
@@ -173,7 +169,9 @@ export function SiteFooter({
             Staff
           </Link>
         </p>
-        <p className="mt-1">Build {label}</p>
+        {process.env.NODE_ENV === "development" || process.env.SHOW_BUILD_INFO === "true" ? (
+          <p className="mt-1">Build {label}</p>
+        ) : null}
       </div>
     </footer>
   );

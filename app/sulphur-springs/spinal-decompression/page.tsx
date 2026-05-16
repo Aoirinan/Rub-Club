@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
 import { SS_SERVICES } from "@/lib/sulphur-springs-content";
 import { telHref } from "@/lib/constants";
+import { publicBookingHref } from "@/lib/public-booking";
 
 const SERVICE = SS_SERVICES.find((s) => s.slug === "spinal-decompression")!;
 
@@ -54,7 +55,7 @@ export default function SpinalDecompressionPage() {
         <CtaCard
           title="Schedule an appointment"
           body="Contact our Sulphur Springs office to discuss whether this treatment is right for you."
-          primary={{ label: "Book online", href: "/book" }}
+          primary={{ label: "Book online", href: publicBookingHref() }}
           secondary={{ label: "Call 903-919-5020", href: telHref("903-919-5020") }}
         />
       </div>
