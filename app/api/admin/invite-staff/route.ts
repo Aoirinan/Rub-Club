@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getAuth, getFirestore } from "@/lib/firebase-admin";
-import { getPublicAppOrigin } from "@/lib/app-origin";
+import { getPublicAppOriginForRequest } from "@/lib/app-origin";
+import { fetchProviderById } from "@/lib/providers-db";
 import { requireStaff } from "@/lib/staff-auth";
 import { sendStaffInviteEmail } from "@/lib/sendgrid";
 import { STAFF_ROLES, canAssignRole, type StaffRole } from "@/lib/staff-roles";
@@ -30,6 +31,13 @@ function authErrorCode(e: unknown): string {
   if (typeof e !== "object" || e === null) return "";
   const o = e as { code?: string; errorInfo?: { code?: string } };
   return o.code ?? o.errorInfo?.code ?? "";
+}
+
+function firebaseErrorMessage(e: unknown): string | undefined {
+  if (typeof e !== "object" || e === null) return undefined;
+  const o = e as { message?: string; errorInfo?: { message?: string } };
+  const msg = o.message ?? o.errorInfo?.message;
+  return typeof msg === "string" && msg.trim() ? msg.trim() : undefined;
 }
 
 export async function POST(req: Request) {
@@ -61,6 +69,18 @@ export async function POST(req: Request) {
 
   const auth = getAuth();
   const db = getFirestore();
+
+  let linkedProviderDisplayName: string | undefined;
+  if (linkedProviderId) {
+    const provider = await fetchProviderById(db, linkedProviderId);
+    if (!provider) {
+      return NextResponse.json(
+        { error: "That bookable provider was not found. Refresh the page and pick a provider from the list." },
+        { status: 400 },
+      );
+    }
+    linkedProviderDisplayName = provider.displayName;
+  }
 
   let uid: string;
   let createdNewAuthUser = false;
@@ -119,7 +139,7 @@ export async function POST(req: Request) {
   let inviteEmailIssue: "missing_env" | "sendgrid_error" | "reset_link_failed" | null = null;
   let inviteEmailDetail: string | undefined;
   try {
-    const origin = getPublicAppOrigin();
+    const origin = getPublicAppOriginForRequest(req);
     const resetLink = await auth.generatePasswordResetLink(email, {
       url: `${origin}/auth/password-reset-complete`,
       handleCodeInApp: false,
@@ -143,6 +163,7 @@ export async function POST(req: Request) {
   } catch (e) {
     console.error("Password reset link / email failed", e);
     inviteEmailIssue = "reset_link_failed";
+    inviteEmailDetail = firebaseErrorMessage(e);
   }
 
   return NextResponse.json({
@@ -152,6 +173,7 @@ export async function POST(req: Request) {
     createdNewAuthUser,
     emailedReset,
     inviteEmailIssue,
+    ...(linkedProviderId ? { linkedProviderId, linkedProviderDisplayName } : {}),
     ...(inviteEmailDetail ? { inviteEmailDetail } : {}),
     ...(createdNewAuthUser && !emailedReset && temporaryPassword
       ? {

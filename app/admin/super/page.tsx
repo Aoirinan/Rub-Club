@@ -26,7 +26,7 @@ type Me = {
   };
 };
 
-type StaffRow = { uid: string; role?: string; email?: string };
+type StaffRow = { uid: string; role?: string; email?: string; linkedProviderId?: string };
 
 type EmailStatus = {
   sendgridConfigured: boolean;
@@ -47,6 +47,8 @@ type InviteStaffResponse = {
   inviteEmailDetail?: string;
   temporaryPassword?: string;
   passwordWarning?: string;
+  linkedProviderId?: string;
+  linkedProviderDisplayName?: string;
 };
 
 type BookableProviderRow = {
@@ -194,7 +196,7 @@ function inviteEmailIssueHint(issue?: InviteStaffResponse["inviteEmailIssue"]): 
     return " No email was sent: SendGrid rejected this request (see the SendGrid line below if present). Common causes: API key not granted “Mail Send”, Preview deployment without env vars, or “from” not verified for this key.";
   }
   if (issue === "reset_link_failed") {
-    return " Password reset link could not be created in Firebase; email was not attempted.";
+    return " Password reset link could not be created in Firebase; email was not attempted. Add this site’s hostname under Firebase Console → Authentication → Settings → Authorized domains, and set NEXT_PUBLIC_APP_URL to your live URL (no trailing slash) in Vercel Production env.";
   }
   return "";
 }
@@ -212,9 +214,6 @@ export default function SuperAdminPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [deletingUid, setDeletingUid] = useState<string | null>(null);
   const [emailStatus, setEmailStatus] = useState<EmailStatus | null>(null);
-  const [emailTestTo, setEmailTestTo] = useState("");
-  const [emailTestLoading, setEmailTestLoading] = useState(false);
-  const [emailTestMessage, setEmailTestMessage] = useState<string | null>(null);
   const [bookableProviders, setBookableProviders] = useState<BookableProviderRow[]>([]);
   const [newProviderName, setNewProviderName] = useState("");
   const [newParis, setNewParis] = useState(true);
@@ -248,45 +247,6 @@ export default function SuperAdminPage() {
       return;
     }
     setEmailStatus((await res.json()) as EmailStatus);
-  }
-
-  async function sendEmailTest() {
-    setEmailTestMessage(null);
-    if (!auth?.currentUser) return;
-    setEmailTestLoading(true);
-    try {
-      const token = await auth.currentUser.getIdToken();
-      const trimmed = emailTestTo.trim();
-      const res = await fetch("/api/admin/email-test", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify(trimmed ? { to: trimmed } : {}),
-      });
-      const data = (await res.json().catch(() => ({}))) as {
-        ok?: boolean;
-        issue?: string;
-        detail?: string;
-        error?: string;
-      };
-      if (res.ok && data.ok) {
-        setEmailTestMessage(
-          `SendGrid accepted the message${trimmed ? ` to ${trimmed}` : ""}. Check inbox/spam and SendGrid Activity.`,
-        );
-        return;
-      }
-      const detail =
-        typeof data.detail === "string" && data.detail.length > 0
-          ? data.detail
-          : typeof data.error === "string"
-            ? data.error
-            : `HTTP ${res.status}`;
-      setEmailTestMessage(`Test failed (${data.issue ?? "error"}): ${detail}`);
-    } finally {
-      setEmailTestLoading(false);
-    }
   }
 
   async function loadBookableProviders(token: string) {
@@ -328,11 +288,21 @@ export default function SuperAdminPage() {
     return () => unsub();
   }, [auth, router]);
 
+  function providerLabelById(id: string | undefined): string | null {
+    if (!id?.trim()) return null;
+    const p = bookableProviders.find((row) => row.id === id.trim());
+    return p?.displayName ?? id.trim();
+  }
+
   async function submitStaff() {
     setMessage(null);
     if (!auth) return;
     const user = auth.currentUser;
     if (!user) return;
+    if (role === "massage_therapist" && !linkedProviderId.trim()) {
+      setMessage("Select a linked bookable provider for massage therapists.");
+      return;
+    }
     const token = await user.getIdToken();
     const res = await fetch("/api/admin/invite-staff", {
       method: "POST",
@@ -352,6 +322,10 @@ export default function SuperAdminPage() {
       return;
     }
     const parts: string[] = [];
+    const linkNote =
+      data.linkedProviderId && role === "massage_therapist"
+        ? ` Linked to provider “${data.linkedProviderDisplayName ?? providerLabelById(data.linkedProviderId) ?? data.linkedProviderId}”.`
+        : "";
     const issueNote = inviteEmailIssueHint(data.inviteEmailIssue);
     if (data.createdNewAuthUser) {
       if (data.emailedReset) {
@@ -369,15 +343,25 @@ export default function SuperAdminPage() {
       );
     } else {
       parts.push(
-        `Staff access was saved, but no invitation email was sent.${issueNote} They can still use “Forgot password” on the staff login page with their work email once mail is working.`,
+        `Staff access was saved${linkNote}, but no invitation email was sent.${issueNote} They can still use “Forgot password” on the staff login page with their work email once mail is working.`,
       );
     }
     const joined = parts.join(" ");
-    const detail =
-      typeof data.inviteEmailDetail === "string" && data.inviteEmailDetail.length > 0
+    const messageBody =
+      joined.includes("Linked to provider") || !linkNote ? joined : `${joined}${linkNote}`;
+    const firebaseDetail =
+      data.inviteEmailIssue === "reset_link_failed" &&
+      typeof data.inviteEmailDetail === "string" &&
+      data.inviteEmailDetail.length > 0
+        ? ` Firebase: ${data.inviteEmailDetail}`
+        : "";
+    const sendgridDetail =
+      data.inviteEmailIssue === "sendgrid_error" &&
+      typeof data.inviteEmailDetail === "string" &&
+      data.inviteEmailDetail.length > 0
         ? ` SendGrid: ${data.inviteEmailDetail}`
         : "";
-    setMessage(`${joined}${detail}`);
+    setMessage(`${messageBody}${firebaseDetail}${sendgridDetail}`);
     setEmail("");
     await loadStaff(token);
   }
@@ -727,45 +711,6 @@ export default function SuperAdminPage() {
                   still send). Add it under Vercel → Environment Variables → Production if you need office copies.
                 </p>
               )}
-              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3 text-sm">
-                <p className="font-medium text-slate-900">SendGrid live test</p>
-                <p className="text-slate-600">
-                  Sends one real message through SendGrid. Confirm in your inbox or in{" "}
-                  <a
-                    href="https://app.sendgrid.com/email_activity"
-                    className="font-semibold underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    SendGrid Activity
-                  </a>
-                  .
-                </p>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-                  <label className="min-w-0 flex-1 space-y-1">
-                    <span className="font-medium text-slate-800">To (optional)</span>
-                    <input
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                      type="email"
-                      placeholder={me?.email ?? "Defaults to your sign-in email"}
-                      value={emailTestTo}
-                      onChange={(e) => setEmailTestTo(e.target.value)}
-                      autoComplete="email"
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    disabled={emailTestLoading}
-                    onClick={() => void sendEmailTest()}
-                    className="shrink-0 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
-                  >
-                    {emailTestLoading ? "Sending…" : "Send test email"}
-                  </button>
-                </div>
-                {emailTestMessage ? (
-                  <p className="text-sm text-slate-800 whitespace-pre-wrap">{emailTestMessage}</p>
-                ) : null}
-              </section>
             </div>
           ) : null}
 
@@ -834,7 +779,8 @@ export default function SuperAdminPage() {
             <button
               type="button"
               onClick={submitStaff}
-              className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+              disabled={role === "massage_therapist" && !linkedProviderId.trim()}
+              className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Add or invite
             </button>
@@ -1332,6 +1278,14 @@ export default function SuperAdminPage() {
                       <div className="font-semibold text-slate-900">{s.email ?? s.uid}</div>
                       <div>uid: {s.uid}</div>
                       <div>role: {staffRoleLabel(s.role)}</div>
+                      {s.role === "massage_therapist" ? (
+                        <div>
+                          linked provider:{" "}
+                          {s.linkedProviderId
+                            ? (providerLabelById(s.linkedProviderId) ?? s.linkedProviderId)
+                            : "(not set — re-invite and pick a provider)"}
+                        </div>
+                      ) : null}
                       {isSelf ? (
                         <div className="font-sans text-[11px] text-slate-500">
                           You cannot remove yourself here; another manager must revoke your access.
