@@ -3,6 +3,8 @@
  * Update these strings rather than touching individual pages.
  */
 
+import { getPublicAppOrigin } from "./app-origin";
+
 export const siteTitle =
   "The Rub Club Massage & Chiropractic Associates | Paris & Sulphur Springs, TX";
 
@@ -31,10 +33,11 @@ export const siteOgImage = "/og/og-default.svg";
 
 /** Resolve the canonical site origin from env, fallback to placeholder. */
 export function getSiteOrigin(): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
-    "https://wellnessparistx.com"
-  );
+  const origin = getPublicAppOrigin();
+  if (origin === "http://localhost:3000") {
+    return "https://wellnessparistx.com";
+  }
+  return origin;
 }
 
 /** Build an absolute URL from a path relative to the site root. */

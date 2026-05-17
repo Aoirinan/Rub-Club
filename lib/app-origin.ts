@@ -1,15 +1,23 @@
 /**
+ * Ensures a value is a full origin URL (https://host). Accepts host-only env values
+ * like `rub-club.vercel.app` so Vercel builds do not throw on `new URL(origin)`.
+ */
+export function normalizePublicOrigin(value: string): string {
+  const trimmed = value.trim().replace(/\/$/, "");
+  if (!trimmed) return trimmed;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed.replace(/^\/+/, "")}`;
+}
+
+/**
  * Canonical public origin (https://example.com) for server-generated outbound links
- * (Firebase email action `continueUrl`, etc.).
+ * (Firebase email action `continueUrl`, metadataBase, etc.).
  */
 export function getPublicAppOrigin(): string {
-  const explicit = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
-  if (explicit) return explicit;
+  const explicit = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (explicit) return normalizePublicOrigin(explicit);
   const vercel = process.env.VERCEL_URL?.trim();
-  if (vercel) {
-    const host = vercel.replace(/^https?:\/\//, "");
-    return `https://${host}`;
-  }
+  if (vercel) return normalizePublicOrigin(vercel);
   return "http://localhost:3000";
 }
 
