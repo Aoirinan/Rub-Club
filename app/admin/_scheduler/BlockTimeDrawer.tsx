@@ -12,7 +12,7 @@ type Props = {
   defaultDate?: string;
 };
 
-type Scope = "all" | "massage" | "chiropractic";
+type Scope = "all" | "massage" | "chiropractic" | "stretch";
 
 const DURATION_OPTIONS: { value: number; label: string }[] = [
   { value: 30, label: "30 minutes" },
@@ -182,8 +182,9 @@ export function BlockTimeDrawer({
                     onChange={(e) => setScope(e.target.value as Scope)}
                     className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
                   >
-                    <option value="all">All services (massage + chiropractic)</option>
+                    <option value="all">All services</option>
                     <option value="massage">Massage only</option>
+                    <option value="stretch">Stretch only</option>
                     <option value="chiropractic">Chiropractic only</option>
                   </select>
                 </label>

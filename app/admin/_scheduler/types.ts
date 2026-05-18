@@ -89,7 +89,7 @@ export type FilterState = {
   /** Chicago-local date in yyyy-MM-dd. */
   date: string;
   locationId: "all" | "paris" | "sulphur_springs";
-  serviceLine: "all" | "massage" | "chiropractic";
+  serviceLine: "all" | "massage" | "chiropractic" | "stretch";
   providerId: "all" | string;
   statuses: ReadonlyArray<BookingStatus>;
   q: string;

@@ -23,7 +23,7 @@ export function bookingDocToEmailContext(
   const phone = data.phone;
 
   if (locationId !== "paris" && locationId !== "sulphur_springs") return null;
-  if (serviceLine !== "massage" && serviceLine !== "chiropractic") return null;
+  if (serviceLine !== "massage" && serviceLine !== "chiropractic" && serviceLine !== "stretch") return null;
   if (durationMin !== 30 && durationMin !== 60) return null;
   if (typeof startIso !== "string" || !startIso.length) return null;
   if (typeof email !== "string" || !email.length) return null;

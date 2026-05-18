@@ -29,7 +29,7 @@ export function AppointmentLookupSection({
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [locationId, setLocationId] = useState("");
-  const [serviceLine, setServiceLine] = useState<"all" | "massage" | "chiropractic">("all");
+  const [serviceLine, setServiceLine] = useState<"all" | "massage" | "chiropractic" | "stretch">("all");
   const [providerId, setProviderId] = useState("");
   const [confirmationStatus, setConfirmationStatus] = useState("");
   const [q, setQ] = useState("");
@@ -234,6 +234,7 @@ export function AppointmentLookupSection({
           >
             <option value="all">All</option>
             <option value="massage">Massage</option>
+            <option value="stretch">Stretch</option>
             <option value="chiropractic">Chiropractic</option>
           </select>
         </label>

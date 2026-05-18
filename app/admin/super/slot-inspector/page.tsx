@@ -87,7 +87,7 @@ export default function SlotInspectorPage() {
 
   const [date, setDate] = useState(todayChicago());
   const [locationId, setLocationId] = useState<"paris" | "sulphur_springs">("paris");
-  const [serviceLine, setServiceLine] = useState<"massage" | "chiropractic">("massage");
+  const [serviceLine, setServiceLine] = useState<"massage" | "chiropractic" | "stretch">("massage");
   const [durationMin, setDurationMin] = useState<30 | 60>(30);
   const [providerMode, setProviderMode] = useState<"any" | "specific">("any");
   const [providerId, setProviderId] = useState<string>("");
@@ -256,10 +256,11 @@ export default function SlotInspectorPage() {
             <span className="font-medium text-slate-700">Service</span>
             <select
               value={serviceLine}
-              onChange={(e) => setServiceLine(e.target.value as "massage" | "chiropractic")}
+              onChange={(e) => setServiceLine(e.target.value as "massage" | "chiropractic" | "stretch")}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
             >
               <option value="massage">Massage</option>
+              <option value="stretch">Stretch</option>
               <option value="chiropractic">Chiropractic</option>
             </select>
           </label>

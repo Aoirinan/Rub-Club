@@ -8,14 +8,14 @@ import type { DurationMin, LocationId, ServiceLine } from "@/lib/constants";
 import { LOCATIONS, TIME_ZONE } from "@/lib/constants";
 import { assertRateLimitOk, getClientIp } from "@/lib/rate-limit";
 import {
-  fetchActiveProvidersForService,
+  fetchActiveProvidersForPublicBooking,
   orderProvidersForAnyBooking,
 } from "@/lib/providers-db";
 import { createPaymentLink } from "@/lib/square";
 import { sendBookingNotification } from "@/lib/sendgrid";
 import {
   bucketDocIdsForAppointment,
-  holdBucketIdsForAppointment,
+  holdBucketIdsForPublicBooking,
   isAlignedToSlotGrid,
   isWithinScheduleWindow,
   parseStartIsoToDateTime,
@@ -145,11 +145,10 @@ export async function POST(req: Request) {
   const locationId = body.locationId as LocationId;
   const durationMin = body.durationMin as DurationMin;
   const visitKind = body.visitKind === "stretch" ? "stretch" : "massage";
-  /** Online booking is massage slots only (stretch uses the same schedule). */
-  const serviceLine: ServiceLine = "massage";
+  const serviceLine: ServiceLine = visitKind === "stretch" ? "stretch" : "massage";
 
   const db = getFirestore();
-  const eligible = await fetchActiveProvidersForService(db, locationId, serviceLine, {
+  const eligible = await fetchActiveProvidersForPublicBooking(db, locationId, serviceLine, {
     publicBooking: true,
   });
   if (eligible.length === 0) {
@@ -212,7 +211,7 @@ export async function POST(req: Request) {
           thisStart,
           durationMin,
         );
-        const holdIds = holdBucketIdsForAppointment(locationId, serviceLine, thisStart, durationMin);
+        const holdIds = holdBucketIdsForPublicBooking(locationId, serviceLine, thisStart, durationMin);
         await db.runTransaction(async (tx) => {
           const bucketRefs = bucketIds.map((id) => db.collection("slot_buckets").doc(id));
           const holdRefs = holdIds.map((id) => db.collection("slot_buckets").doc(id));
@@ -283,7 +282,7 @@ export async function POST(req: Request) {
         });
       } else {
         const tryOrder = orderProvidersForAnyBooking(eligible, preferredProviderId);
-        const holdIds = holdBucketIdsForAppointment(locationId, serviceLine, thisStart, durationMin);
+        const holdIds = holdBucketIdsForPublicBooking(locationId, serviceLine, thisStart, durationMin);
         await db.runTransaction(async (tx) => {
           const holdRefs = holdIds.map((id) => db.collection("slot_buckets").doc(id));
           const holdSnaps = await Promise.all(holdRefs.map((r) => tx.get(r)));

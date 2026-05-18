@@ -17,7 +17,7 @@ export const runtime = "nodejs";
 
 const bodySchema = z.object({
   locationId: z.enum(["paris", "sulphur_springs"]),
-  serviceLine: z.enum(["massage", "chiropractic"]),
+  serviceLine: z.enum(["massage", "chiropractic", "stretch"]),
   durationMin: z.union([z.literal(30), z.literal(60)]),
   startIso: z.string().min(8),
   providerId: z.string().min(1).max(200),

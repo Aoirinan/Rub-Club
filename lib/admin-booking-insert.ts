@@ -4,7 +4,7 @@ import { DateTime } from "luxon";
 import type { DurationMin, LocationId, ServiceLine } from "@/lib/constants";
 import {
   bucketDocIdsForAppointment,
-  holdBucketIdsForAppointment,
+  holdBucketIdsForPublicBooking,
 } from "@/lib/slots-luxon";
 import { recordBookingEventInTx } from "@/lib/booking-events";
 import { generatePatientPortalToken, hashPatientPortalToken } from "@/lib/patient-portal-token";
@@ -70,7 +70,7 @@ export async function insertAdminBookingInTransaction(
     await db.runTransaction(async (tx) => {
       if (!skipConflictCheck) {
         const providerBucketRefs = bucketIds.map((id) => db.collection("slot_buckets").doc(id));
-        const holdIds = holdBucketIdsForAppointment(locationId, serviceLine, thisStart, durationMin);
+        const holdIds = holdBucketIdsForPublicBooking(locationId, serviceLine, thisStart, durationMin);
         const holdRefs = holdIds.map((id) => db.collection("slot_buckets").doc(id));
 
         const providerSnaps = await Promise.all(providerBucketRefs.map((r) => tx.get(r)));

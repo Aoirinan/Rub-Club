@@ -16,7 +16,7 @@ export const runtime = "nodejs";
 
 const createSchema = z.object({
   locationId: z.enum(["paris", "sulphur_springs"]),
-  scope: z.enum(["all", "massage", "chiropractic"]),
+  scope: z.enum(["all", "massage", "chiropractic", "stretch"]),
   startIso: z.string().min(8),
   durationMin: z.number().int().positive().max(720),
   note: z.string().max(400).optional(),

@@ -15,7 +15,7 @@ function asServiceLines(raw: unknown): ServiceLine[] | null {
   if (!Array.isArray(raw)) return null;
   const out: ServiceLine[] = [];
   for (const x of raw) {
-    if (x === "massage" || x === "chiropractic") out.push(x);
+    if (x === "massage" || x === "chiropractic" || x === "stretch") out.push(x);
   }
   return out.length ? out : null;
 }
@@ -102,6 +102,13 @@ export async function fetchAllProviders(db: Firestore): Promise<ProviderRow[]> {
   return rows;
 }
 
+function providerEligibleForPublicService(row: ProviderRow, serviceLine: ServiceLine): boolean {
+  if (serviceLine === "stretch") {
+    return row.serviceLines.includes("stretch") || row.serviceLines.includes("massage");
+  }
+  return row.serviceLines.includes(serviceLine);
+}
+
 export async function fetchActiveProvidersForService(
   db: Firestore,
   locationId: LocationId,
@@ -115,6 +122,27 @@ export async function fetchActiveProvidersForService(
     if (!row) continue;
     if (!row.locationIds.includes(locationId)) continue;
     if (!row.serviceLines.includes(serviceLine)) continue;
+    if (opts?.publicBooking && row.acceptsNewClients === false) continue;
+    rows.push(row);
+  }
+  rows.sort(compareProvidersForAssignment);
+  return rows;
+}
+
+/** Public booking eligibility (stretch includes legacy massage-tagged providers). */
+export async function fetchActiveProvidersForPublicBooking(
+  db: Firestore,
+  locationId: LocationId,
+  serviceLine: ServiceLine,
+  opts?: { publicBooking?: boolean },
+): Promise<ProviderRow[]> {
+  const snap = await db.collection("providers").where("active", "==", true).get();
+  const rows: ProviderRow[] = [];
+  for (const d of snap.docs) {
+    const row = parseProviderDoc(d.id, d.data());
+    if (!row) continue;
+    if (!row.locationIds.includes(locationId)) continue;
+    if (!providerEligibleForPublicService(row, serviceLine)) continue;
     if (opts?.publicBooking && row.acceptsNewClients === false) continue;
     rows.push(row);
   }

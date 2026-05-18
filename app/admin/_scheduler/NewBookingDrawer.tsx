@@ -24,7 +24,7 @@ export function NewBookingDrawer({
   defaultDate,
 }: Props) {
   const [locationId, setLocationId] = useState<"paris" | "sulphur_springs">("paris");
-  const [serviceLine, setServiceLine] = useState<"massage" | "chiropractic">("massage");
+  const [serviceLine, setServiceLine] = useState<"massage" | "chiropractic" | "stretch">("massage");
   const [durationMin, setDurationMin] = useState<30 | 60>(60);
   const [date, setDate] = useState(defaultDate ?? DateTime.now().setZone(TIME_ZONE).toFormat("yyyy-LL-dd"));
   const [time, setTime] = useState("09:00");
@@ -274,10 +274,11 @@ export function NewBookingDrawer({
                   <span className="text-xs font-medium text-slate-700">Service</span>
                   <select
                     value={serviceLine}
-                    onChange={(e) => setServiceLine(e.target.value as "massage" | "chiropractic")}
+                    onChange={(e) => setServiceLine(e.target.value as "massage" | "chiropractic" | "stretch")}
                     className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
                   >
                     <option value="massage">Massage</option>
+                    <option value="stretch">Stretch</option>
                     <option value="chiropractic">Chiropractic</option>
                   </select>
                 </label>

@@ -68,6 +68,8 @@ export function serviceLineColor(serviceLine: string | undefined): {
       return { borderClass: "border-l-4 border-l-teal-500", dotClass: "bg-teal-500", label: "Massage" };
     case "chiropractic":
       return { borderClass: "border-l-4 border-l-indigo-500", dotClass: "bg-indigo-500", label: "Chiropractic" };
+    case "stretch":
+      return { borderClass: "border-l-4 border-l-amber-500", dotClass: "bg-amber-500", label: "Stretch" };
     default:
       return { borderClass: "border-l-4 border-l-slate-400", dotClass: "bg-slate-400", label: "Other" };
   }
@@ -77,6 +79,7 @@ export function serviceLineColor(serviceLine: string | undefined): {
 export const SERVICE_LINE_COLORS = [
   { serviceLine: "massage", dotClass: "bg-teal-500", label: "Massage" },
   { serviceLine: "chiropractic", dotClass: "bg-indigo-500", label: "Chiropractic" },
+  { serviceLine: "stretch", dotClass: "bg-amber-500", label: "Stretch" },
 ] as const;
 
 /** Whether the status counts as "live" (still occupies a time slot in the day view). */

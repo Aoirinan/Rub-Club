@@ -240,7 +240,7 @@ export default function ReportsPage() {
                     <div key={svc} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`h-3 w-3 rounded-full ${svc === "massage" ? "bg-teal-500" : svc === "chiropractic" ? "bg-indigo-500" : "bg-slate-400"}`}
+                          className={`h-3 w-3 rounded-full ${svc === "massage" ? "bg-teal-500" : svc === "chiropractic" ? "bg-indigo-500" : svc === "stretch" ? "bg-amber-500" : "bg-slate-400"}`}
                         />
                         <span className="text-sm capitalize text-slate-700">{svc}</span>
                       </div>

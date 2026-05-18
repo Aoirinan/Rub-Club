@@ -57,7 +57,7 @@ export function holdBucketDocId(
   return `${locationId}__hold__${scope}__${z.toFormat("yyyy-LL-dd")}__${z.toFormat("HHmm")}`;
 }
 
-const HOLD_ID_RE = /^(?:paris|sulphur_springs)__hold__(?:all|massage|chiropractic)__/;
+const HOLD_ID_RE = /^(?:paris|sulphur_springs)__hold__(?:all|massage|chiropractic|stretch)__/;
 export function isHoldBucketId(id: string): boolean {
   return HOLD_ID_RE.test(id);
 }
@@ -80,6 +80,21 @@ export function holdBucketIdsForAppointment(
     out.push(holdBucketDocId(locationId, serviceLine, s));
   }
   return out;
+}
+
+/** Hold scopes for public booking (stretch shares massage calendar holds). */
+export function holdBucketIdsForPublicBooking(
+  locationId: LocationId,
+  serviceLine: ServiceLine,
+  start: DateTime,
+  durationMin: DurationMin,
+): string[] {
+  if (serviceLine === "stretch") {
+    const massage = holdBucketIdsForAppointment(locationId, "massage", start, durationMin);
+    const stretch = holdBucketIdsForAppointment(locationId, "stretch", start, durationMin);
+    return [...new Set([...massage, ...stretch])];
+  }
+  return holdBucketIdsForAppointment(locationId, serviceLine, start, durationMin);
 }
 
 /** Bucket ids that a single hold itself writes. */

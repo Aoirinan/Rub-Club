@@ -63,13 +63,13 @@ export type BookingWizardInitial = {
 
 export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = {}) {
   const locById = initial?.locations ?? LOCATIONS;
-  const serviceLine: ServiceLine = "massage";
   const [locationId, setLocationId] = useState<LocationId>(
     readInitialLocation(initial?.location ?? null),
   );
   const [visitKind, setVisitKind] = useState<"massage" | "stretch">(
     readInitialVisitKind(initial?.service ?? null),
   );
+  const serviceLine: ServiceLine = visitKind === "stretch" ? "stretch" : "massage";
   const [payMode, setPayMode] = useState<"unset" | "cash" | "insurance">("unset");
   const [durationMin, setDurationMin] = useState<DurationMin>(
     readInitialDuration(initial?.duration ?? null),

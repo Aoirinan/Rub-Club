@@ -22,7 +22,29 @@ export const BUSINESS = {
 
 export type LocationId = "paris" | "sulphur_springs";
 
-export type ServiceLine = "massage" | "chiropractic";
+export type ServiceLine = "massage" | "chiropractic" | "stretch";
+
+export function serviceLineEmailLabel(line: ServiceLine): string {
+  switch (line) {
+    case "massage":
+      return "Massage therapy";
+    case "chiropractic":
+      return "Chiropractic";
+    case "stretch":
+      return "Stretch";
+  }
+}
+
+export function serviceLineEmailLabelLower(line: ServiceLine): string {
+  switch (line) {
+    case "massage":
+      return "massage therapy";
+    case "chiropractic":
+      return "chiropractic";
+    case "stretch":
+      return "stretch";
+  }
+}
 
 export type DurationMin = 30 | 60;
 

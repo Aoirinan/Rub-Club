@@ -32,7 +32,7 @@ export function readFilters(params: URLSearchParams): FilterState {
 
   const rawSvc = params.get("svc");
   const serviceLine: FilterState["serviceLine"] =
-    rawSvc === "massage" || rawSvc === "chiropractic" ? rawSvc : "all";
+    rawSvc === "massage" || rawSvc === "chiropractic" || rawSvc === "stretch" ? rawSvc : "all";
 
   const providerId = params.get("provider") || "all";
   const date = params.get("date") || todayChicagoIsoDate();

@@ -27,6 +27,7 @@ function parseServiceLine(raw: string): ServiceLine | null {
   const t = raw.trim().toLowerCase();
   if (t === "massage") return "massage";
   if (t === "chiropractic" || t === "chiro") return "chiropractic";
+  if (t === "stretch") return "stretch";
   return null;
 }
 

@@ -7,7 +7,7 @@ import { TIME_ZONE } from "@/lib/constants";
 export type HoldRow = {
   id: string;
   locationId: "paris" | "sulphur_springs";
-  scope: "all" | "massage" | "chiropractic";
+  scope: "all" | "massage" | "chiropractic" | "stretch";
   startAtMs: number;
   endAtMs: number;
   durationMin: number;

@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 const patchSchema = z.object({
   displayName: z.string().min(1).max(120).optional(),
   locationIds: z.array(z.enum(["paris", "sulphur_springs"])).min(1).optional(),
-  serviceLines: z.array(z.enum(["massage", "chiropractic"])).min(1).optional(),
+  serviceLines: z.array(z.enum(["massage", "chiropractic", "stretch"])).min(1).optional(),
   active: z.boolean().optional(),
   sortOrder: z.number().optional(),
   acceptsNewClients: z.boolean().optional(),

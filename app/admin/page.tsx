@@ -980,6 +980,7 @@ function Toolbar({
           options={[
             { v: "all", l: "All services" },
             { v: "massage", l: "Massage" },
+            { v: "stretch", l: "Stretch" },
             { v: "chiropractic", l: "Chiropractic" },
           ]}
           onChange={(v) => onChange({ serviceLine: v as FilterState["serviceLine"] })}

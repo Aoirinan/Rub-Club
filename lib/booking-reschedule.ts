@@ -34,7 +34,7 @@ function isBookingFieldOk(
 ): locationId is LocationId {
   return (
     (locationId === "paris" || locationId === "sulphur_springs") &&
-    (serviceLine === "massage" || serviceLine === "chiropractic") &&
+    (serviceLine === "massage" || serviceLine === "chiropractic" || serviceLine === "stretch") &&
     (durationMin === 30 || durationMin === 60)
   );
 }

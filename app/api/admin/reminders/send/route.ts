@@ -88,7 +88,7 @@ export async function POST(req: Request) {
     if (emailCtx.phone) {
       const loc = LOCATIONS[emailCtx.locationId];
       const smsBody = [
-        `Reminder: Your ${emailCtx.serviceLine === "massage" ? "massage" : "chiropractic"} appointment is on ${formatChicagoDateTimeLong(emailCtx.start)}.`,
+        `Reminder: Your ${emailCtx.serviceLine === "massage" ? "massage" : emailCtx.serviceLine === "stretch" ? "stretch" : "chiropractic"} appointment is on ${formatChicagoDateTimeLong(emailCtx.start)}.`,
         `Provider: ${emailCtx.providerDisplayName || "First available"}`,
         `Location: ${loc.shortName} — ${loc.streetAddress}`,
         `To reschedule or cancel, call ${loc.phonePrimary}.`,

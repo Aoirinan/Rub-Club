@@ -4,10 +4,10 @@ import type { DateTime } from "luxon";
 import { getFirestore } from "@/lib/firebase-admin";
 import type { DurationMin, LocationId, ServiceLine } from "@/lib/constants";
 import { formatChicagoSlotChoice } from "@/lib/chicago-datetime-format";
-import { fetchActiveProvidersForService } from "@/lib/providers-db";
+import { fetchActiveProvidersForPublicBooking } from "@/lib/providers-db";
 import {
   bucketDocIdsForAppointment,
-  holdBucketIdsForAppointment,
+  holdBucketIdsForPublicBooking,
   isWithinScheduleWindow,
   unionCandidateStartsFromSchedules,
   enumerateCandidateStartsInWindow,
@@ -27,7 +27,7 @@ async function bucketsFree(
   durationMin: DurationMin,
 ): Promise<boolean> {
   const providerIds = bucketDocIdsForAppointment(locationId, providerId, start, durationMin);
-  const holdIds = holdBucketIdsForAppointment(locationId, serviceLine, start, durationMin);
+  const holdIds = holdBucketIdsForPublicBooking(locationId, serviceLine, start, durationMin);
   const allIds = [...providerIds, ...holdIds];
   const refs = allIds.map((id) => db.collection("slot_buckets").doc(id));
   const snaps = await db.getAll(...refs);
@@ -54,7 +54,7 @@ export async function GET(req: Request) {
     if (durationMin !== 30 && durationMin !== 60) {
       return NextResponse.json({ error: "Invalid durationMin" }, { status: 400 });
     }
-    if (serviceLine !== "massage" && serviceLine !== "chiropractic") {
+    if (serviceLine !== "massage" && serviceLine !== "chiropractic" && serviceLine !== "stretch") {
       return NextResponse.json({ error: "Invalid serviceLine" }, { status: 400 });
     }
     if (providerMode !== "specific" && providerMode !== "any") {
@@ -65,7 +65,7 @@ export async function GET(req: Request) {
     }
 
     const db = getFirestore();
-    const eligible = await fetchActiveProvidersForService(db, locationId, serviceLine, {
+    const eligible = await fetchActiveProvidersForPublicBooking(db, locationId, serviceLine, {
       publicBooking: true,
     });
 

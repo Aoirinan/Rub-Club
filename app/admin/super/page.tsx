@@ -220,6 +220,7 @@ export default function SuperAdminPage() {
   const [newSulphur, setNewSulphur] = useState(true);
   const [newMassage, setNewMassage] = useState(true);
   const [newChiro, setNewChiro] = useState(true);
+  const [newStretch, setNewStretch] = useState(false);
   const [newSort, setNewSort] = useState(0);
   const [editingProvider, setEditingProvider] = useState<BookableProviderRow | null>(null);
   const [savingProvider, setSavingProvider] = useState(false);
@@ -408,6 +409,7 @@ export default function SuperAdminPage() {
     const serviceLines = [
       ...(newMassage ? (["massage"] as const) : []),
       ...(newChiro ? (["chiropractic"] as const) : []),
+      ...(newStretch ? (["stretch"] as const) : []),
     ];
     if (!newProviderName.trim() || locationIds.length === 0 || serviceLines.length === 0) {
       setMessage("Add a display name and select at least one location and one service.");
@@ -454,7 +456,8 @@ export default function SuperAdminPage() {
       (x): x is "paris" | "sulphur_springs" => x === "paris" || x === "sulphur_springs",
     );
     const serviceLines = editingProvider.serviceLines.filter(
-      (x): x is "massage" | "chiropractic" => x === "massage" || x === "chiropractic",
+      (x): x is "massage" | "chiropractic" | "stretch" =>
+        x === "massage" || x === "chiropractic" || x === "stretch",
     );
     if (!editingProvider.displayName.trim() || locationIds.length === 0 || serviceLines.length === 0) {
       setMessage("Display name, location(s), and service(s) are required.");
@@ -913,6 +916,10 @@ export default function SuperAdminPage() {
                   <input type="checkbox" checked={newChiro} onChange={(e) => setNewChiro(e.target.checked)} />
                   Chiropractic
                 </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={newStretch} onChange={(e) => setNewStretch(e.target.checked)} />
+                  Stretch
+                </label>
               </div>
               <label className="block space-y-1 text-sm">
                 <span className="font-medium text-slate-800">Sort order (lower first in lists)</span>
@@ -1018,6 +1025,23 @@ export default function SuperAdminPage() {
                       }}
                     />
                     Chiropractic
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={editingProvider.serviceLines.includes("stretch")}
+                      onChange={(e) => {
+                        const on = e.target.checked;
+                        setEditingProvider((prev) => {
+                          if (!prev) return prev;
+                          const next = new Set(prev.serviceLines);
+                          if (on) next.add("stretch");
+                          else next.delete("stretch");
+                          return { ...prev, serviceLines: Array.from(next) };
+                        });
+                      }}
+                    />
+                    Stretch
                   </label>
                 </div>
                 <label className="flex items-center gap-2">

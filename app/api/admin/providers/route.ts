@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 const createSchema = z.object({
   displayName: z.string().min(1).max(120),
   locationIds: z.array(z.enum(["paris", "sulphur_springs"])).min(1),
-  serviceLines: z.array(z.enum(["massage", "chiropractic"])).min(1),
+  serviceLines: z.array(z.enum(["massage", "chiropractic", "stretch"])).min(1),
   active: z.boolean().optional(),
   sortOrder: z.number().optional(),
   acceptsNewClients: z.boolean().optional(),

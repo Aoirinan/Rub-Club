@@ -3,7 +3,7 @@ import { getFirestore } from "@/lib/firebase-admin";
 import type { LocationId, ServiceLine } from "@/lib/constants";
 import { massageTeamMemberMatchKey, massageTeamPhotoByMatchKey } from "@/lib/massage-team-provider-match";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
-import { fetchActiveProvidersForService } from "@/lib/providers-db";
+import { fetchActiveProvidersForPublicBooking } from "@/lib/providers-db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,17 +19,17 @@ export async function GET(req: Request) {
     if (locationId !== "paris" && locationId !== "sulphur_springs") {
       return NextResponse.json({ error: "Invalid locationId" }, { status: 400, headers: noStore });
     }
-    if (serviceLine !== "massage" && serviceLine !== "chiropractic") {
+    if (serviceLine !== "massage" && serviceLine !== "chiropractic" && serviceLine !== "stretch") {
       return NextResponse.json({ error: "Invalid serviceLine" }, { status: 400, headers: noStore });
     }
 
     const db = getFirestore();
-    const rows = await fetchActiveProvidersForService(db, locationId, serviceLine, {
+    const rows = await fetchActiveProvidersForPublicBooking(db, locationId, serviceLine, {
       publicBooking: true,
     });
 
     const teamPhotoByKey =
-      serviceLine === "massage"
+      serviceLine === "massage" || serviceLine === "stretch"
         ? massageTeamPhotoByMatchKey(await getMassageTeamForMarketing())
         : null;
 
