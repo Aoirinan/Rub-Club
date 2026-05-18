@@ -3,6 +3,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { revalidatePath } from "next/cache";
 import { getFirestore } from "@/lib/firebase-admin";
 import {
+  CMS_REVALIDATE_PATHS,
   CONTENT_CHANGE_LOG_COLLECTION,
   DEFAULTS,
   SITE_CONTENT_COLLECTION,
@@ -12,16 +13,6 @@ import {
 import { requireStaff } from "@/lib/staff-auth";
 
 export const runtime = "nodejs";
-
-const PUBLIC_PATHS = [
-  "/",
-  "/about",
-  "/faq",
-  "/contact",
-  "/services/chiropractic",
-  "/services/massage",
-  "/sulphur-springs",
-];
 
 export async function POST(
   req: Request,
@@ -70,7 +61,7 @@ export async function POST(
     changedBy: staff.email ?? staff.uid,
   });
 
-  for (const p of PUBLIC_PATHS) {
+  for (const p of CMS_REVALIDATE_PATHS) {
     revalidatePath(p);
   }
 

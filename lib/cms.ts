@@ -9,6 +9,11 @@ import {
 } from "@/lib/home-verbatim";
 import { publicBookingHref } from "@/lib/public-booking";
 import { siteShortName } from "@/lib/site-content";
+import {
+  WELLNESS_SECTION_SPECS,
+  wellnessCarePlansDefaults,
+  wellnessSectionFieldId,
+} from "@/lib/wellness-care-plans-content";
 
 export type ContentFieldType =
   | "text"
@@ -28,7 +33,8 @@ export type ContentPageKey =
   | "Contact"
   | "Footer"
   | "Navigation"
-  | "Doctors";
+  | "Doctors"
+  | "Wellness care plans";
 
 export type ContentFieldMeta = {
   id: string;
@@ -129,6 +135,63 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
 
   { id: "nav_giftcard_url", pageLabel: "Navigation", sectionLabel: "Links", fieldLabel: "Gift Card URL", type: "url" },
   { id: "nav_book_url", pageLabel: "Navigation", sectionLabel: "Links", fieldLabel: "Book Now URL", type: "url" },
+
+  { id: "chiro_wellness_teaser_heading", pageLabel: "Chiropractic", sectionLabel: "Wellness teaser", fieldLabel: "Heading", type: "text" },
+  { id: "chiro_wellness_teaser_body", pageLabel: "Chiropractic", sectionLabel: "Wellness teaser", fieldLabel: "Body copy", type: "text" },
+
+  { id: "wellness_hero_eyebrow", pageLabel: "Wellness care plans", sectionLabel: "Hero", fieldLabel: "Eyebrow", type: "text" },
+  { id: "wellness_page_lede", pageLabel: "Wellness care plans", sectionLabel: "Hero", fieldLabel: "Intro paragraph", type: "text" },
+  ...WELLNESS_SECTION_SPECS.flatMap((spec) => [
+    {
+      id: wellnessSectionFieldId(spec.id, "title"),
+      pageLabel: "Wellness care plans" as const,
+      sectionLabel: spec.title,
+      fieldLabel: "Section title",
+      type: "text" as const,
+    },
+    {
+      id: wellnessSectionFieldId(spec.id, "subtitle"),
+      pageLabel: "Wellness care plans" as const,
+      sectionLabel: spec.title,
+      fieldLabel: "Subtitle (optional)",
+      type: "text" as const,
+    },
+    {
+      id: wellnessSectionFieldId(spec.id, "lines"),
+      pageLabel: "Wellness care plans" as const,
+      sectionLabel: spec.title,
+      fieldLabel: "Plan lines (one per line)",
+      type: "richtext" as const,
+    },
+  ]),
+  {
+    id: "wellness_closing_headline",
+    pageLabel: "Wellness care plans",
+    sectionLabel: "Closing",
+    fieldLabel: "Headline",
+    type: "text",
+  },
+  {
+    id: "wellness_closing_lines",
+    pageLabel: "Wellness care plans",
+    sectionLabel: "Closing",
+    fieldLabel: "Bullet points (one per line)",
+    type: "richtext",
+  },
+  {
+    id: "wellness_cta_title",
+    pageLabel: "Wellness care plans",
+    sectionLabel: "Bottom CTA",
+    fieldLabel: "Heading",
+    type: "text",
+  },
+  {
+    id: "wellness_cta_body",
+    pageLabel: "Wellness care plans",
+    sectionLabel: "Bottom CTA",
+    fieldLabel: "Body copy",
+    type: "text",
+  },
 ];
 
 export const DEFAULTS: Record<string, string> = {
@@ -200,6 +263,8 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
 
   nav_giftcard_url: GIFT_CARD_ORDER_URL,
   nav_book_url: publicBookingHref(),
+
+  ...wellnessCarePlansDefaults(),
 };
 
 export const CONTENT_IDS = CONTENT_REGISTRY.map((f) => f.id);
@@ -273,3 +338,15 @@ export async function getContentMany(ids: string[]): Promise<Record<string, stri
 
 export const SITE_CONTENT_COLLECTION = "site_content";
 export const CONTENT_CHANGE_LOG_COLLECTION = "content_change_log";
+
+/** Paths revalidated when site content is saved in superadmin. */
+export const CMS_REVALIDATE_PATHS = [
+  "/",
+  "/about",
+  "/faq",
+  "/contact",
+  "/services/chiropractic",
+  "/services/chiropractic/wellness-care-plans",
+  "/services/massage",
+  "/sulphur-springs",
+] as const;

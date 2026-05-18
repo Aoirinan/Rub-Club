@@ -37,6 +37,7 @@ type FaqRow = {
 const PAGE_NAV: { key: ContentPageKey | "FAQ Items"; label: string }[] = [
   { key: "Home", label: "Home" },
   { key: "Chiropractic", label: "Chiropractic" },
+  { key: "Wellness care plans", label: "Wellness plans" },
   { key: "Massage", label: "Massage" },
   { key: "Sulphur Springs", label: "Sulphur Springs" },
   { key: "About", label: "About" },
@@ -51,6 +52,7 @@ const PAGE_NAV: { key: ContentPageKey | "FAQ Items"; label: string }[] = [
 const BADGE_CLASS: Record<string, string> = {
   Home: "bg-blue-100 text-blue-900",
   Chiropractic: "bg-teal-100 text-teal-900",
+  "Wellness care plans": "bg-emerald-100 text-emerald-900",
   Massage: "bg-purple-100 text-purple-900",
   "Sulphur Springs": "bg-orange-100 text-orange-900",
   About: "bg-green-100 text-green-900",

@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
 import { WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
+import { getContentMany } from "@/lib/cms";
 import { publicBookingHref } from "@/lib/public-booking";
 import {
-  WELLNESS_CLOSING_HEADLINE,
-  WELLNESS_CLOSING_LINES,
-  WELLNESS_PAGE_LEDE,
-  WELLNESS_SECTIONS,
+  WELLNESS_PAGE_CMS_FIELD_IDS,
+  buildWellnessCarePlansContent,
 } from "@/lib/wellness-care-plans-content";
+
 export const metadata: Metadata = {
   title: "Wellness Care Plans — Chiropractic Associates, Paris, TX",
   description:
@@ -22,7 +22,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function WellnessCarePlansPage() {
+export const revalidate = 60;
+
+export default async function WellnessCarePlansPage() {
+  const raw = await getContentMany([...WELLNESS_PAGE_CMS_FIELD_IDS]);
+  const content = buildWellnessCarePlansContent(raw);
+
   return (
     <>
       <Breadcrumbs
@@ -35,14 +40,14 @@ export default function WellnessCarePlansPage() {
       />
 
       <PageHero
-        eyebrow="Chiro-Fitness · Acu-Fit"
+        eyebrow={content.heroEyebrow}
         title="Wellness care plans"
-        lede={WELLNESS_PAGE_LEDE}
+        lede={content.pageLede}
       />
 
       <div className="mx-auto max-w-6xl space-y-8 px-4 pb-16">
         <div className="grid gap-6 md:grid-cols-2">
-          {WELLNESS_SECTIONS.map((section) => (
+          {content.sections.map((section) => (
             <section
               key={section.id}
               className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-8"
@@ -66,9 +71,9 @@ export default function WellnessCarePlansPage() {
         </div>
 
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-xl font-black text-[#173f3b]">{WELLNESS_CLOSING_HEADLINE}</h2>
+          <h2 className="text-xl font-black text-[#173f3b]">{content.closingHeadline}</h2>
           <ul className="mt-4 list-disc space-y-2 pl-5 text-stone-700">
-            {WELLNESS_CLOSING_LINES.map((line) => (
+            {content.closingLines.map((line) => (
               <li key={line}>{line}</li>
             ))}
           </ul>
@@ -89,8 +94,8 @@ export default function WellnessCarePlansPage() {
         </section>
 
         <CtaCard
-          title="Start your wellness plan"
-          body="Book online or call our Paris office to set up monthly wellness care."
+          title={content.ctaTitle}
+          body={content.ctaBody}
           primary={{ label: "Book chiropractic online", href: publicBookingHref("service=chiropractic") }}
           secondary={{ label: "Call Paris 903-785-5551", href: telHref("903-785-5551") }}
         />

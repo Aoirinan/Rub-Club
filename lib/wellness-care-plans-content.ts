@@ -1,7 +1,9 @@
 /**
  * Chiropractic wellness membership pricing (Chiro-Fitness / Acu-Fit).
- * Source: practice wellness offerings; keep in sync with office materials.
+ * Defaults for CMS; editable in superadmin → Site content → Wellness care plans.
  */
+
+import { WELLNESS_CARE_PLANS_PATH } from "@/lib/constants";
 
 export type WellnessPlanSection = {
   id: string;
@@ -10,10 +12,14 @@ export type WellnessPlanSection = {
   lines: readonly string[];
 };
 
+export const WELLNESS_PUBLIC_PATH = WELLNESS_CARE_PLANS_PATH;
+
+export const WELLNESS_HERO_EYEBROW = "Chiro-Fitness · Acu-Fit";
+
 export const WELLNESS_PAGE_LEDE =
   "Chiro-Fitness memberships use automatic monthly debit and are for wellness care only. Plans below are available through our Paris office — ask the front desk to enroll or to confirm current pricing.";
 
-export const WELLNESS_SECTIONS: readonly WellnessPlanSection[] = [
+export const WELLNESS_SECTION_SPECS: readonly WellnessPlanSection[] = [
   {
     id: "adjustment",
     title: "Chiropractic treatments",
@@ -64,6 +70,9 @@ export const WELLNESS_SECTIONS: readonly WellnessPlanSection[] = [
   },
 ] as const;
 
+/** @deprecated Use WELLNESS_SECTION_SPECS */
+export const WELLNESS_SECTIONS = WELLNESS_SECTION_SPECS;
+
 export const WELLNESS_CLOSING_HEADLINE = "All the services you need, all in one place.";
 
 export const WELLNESS_CLOSING_LINES = [
@@ -71,3 +80,93 @@ export const WELLNESS_CLOSING_LINES = [
   "Get your wellness plan started today.",
   "Prices subject to change.",
 ] as const;
+
+export const WELLNESS_CTA_TITLE = "Start your wellness plan";
+export const WELLNESS_CTA_BODY =
+  "Book online or call our Paris office to set up monthly wellness care.";
+
+export const CHIRO_WELLNESS_TEASER_HEADING = "Wellness care plans";
+export const CHIRO_WELLNESS_TEASER_BODY =
+  "Monthly Chiro-Fitness and Acu-Fit memberships at our Paris office combine adjustments, roller table, massage, therapy, acupuncture, and rehab options — billed on automatic debit for ongoing wellness care.";
+
+export function wellnessSectionFieldId(sectionId: string, part: "title" | "subtitle" | "lines"): string {
+  return `wellness_${sectionId}_${part}`;
+}
+
+export function parseWellnessLines(value: string): string[] {
+  return value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+export function buildWellnessSectionsFromContent(c: Record<string, string>): WellnessPlanSection[] {
+  return WELLNESS_SECTION_SPECS.map((spec) => {
+    const titleKey = wellnessSectionFieldId(spec.id, "title");
+    const subtitleKey = wellnessSectionFieldId(spec.id, "subtitle");
+    const linesKey = wellnessSectionFieldId(spec.id, "lines");
+    const subtitleRaw = (c[subtitleKey] ?? spec.subtitle ?? "").trim();
+    return {
+      id: spec.id,
+      title: (c[titleKey] ?? spec.title).trim() || spec.title,
+      subtitle: subtitleRaw || undefined,
+      lines: parseWellnessLines(c[linesKey] ?? spec.lines.join("\n")),
+    };
+  });
+}
+
+export const WELLNESS_PAGE_CMS_FIELD_IDS = [
+  "wellness_hero_eyebrow",
+  "wellness_page_lede",
+  ...WELLNESS_SECTION_SPECS.flatMap((s) => [
+    wellnessSectionFieldId(s.id, "title"),
+    wellnessSectionFieldId(s.id, "subtitle"),
+    wellnessSectionFieldId(s.id, "lines"),
+  ]),
+  "wellness_closing_headline",
+  "wellness_closing_lines",
+  "wellness_cta_title",
+  "wellness_cta_body",
+] as const;
+
+export function wellnessCarePlansDefaults(): Record<string, string> {
+  const out: Record<string, string> = {
+    wellness_hero_eyebrow: WELLNESS_HERO_EYEBROW,
+    wellness_page_lede: WELLNESS_PAGE_LEDE,
+    wellness_closing_headline: WELLNESS_CLOSING_HEADLINE,
+    wellness_closing_lines: WELLNESS_CLOSING_LINES.join("\n"),
+    wellness_cta_title: WELLNESS_CTA_TITLE,
+    wellness_cta_body: WELLNESS_CTA_BODY,
+    chiro_wellness_teaser_heading: CHIRO_WELLNESS_TEASER_HEADING,
+    chiro_wellness_teaser_body: CHIRO_WELLNESS_TEASER_BODY,
+  };
+  for (const spec of WELLNESS_SECTION_SPECS) {
+    out[wellnessSectionFieldId(spec.id, "title")] = spec.title;
+    out[wellnessSectionFieldId(spec.id, "subtitle")] = spec.subtitle ?? "";
+    out[wellnessSectionFieldId(spec.id, "lines")] = spec.lines.join("\n");
+  }
+  return out;
+}
+
+export type WellnessCarePlansContent = {
+  heroEyebrow: string;
+  pageLede: string;
+  sections: WellnessPlanSection[];
+  closingHeadline: string;
+  closingLines: string[];
+  ctaTitle: string;
+  ctaBody: string;
+};
+
+export function buildWellnessCarePlansContent(c: Record<string, string>): WellnessCarePlansContent {
+  const d = wellnessCarePlansDefaults();
+  return {
+    heroEyebrow: c.wellness_hero_eyebrow ?? d.wellness_hero_eyebrow!,
+    pageLede: c.wellness_page_lede ?? d.wellness_page_lede!,
+    sections: buildWellnessSectionsFromContent(c),
+    closingHeadline: c.wellness_closing_headline ?? d.wellness_closing_headline!,
+    closingLines: parseWellnessLines(c.wellness_closing_lines ?? d.wellness_closing_lines!),
+    ctaTitle: c.wellness_cta_title ?? d.wellness_cta_title!,
+    ctaBody: c.wellness_cta_body ?? d.wellness_cta_body!,
+  };
+}

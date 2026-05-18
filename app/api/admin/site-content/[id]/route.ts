@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getFirestore } from "@/lib/firebase-admin";
 import {
+  CMS_REVALIDATE_PATHS,
   CONTENT_CHANGE_LOG_COLLECTION,
   SITE_CONTENT_COLLECTION,
   getContent,
@@ -17,18 +18,8 @@ const patchSchema = z.object({
   value: z.string().max(100_000),
 });
 
-const PUBLIC_PATHS = [
-  "/",
-  "/about",
-  "/faq",
-  "/contact",
-  "/services/chiropractic",
-  "/services/massage",
-  "/sulphur-springs",
-];
-
 function revalidatePublicPages(): void {
-  for (const p of PUBLIC_PATHS) {
+  for (const p of CMS_REVALIDATE_PATHS) {
     revalidatePath(p);
   }
 }

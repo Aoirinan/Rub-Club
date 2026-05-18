@@ -143,6 +143,8 @@ export default async function ChiropracticServicePage() {
     "chiro_testimonial_2_attr",
     "chiro_testimonial_3_text",
     "chiro_testimonial_3_attr",
+    "chiro_wellness_teaser_heading",
+    "chiro_wellness_teaser_body",
   ]);
   const doctors = await getDoctorsForMarketing();
   const conditions = parseConditionsList(c.chiro_conditions_list ?? "");
@@ -274,12 +276,8 @@ export default async function ChiropracticServicePage() {
         </section>
 
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-xl font-black text-[#173f3b]">Wellness care plans</h2>
-          <p className="mt-3 max-w-3xl text-stone-700">
-            Monthly Chiro-Fitness and Acu-Fit memberships at our Paris office combine adjustments,
-            roller table, massage, therapy, acupuncture, and rehab options — billed on automatic debit
-            for ongoing wellness care.
-          </p>
+          <h2 className="text-xl font-black text-[#173f3b]">{c.chiro_wellness_teaser_heading}</h2>
+          <p className="mt-3 max-w-3xl text-stone-700">{c.chiro_wellness_teaser_body}</p>
           <Link
             href={WELLNESS_CARE_PLANS_PATH}
             className="focus-ring mt-4 inline-flex bg-[#0f5f5c] px-5 py-2.5 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
