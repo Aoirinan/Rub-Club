@@ -6,7 +6,10 @@
  *   npx tsx scripts/migrate-staff-roles.ts          # dry run
  *   npx tsx scripts/migrate-staff-roles.ts --apply  # write changes
  */
+import { loadEnvConfig } from "@next/env";
 import { getFirestore } from "../lib/firebase-admin";
+
+loadEnvConfig(process.cwd());
 
 async function main() {
   const apply = process.argv.includes("--apply");
