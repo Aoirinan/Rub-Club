@@ -3,10 +3,7 @@ import { Timestamp } from "firebase-admin/firestore";
 import { DateTime } from "luxon";
 import { getFirestore } from "@/lib/firebase-admin";
 import { TIME_ZONE, type LocationId, type ServiceLine } from "@/lib/constants";
-import {
-  fetchActiveProvidersForPublicBooking,
-  fetchActiveProvidersForService,
-} from "@/lib/providers-db";
+import { fetchActiveProvidersForService } from "@/lib/providers-db";
 import { isHoldBucketId } from "@/lib/slots-luxon";
 import { requireStaff } from "@/lib/staff-auth";
 
@@ -83,10 +80,7 @@ export async function GET(req: Request) {
   const dayStart = DateTime.fromISO(date, { zone: TIME_ZONE }).startOf("day");
   const dayEnd = dayStart.plus({ days: 1 });
 
-  const eligible =
-    serviceLine === "stretch"
-      ? await fetchActiveProvidersForPublicBooking(db, locationId, serviceLine)
-      : await fetchActiveProvidersForService(db, locationId, serviceLine);
+  const eligible = await fetchActiveProvidersForService(db, locationId, serviceLine);
   const providers: ProviderDebug[] = eligible.map((p) => ({
     id: p.id,
     displayName: p.displayName,

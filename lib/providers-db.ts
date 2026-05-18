@@ -102,13 +102,6 @@ export async function fetchAllProviders(db: Firestore): Promise<ProviderRow[]> {
   return rows;
 }
 
-function providerEligibleForPublicService(row: ProviderRow, serviceLine: ServiceLine): boolean {
-  if (serviceLine === "stretch") {
-    return row.serviceLines.includes("stretch") || row.serviceLines.includes("massage");
-  }
-  return row.serviceLines.includes(serviceLine);
-}
-
 export async function fetchActiveProvidersForService(
   db: Firestore,
   locationId: LocationId,
@@ -129,25 +122,14 @@ export async function fetchActiveProvidersForService(
   return rows;
 }
 
-/** Public booking eligibility (stretch includes legacy massage-tagged providers). */
+/** Public booking — provider must have the requested service line checked in admin. */
 export async function fetchActiveProvidersForPublicBooking(
   db: Firestore,
   locationId: LocationId,
   serviceLine: ServiceLine,
   opts?: { publicBooking?: boolean },
 ): Promise<ProviderRow[]> {
-  const snap = await db.collection("providers").where("active", "==", true).get();
-  const rows: ProviderRow[] = [];
-  for (const d of snap.docs) {
-    const row = parseProviderDoc(d.id, d.data());
-    if (!row) continue;
-    if (!row.locationIds.includes(locationId)) continue;
-    if (!providerEligibleForPublicService(row, serviceLine)) continue;
-    if (opts?.publicBooking && row.acceptsNewClients === false) continue;
-    rows.push(row);
-  }
-  rows.sort(compareProvidersForAssignment);
-  return rows;
+  return fetchActiveProvidersForService(db, locationId, serviceLine, opts);
 }
 
 export async function fetchProviderById(db: Firestore, id: string): Promise<ProviderRow | null> {

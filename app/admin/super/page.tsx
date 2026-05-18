@@ -223,6 +223,7 @@ export default function SuperAdminPage() {
   const [newStretch, setNewStretch] = useState(false);
   const [newSort, setNewSort] = useState(0);
   const [editingProvider, setEditingProvider] = useState<BookableProviderRow | null>(null);
+  const [editProviderPhoto, setEditProviderPhoto] = useState<File | null>(null);
   const [savingProvider, setSavingProvider] = useState(false);
   const [deletingProviderId, setDeletingProviderId] = useState<string | null>(null);
 
@@ -466,31 +467,58 @@ export default function SuperAdminPage() {
     setSavingProvider(true);
     try {
       const token = await auth.currentUser.getIdToken();
-      const res = await fetch(`/api/admin/providers/${editingProvider.id}`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          displayName: editingProvider.displayName.trim(),
-          locationIds,
-          serviceLines,
-          sortOrder: editingProvider.sortOrder,
-          active: editingProvider.active,
-          schedule: editingProvider.schedule ?? null,
-          acceptsNewClients: editingProvider.acceptsNewClients,
-          photoUrl: editingProvider.photoUrl?.trim() || null,
-          about: editingProvider.about?.trim() || null,
-        }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const payload = {
+        displayName: editingProvider.displayName.trim(),
+        locationIds,
+        serviceLines,
+        sortOrder: editingProvider.sortOrder,
+        active: editingProvider.active,
+        schedule: editingProvider.schedule ?? null,
+        acceptsNewClients: editingProvider.acceptsNewClients,
+        photoUrl: editingProvider.photoUrl?.trim() || null,
+        about: editingProvider.about?.trim() || null,
+      };
+
+      let res: Response;
+      if (editProviderPhoto) {
+        const form = new FormData();
+        form.set("displayName", payload.displayName);
+        form.set("locationIds", JSON.stringify(payload.locationIds));
+        form.set("serviceLines", JSON.stringify(payload.serviceLines));
+        form.set("sortOrder", String(payload.sortOrder));
+        form.set("active", String(payload.active));
+        form.set("acceptsNewClients", String(payload.acceptsNewClients !== false));
+        form.set("about", payload.about ?? "");
+        form.set("schedule", JSON.stringify(payload.schedule));
+        form.set("photoUrl", payload.photoUrl ?? "");
+        form.set("photo", editProviderPhoto);
+        res = await fetch(`/api/admin/providers/${editingProvider.id}`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+          body: form,
+        });
+      } else {
+        res = await fetch(`/api/admin/providers/${editingProvider.id}`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        provider?: BookableProviderRow;
+      };
       if (!res.ok) {
         setMessage(typeof data.error === "string" ? data.error : "Could not save provider.");
         return;
       }
       setMessage("Provider updated.");
       setEditingProvider(null);
+      setEditProviderPhoto(null);
       await loadBookableProviders(token);
     } finally {
       setSavingProvider(false);
@@ -512,7 +540,10 @@ export default function SuperAdminPage() {
       return;
     }
     setMessage("Provider hidden from booking.");
-    if (editingProvider?.id === id) setEditingProvider(null);
+    if (editingProvider?.id === id) {
+      setEditProviderPhoto(null);
+      setEditingProvider(null);
+    }
     await loadBookableProviders(token);
   }
 
@@ -539,7 +570,10 @@ export default function SuperAdminPage() {
         return;
       }
       setMessage("Provider deleted.");
-      if (editingProvider?.id === id) setEditingProvider(null);
+      if (editingProvider?.id === id) {
+      setEditProviderPhoto(null);
+      setEditingProvider(null);
+    }
       await loadBookableProviders(token);
     } finally {
       setDeletingProviderId(null);
@@ -836,7 +870,10 @@ export default function SuperAdminPage() {
                           <div className="flex shrink-0 flex-wrap gap-2">
                             <button
                               type="button"
-                              onClick={() => setEditingProvider({ ...p })}
+                              onClick={() => {
+                                setEditProviderPhoto(null);
+                                setEditingProvider({ ...p });
+                              }}
                               className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-900 hover:border-slate-400"
                             >
                               Edit
@@ -1066,17 +1103,44 @@ export default function SuperAdminPage() {
                   />
                   Accepting new clients on the public book page (uncheck for existing clients only)
                 </label>
-                <label className="block space-y-1">
-                  <span className="font-medium text-slate-800">Photo URL (https only, optional)</span>
-                  <input
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                    value={editingProvider.photoUrl ?? ""}
-                    onChange={(e) =>
-                      setEditingProvider((prev) => (prev ? { ...prev, photoUrl: e.target.value } : prev))
-                    }
-                    placeholder="https://…"
-                  />
-                </label>
+                <div className="space-y-2">
+                  <span className="font-medium text-slate-800">Photo (optional)</span>
+                  {editingProvider.photoUrl && !editProviderPhoto ? (
+                    <div className="flex items-center gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={editingProvider.photoUrl}
+                        alt=""
+                        className="h-16 w-16 rounded-lg border border-slate-200 object-cover"
+                      />
+                      <p className="text-xs text-slate-600">Current photo — upload a new file to replace it.</p>
+                    </div>
+                  ) : null}
+                  <label className="block space-y-1">
+                    <span className="text-xs text-slate-600">Upload image (JPEG, PNG, or WebP, max 5 MB)</span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="w-full text-sm"
+                      onChange={(e) => setEditProviderPhoto(e.target.files?.[0] ?? null)}
+                    />
+                  </label>
+                  <label className="block space-y-1">
+                    <span className="text-xs text-slate-600">Or paste an https URL</span>
+                    <input
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                      value={editingProvider.photoUrl ?? ""}
+                      onChange={(e) => {
+                        setEditProviderPhoto(null);
+                        setEditingProvider((prev) =>
+                          prev ? { ...prev, photoUrl: e.target.value } : prev,
+                        );
+                      }}
+                      placeholder="https://…"
+                      disabled={!!editProviderPhoto}
+                    />
+                  </label>
+                </div>
                 <label className="block space-y-1">
                   <span className="font-medium text-slate-800">About (plain text, optional)</span>
                   <textarea
@@ -1190,7 +1254,10 @@ export default function SuperAdminPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setEditingProvider(null)}
+                    onClick={() => {
+                      setEditProviderPhoto(null);
+                      setEditingProvider(null);
+                    }}
                     className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900"
                   >
                     Cancel
@@ -1235,7 +1302,10 @@ export default function SuperAdminPage() {
                   <div className="flex shrink-0 flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={() => setEditingProvider({ ...p })}
+                      onClick={() => {
+                        setEditProviderPhoto(null);
+                        setEditingProvider({ ...p });
+                      }}
                       className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 hover:border-slate-400"
                     >
                       Edit
