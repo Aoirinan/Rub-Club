@@ -117,7 +117,11 @@ export default async function ContactPage() {
               <p className="text-sm font-bold">Privacy notice</p>
               <p className="mt-1 text-sm">
                 Please don&rsquo;t share sensitive health information through this form. For
-                anything medical, please call us directly.
+                anything medical, please call us directly. See our{" "}
+                <Link className="font-bold underline" href="/website-privacy">
+                  website privacy policy
+                </Link>
+                .
               </p>
             </div>
           </aside>

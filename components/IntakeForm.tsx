@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
+import { PRIVACY_PRACTICES_PATH } from "@/lib/privacy";
 
 const PRESSURE_OPTIONS = ["Light", "Medium", "Firm", "Deep"] as const;
 
@@ -52,6 +54,7 @@ export function IntakeForm() {
     website: "",
   });
 
+  const [privacyAcknowledged, setPrivacyAcknowledged] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +65,10 @@ export function IntakeForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!privacyAcknowledged) {
+      setError("Please read and acknowledge the Notice of Privacy Practices before submitting.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
 
@@ -97,6 +104,7 @@ export function IntakeForm() {
       }
       fd.append("pregnant", form.pregnant ? "true" : "false");
       fd.append("pacemaker", form.pacemaker ? "true" : "false");
+      fd.append("privacyAcknowledged", "true");
       if (insuranceCardFrontFile) fd.append("insuranceCardFront", insuranceCardFrontFile);
       if (insuranceCardBackFile) fd.append("insuranceCardBack", insuranceCardBackFile);
       if (driversLicenseFile) fd.append("driversLicense", driversLicenseFile);
@@ -495,11 +503,41 @@ export function IntakeForm() {
         </label>
       </fieldset>
 
-      <p className="text-xs text-stone-500">
+      <div className="rounded border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-950">
+        <p className="font-bold">Not for emergencies</p>
+        <p className="mt-1">
+          If you have a medical emergency, call 911 or go to the nearest emergency room. This form is
+          not monitored in real time.
+        </p>
+      </div>
+
+      <p className="text-xs leading-relaxed text-stone-600">
         Information you submit is used for appointment preparation and care coordination. Optional
-        uploads are stored securely and are only available to authorized clinic staff; access is
-        logged for privacy compliance.
+        uploads are stored securely; only authorized clinic staff can view them, and access is logged.
+        Insurance verification and billing are also completed in the office at your visit.
       </p>
+
+      <label className="flex gap-3 text-sm text-stone-800">
+        <input
+          type="checkbox"
+          checked={privacyAcknowledged}
+          onChange={(e) => setPrivacyAcknowledged(e.target.checked)}
+          className="mt-1 h-4 w-4 shrink-0 rounded border-stone-300"
+          required
+        />
+        <span>
+          I have read the{" "}
+          <Link
+            href={PRIVACY_PRACTICES_PATH}
+            className="font-bold text-[#0f5f5c] underline hover:text-[#173f3b]"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Notice of Privacy Practices
+          </Link>{" "}
+          and consent to submit my information electronically for appointment preparation.
+        </span>
+      </label>
 
       {error ? (
         <p className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
@@ -509,7 +547,7 @@ export function IntakeForm() {
 
       <button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || !privacyAcknowledged}
         className="focus-ring bg-[#f2d25d] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d] disabled:opacity-50"
       >
         {submitting ? "Submitting…" : "Submit intake form"}

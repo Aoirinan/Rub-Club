@@ -25,4 +25,4 @@ export const INTAKE_TEXT_FIELDS = [
 
 export type IntakeTextFieldKey = (typeof INTAKE_TEXT_FIELDS)[number];
 
-export const INTAKE_BOOLEAN_FIELDS = ["pregnant", "pacemaker"] as const;
+export const INTAKE_BOOLEAN_FIELDS = ["pregnant", "pacemaker", "privacyAcknowledged"] as const;

@@ -1,6 +1,6 @@
 {
   "name": "wellness-paris-tx",
-  "version": "0.11.7",
+  "version": "0.12.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -15,6 +15,8 @@
     "backfill:patients": "npx tsx scripts/backfill-patients.ts",
     "storage:apply-cors": "npx tsx scripts/apply-storage-cors.ts",
     "seed:content": "npx tsx scripts/seedContentBlocks.ts",
+    "generate:baa-pdf": "npx tsx scripts/generate-baa-pdf.ts",
+    "build:chiro-packet": "node scripts/build-chiro-packet.mjs",
     "vercel:login": "npx vercel@50 login",
     "vercel:link": "npx vercel@50 link",
     "deploy:vercel": "npx vercel@50 deploy --prod --yes"
@@ -34,16 +36,18 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "tsx": "^4.19.4",
     "@eslint/eslintrc": "^3",
     "@types/luxon": "^3.7.1",
     "@types/node": "^20",
+    "@types/pdfkit": "^0.17.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^15.5.18",
+    "pdfkit": "^0.18.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.19.4",
     "typescript": "^5",
     "vitest": "^3.2.4"
   }

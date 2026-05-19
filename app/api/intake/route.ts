@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getFirestore } from "@/lib/firebase-admin";
 import { sendBookingNotification } from "@/lib/sendgrid";
-import { siteShortName } from "@/lib/site-content";
+import { buildIntakeOfficeNotificationEmail } from "@/lib/intake-office-notification";
 import { assertRateLimitOk } from "@/lib/rate-limit";
 import { INTAKE_BOOLEAN_FIELDS, INTAKE_TEXT_FIELDS } from "@/lib/intake-form-fields";
 import {
@@ -74,6 +74,9 @@ function buildRecordFromBody(body: Record<string, unknown>): Record<string, unkn
       record[key] = val;
     }
   }
+  if (body.privacyAcknowledged === true) {
+    record.privacyAcknowledgedAt = FieldValue.serverTimestamp();
+  }
   return record;
 }
 
@@ -134,6 +137,12 @@ export async function POST(req: Request) {
   }
   if (!email && !phone) {
     return NextResponse.json({ error: "Please provide a phone number or email." }, { status: 400 });
+  }
+  if (body.privacyAcknowledged !== true) {
+    return NextResponse.json(
+      { error: "Please read and acknowledge the Notice of Privacy Practices." },
+      { status: 400 },
+    );
   }
 
   const record = buildRecordFromBody(body);
@@ -196,27 +205,14 @@ export async function POST(req: Request) {
   try {
     const officeEmail = process.env.OFFICE_NOTIFICATION_EMAIL?.trim();
     if (officeEmail) {
-      const hasDocs = Boolean(insuranceLegacy || insuranceFrontFile || insuranceBackFile || driversFile);
+      const { subject, text } = buildIntakeOfficeNotificationEmail({
+        service: typeof body.service === "string" ? body.service : undefined,
+        location: typeof body.location === "string" ? body.location : undefined,
+      });
       await sendBookingNotification({
         to: officeEmail,
-        subject: `New intake form: ${firstName} ${lastName}`,
-        text: [
-          `New patient intake form submitted on ${siteShortName}.`,
-          "",
-          `Name: ${firstName} ${lastName}`,
-          phone ? `Phone: ${phone}` : "",
-          email ? `Email: ${email}` : "",
-          `Service: ${String(body.service ?? "Not specified")}`,
-          `Location: ${String(body.location ?? "Not specified")}`,
-          body.reasonForVisit ? `Reason: ${String(body.reasonForVisit)}` : "",
-          hasDocs
-            ? "Attachments: patient uploaded one or more ID/insurance images (Scheduler → Manager → Intake documents with uploads)."
-            : "",
-          "",
-          `View in Firestore: intake_forms/${ref.id}`,
-        ]
-          .filter(Boolean)
-          .join("\n"),
+        subject,
+        text,
         fromName: "Patient Intake",
       });
     }
@@ -224,5 +220,5 @@ export async function POST(req: Request) {
     console.error("Intake notification email failed:", err);
   }
 
-  return NextResponse.json({ ok: true, id: ref.id });
+  return NextResponse.json({ ok: true });
 }

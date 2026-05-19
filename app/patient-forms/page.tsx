@@ -4,8 +4,10 @@ import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { IntakeForm } from "@/components/IntakeForm";
 import { WELLNESS_CARE_PLANS_PATH } from "@/lib/constants";
 
-const MASSAGE_NEW_CLIENT_PDF = "/the-rub-club-new-client-form-1.pdf";
-const CHIRO_INTAKE_PACKET_PDF = "/chiropractic-new-patient-packet.pdf";
+import {
+  CHIRO_INTAKE_PACKET_PDF,
+  MASSAGE_NEW_CLIENT_PDF,
+} from "@/lib/privacy";
 
 export const metadata: Metadata = {
   title: "Patient Forms",
@@ -32,35 +34,43 @@ export default function PatientFormsPage() {
       <PageHero
         eyebrow="Welcome to our practice"
         title="Patient forms"
-        lede="Use the printable chiropractic packet for new patients and injury-related visits, download the massage new-client PDF, or submit our online intake for either service — Paris or Sulphur Springs."
+        lede="Download our 9-page chiropractic intake packet (print and bring to your visit), the massage new-client PDF, or submit our online intake for either service — Paris or Sulphur Springs."
       />
       <div className="mx-auto max-w-3xl space-y-6 px-4 pb-16">
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-8">
           <h2 className="text-xl font-black text-[#173f3b]">Chiropractic: new patient &amp; personal injury</h2>
           <p className="mt-2 text-sm leading-relaxed text-stone-700">
-            This is the same printable packet we use in office for new chiropractic patients. Print
-            it, complete every page that applies to your visit, and bring it with you (or arrive a
-            few minutes early to fill it out here).
+            This is the same <strong>9-page</strong> printable packet we use in office for new
+            chiropractic patients. Print it, complete every page that applies to your visit, and bring
+            it with you (or arrive a few minutes early to fill it out here).
           </p>
           <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-stone-700">
             <li>
-              <span className="font-bold text-[#173f3b]">New patient intake</span> — health history,
-              consent, and first-visit paperwork for chiropractic care.
+              <span className="font-bold text-[#173f3b]">Pages 1–4</span> — patient and insurance
+              information, health history, and symptom checklist.
             </li>
             <li>
-              <span className="font-bold text-[#173f3b]">Personal injury / auto accident intake</span>{" "}
-              — use this same packet for motor vehicle and injury-related visits; answer accident and
-              case questions where prompted and bring insurance or claim information to your
-              appointment.
+              <span className="font-bold text-[#173f3b]">Pages 5–8</span> — insurance acknowledgment,
+              informed consent, assignment of benefits, and Notice of Privacy Practices (HIPAA).
+            </li>
+            <li>
+              <span className="font-bold text-[#173f3b]">Page 9</span> — CMS-1500 (if your visit
+              requires it; the front desk can help).
+            </li>
+            <li>
+              <span className="font-bold text-[#173f3b]">Personal injury / auto accident</span> — use
+              this same packet; answer accident and case questions where prompted and bring insurance
+              or claim information to your appointment.
             </li>
           </ul>
           <a
             href={CHIRO_INTAKE_PACKET_PDF}
+            download="chiropractic-new-patient-packet.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="focus-ring mt-6 inline-flex bg-[#0f5f5c] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
           >
-            Download chiropractic intake packet (PDF)
+            Download 9-page chiropractic intake packet (PDF)
           </a>
           <p className="mt-6 border-t border-stone-200 pt-6 text-sm leading-relaxed text-stone-700">
             Interested in ongoing chiropractic wellness options? See our{" "}

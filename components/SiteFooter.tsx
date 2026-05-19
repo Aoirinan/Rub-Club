@@ -7,6 +7,11 @@ import {
   type LocationInfo,
 } from "@/lib/constants";
 import { MASSAGE } from "@/lib/home-verbatim";
+import {
+  PRIVACY_PRACTICES_PATH,
+  TERMS_PATH,
+  WEBSITE_PRIVACY_PATH,
+} from "@/lib/legal";
 import { siteShortName } from "@/lib/site-content";
 import { BookingCta } from "@/components/BookingCta";
 
@@ -149,6 +154,21 @@ export function SiteFooter({
               </Link>
             </li>
             <li>
+              <Link className="hover:underline" href={PRIVACY_PRACTICES_PATH}>
+                Privacy practices
+              </Link>
+            </li>
+            <li>
+              <Link className="hover:underline" href={WEBSITE_PRIVACY_PATH}>
+                Website privacy
+              </Link>
+            </li>
+            <li>
+              <Link className="hover:underline" href={TERMS_PATH}>
+                Terms of use
+              </Link>
+            </li>
+            <li>
               <Link className="hover:underline" href="/contact">
                 Contact
               </Link>
@@ -169,8 +189,29 @@ export function SiteFooter({
         </div>
       </div>
       <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-white/60">
-        <p>
-          {copyrightLine} ·{" "}
+        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+          <span>{copyrightLine}</span>
+          <span aria-hidden className="text-white/30">
+            ·
+          </span>
+          <Link className="hover:underline" href={PRIVACY_PRACTICES_PATH}>
+            Privacy practices
+          </Link>
+          <span aria-hidden className="text-white/30">
+            ·
+          </span>
+          <Link className="hover:underline" href={WEBSITE_PRIVACY_PATH}>
+            Website privacy
+          </Link>
+          <span aria-hidden className="text-white/30">
+            ·
+          </span>
+          <Link className="hover:underline" href={TERMS_PATH}>
+            Terms
+          </Link>
+          <span aria-hidden className="text-white/30">
+            ·
+          </span>
           <Link className="hover:underline" href="/admin/login">
             Staff
           </Link>
