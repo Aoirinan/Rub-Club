@@ -832,13 +832,17 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
               />
             </label>
             <label className="block space-y-1.5 text-sm sm:col-span-2">
-              <span className={fieldLabel}>Notes (optional)</span>
+              <span className={fieldLabel}>Scheduling notes (optional)</span>
               <textarea
                 className={`${fieldControl} min-h-[120px] resize-y sm:min-h-[100px]`}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Anything we should know? Reason for visit, allergies, pregnancy, etc."
+                placeholder="Scheduling preferences only (e.g. prefer afternoons, returning client, parking question)."
+                maxLength={500}
               />
+              <span className="block text-[11px] text-stone-500">
+                Please do not include health or medical information here. Save those details for your visit.
+              </span>
             </label>
           </div>
 

@@ -97,20 +97,6 @@ export function PatientProfileBody({ patientId, getIdToken, isSuperadmin, compac
     }
   }
 
-  async function uploadInsurance(side: "front" | "back", file: File) {
-    const token = await getIdToken();
-    if (!token) return;
-    const fd = new FormData();
-    fd.set("side", side);
-    fd.set("file", file);
-    const res = await fetch(`/api/admin/patients/${encodeURIComponent(patientId)}/insurance`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: fd,
-    });
-    if (res.ok) void load();
-  }
-
   if (loading) return <p className="text-sm text-slate-600">Loading…</p>;
   if (error) return <p className="text-sm text-rose-700">{error}</p>;
   if (!patient) return <p className="text-sm text-slate-600">Patient not found.</p>;
@@ -282,34 +268,11 @@ export function PatientProfileBody({ patientId, getIdToken, isSuperadmin, compac
           </div>
         ) : null}
 
-        {isSuperadmin && !editing ? (
-          <label className="block text-xs font-semibold text-slate-700">
-            Upload insurance card
-            <input
-              type="file"
-              accept="image/*"
-              className="mt-1 block text-xs"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                e.target.value = "";
-                if (f) void uploadInsurance("front", f);
-              }}
-            />
-            <input
-              type="file"
-              accept="image/*"
-              className="mt-1 block text-xs"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                e.target.value = "";
-                if (f) void uploadInsurance("back", f);
-              }}
-            />
-          </label>
-        ) : null}
+        {/* Insurance card uploads are disabled in this admin to keep PHI out of website infrastructure.
+            Scan or photograph cards in-office and store them in the clinic's EMR / paper file. */}
 
         <label className="block text-sm">
-          <span className="text-xs font-medium text-slate-500">Internal notes</span>
+          <span className="text-xs font-medium text-slate-500">Scheduling notes (staff)</span>
           <textarea
             className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
             rows={3}
@@ -317,7 +280,12 @@ export function PatientProfileBody({ patientId, getIdToken, isSuperadmin, compac
             onChange={(e) => setNotesDraft(e.target.value)}
             onBlur={() => void saveNotes()}
             readOnly={!isSuperadmin}
+            placeholder="Scheduling notes only (e.g. preferred provider, parking, scheduling pattern). Do not enter health or clinical information here."
+            maxLength={1000}
           />
+          <span className="mt-1 block text-[11px] text-slate-500">
+            Do not enter health or clinical information here. Clinical notes belong in the EMR / paper chart.
+          </span>
         </label>
       </section>
 

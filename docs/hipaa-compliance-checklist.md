@@ -1,67 +1,79 @@
-# HIPAA compliance checklist (Rub Club website + intake)
+# HIPAA compliance posture — scheduling-only website
 
-**Not legal advice.** Your practice bills insurance in office — you are very likely a **HIPAA covered entity**. Use this checklist with your attorney/compliance advisor. Store signed BAAs and policies **outside git** (secure folder or password manager).
+**Not legal advice.** Review with your attorney/compliance advisor. Keep signed contracts and BAAs **outside git** (secure folder or password manager).
 
-**Developer ↔ clinic BAA template (PDF):** run `npm run generate:baa-pdf` → `docs/business-associate-agreement-template.pdf` (not published on the site; source markdown: [`business-associate-agreement-template.md`](business-associate-agreement-template.md)).
+**Developer ↔ clinic services agreement / retainer (template, local-only):**
+- Source: [`services-retainer-agreement-template.md`](services-retainer-agreement-template.md)
+- BAA template (only if the scope changes to include PHI later): [`business-associate-agreement-template.md`](business-associate-agreement-template.md), generate PDF with `npm run generate:baa-pdf`
 
-## Status: what the website code already does
+## Current scope of this website
 
-- Online intake with insurance/ID uploads → Firebase Firestore + Cloud Storage (private; no public client access)
-- Staff-only admin with role checks and `phi_access_log` on intake views/downloads
-- Intake office email alerts contain **no patient names or clinical text** (review in admin only)
-- `/privacy` page + intake consent checkbox before submit
+This website is intentionally **scheduling, marketing, and customer-list only**. It does **not** collect, store, or transmit clinical PHI through any public form, admin upload, or notification email.
 
-## Your action items (cannot be done in code alone)
+What the site does:
 
-### 1. Google Cloud / Firebase (required for PHI in database)
+- Public marketing pages.
+- Online booking that collects only **name, phone, email, appointment time/service, and optional scheduling notes** — the same info a front desk would write down on the phone.
+- Staff admin: appointment management, patient list (name/phone/email/appointment history/payment type), **scheduling-only** notes fields with banners warning against entering clinical information.
+- Printable PDFs (chiropractic 9-page packet, massage new-client form) for the patient to complete on paper and bring in person.
 
-1. Open [Google Cloud Console](https://console.cloud.google.com/) for your Firebase project.
-2. **Compliance** → accept the [HIPAA Business Associate Agreement](https://cloud.google.com/terms/hipaa-baa).
-3. Confirm you only use [HIPAA-eligible services](https://cloud.google.com/security/compliance/hipaa) for PHI (Firestore, Cloud Storage, Firebase Auth for staff are typical).
-4. Save a PDF/screenshot of BAA acceptance date in your compliance folder.
+What the site explicitly does **not** do (any longer):
 
-### 2. Vercel (required — API routes process intake uploads)
+- Online intake form with medical history / allergies / medications / pregnancy / pacemaker fields. (Retired — `/api/intake` returns 410 Gone.)
+- Insurance card or photo-ID image uploads, either by patients or by staff. (Retired.)
+- Clinical / treatment notes. Those belong in the clinic's EMR or paper chart, not in this admin.
+- Email/SMS messages that contain clinical PHI.
 
-1. Upgrade to **Pro** (if not already).
-2. Enable the **HIPAA add-on** and accept the BAA: [Vercel HIPAA guide](https://vercel.com/guides/hipaa-compliance-guide-vercel) · [BAA terms](https://vercel.com/legal/baa).
-3. Production only for real PHI; do not submit real patient data on Preview deployments.
-4. Disable non-essential Vercel integrations/analytics on the production project.
-5. Do not log request bodies on `/api/intake`.
+## Why this matters
 
-### 3. SendGrid (important limitation)
+Because PHI doesn't flow through the website, the **developer is not acting as a HIPAA Business Associate for clinical data**. The clinic remains a HIPAA covered entity for any PHI it collects in person, in its EMR, or by phone — that part is unchanged.
 
-- **SendGrid is not HIPAA-eligible** — do not put PHI in any email body or subject.
-- Current intake alerts are generic (“new submission — open admin”). **Keep it that way.**
-- Booking/patient confirmation emails may still contain names/appointments; discuss with counsel whether to genericize those too or use a HIPAA-eligible mail vendor later.
+If the clinic later decides it wants real online intake, insurance uploads, or PHI-bearing messaging on the website, **scope changes** and the developer-clinic services agreement should be amended to include a Business Associate Agreement and the additional vendor/process work below.
 
-### 4. Notice of Privacy Practices (NPP)
+## Patient/booking data the website *does* collect (minimization summary)
 
-1. Confirm which pages in `public/chiropractic-new-patient-packet.pdf` are the official NPP (and whether the massage PDF includes one).
-2. `/privacy` links to that packet by default; online intake acknowledges the Notice via `/privacy`.
-3. Optional: set `NEXT_PUBLIC_NPP_PDF_URL` only if you later host an **NPP-only** PDF (attorney-approved).
+| Field | Where used | PHI under HIPAA? |
+|------|-----------|------------------|
+| Name, phone, email | Booking confirmation, staff dashboard, optional appointment reminders | **Minimal-risk identifier** when held by a covered entity; treat as confidential. |
+| Appointment time, service line, location | Scheduler | Same as above. |
+| Scheduling notes (optional) | Booking + admin (with "no health info" banner) | Should not contain clinical info; banner enforces. |
+| Payment type / Square payment link | Billing | Not clinical PHI. |
 
-### 5. Policies & training (organizational)
+No diagnoses, treatment details, insurance member IDs, images, or medical history are collected on this site.
 
-- [ ] Designate privacy/security contact (name + phone/email)
-- [ ] Written **security risk assessment** (update annually)
-- [ ] Privacy, security, and **breach notification** policies
-- [ ] Workforce training: use admin for intake; no forwarding cards to personal email/text
-- [ ] Offboard staff Firebase accounts promptly (`staff/<uid>`)
-- [ ] Retention rule: how long to keep `intake_forms` and images; delete when no longer needed
+## Action items (still recommended)
 
-### 6. Breach response (prepare before an incident)
+These remain best practice even with a scheduling-only site:
 
-- Document who calls counsel, who notifies patients (within **60 days** if PHI breached), when to report to HHS
-- Preserve `phi_access_log` and Firebase audit logs during investigation
+1. **Form a business entity** (LLC or similar) before charging recurring fees. Separates personal assets.
+2. **Cyber liability / tech E&O insurance** sized for your retainer revenue. Carriers: Coalition, At-Bay, Hiscox, Beazley, Travelers.
+3. **Signed services agreement / retainer** between you and the clinic — see template.
+4. **Operational hygiene:**
+   - Lock down admin accounts (Firebase Auth, strong passwords, MFA on Vercel/Google accounts).
+   - Remove staff Firebase users promptly when employment ends.
+   - Don't put scheduling notes, names, or appointment details into chat tools, personal email, or SMS.
+   - Disable analytics/log drains that capture booking submissions.
+5. **Texas business records:** scheduling and appointment records may have records-retention implications under state contract / consumer-protection law even when they aren't clinical PHI. Confirm retention period with the clinic and a Texas attorney.
+6. **Ownership transition:** if/when the clinic takes over the Vercel + Firebase + domain accounts, follow [`ownership-transfer-runbook.md`](ownership-transfer-runbook.md). After transfer, the developer stops being the data host.
 
-## Annual / quarterly maintenance
+## If scope ever expands to PHI again (re-trigger the full HIPAA stack)
 
-- Review manager/admin access list
-- Spot-check `phi_access_log` for unexpected access
-- Reconfirm BAAs still active after vendor/plan changes
-- Retest intake form after major deploys
+Then you also need:
+
+1. **Vendor BAAs** — Google Cloud (Firebase), Vercel HIPAA add-on, any HIPAA-eligible mail vendor, etc.
+2. **Developer ↔ clinic BAA** — sign [`business-associate-agreement-template.md`](business-associate-agreement-template.md) after attorney review.
+3. **Written Security Risk Assessment** (HHS template) updated annually.
+4. **Privacy / security / breach-notification policies** and workforce training.
+5. **Audit logging** of any PHI access (the `phi_access_log` Firestore collection already exists in the codebase for re-use).
+6. **PHI-free email notifications**, opaque tokens for any "complete your intake" links, no PHI in URLs or analytics.
+7. **Breach response plan** (60-day notification to patients; ≥500 records → HHS notice).
+
+The code that previously implemented an online intake form is still in the repo (`components/IntakeForm.tsx`, `lib/intake-office-notification.ts`, `lib/intake-form-fields.ts`, `lib/privacy.ts`, etc.) — it's just not wired up to any page. It can be re-enabled when the compliance items above are signed and in place.
 
 ## References
 
 - [HHS HIPAA for Professionals](https://www.hhs.gov/hipaa/for-professionals/index.html)
+- [HHS Security Risk Assessment Tool](https://www.healthit.gov/topic/privacy-security-and-hipaa/security-risk-assessment-tool)
 - [HHS cloud computing guidance](https://www.hhs.gov/hipaa/for-professionals/special-topics/health-information-technology/cloud-computing/index.html)
+- [Google Cloud HIPAA BAA](https://cloud.google.com/terms/hipaa-baa)
+- [Vercel HIPAA guide](https://vercel.com/guides/hipaa-compliance-guide-vercel)

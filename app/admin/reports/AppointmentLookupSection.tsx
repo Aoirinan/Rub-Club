@@ -437,13 +437,13 @@ export function AppointmentLookupSection({
                             </div>
                           ) : null}
                           <div>
-                            <span className="font-semibold text-slate-800">Internal notes (staff)</span>
+                            <span className="font-semibold text-slate-800">Scheduling notes (staff)</span>
                             <textarea
                               key={`${b.id}-${b.internalNotes ?? ""}`}
                               defaultValue={b.internalNotes ?? ""}
                               maxLength={2000}
                               rows={4}
-                              placeholder="Optional — staff only"
+                              placeholder="Scheduling info only. Do not enter health or clinical information here."
                               className="mt-1 block w-full max-w-xl rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-800"
                               onBlur={(e) => {
                                 const v = e.target.value;
@@ -451,7 +451,9 @@ export function AppointmentLookupSection({
                                 void saveInternalNotes(b.id, v);
                               }}
                             />
-                            <p className="mt-1 text-[11px] text-slate-500">Saves when you leave this field.</p>
+                            <p className="mt-1 text-[11px] text-slate-500">
+                              Saves when you leave this field. Clinical notes belong in the EMR / paper chart.
+                            </p>
                           </div>
                         </div>
                       </td>

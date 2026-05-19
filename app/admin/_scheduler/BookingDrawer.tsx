@@ -509,7 +509,7 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken, 
             </label>
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-600" htmlFor="visit-notes">
-                Internal visit notes (staff only, max 2000 characters)
+                Scheduling notes (staff only, max 2000 characters)
               </label>
               <textarea
                 id="visit-notes"
@@ -519,7 +519,11 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken, 
                 value={notesDraft}
                 onChange={(e) => setNotesDraft(e.target.value)}
                 disabled={visitBusy || working}
+                placeholder="Scheduling info only (e.g. running late, parking, rebooking pattern). Do not enter health or clinical information here."
               />
+              <p className="text-[11px] text-slate-500">
+                Clinical / treatment notes belong in the EMR or paper chart, not in this scheduler.
+              </p>
               <button
                 type="button"
                 disabled={visitBusy || working || notesDraft === (booking.internalNotes ?? "")}
@@ -538,7 +542,7 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken, 
               </DetailRow>
             ) : null}
             {booking.internalNotes ? (
-              <DetailRow label="Internal visit notes">
+              <DetailRow label="Scheduling notes">
                 <p className="whitespace-pre-line text-slate-700">{booking.internalNotes}</p>
               </DetailRow>
             ) : null}

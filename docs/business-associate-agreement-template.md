@@ -4,6 +4,14 @@
 
 **IMPORTANT:** This is a **starting-point template** for a small practice and an independent developer/host. It is **not legal advice**. Have a licensed attorney in **Texas** review and adapt it before anyone signs. HIPAA rules are in **45 CFR Part 164** (especially **§164.502(e)** and **§164.504(e)**).
 
+## When you need this BAA
+
+This BAA is **only required if the website / admin actually handles PHI** for the clinic — for example, online intake with medical questions or insurance card uploads, PHI in email/SMS, or a patient portal exchanging clinical info.
+
+As of the current scope, the website is **scheduling, marketing, and customer-list only** (see [`hipaa-compliance-checklist.md`](hipaa-compliance-checklist.md)). In that scope the developer is generally **not** a Business Associate, and the parties' relationship is governed by a services agreement / retainer instead — see [`services-retainer-agreement-template.md`](services-retainer-agreement-template.md). Confirm with counsel.
+
+Sign this BAA **before** the clinic asks the developer to build/operate any of the PHI-bearing features listed in the "If scope ever expands" section of the HIPAA checklist.
+
 ---
 
 ## How to use

@@ -28,28 +28,47 @@ export default function PrivacyPage() {
       <PageHero
         eyebrow="Your privacy"
         title="Notice of Privacy Practices"
-        lede="We use health and insurance information to prepare for your visit, coordinate care, and bill insurance when applicable. This page summarizes how we handle information submitted online and in the office."
+        lede="This page summarizes what information we collect through this website and how we protect health information collected during your in-office visits."
       />
       <div className="mx-auto max-w-3xl space-y-6 px-4 pb-16">
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-8">
-          <h2 className="text-lg font-black text-[#173f3b]">Online intake &amp; uploads</h2>
+          <h2 className="text-lg font-black text-[#173f3b]">What this website is used for</h2>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-stone-700">
             <li>
-              Information you submit on our{" "}
-              <Link href="/patient-forms" className="font-bold text-[#0f5f5c] underline">
-                patient forms
-              </Link>{" "}
-              page (including optional insurance card or ID images) is stored securely and used for
-              appointment preparation and care operations.
+              This website is used for <strong>scheduling and general information</strong>. We use
+              it to take appointment requests, share office details, and answer general questions.
             </li>
-            <li>Only authorized clinic staff may view intake records; access is logged.</li>
+            <li>
+              <strong className="text-[#173f3b]">Do not submit health information online.</strong>{" "}
+              Please bring your printable patient forms, insurance card, and photo ID with you to
+              your appointment. Do not email or text card photos.
+            </li>
+            <li>
+              When you request an appointment, the website only collects your{" "}
+              <strong>name, phone, email, preferred time, and any scheduling notes you choose to add</strong>{" "}
+              &mdash; the same information the front desk would write down over the phone.
+            </li>
             <li>
               <strong className="text-[#173f3b]">Not for emergencies.</strong> If you have a
               medical emergency, call 911 or go to the nearest emergency room.
             </li>
+          </ul>
+        </section>
+
+        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-8">
+          <h2 className="text-lg font-black text-[#173f3b]">How we protect information in the office</h2>
+          <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-stone-700">
             <li>
-              Insurance verification and billing are also completed in the office when you visit, in
-              addition to any information you send online.
+              Health and insurance information that you provide in person is kept in our clinical
+              and billing systems and is used to prepare for your visit, coordinate care, and bill
+              insurance when applicable.
+            </li>
+            <li>
+              We do not share your health information with anyone other than as permitted by law and
+              as described in the Notice of Privacy Practices below.
+            </li>
+            <li>
+              Access is limited to authorized clinic staff who need the information to do their job.
             </li>
           </ul>
         </section>
@@ -86,10 +105,10 @@ export default function PrivacyPage() {
         </section>
 
         <section className="border-t-4 border-stone-300 bg-stone-50 p-6 shadow-md sm:p-8">
-          <h2 className="text-lg font-black text-[#173f3b]">Website &amp; cookies</h2>
+          <h2 className="text-lg font-black text-[#173f3b]">Website, contact forms &amp; cookies</h2>
           <p className="mt-3 text-sm leading-relaxed text-stone-700">
-            For how we handle contact forms, booking, cookies, and general website data (separate
-            from PHI), see our{" "}
+            For how we handle contact form messages, booking requests, cookies, and general website
+            usage data, see our{" "}
             <Link className="font-bold text-[#0f5f5c] underline" href="/website-privacy">
               website privacy policy
             </Link>{" "}
