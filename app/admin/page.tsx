@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { DateTime } from "luxon";
 import { onAuthStateChanged, signOut, type Auth } from "firebase/auth";
 import { TIME_ZONE } from "@/lib/constants";
@@ -21,10 +21,14 @@ import {
   chicagoStartOfWeek,
   filterByService,
   pickColumnProviders,
+  providerMatchesServiceScope,
   readFilters,
   todayChicagoIsoDate,
   writeFilters,
 } from "./_scheduler/helpers";
+import { openChiroSchedulerWindow } from "./_scheduler/open-chiro-window";
+import { broadcastSchedulerSync, subscribeSchedulerSync } from "./_scheduler/scheduler-sync";
+import type { SchedulerMode } from "./_scheduler/SchedulerChrome";
 import {
   bookingStatusLabel,
   bookingStatusPillClasses,
@@ -39,8 +43,9 @@ import { DayView, ListView, WeekView } from "./_scheduler/views";
 import { CsvImportModal, type CsvImportDraft } from "./_scheduler/CsvImportModal";
 import { PatientCsvImportModal } from "./_scheduler/PatientCsvImportModal";
 import { PatientLookupPanel } from "./_scheduler/PatientLookupPanel";
+import { SchedulerHeader, schedulerHeaderRoleLabel } from "./_scheduler/SchedulerChrome";
 import { parseCsvRows } from "@/lib/csv-parse";
-import { staffMeetsMin, staffRoleLabel, type StaffRole } from "@/lib/staff-roles";
+import { staffMeetsMin, type StaffRole } from "@/lib/staff-roles";
 
 type Me = {
   authenticated: boolean;
@@ -70,7 +75,12 @@ export default function AdminDashboardPage() {
 
 function AdminDashboard() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isChiroWindow = pathname.startsWith("/admin/chiro");
+  const schedulerMode: SchedulerMode = isChiroWindow ? "chiropractic" : "bodywork";
+  const serviceScope = isChiroWindow ? "chiropractic" : "bodywork";
+  const basePath = isChiroWindow ? "/admin/chiro" : "/admin";
   const [auth, setAuth] = useState<Auth | null>(null);
   const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +112,15 @@ function AdminDashboard() {
     setAuth(getFirebaseClientAuth());
   }, []);
 
-  const filters = useMemo<FilterState>(() => readFilters(new URLSearchParams(searchParams.toString())), [searchParams]);
+  const filtersFromUrl = useMemo<FilterState>(
+    () => readFilters(new URLSearchParams(searchParams.toString())),
+    [searchParams],
+  );
+
+  const filters = useMemo<FilterState>(
+    () => ({ ...filtersFromUrl, serviceLine: serviceScope }),
+    [filtersFromUrl, serviceScope],
+  );
 
   const getIdToken = useCallback(async (): Promise<string | null> => {
     const user = auth?.currentUser;
@@ -112,12 +130,29 @@ function AdminDashboard() {
 
   const updateFilters = useCallback(
     (patch: Partial<FilterState>) => {
-      const next: FilterState = { ...filters, ...patch };
+      const next: FilterState = { ...filters, ...patch, serviceLine: serviceScope };
       const qs = writeFilters(next);
-      router.replace(qs ? `/admin?${qs}` : "/admin");
+      router.replace(qs ? `${basePath}?${qs}` : basePath);
+      if (patch.date !== undefined || patch.locationId !== undefined) {
+        broadcastSchedulerSync({ date: next.date, locationId: next.locationId });
+      }
     },
-    [filters, router],
+    [filters, router, basePath, serviceScope],
   );
+
+  useEffect(() => {
+    return subscribeSchedulerSync((payload) => {
+      if (payload.date === filters.date && payload.locationId === filters.locationId) return;
+      const next: FilterState = {
+        ...filters,
+        date: payload.date,
+        locationId: payload.locationId,
+        serviceLine: serviceScope,
+      };
+      const qs = writeFilters(next);
+      router.replace(qs ? `${basePath}?${qs}` : basePath);
+    });
+  }, [filters, router, basePath, serviceScope]);
 
   const bookingsQueryKey = useMemo(
     () =>
@@ -278,6 +313,15 @@ function AdminDashboard() {
     [providers, filters],
   );
 
+  const scopedProviders = useMemo(
+    () =>
+      providers
+        .filter((p) => p.active || filters.providerId === p.id)
+        .filter((p) => providerMatchesServiceScope(p, serviceScope))
+        .sort((a, b) => a.sortOrder - b.sortOrder || a.displayName.localeCompare(b.displayName)),
+    [providers, filters.providerId, serviceScope],
+  );
+
   const pendingRows = useMemo(
     () =>
       viewBookings
@@ -394,234 +438,112 @@ function AdminDashboard() {
   const isDeskWrite = me?.capabilities?.deskWrite ?? (me?.role ? staffMeetsMin(me.role, "front_desk") : false);
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4">
-          <div>
-            <h1 className="text-xl font-semibold text-slate-900">Scheduler</h1>
-            <p className="text-xs text-slate-500">
-              Signed in as {me?.email ?? "…"}{" "}
-              {me?.role ? `(${staffRoleLabel(me.role)})` : ""}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {isDeskWrite ? (
-              <button
-                type="button"
-                onClick={() => setNewBookingOpen(true)}
-                className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
-              >
-                + New appointment
-              </button>
-            ) : null}
-            {isOperationsManager ? (
-              <button
-                type="button"
-                onClick={() => setBlockTimeOpen(true)}
-                className="rounded-full border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50"
-              >
-                Block time
-              </button>
-            ) : null}
-            {isOperationsManager ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setReminderOpen(true);
-                  setReminderPreview(null);
-                  void loadReminderPreview();
-                }}
-                className="rounded-full border border-sky-300 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-900 hover:bg-sky-100"
-              >
-                Send reminders
-              </button>
-            ) : null}
-            {isOperationsManager ? (
-              <button
-                type="button"
-                onClick={async () => {
-                  const token = await getIdToken();
-                  if (!token) return;
-                  setToastMessage("Preparing patient export…");
-                  const res = await fetch("/api/admin/patients/export", {
-                    headers: { Authorization: `Bearer ${token}` },
-                  });
-                  if (!res.ok) {
-                    setToastMessage("Patient export failed.");
-                    return;
-                  }
-                  const blob = await res.blob();
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  const date = new Date().toISOString().slice(0, 10);
-                  a.download = `patients_${date}.csv`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                  setToastMessage("Patient export started");
-                }}
-                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
-                title="Download all patient profiles"
-              >
-                Export patients
-              </button>
-            ) : null}
-            {isOperationsManager ? (
-              <button
-                type="button"
-                disabled={patientCsvImportBusy}
-                onClick={() => setPatientCsvImportOpen(true)}
-                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400 disabled:opacity-50"
-                title="Import patient profiles from CSV"
-              >
-                {patientCsvImportBusy ? "Importing…" : "Import patients"}
-              </button>
-            ) : null}
-            {isOperationsManager ? (
-              <>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const token = await getIdToken();
-                    if (!token) return;
-                    const { qs } = bookingsApiQuery(filters);
-                    const res = await fetch(`/api/admin/bookings/export?${qs}`, {
-                      headers: { Authorization: `Bearer ${token}` },
-                    });
-                    if (!res.ok) {
-                      setToastMessage("Appointment export failed.");
-                      return;
-                    }
-                    const blob = await res.blob();
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `appointments-export.csv`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    setToastMessage("Appointment export started");
-                  }}
-                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-100"
-                  title="Export appointments in the current date range"
-                >
-                  Export appts
-                </button>
-                <input
-                  ref={csvImportInputRef}
-                  type="file"
-                  accept=".csv,text/csv"
-                  className="hidden"
-                  onChange={async (e) => {
-                    const input = e.target;
-                    const f = input.files?.[0];
-                    input.value = "";
-                    if (!f) return;
-                    const token = await getIdToken();
-                    if (!token) {
-                      setError("Sign in to import.");
-                      return;
-                    }
-                    setError(null);
-                    setCsvImportBusy(true);
-                    try {
-                      const text = await f.text();
-                      const grid = parseCsvRows(text);
-                      if (grid.length < 2) {
-                        setError("CSV must include a header row and at least one data row.");
-                        return;
-                      }
-                      setCsvImportDraft({ file: f, headers: grid[0]!.map((c) => c.trim()) });
-                    } catch {
-                      setError("Could not read CSV file.");
-                    } finally {
-                      setCsvImportBusy(false);
-                    }
-                  }}
-                />
-                <label
-                  className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                  title="Allow importing appointments on top of existing slots"
-                >
-                  <input
-                    type="checkbox"
-                    checked={csvImportSkipConflict}
-                    onChange={(e) => setCsvImportSkipConflict(e.target.checked)}
-                    className="rounded border-slate-300"
-                  />
-                  Overlap
-                </label>
-                <button
-                  type="button"
-                  disabled={csvImportBusy}
-                  onClick={() => csvImportInputRef.current?.click()}
-                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-50"
-                  title="Import appointments from CSV"
-                >
-                  {csvImportBusy ? "Importing…" : "Import appts"}
-                </button>
-              </>
-            ) : null}
-            {isOperationsManager ? (
-              <Link
-                href="/admin/reports"
-                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
-              >
-                Reports
-              </Link>
-            ) : null}
-            {isDeskWrite ? (
-              <button
-                type="button"
-                onClick={() => setPatientLookupOpen(true)}
-                className="rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-900 hover:bg-violet-100"
-              >
-                Patient lookup
-              </button>
-            ) : null}
-            {isDeskWrite ? (
-              <Link
-                href="/admin/contact"
-                className="rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-900 hover:bg-sky-100"
-              >
-                Contact inbox
-              </Link>
-            ) : null}
-            {isDeskWrite ? (
-              <Link
-                href="/admin/patients"
-                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
-              >
-                Patients
-              </Link>
-            ) : null}
-            {isOperationsManager ? (
-              <Link
-                href="/admin/super"
-                title="Staff, site copy, banners, and promos"
-                className="rounded-full border border-[#0f5f5c]/40 bg-[#f0faf9] px-4 py-2 text-sm font-semibold text-[#0b4a47] hover:bg-[#e2f5f3]"
-              >
-                Website &amp; settings
-              </Link>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => void refreshBookings()}
-              disabled={loading}
-              className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400 disabled:opacity-50"
-            >
-              {loading ? "Refreshing…" : "Refresh"}
-            </button>
-            <button
-              type="button"
-              onClick={logout}
-              className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-            >
-              Sign out
-            </button>
-          </div>
-        </div>
-      </header>
+      <SchedulerHeader
+        mode={schedulerMode}
+        email={me?.email}
+        roleLabel={schedulerHeaderRoleLabel(me?.role)}
+        onOpenChiroWindow={
+          !isChiroWindow
+            ? () => openChiroSchedulerWindow({ date: filters.date, locationId: filters.locationId })
+            : undefined
+        }
+        deskWrite={isDeskWrite}
+        operations={isOperationsManager}
+        loading={loading}
+        patientCsvImportBusy={patientCsvImportBusy}
+        csvImportBusy={csvImportBusy}
+        csvImportSkipConflict={csvImportSkipConflict}
+        onCsvImportSkipConflictChange={setCsvImportSkipConflict}
+        onNewAppointment={() => setNewBookingOpen(true)}
+        onBlockTime={() => setBlockTimeOpen(true)}
+        onSendReminders={() => {
+          setReminderOpen(true);
+          setReminderPreview(null);
+          void loadReminderPreview();
+        }}
+        onPatientLookup={() => setPatientLookupOpen(true)}
+        onExportPatients={async () => {
+          const token = await getIdToken();
+          if (!token) return;
+          setToastMessage("Preparing patient export…");
+          const res = await fetch("/api/admin/patients/export", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) {
+            setToastMessage("Patient export failed.");
+            return;
+          }
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          const date = new Date().toISOString().slice(0, 10);
+          a.download = `patients_${date}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+          setToastMessage("Patient export started");
+        }}
+        onImportPatients={() => setPatientCsvImportOpen(true)}
+        onExportAppointments={async () => {
+          const token = await getIdToken();
+          if (!token) return;
+          const { qs } = bookingsApiQuery(filters);
+          const res = await fetch(`/api/admin/bookings/export?${qs}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) {
+            setToastMessage("Appointment export failed.");
+            return;
+          }
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `appointments-export.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+          setToastMessage("Appointment export started");
+        }}
+        onImportAppointmentsClick={() => csvImportInputRef.current?.click()}
+        onRefresh={() => void refreshBookings()}
+        onSignOut={logout}
+      />
+      <input
+        ref={csvImportInputRef}
+        type="file"
+        accept=".csv,text/csv"
+        className="hidden"
+        onChange={async (e) => {
+          const input = e.target;
+          const f = input.files?.[0];
+          input.value = "";
+          if (!f) return;
+          const token = await getIdToken();
+          if (!token) {
+            setError("Sign in to import.");
+            return;
+          }
+          setError(null);
+          setCsvImportBusy(true);
+          try {
+            const text = await f.text();
+            const grid = parseCsvRows(text);
+            if (grid.length < 2) {
+              setError("CSV must include a header row and at least one data row.");
+              return;
+            }
+            setCsvImportDraft({ file: f, headers: grid[0]!.map((c) => c.trim()) });
+          } catch {
+            setError("Could not read CSV file.");
+          } finally {
+            setCsvImportBusy(false);
+          }
+        }}
+      />
 
-      <main className="mx-auto max-w-7xl space-y-4 px-4 py-6">
+      <main
+        className={`mx-auto space-y-4 px-4 py-6 ${isChiroWindow ? "max-w-[100rem]" : "max-w-7xl"}`}
+      >
         {error ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
             <p>{error}</p>
@@ -639,18 +561,24 @@ function AdminDashboard() {
           <>
             <Toolbar
               filters={filters}
-              providers={providers}
+              providers={scopedProviders}
+              schedulerMode={schedulerMode}
               onChange={updateFilters}
             />
 
             {filters.view === "day" ? (
-              <p className="text-xs text-slate-500">
-                Day view markers: <span className="font-bold text-emerald-700">✓</span> confirmed online ·{" "}
-                <span className="text-slate-500">○</span> not yet online ·{" "}
-                <span className="text-sky-600">★</span> checked in ·{" "}
-                <span className="font-bold text-amber-700">✕</span> needs reschedule · Same patient, multiple
-                visits: <span className="font-semibold">(2×)</span> and ↳ on later times.
-              </p>
+              <details className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                <summary className="cursor-pointer font-semibold text-slate-700">
+                  Day view legend
+                </summary>
+                <p className="mt-2 text-slate-500">
+                  <span className="font-bold text-emerald-700">✓</span> confirmed online ·{" "}
+                  <span className="text-slate-500">○</span> not yet online ·{" "}
+                  <span className="text-sky-600">★</span> checked in ·{" "}
+                  <span className="font-bold text-amber-700">✕</span> needs reschedule · Same patient,
+                  multiple visits: <span className="font-semibold">(2×)</span> and ↳ on later times.
+                </p>
+              </details>
             ) : null}
 
             {pendingRows.length > 0 ? (
@@ -682,7 +610,7 @@ function AdminDashboard() {
             {filters.view === "week" ? (
               <WeekView
                 bookings={viewBookings}
-                providers={providers}
+                providers={scopedProviders}
                 filters={filters}
                 onSelect={setSelectedId}
               />
@@ -690,7 +618,7 @@ function AdminDashboard() {
             {filters.view === "list" ? (
               <ListView
                 bookings={viewBookings}
-                providers={providers}
+                providers={scopedProviders}
                 filters={filters}
                 isManager={isOperationsManager}
                 onSelect={setSelectedId}
@@ -717,8 +645,9 @@ function AdminDashboard() {
           await refreshBookings();
         }}
         getIdToken={getIdToken}
-        providers={providers}
+        providers={scopedProviders}
         defaultDate={filters.date}
+        defaultServiceLine={isChiroWindow ? "chiropractic" : "massage"}
       />
 
       <BlockTimeDrawer
@@ -846,10 +775,12 @@ function AdminDashboard() {
 function Toolbar({
   filters,
   providers,
+  schedulerMode,
   onChange,
 }: {
   filters: FilterState;
   providers: ProviderRow[];
+  schedulerMode: SchedulerMode;
   onChange: (patch: Partial<FilterState>) => void;
 }) {
   const [searchDraft, setSearchDraft] = useState(filters.q);
@@ -897,9 +828,11 @@ function Toolbar({
     }, 250);
   }
 
-  const filteredProviders = providers
-    .filter((p) => p.active || filters.providerId === p.id)
-    .sort((a, b) => a.sortOrder - b.sortOrder || a.displayName.localeCompare(b.displayName));
+  const legendColors = SERVICE_LINE_COLORS.filter((c) =>
+    schedulerMode === "chiropractic"
+      ? c.serviceLine === "chiropractic"
+      : c.serviceLine === "massage" || c.serviceLine === "stretch",
+  );
 
   const dateLabel = (() => {
     if (filters.view === "week") {
@@ -912,15 +845,15 @@ function Toolbar({
   })();
 
   return (
-    <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex rounded-full border border-slate-300 bg-white p-0.5 text-sm">
+        <div className="inline-flex rounded-lg border border-slate-300 bg-white p-0.5 text-sm">
           {(["day", "week", "list"] as SchedulerView[]).map((v) => (
             <button
               key={v}
               type="button"
               onClick={() => setView(v)}
-              className={`rounded-full px-3 py-1 font-semibold transition ${
+              className={`rounded-md px-3 py-1 font-semibold transition ${
                 filters.view === v
                   ? "bg-slate-900 text-white"
                   : "text-slate-700 hover:bg-slate-100"
@@ -937,7 +870,7 @@ function Toolbar({
               <button
                 type="button"
                 onClick={() => shiftDate(-1)}
-                className="rounded-full border border-slate-300 bg-white px-3 py-1 text-sm hover:border-slate-400"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-sm hover:border-slate-400"
                 aria-label="Previous"
               >
                 ‹
@@ -945,19 +878,19 @@ function Toolbar({
               <button
                 type="button"
                 onClick={goToday}
-                className="rounded-full border border-slate-300 bg-white px-3 py-1 text-sm font-semibold hover:border-slate-400"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-sm font-semibold hover:border-slate-400"
               >
                 Today
               </button>
               <button
                 type="button"
                 onClick={() => shiftDate(1)}
-                className="rounded-full border border-slate-300 bg-white px-3 py-1 text-sm hover:border-slate-400"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1 text-sm hover:border-slate-400"
                 aria-label="Next"
               >
                 ›
               </button>
-              <span className="ml-2 text-sm font-semibold text-slate-900">{dateLabel}</span>
+              <span className="text-sm font-semibold text-slate-900">{dateLabel}</span>
             </>
           ) : (
             <span className="text-sm font-semibold text-slate-900">All upcoming</span>
@@ -971,40 +904,43 @@ function Toolbar({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <FilterDropdown
-          label="Location"
-          value={filters.locationId}
-          options={[
-            { v: "all", l: "All locations" },
-            { v: "paris", l: "Paris" },
-            { v: "sulphur_springs", l: "Sulphur Springs" },
-          ]}
-          onChange={(v) => onChange({ locationId: v as FilterState["locationId"] })}
+      <div className="flex flex-wrap items-end justify-between gap-3 border-t border-slate-100 pt-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <FilterDropdown
+            label="Location"
+            value={filters.locationId}
+            options={[
+              { v: "all", l: "All locations" },
+              { v: "paris", l: "Paris" },
+              { v: "sulphur_springs", l: "Sulphur Springs" },
+            ]}
+            onChange={(v) => onChange({ locationId: v as FilterState["locationId"] })}
+          />
+          <FilterDropdown
+            label="Provider"
+            value={filters.providerId}
+            options={[
+              { v: "all", l: "All providers" },
+              ...providers.map((p) => ({ v: p.id, l: p.displayName })),
+            ]}
+            onChange={(v) => onChange({ providerId: v })}
+          />
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+            {schedulerMode === "chiropractic" ? "Chiropractic only" : "Massage & stretch"}
+          </span>
+        </div>
+        <input
+          type="search"
+          value={searchDraft}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="Search name, phone, email…"
+          className="w-full min-w-[12rem] max-w-xs rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm sm:w-56"
         />
-        <FilterDropdown
-          label="Service"
-          value={filters.serviceLine}
-          options={[
-            { v: "all", l: "All services" },
-            { v: "massage", l: "Massage" },
-            { v: "stretch", l: "Stretch" },
-            { v: "chiropractic", l: "Chiropractic" },
-          ]}
-          onChange={(v) => onChange({ serviceLine: v as FilterState["serviceLine"] })}
-        />
-        <FilterDropdown
-          label="Provider"
-          value={filters.providerId}
-          options={[
-            { v: "all", l: "All providers" },
-            ...filteredProviders.map((p) => ({ v: p.id, l: p.displayName })),
-          ]}
-          onChange={(v) => onChange({ providerId: v })}
-        />
+      </div>
 
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
             Status
           </span>
           {ALL_STATUSES.map((s) => {
@@ -1022,42 +958,33 @@ function Toolbar({
               </button>
             );
           })}
+          <span className="mx-1 text-slate-300">|</span>
           <button
             type="button"
             onClick={setAllStatuses}
-            className="text-xs font-semibold text-slate-700 underline"
+            className="text-xs font-semibold text-slate-600 hover:text-slate-900"
           >
             All
           </button>
           <button
             type="button"
             onClick={resetStatuses}
-            className="text-xs font-semibold text-slate-700 underline"
+            className="text-xs font-semibold text-slate-600 hover:text-slate-900"
           >
-            Active
+            Active only
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Service
+            Colors
           </span>
-          {SERVICE_LINE_COLORS.map((c) => (
+          {legendColors.map((c) => (
             <span key={c.serviceLine} className="inline-flex items-center gap-1 text-xs text-slate-700">
               <span className={`inline-block h-2.5 w-2.5 rounded-full ${c.dotClass}`} />
               {c.label}
             </span>
           ))}
-        </div>
-
-        <div className="ml-auto">
-          <input
-            type="search"
-            value={searchDraft}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="Search name, phone, email…"
-            className="w-56 rounded-full border border-slate-300 bg-white px-3 py-1 text-sm"
-          />
         </div>
       </div>
     </div>

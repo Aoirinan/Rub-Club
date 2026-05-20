@@ -24,6 +24,7 @@ import { getSiteOwnerConfig, bannerIsActivePublic } from "@/lib/site-owner-confi
 import { getLayoutCmsContent } from "@/lib/cms-display";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
 import { PublicBookingProvider } from "@/components/PublicBookingProvider";
+import { ConditionalMarketingChrome } from "@/components/ConditionalMarketingChrome";
 import {
   getPublicBookingConfig,
   isPublicBookingEnabled,
@@ -126,24 +127,35 @@ export default async function RootLayout({
         </a>
         <JsonLd data={[organizationJsonLd(schemaLocations), websiteJsonLd()]} />
         <PublicBookingProvider enabled={onlineBookingEnabled}>
-          <SiteHeader
-            paris={displayLocs.paris}
-            sulphur={displayLocs.sulphur_springs}
-            giftCardHref={giftCardHref}
-          />
-          {salesBanner ? <SalesBannerBar payload={salesBanner} /> : null}
-          <main id="main" tabIndex={-1} className="outline-none">
-            {children}
-          </main>
-          <SiteFooter
-            locations={schemaLocations}
-            giftCardHref={giftCardHref}
-            footerBlurbHtml={footerBlurbHtml}
-            footerTagline={cms.footer_tagline}
-            footerCopyright={cms.footer_copyright}
-            parisHours={parisHours}
-          />
-          <DomainSpecialsPopup />
+          <ConditionalMarketingChrome
+            header={
+              <>
+                <SiteHeader
+                  paris={displayLocs.paris}
+                  sulphur={displayLocs.sulphur_springs}
+                  giftCardHref={giftCardHref}
+                />
+                {salesBanner ? <SalesBannerBar payload={salesBanner} /> : null}
+              </>
+            }
+            footer={
+              <>
+                <SiteFooter
+                  locations={schemaLocations}
+                  giftCardHref={giftCardHref}
+                  footerBlurbHtml={footerBlurbHtml}
+                  footerTagline={cms.footer_tagline}
+                  footerCopyright={cms.footer_copyright}
+                  parisHours={parisHours}
+                />
+                <DomainSpecialsPopup />
+              </>
+            }
+          >
+            <main id="main" tabIndex={-1} className="outline-none">
+              {children}
+            </main>
+          </ConditionalMarketingChrome>
         </PublicBookingProvider>
         <Analytics />
       </body>

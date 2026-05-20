@@ -32,7 +32,12 @@ export function readFilters(params: URLSearchParams): FilterState {
 
   const rawSvc = params.get("svc");
   const serviceLine: FilterState["serviceLine"] =
-    rawSvc === "massage" || rawSvc === "chiropractic" || rawSvc === "stretch" ? rawSvc : "all";
+    rawSvc === "bodywork" ||
+    rawSvc === "massage" ||
+    rawSvc === "chiropractic" ||
+    rawSvc === "stretch"
+      ? rawSvc
+      : "all";
 
   const providerId = params.get("provider") || "all";
   const date = params.get("date") || todayChicagoIsoDate();
@@ -113,7 +118,21 @@ export function bookingsApiQuery(
 /** Apply client-side service-line filter (the API can't filter by it today). */
 export function filterByService(rows: BookingRow[], svc: FilterState["serviceLine"]): BookingRow[] {
   if (svc === "all") return rows;
+  if (svc === "bodywork") {
+    return rows.filter((r) => r.serviceLine === "massage" || r.serviceLine === "stretch");
+  }
   return rows.filter((r) => r.serviceLine === svc);
+}
+
+export function providerMatchesServiceScope(
+  p: ProviderRow,
+  scope: FilterState["serviceLine"],
+): boolean {
+  if (scope === "all") return true;
+  if (scope === "bodywork") {
+    return p.serviceLines.includes("massage") || p.serviceLines.includes("stretch");
+  }
+  return p.serviceLines.includes(scope);
 }
 
 /** Choose which providers should appear as columns for the Day view. */
@@ -126,9 +145,7 @@ export function pickColumnProviders(
     .filter((p) =>
       filters.locationId === "all" ? true : p.locationIds.includes(filters.locationId),
     )
-    .filter((p) =>
-      filters.serviceLine === "all" ? true : p.serviceLines.includes(filters.serviceLine),
-    )
+    .filter((p) => providerMatchesServiceScope(p, filters.serviceLine))
     .filter((p) => (filters.providerId === "all" ? true : p.id === filters.providerId))
     .sort((a, b) => a.sortOrder - b.sortOrder || a.displayName.localeCompare(b.displayName));
 }

@@ -13,6 +13,7 @@ type Props = {
   providers: ProviderRow[];
   /** Pre-fill date from the scheduler's current view (yyyy-MM-dd Chicago). */
   defaultDate?: string;
+  defaultServiceLine?: "massage" | "chiropractic" | "stretch";
 };
 
 export function NewBookingDrawer({
@@ -22,9 +23,12 @@ export function NewBookingDrawer({
   getIdToken,
   providers,
   defaultDate,
+  defaultServiceLine = "massage",
 }: Props) {
   const [locationId, setLocationId] = useState<"paris" | "sulphur_springs">("paris");
-  const [serviceLine, setServiceLine] = useState<"massage" | "chiropractic" | "stretch">("massage");
+  const [serviceLine, setServiceLine] = useState<"massage" | "chiropractic" | "stretch">(
+    defaultServiceLine,
+  );
   const [durationMin, setDurationMin] = useState<30 | 60>(60);
   const [date, setDate] = useState(defaultDate ?? DateTime.now().setZone(TIME_ZONE).toFormat("yyyy-LL-dd"));
   const [time, setTime] = useState("09:00");
@@ -50,8 +54,9 @@ export function NewBookingDrawer({
       setSuccess(false);
       setSuccessDetail(null);
       setDate(defaultDate ?? DateTime.now().setZone(TIME_ZONE).toFormat("yyyy-LL-dd"));
+      setServiceLine(defaultServiceLine);
     }
-  }, [open, defaultDate]);
+  }, [open, defaultDate, defaultServiceLine]);
 
   const filteredProviders = useMemo(
     () =>
@@ -277,9 +282,14 @@ export function NewBookingDrawer({
                     onChange={(e) => setServiceLine(e.target.value as "massage" | "chiropractic" | "stretch")}
                     className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
                   >
-                    <option value="massage">Massage</option>
-                    <option value="stretch">Stretch</option>
-                    <option value="chiropractic">Chiropractic</option>
+                    {defaultServiceLine === "chiropractic" ? (
+                      <option value="chiropractic">Chiropractic</option>
+                    ) : (
+                      <>
+                        <option value="massage">Massage</option>
+                        <option value="stretch">Stretch</option>
+                      </>
+                    )}
                   </select>
                 </label>
               </div>
