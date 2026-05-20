@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { AdminAuthGate } from "@/app/admin/_components/AdminAuthGate";
 
-/** Parent layout gates manager+; this restricts site content (including massage team) to superadmin. */
+/** Site content and massage team editing for managers and superadmins. */
 export default function SiteContentLayout({ children }: { children: ReactNode }) {
-  return <AdminAuthGate requireMinRole="superadmin">{children}</AdminAuthGate>;
+  return <AdminAuthGate requireMinRole="manager">{children}</AdminAuthGate>;
 }

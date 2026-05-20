@@ -3,12 +3,12 @@ import {
   SS_INJURIES,
   SS_PATIENT_RESOURCES,
   SS_SERVICES,
-  SS_STAFF,
   type SSInjury,
   type SSService,
-  type SSStaffMember,
 } from "@/lib/sulphur-springs-content";
-import { ssPageBodyId, ssPageMetaId, ssStaffBioId } from "@/lib/ss-cms-registry";
+import { ssPageBodyId, ssPageMetaId } from "@/lib/ss-cms-registry";
+
+export { getSSStaffForDisplay, getSSStaffPageContent } from "@/lib/ss-staff-cms";
 
 export type SSPageContent = {
   slug: string;
@@ -38,16 +38,6 @@ export async function getSSPageContent(slug: string): Promise<SSPageContent | nu
     body: cms[bodyId]?.trim() || base.body,
     kind,
   };
-}
-
-export async function getSSStaffForDisplay(): Promise<SSStaffMember[]> {
-  const bioIds = SS_STAFF.map((m) => ssStaffBioId(m.name));
-  const cms = await getContentMany(bioIds);
-
-  return SS_STAFF.map((member) => {
-    const bio = cms[ssStaffBioId(member.name)]?.trim();
-    return bio !== undefined && bio !== "" ? { ...member, bio } : member;
-  });
 }
 
 export async function getSSPatientResourcesIntro(): Promise<string> {

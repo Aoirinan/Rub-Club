@@ -30,7 +30,7 @@ export function staffCapabilities(role: StaffRole): StaffCapabilities {
   const rank = ROLE_RANK[role];
   return {
     operations: rank >= ROLE_RANK.manager,
-    siteContent: rank >= ROLE_RANK.superadmin,
+    siteContent: rank >= ROLE_RANK.manager,
     marketing: rank >= ROLE_RANK.superadmin,
     deskWrite: rank >= ROLE_RANK.front_desk,
   };
@@ -71,12 +71,13 @@ export const STAFF_ROLE_OPTIONS: {
   {
     value: "manager",
     label: "Manager",
-    description: "Front desk access plus Operations (staff, providers, intake).",
+    description:
+      "Front desk access plus Operations (staff, providers, intake) and Site content (pages, staff, doctors, FAQs, massage team).",
   },
   {
     value: "superadmin",
     label: "Superadmin",
-    description: "Full access including site content and marketing.",
+    description: "Manager access plus marketing banners, videos, and booking promos.",
   },
 ];
 

@@ -46,6 +46,7 @@ const PAGE_NAV: { key: SiteContentNavKey; label: string }[] = [
   { key: "Paris / main office", label: "Paris office" },
   { key: "Paris staff", label: "Paris staff" },
   { key: "Sulphur Springs", label: "Sulphur Springs" },
+  { key: "Sulphur staff", label: "Sulphur staff" },
   { key: "SS subpages", label: "SS subpages" },
   { key: "Insurance", label: "Insurance" },
   { key: "Services hub", label: "Services hub" },
@@ -68,6 +69,7 @@ const BADGE_CLASS: Record<string, string> = {
   "Sulphur Springs": "bg-orange-100 text-orange-900",
   "Paris / main office": "bg-amber-100 text-amber-950",
   "Paris staff": "bg-amber-50 text-amber-900",
+  "Sulphur staff": "bg-orange-50 text-orange-900",
   "SS subpages": "bg-orange-50 text-orange-950",
   Insurance: "bg-sky-100 text-sky-900",
   "Services hub": "bg-indigo-100 text-indigo-900",
@@ -351,8 +353,9 @@ export function SiteContentEditor() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-slate-900">Site content</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Edit public page copy, images, massage team bios, and FAQs. Changes appear on the live site within about 60
-          seconds.
+          Managers can edit public page copy, staff and doctor names/titles/photos/bios, massage team, and FAQs. Use the
+          tabs below — changes appear on the live site within about 60 seconds. Adding or removing a team member still
+          requires a developer.
         </p>
       </div>
 

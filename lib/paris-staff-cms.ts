@@ -6,6 +6,7 @@ import {
   type ParisOfficeStaffMember,
 } from "@/lib/paris-office-staff";
 import { PARIS_STAFF_IMAGES } from "@/lib/paris-staff-images";
+import { staffCmsSlug } from "@/lib/staff-cms-id";
 
 export const PARIS_STAFF_PAGE_CMS_KEYS = [
   "paris_staff_hero_title",
@@ -15,29 +16,40 @@ export const PARIS_STAFF_PAGE_CMS_KEYS = [
   "paris_staff_cta_body",
 ] as const;
 
-export function parisStaffSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_|_$/g, "");
+export function parisStaffNameId(staffId: string): string {
+  return `paris_staff_${staffCmsSlug(staffId)}_name`;
 }
 
-export function parisStaffBioId(name: string): string {
-  return `paris_staff_${parisStaffSlug(name)}_bio`;
+export function parisStaffRoleId(staffId: string): string {
+  return `paris_staff_${staffCmsSlug(staffId)}_role`;
 }
 
-export function parisStaffPhotoId(name: string): string {
-  return `paris_staff_${parisStaffSlug(name)}_photo`;
+export function parisStaffBioId(staffId: string): string {
+  return `paris_staff_${staffCmsSlug(staffId)}_bio`;
 }
 
-export function parisStaffCmsKeysForMember(name: string): { bio: string; photo: string } {
-  return { bio: parisStaffBioId(name), photo: parisStaffPhotoId(name) };
+export function parisStaffPhotoId(staffId: string): string {
+  return `paris_staff_${staffCmsSlug(staffId)}_photo`;
+}
+
+export function parisStaffCmsKeysForMember(staffId: string): {
+  name: string;
+  role: string;
+  bio: string;
+  photo: string;
+} {
+  return {
+    name: parisStaffNameId(staffId),
+    role: parisStaffRoleId(staffId),
+    bio: parisStaffBioId(staffId),
+    photo: parisStaffPhotoId(staffId),
+  };
 }
 
 export function allParisStaffContentIds(): string[] {
   const memberIds = PARIS_OFFICE_STAFF.flatMap((m) => {
-    const keys = parisStaffCmsKeysForMember(m.name);
-    return [keys.bio, keys.photo];
+    const keys = parisStaffCmsKeysForMember(m.id);
+    return [keys.name, keys.role, keys.bio, keys.photo];
   });
   return [...PARIS_STAFF_PAGE_CMS_KEYS, ...memberIds];
 }
@@ -82,19 +94,34 @@ export function buildParisStaffCmsRegistry(): ContentFieldMeta[] {
   ];
 
   for (const member of PARIS_OFFICE_STAFF) {
-    const keys = parisStaffCmsKeysForMember(member.name);
+    const keys = parisStaffCmsKeysForMember(member.id);
+    const section = member.name;
     fields.push(
+      {
+        id: keys.name,
+        pageLabel: "Paris staff",
+        sectionLabel: section,
+        fieldLabel: "Name",
+        type: "text",
+      },
+      {
+        id: keys.role,
+        pageLabel: "Paris staff",
+        sectionLabel: section,
+        fieldLabel: "Job title",
+        type: "text",
+      },
       {
         id: keys.photo,
         pageLabel: "Paris staff",
-        sectionLabel: member.name,
+        sectionLabel: section,
         fieldLabel: "Photo",
         type: "image",
       },
       {
         id: keys.bio,
         pageLabel: "Paris staff",
-        sectionLabel: member.name,
+        sectionLabel: section,
         fieldLabel: "Bio",
         type: "richtext",
       },
@@ -114,7 +141,9 @@ export function buildParisStaffCmsDefaults(): Record<string, string> {
   };
 
   for (const member of PARIS_OFFICE_STAFF) {
-    const keys = parisStaffCmsKeysForMember(member.name);
+    const keys = parisStaffCmsKeysForMember(member.id);
+    defaults[keys.name] = member.name;
+    defaults[keys.role] = member.role;
     defaults[keys.bio] = member.bio;
     defaults[keys.photo] = PARIS_STAFF_IMAGES[member.imageKey];
   }
@@ -143,15 +172,18 @@ export async function getParisStaffPageContent(): Promise<ParisStaffPageContent>
 }
 
 export async function getParisOfficeStaffForDisplay(): Promise<ParisOfficeStaffMember[]> {
-  const ids = allParisStaffContentIds();
-  const cms = await getContentMany(ids);
+  const cms = await getContentMany(allParisStaffContentIds());
 
   return PARIS_OFFICE_STAFF.map((member) => {
-    const keys = parisStaffCmsKeysForMember(member.name);
+    const keys = parisStaffCmsKeysForMember(member.id);
+    const name = cms[keys.name]?.trim() || member.name;
+    const role = cms[keys.role]?.trim() || member.role;
     const bio = cms[keys.bio]?.trim();
     const photo = cms[keys.photo]?.trim() || PARIS_STAFF_IMAGES[member.imageKey];
     return {
       ...member,
+      name,
+      role,
       bio: bio !== undefined && bio !== "" ? bio : member.bio,
       image: photo,
     };

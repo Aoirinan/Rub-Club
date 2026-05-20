@@ -16,6 +16,7 @@ import {
 } from "@/lib/wellness-care-plans-content";
 import { buildParisStaffCmsDefaults, buildParisStaffCmsRegistry } from "@/lib/paris-staff-cms";
 import { buildSSCmsDefaults, buildSSCmsRegistry } from "@/lib/ss-cms-registry";
+import { buildSSStaffCmsDefaults, buildSSStaffCmsRegistry } from "@/lib/ss-staff-cms";
 import {
   STATIC_PAGES_CMS_REGISTRY,
   buildStaticPagesCmsDefaults,
@@ -36,6 +37,7 @@ export type ContentPageKey =
   | "Paris / main office"
   | "Paris staff"
   | "Sulphur Springs"
+  | "Sulphur staff"
   | "SS subpages"
   | "Insurance"
   | "Services hub"
@@ -109,15 +111,21 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "chiro_testimonial_3_text", pageLabel: "Chiropractic", sectionLabel: "Testimonials", fieldLabel: "Testimonial 3", type: "richtext" },
   { id: "chiro_testimonial_3_attr", pageLabel: "Chiropractic", sectionLabel: "Testimonials", fieldLabel: "Testimonial 3 Attribution", type: "text" },
 
-  { id: "doctor_greg_bio", pageLabel: "Doctors", sectionLabel: "Doctor Bios", fieldLabel: "Dr. Greg Thompson Bio", type: "richtext" },
-  { id: "doctor_greg_photo", pageLabel: "Doctors", sectionLabel: "Doctor Bios", fieldLabel: "Dr. Greg Thompson Photo", type: "image" },
-  { id: "doctor_greg_video", pageLabel: "Doctors", sectionLabel: "Doctor Bios", fieldLabel: "Dr. Greg Thompson Intro Video", type: "video" },
-  { id: "doctor_sean_bio", pageLabel: "Doctors", sectionLabel: "Doctor Bios", fieldLabel: "Dr. Sean Welborn Bio", type: "richtext" },
-  { id: "doctor_sean_photo", pageLabel: "Doctors", sectionLabel: "Doctor Bios", fieldLabel: "Dr. Sean Welborn Photo", type: "image" },
-  { id: "doctor_sean_video", pageLabel: "Doctors", sectionLabel: "Doctor Bios", fieldLabel: "Dr. Sean Welborn Intro Video", type: "video" },
-  { id: "doctor_brandy_bio", pageLabel: "Doctors", sectionLabel: "Doctor Bios", fieldLabel: "Dr. Brandy Collins Bio", type: "richtext" },
-  { id: "doctor_brandy_photo", pageLabel: "Doctors", sectionLabel: "Doctor Bios", fieldLabel: "Dr. Brandy Collins Photo", type: "image" },
-  { id: "doctor_brandy_video", pageLabel: "Doctors", sectionLabel: "Doctor Bios", fieldLabel: "Dr. Brandy Collins Intro Video", type: "video" },
+  { id: "doctor_greg_name", pageLabel: "Doctors", sectionLabel: "Dr. Greg Thompson", fieldLabel: "Name", type: "text" },
+  { id: "doctor_greg_role", pageLabel: "Doctors", sectionLabel: "Dr. Greg Thompson", fieldLabel: "Job title", type: "text" },
+  { id: "doctor_greg_bio", pageLabel: "Doctors", sectionLabel: "Dr. Greg Thompson", fieldLabel: "Bio", type: "richtext" },
+  { id: "doctor_greg_photo", pageLabel: "Doctors", sectionLabel: "Dr. Greg Thompson", fieldLabel: "Photo", type: "image" },
+  { id: "doctor_greg_video", pageLabel: "Doctors", sectionLabel: "Dr. Greg Thompson", fieldLabel: "Intro video", type: "video" },
+  { id: "doctor_sean_name", pageLabel: "Doctors", sectionLabel: "Dr. Sean Welborn", fieldLabel: "Name", type: "text" },
+  { id: "doctor_sean_role", pageLabel: "Doctors", sectionLabel: "Dr. Sean Welborn", fieldLabel: "Job title", type: "text" },
+  { id: "doctor_sean_bio", pageLabel: "Doctors", sectionLabel: "Dr. Sean Welborn", fieldLabel: "Bio", type: "richtext" },
+  { id: "doctor_sean_photo", pageLabel: "Doctors", sectionLabel: "Dr. Sean Welborn", fieldLabel: "Photo", type: "image" },
+  { id: "doctor_sean_video", pageLabel: "Doctors", sectionLabel: "Dr. Sean Welborn", fieldLabel: "Intro video", type: "video" },
+  { id: "doctor_brandy_name", pageLabel: "Doctors", sectionLabel: "Dr. Brandy Collins", fieldLabel: "Name", type: "text" },
+  { id: "doctor_brandy_role", pageLabel: "Doctors", sectionLabel: "Dr. Brandy Collins", fieldLabel: "Job title", type: "text" },
+  { id: "doctor_brandy_bio", pageLabel: "Doctors", sectionLabel: "Dr. Brandy Collins", fieldLabel: "Bio", type: "richtext" },
+  { id: "doctor_brandy_photo", pageLabel: "Doctors", sectionLabel: "Dr. Brandy Collins", fieldLabel: "Photo", type: "image" },
+  { id: "doctor_brandy_video", pageLabel: "Doctors", sectionLabel: "Dr. Brandy Collins", fieldLabel: "Intro video", type: "video" },
 
   { id: "massage_hero_heading", pageLabel: "Massage", sectionLabel: "Hero", fieldLabel: "Main Heading", type: "text" },
   { id: "massage_hero_subheading", pageLabel: "Massage", sectionLabel: "Hero", fieldLabel: "Subheading", type: "text" },
@@ -222,6 +230,7 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
 
   ...buildSSCmsRegistry(),
   ...buildParisStaffCmsRegistry(),
+  ...buildSSStaffCmsRegistry(),
   ...STATIC_PAGES_CMS_REGISTRY,
 ];
 
@@ -248,12 +257,18 @@ export const DEFAULTS: Record<string, string> = {
   chiro_testimonial_3_text: CHIRO_TESTIMONIAL_DEFAULTS[2].text,
   chiro_testimonial_3_attr: CHIRO_TESTIMONIAL_DEFAULTS[2].attr,
 
+  doctor_greg_name: DOCTORS[0].name,
+  doctor_greg_role: DOCTORS[0].role,
   doctor_greg_bio: DOCTORS[0].bio,
   doctor_greg_photo: IMAGES.doctorGreg,
   doctor_greg_video: "",
+  doctor_sean_name: DOCTORS[1].name,
+  doctor_sean_role: DOCTORS[1].role,
   doctor_sean_bio: DOCTORS[1].bio,
   doctor_sean_photo: IMAGES.doctorSean,
   doctor_sean_video: "",
+  doctor_brandy_name: DOCTORS[2].name,
+  doctor_brandy_role: DOCTORS[2].role,
   doctor_brandy_bio: DOCTORS[2].bio,
   doctor_brandy_photo: IMAGES.doctorCollins,
   doctor_brandy_video: "",
@@ -300,6 +315,7 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
   ...wellnessCarePlansDefaults(),
   ...buildSSCmsDefaults(),
   ...buildParisStaffCmsDefaults(),
+  ...buildSSStaffCmsDefaults(),
   ...buildStaticPagesCmsDefaults(),
 };
 

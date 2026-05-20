@@ -30,9 +30,19 @@ Other scripts:
 
 **Massage team (superadmin):** edit under Admin → Site content → **Massage team** (home and `/services/massage` “Meet the team” section). Portrait uploads land in Storage at `public_site/massage_team/<FirestoreDocId>.<ext>` with `photoUrl` stored on the document. Deploy rules so visitors can read them: `firebase deploy --only storage` (see `storage.rules` → `public_site/**` read).
 
-**Paris office staff (superadmin):** edit under Admin → Site content → **Paris staff** (`/locations/paris/staff`): page heading/intro, team section heading, bottom CTA, and **per person** photo (upload) + bio. Default photos are pulled from the legacy Paris chiropractic site CDN; uploads replace them in Firebase Storage like doctor photos. Names and job titles stay in code. Massage therapists also appear on Rub Club “Meet the team” sections — use Paris staff for insurance, marketing, front desk, and similar roles.
+**Paris office staff:** Admin → Site content → **Paris staff** — edit page copy and each person’s **name**, **job title**, **photo**, and **bio**.
 
-**Who can edit the website?** **Managers** handle scheduling, patients, and bookable providers. **Superadmins** (plus the one-time bootstrap on `/admin/super`) can edit site copy, hours, FAQs, massage team, Paris/SS staff bios, and marketing banners.
+**Sulphur Springs staff:** Admin → Site content → **Sulphur staff** — same fields for `/sulphur-springs/staff`.
+
+**Paris chiropractors:** Admin → Site content → **Doctors** — name, title, bio, photo, intro video per doctor.
+
+**Massage team:** Admin → Site content → **Massage team** — full roster (add/edit/remove therapists with photos).
+
+**Other pages:** Home, Chiropractic, Massage, Paris hours, Sulphur hub, SS treatment/injury subpages, Insurance, Services, Reviews, Patient forms, About, FAQ, Contact, Footer, and Navigation are all under Site content tabs.
+
+**Who can edit the website?** **Managers** (and superadmins) can use **Site content** and **Massage team** for everything above. **Superadmins** also get **Banners & promos** (booking toggle, specials, videos). Front desk can use the scheduler only. Promote trusted clinic leads to **Manager** in Operations → Staff so they do not need to call you for copy changes.
+
+**Adding/removing people:** Editing names on an existing slot is self-serve. Adding a brand-new team member to Paris, Sulphur, or doctors still needs a developer deploy (roster slots are defined in code).
 
 ---
 

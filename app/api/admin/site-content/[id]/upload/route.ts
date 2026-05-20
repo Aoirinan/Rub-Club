@@ -32,7 +32,7 @@ export async function POST(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const staff = await requireStaff(req.headers.get("authorization"), "superadmin");
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -97,11 +97,25 @@ export async function POST(
     changedBy: staff.email ?? staff.uid,
   });
 
-  for (const p of ["/", "/about", "/services/chiropractic", "/locations/paris/staff", "/locations/paris"]) {
+  for (const p of [
+    "/",
+    "/about",
+    "/services/chiropractic",
+    "/locations/paris/staff",
+    "/locations/paris",
+    "/sulphur-springs/staff",
+  ]) {
     revalidatePath(p);
   }
   if (id.startsWith("paris_staff_")) {
     revalidatePath("/locations/paris/staff");
+  }
+  if (id.startsWith("ss_staff_")) {
+    revalidatePath("/sulphur-springs/staff");
+  }
+  if (id.startsWith("doctor_")) {
+    revalidatePath("/about");
+    revalidatePath("/services/chiropractic");
   }
 
   return NextResponse.json({ ok: true, value: url });

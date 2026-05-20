@@ -1,10 +1,5 @@
 import type { ContentFieldMeta } from "@/lib/cms";
-import {
-  SS_INJURIES,
-  SS_PATIENT_RESOURCES,
-  SS_SERVICES,
-  SS_STAFF,
-} from "@/lib/sulphur-springs-content";
+import { SS_INJURIES, SS_PATIENT_RESOURCES, SS_SERVICES } from "@/lib/sulphur-springs-content";
 
 export function ssPageBodyId(slug: string): string {
   return `ss_page_${slug}_body`;
@@ -14,15 +9,7 @@ export function ssPageMetaId(slug: string): string {
   return `ss_page_${slug}_meta`;
 }
 
-export function ssStaffBioId(name: string): string {
-  const key = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_|_$/g, "");
-  return `ss_staff_${key}_bio`;
-}
-
-/** CMS registry fields for Sulphur Springs treatment, injury, staff, and patient resources pages. */
+/** CMS registry fields for Sulphur Springs treatment, injury, and patient resources pages. */
 export function buildSSCmsRegistry(): ContentFieldMeta[] {
   const fields: ContentFieldMeta[] = [];
 
@@ -64,16 +51,6 @@ export function buildSSCmsRegistry(): ContentFieldMeta[] {
     );
   }
 
-  for (const member of SS_STAFF) {
-    fields.push({
-      id: ssStaffBioId(member.name),
-      pageLabel: "SS subpages",
-      sectionLabel: "Staff",
-      fieldLabel: `${member.name} bio`,
-      type: "richtext",
-    });
-  }
-
   fields.push({
     id: "ss_patient_resources_intro",
     pageLabel: "SS subpages",
@@ -98,10 +75,6 @@ export function buildSSCmsDefaults(): Record<string, string> {
     defaults[ssPageBodyId(i.slug)] = i.body;
     defaults[ssPageMetaId(i.slug)] = i.metaDescription;
   }
-  for (const member of SS_STAFF) {
-    defaults[ssStaffBioId(member.name)] = member.bio;
-  }
-
   return defaults;
 }
 

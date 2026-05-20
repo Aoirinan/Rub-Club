@@ -3,7 +3,8 @@ import Image from "next/image";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { telHref, LOCATIONS } from "@/lib/constants";
-import { getSSStaffForDisplay } from "@/lib/ss-cms-content";
+import { renderRichText } from "@/lib/cms";
+import { getSSStaffForDisplay, getSSStaffPageContent } from "@/lib/ss-cms-content";
 import type { SSStaffMember } from "@/lib/sulphur-springs-content";
 
 const ss = LOCATIONS.sulphur_springs;
@@ -38,7 +39,7 @@ function StaffPhoto({ member, className }: { member: SSStaffMember; className?: 
     );
   }
   return (
-    <div className={`aspect-[3/4] w-full bg-stone-200 flex items-center justify-center ${className ?? ""}`}>
+    <div className={`flex aspect-[3/4] w-full items-center justify-center bg-stone-200 ${className ?? ""}`}>
       <svg
         className="h-16 w-16 text-stone-400"
         fill="none"
@@ -57,9 +58,24 @@ function StaffPhoto({ member, className }: { member: SSStaffMember; className?: 
   );
 }
 
+function BioBlock({ bio }: { bio: string }) {
+  if (!bio.trim()) return null;
+  return (
+    <div className="space-y-4 leading-relaxed text-stone-700">
+      {bio.split("\n\n").map((paragraph, i) => (
+        <p
+          key={i}
+          dangerouslySetInnerHTML={{ __html: renderRichText(paragraph) }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default async function SulphurSpringsStaffPage() {
-  const staff = await getSSStaffForDisplay();
+  const [staff, page] = await Promise.all([getSSStaffForDisplay(), getSSStaffPageContent()]);
   const [featured, ...rest] = staff;
+
   return (
     <>
       <Breadcrumbs
@@ -71,7 +87,8 @@ export default async function SulphurSpringsStaffPage() {
       />
       <PageHero
         eyebrow="Chiropractic Associates · Sulphur Springs"
-        title="Meet the Sulphur Springs Team"
+        title={page.heroTitle}
+        lede={page.heroLede || undefined}
       />
 
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
@@ -80,24 +97,16 @@ export default async function SulphurSpringsStaffPage() {
             <StaffPhoto member={featured} />
             <div className="space-y-4">
               <div>
-                <h2 className="text-2xl font-black text-[#173f3b]">
-                  {featured.name}
-                </h2>
-                <p className="text-sm font-bold text-stone-600">
-                  {featured.role}
-                </p>
+                <h2 className="text-2xl font-black text-[#173f3b]">{featured.name}</h2>
+                <p className="text-sm font-bold text-stone-600">{featured.role}</p>
               </div>
-              <div className="space-y-4 leading-relaxed text-stone-700">
-                {featured.bio.split("\n\n").map((paragraph, i) => (
-                  <p key={i}>{paragraph}</p>
-                ))}
-              </div>
+              <BioBlock bio={featured.bio} />
             </div>
           </div>
         </section>
 
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">Our Team</h2>
+          <h2 className="text-2xl font-black text-[#173f3b]">{page.sectionHeading}</h2>
           <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {rest.map((member) => (
               <article
@@ -106,17 +115,9 @@ export default async function SulphurSpringsStaffPage() {
               >
                 <StaffPhoto member={member} />
                 <div className="flex flex-1 flex-col p-5">
-                  <h3 className="text-lg font-black text-[#173f3b]">
-                    {member.name}
-                  </h3>
-                  <p className="text-sm font-bold text-stone-600">
-                    {member.role}
-                  </p>
-                  {member.bio ? (
-                    <p className="mt-3 flex-1 text-sm leading-relaxed text-stone-700">
-                      {member.bio}
-                    </p>
-                  ) : null}
+                  <h3 className="text-lg font-black text-[#173f3b]">{member.name}</h3>
+                  <p className="text-sm font-bold text-stone-600">{member.role}</p>
+                  <BioBlock bio={member.bio} />
                 </div>
               </article>
             ))}
@@ -124,8 +125,8 @@ export default async function SulphurSpringsStaffPage() {
         </section>
 
         <ScheduleCtaCard
-          title="Ready for relief?"
-          body="Book an appointment online or give us a call — we're here to help you feel better and move better."
+          title={page.ctaTitle}
+          body={page.ctaBody}
           secondary={{
             label: "Call 903-919-5020",
             href: telHref(ss.phonePrimary),
