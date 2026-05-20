@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { contactFormAutoReplyEmail, contactFormEmail } from "@/lib/email-templates";
+import {
+  createContactSubmission,
+  updateContactSubmissionDelivery,
+} from "@/lib/contact-submissions";
 import { assertRateLimitOk } from "@/lib/rate-limit";
-import { sendBookingNotification } from "@/lib/sendgrid";
-import { contactFormEmail } from "@/lib/email-templates";
+import { sendOutboundEmail } from "@/lib/sendgrid";
 
 export const runtime = "nodejs";
 
@@ -41,31 +45,63 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true }, { status: 200 });
   }
 
-  const officeTo = process.env.OFFICE_NOTIFICATION_EMAIL;
-  if (!officeTo) {
-    console.warn("Contact form submitted but OFFICE_NOTIFICATION_EMAIL is not set");
+  const payload = {
+    name: body.name.trim(),
+    email: body.email.trim(),
+    phone: body.phone?.trim(),
+    topic: body.topic?.trim(),
+    message: body.message.trim(),
+  };
+
+  let submissionId: string;
+  try {
+    submissionId = await createContactSubmission(payload);
+  } catch (err) {
+    console.error("Contact form Firestore save failed", err);
     return NextResponse.json(
-      { ok: true, note: "Received. The office will follow up." },
-      { status: 200 },
+      {
+        error:
+          "We could not save your message right now. Please call our Paris office at 903-785-5551.",
+      },
+      { status: 503 },
     );
   }
 
-  try {
+  let officeEmailSent = false;
+  const officeTo = process.env.OFFICE_NOTIFICATION_EMAIL?.trim();
+  if (officeTo) {
     const { subject, text, html } = contactFormEmail({
-      name: body.name.trim(),
-      email: body.email.trim(),
-      phone: body.phone?.trim(),
-      topic: body.topic?.trim(),
-      message: body.message.trim(),
+      name: payload.name,
+      email: payload.email,
+      phone: payload.phone,
+      topic: payload.topic,
+      message: payload.message,
     });
-    await sendBookingNotification({
-      to: officeTo,
-      subject,
-      text,
-      html,
-    });
+    const officeResult = await sendOutboundEmail({ to: officeTo, subject, text, html });
+    officeEmailSent = officeResult.ok;
+    if (!officeResult.ok) {
+      console.warn("[contact] office notification not sent:", officeResult.reason);
+    }
+  } else {
+    console.warn("[contact] OFFICE_NOTIFICATION_EMAIL is not set — message saved; staff use Admin → Contact inbox");
+  }
+
+  const autoReply = contactFormAutoReplyEmail({ name: payload.name });
+  const autoResult = await sendOutboundEmail({
+    to: payload.email,
+    subject: autoReply.subject,
+    text: autoReply.text,
+    html: autoReply.html,
+  });
+  const autoReplySent = autoResult.ok;
+  if (!autoResult.ok) {
+    console.warn("[contact] visitor auto-reply not sent:", autoResult.reason);
+  }
+
+  try {
+    await updateContactSubmissionDelivery(submissionId, { officeEmailSent, autoReplySent });
   } catch (err) {
-    console.error("Contact form SendGrid failed", err);
+    console.error("Contact form delivery flags update failed", err);
   }
 
   return NextResponse.json({ ok: true }, { status: 200 });

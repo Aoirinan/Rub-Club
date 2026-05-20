@@ -40,7 +40,9 @@ Other scripts:
 
 **Other pages:** Home, Chiropractic, Massage, Paris hours, Sulphur hub, SS treatment/injury subpages, Insurance, Services, Reviews, Patient forms, About, FAQ, Contact, Footer, and Navigation are all under Site content tabs.
 
-**Who can edit the website?** **Managers** (and superadmins) can use **Site content** and **Massage team** for everything above. **Superadmins** also get **Banners & promos** (booking toggle, specials, videos). Front desk can use the scheduler only. Promote trusted clinic leads to **Manager** in Operations → Staff so they do not need to call you for copy changes.
+**Contact form:** Every submission on `/contact` is stored in Firestore. **Front desk** (and all staff) read messages under **Admin → Contact inbox** — no email required for daily work. Optional email copies go to `OFFICE_NOTIFICATION_EMAIL` (production: `dr.seanwelborn@gmail.com`). Visitors get an auto-reply when SendGrid is configured.
+
+**Who can edit the website?** **Managers** (and superadmins) can use **Site content** and **Massage team** for everything above. **Superadmins** also get **Banners & promos** (booking toggle, specials, videos). Front desk can use the scheduler and **Contact inbox**. Promote trusted clinic leads to **Manager** in Operations → Staff so they do not need to call you for copy changes.
 
 **Adding/removing people:** Editing names on an existing slot is self-serve. Adding a brand-new team member to Paris, Sulphur, or doctors still needs a developer deploy (roster slots are defined in code).
 
@@ -59,7 +61,7 @@ Other scripts:
 | `NEXT_PUBLIC_APP_URL` | Yes | Canonical site origin (no trailing slash). Drives `metadataBase`, OG, canonical, sitemap, and Firebase password-reset return links. |
 | `SENDGRID_API_KEY` | Recommended | Enables booking confirmation, office notification, contact form, and staff-invite emails. |
 | `SENDGRID_FROM_EMAIL` | Recommended | Verified Single Sender in SendGrid. Plain email only (no JSON, no quotes). |
-| `OFFICE_NOTIFICATION_EMAIL` | Recommended | Where booking + contact-form notifications are sent. |
+| `OFFICE_NOTIFICATION_EMAIL` | Optional | Email copies for bookings + contact (`dr.seanwelborn@gmail.com`). Primary workflow: **Admin → Contact inbox**. |
 | `RATE_LIMIT_SALT` | Recommended | Rotate occasionally; hashes IPs for the booking rate limiter. |
 | `ADMIN_BOOTSTRAP_SECRET` | Bootstrap only | Long random string used once to grant the first superadmin, then removed. |
 | `NEXT_PUBLIC_GA_ID` | Optional | GA4 measurement ID (`G-XXXXXXXXXX`). When set, GA loads automatically. |
@@ -87,7 +89,7 @@ app/
   book/                   # Booking wizard (server shell + client wizard)
   services/{massage,chiropractic}/
   locations/{paris,sulphur-springs}/
-  contact/                # Contact form
+  contact/                # Contact form (saves to Firestore + emails office + auto-reply)
   about/, faq/, insurance/, reviews/, patient-forms/
   auth/password-reset-complete/
   admin/                  # Staff portal (auth-gated)

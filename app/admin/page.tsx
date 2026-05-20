@@ -579,6 +579,14 @@ function AdminDashboard() {
             ) : null}
             {isDeskWrite ? (
               <Link
+                href="/admin/contact"
+                className="rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-900 hover:bg-sky-100"
+              >
+                Contact inbox
+              </Link>
+            ) : null}
+            {isDeskWrite ? (
+              <Link
                 href="/admin/patients"
                 className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
               >

@@ -74,27 +74,33 @@ export type EmailAttachment = {
   disposition?: "attachment" | "inline";
 };
 
-export async function sendBookingNotification(params: {
+export type OutboundEmailResult =
+  | { ok: true }
+  | { ok: false; reason: "missing_api_key" | "invalid_from_email" | "send_failed" };
+
+/** Sends mail when SendGrid is configured; returns whether delivery was attempted successfully. */
+export async function sendOutboundEmail(params: {
   to: string;
   subject: string;
   text: string;
   html?: string;
   attachments?: EmailAttachment[];
   fromName?: string;
-}): Promise<void> {
+}): Promise<OutboundEmailResult> {
   ensureSendgrid();
   const key = getSendgridApiKey();
   const fromEmail = getSendgridFromEmailNormalized();
   if (!key) {
     console.warn("[sendgrid] SENDGRID_API_KEY is missing — email NOT sent to", params.to);
-    return;
+    return { ok: false, reason: "missing_api_key" };
   }
   if (!isValidOutboundFromEmail(fromEmail)) {
     console.warn("[sendgrid] SENDGRID_FROM_EMAIL is missing or invalid — email NOT sent to", params.to);
-    return;
+    return { ok: false, reason: "invalid_from_email" };
   }
 
-  await sgMail.send({
+  try {
+    await sgMail.send({
     to: params.to,
     from: { email: fromEmail, name: params.fromName ?? emailFromName },
     subject: params.subject,
@@ -110,7 +116,24 @@ export async function sendBookingNotification(params: {
       clickTracking: { enable: false },
       openTracking: { enable: false },
     },
-  });
+    });
+    return { ok: true };
+  } catch (err) {
+    console.error("[sendgrid] send failed to", params.to, err);
+    return { ok: false, reason: "send_failed" };
+  }
+}
+
+export async function sendBookingNotification(params: {
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+  attachments?: EmailAttachment[];
+  fromName?: string;
+}): Promise<void> {
+  const result = await sendOutboundEmail(params);
+  if (!result.ok) return;
 }
 
 function escapeHtml(s: string): string {

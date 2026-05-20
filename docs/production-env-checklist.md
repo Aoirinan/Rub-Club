@@ -11,7 +11,17 @@ Use this when deploying to Vercel (or similar). Copy `env.example` to Vercel **P
 | `NEXT_PUBLIC_APP_URL` | Your live URL with `https://` and no trailing slash (e.g. `https://wellnessparistx.com` or the Vercel URL until DNS is ready) |
 | `SENDGRID_API_KEY` | From SendGrid → API Keys |
 | `SENDGRID_FROM_EMAIL` | A **verified** sender in SendGrid (clinic email, not a personal test address in production) |
-| `OFFICE_NOTIFICATION_EMAIL` | Where new booking emails go (front desk inbox) |
+| `OFFICE_NOTIFICATION_EMAIL` | Optional email copies for bookings + contact form. Use **`dr.seanwelborn@gmail.com`**. Front desk should use **Admin → Contact inbox**, not email. |
+
+## Contact form (required for handoff)
+
+Every public `/contact` submission is:
+
+1. **Saved in Firestore** (`contact_submissions`) — **front desk checks Admin → Contact inbox** after staff sign-in (all roles, including front desk).
+2. **Optional email copy** to `OFFICE_NOTIFICATION_EMAIL` (`dr.seanwelborn@gmail.com`) when SendGrid is configured.
+3. **Auto-reply emailed** to the visitor confirming receipt.
+
+Before go-live, submit a test on `/contact`, sign in as front desk, open **Admin → Contact inbox**, and confirm the message appears. Email to Sean’s Gmail is optional backup, not required for daily workflow.
 
 Add your Vercel hostname and final domain under **Firebase Auth → Settings → Authorized domains** so admin login and password reset work.
 

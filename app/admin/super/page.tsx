@@ -736,14 +736,17 @@ export default function SuperAdminPage() {
               </p>
               {emailStatus.officeNotificationConfigured ? (
                 <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
-                  <code className="rounded bg-white/80 px-1">OFFICE_NOTIFICATION_EMAIL</code> is set — contact and
-                  booking flows can send the office notification copy when SendGrid sends.
+                  <code className="rounded bg-white/80 px-1">OFFICE_NOTIFICATION_EMAIL</code> is set — optional email
+                  copies for bookings and the contact form (recommended:{" "}
+                  <code className="rounded bg-white/80 px-1">dr.seanwelborn@gmail.com</code>). Front desk uses{" "}
+                  <strong>Admin → Contact inbox</strong> for contact messages.
                 </p>
               ) : (
-                <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-                  <code className="rounded bg-white/80 px-1">OFFICE_NOTIFICATION_EMAIL</code> is not set on this
-                  deployment — new bookings and the contact form will not email the office (patient-facing mail may
-                  still send). Add it under Vercel → Environment Variables → Production if you need office copies.
+                <p className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950">
+                  <code className="rounded bg-white/80 px-1">OFFICE_NOTIFICATION_EMAIL</code> is not set — contact
+                  messages still appear in <strong>Admin → Contact inbox</strong>. Set it to{" "}
+                  <code className="rounded bg-white/80 px-1">dr.seanwelborn@gmail.com</code> in Vercel Production if
+                  you also want email copies for bookings and contact.
                 </p>
               )}
             </div>

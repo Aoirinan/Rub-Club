@@ -870,3 +870,50 @@ export function contactFormEmail(params: {
   });
   return { subject, text, html };
 }
+
+/** Auto-reply after a visitor submits the public contact form. */
+export function contactFormAutoReplyEmail(params: {
+  name: string;
+}): { subject: string; text: string; html: string } {
+  const subject = `We received your message — ${siteShortName}`;
+  const text = [
+    `Hi ${params.name},`,
+    "",
+    "Thank you for contacting us. We received your message and will respond during office hours.",
+    "",
+    "If your question is urgent, please call:",
+    "Paris office: 903-785-5551",
+    "The Rub Club (massage): 903-739-9959",
+    "Sulphur Springs: 903-919-5020",
+    "",
+    "Please do not reply with medical records or other sensitive health information by email.",
+    "",
+    siteShortName,
+  ].join("\n");
+
+  const body = `
+    <p style="margin:0 0 12px 0;">Hi ${escapeHtml(params.name)},</p>
+    <p style="margin:0 0 12px 0;">
+      Thank you for contacting us. We received your message and will respond during office hours.
+    </p>
+    <p style="margin:0 0 12px 0;">
+      <strong>If your question is urgent, please call:</strong><br />
+      Paris office: <a href="tel:+19037855551" style="color:${PRIMARY};font-weight:700;">903-785-5551</a><br />
+      The Rub Club (massage): <a href="tel:+19037399959" style="color:${PRIMARY};font-weight:700;">903-739-9959</a><br />
+      Sulphur Springs: <a href="tel:+19039195020" style="color:${PRIMARY};font-weight:700;">903-919-5020</a>
+    </p>
+    <p style="margin:0;font-size:13px;color:${MUTED};">
+      Please do not send medical records or other sensitive health information by email.
+    </p>
+  `;
+
+  const html = brandedShell({
+    preheader: "We received your message and will respond during office hours.",
+    heading: "Thanks for reaching out",
+    body,
+    ctaText: "Visit our website",
+    ctaHref: siteUrl("/contact"),
+  });
+
+  return { subject, text, html };
+}
