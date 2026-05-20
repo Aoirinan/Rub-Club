@@ -1,14 +1,17 @@
 import type { LocationInfo } from "@/lib/constants";
 import { telHref } from "@/lib/constants";
-import { MASSAGE } from "@/lib/home-verbatim";
 import { BookingCta } from "@/components/BookingCta";
+import { OfficeHoursTable } from "@/components/OfficeHoursTable";
+import type { OfficeHoursRow } from "@/lib/office-hours";
 
 export function LocationDetail({
   location,
   reviewUrl,
+  officeHours,
 }: {
   location: LocationInfo;
   reviewUrl: string;
+  officeHours: readonly OfficeHoursRow[];
 }) {
   const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(
     `${location.streetAddress}, ${location.addressLocality}, ${location.addressRegion} ${location.postalCode}`,
@@ -66,17 +69,7 @@ export function LocationDetail({
         </div>
         <div className="space-y-4">
           <h3 className="text-lg font-black text-[#173f3b]">Office hours</h3>
-          <dl className="space-y-1 text-sm">
-            {MASSAGE.hours.map((row) => (
-              <div
-                key={row.day}
-                className="flex justify-between gap-4 border-b border-stone-200 py-2 text-stone-700"
-              >
-                <dt className="font-bold text-[#173f3b]">{row.day}</dt>
-                <dd>{row.hours}</dd>
-              </div>
-            ))}
-          </dl>
+          <OfficeHoursTable rows={officeHours} />
           <BookingCta
             label="Book at this location"
             query={`location=${location.id}`}

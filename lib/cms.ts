@@ -7,6 +7,7 @@ import {
   HOME_INTRO,
   MASSAGE,
 } from "@/lib/home-verbatim";
+import { PARIS_HOURS_DEFAULT_TEXT } from "@/lib/office-hours";
 import { publicBookingHref } from "@/lib/public-booking";
 import { siteShortName } from "@/lib/site-content";
 import {
@@ -27,6 +28,7 @@ export type ContentPageKey =
   | "Home"
   | "Chiropractic"
   | "Massage"
+  | "Paris / main office"
   | "Sulphur Springs"
   | "About"
   | "FAQ"
@@ -112,9 +114,23 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "massage_services_list", pageLabel: "Massage", sectionLabel: "Services", fieldLabel: "Services Offered", type: "richtext" },
   { id: "massage_cta_heading", pageLabel: "Massage", sectionLabel: "CTA", fieldLabel: "Heading", type: "text" },
 
+  {
+    id: "paris_hours",
+    pageLabel: "Paris / main office",
+    sectionLabel: "Hours",
+    fieldLabel: "Office hours (one line per day: Monday|9:00 AM – 5:00 PM)",
+    type: "richtext",
+  },
+
   { id: "ss_hero_heading", pageLabel: "Sulphur Springs", sectionLabel: "Hero", fieldLabel: "Main Heading", type: "text" },
   { id: "ss_intro_body", pageLabel: "Sulphur Springs", sectionLabel: "Intro", fieldLabel: "Body Copy", type: "richtext" },
-  { id: "ss_hours", pageLabel: "Sulphur Springs", sectionLabel: "Location", fieldLabel: "Hours", type: "richtext" },
+  {
+    id: "ss_hours",
+    pageLabel: "Sulphur Springs",
+    sectionLabel: "Location",
+    fieldLabel: "Hours (one line per range: Monday – Friday|9:00 AM – 5:00 PM)",
+    type: "richtext",
+  },
 
   { id: "about_heading", pageLabel: "About", sectionLabel: "Hero", fieldLabel: "Main Heading", type: "text" },
   { id: "about_body", pageLabel: "About", sectionLabel: "Story", fieldLabel: "Body Copy", type: "richtext" },
@@ -233,6 +249,8 @@ export const DEFAULTS: Record<string, string> = {
   massage_intro_body: MASSAGE.stressParas.join("\n\n"),
   massage_services_list: MASSAGE_SERVICES_DEFAULT,
   massage_cta_heading: MASSAGE.contactTitle,
+
+  paris_hours: PARIS_HOURS_DEFAULT_TEXT,
 
   ss_hero_heading: "Chiropractic Care Created Precisely For You",
   ss_intro_body:

@@ -6,7 +6,7 @@ import {
   telHref,
   type LocationInfo,
 } from "@/lib/constants";
-import { MASSAGE } from "@/lib/home-verbatim";
+import type { OfficeHoursRow } from "@/lib/office-hours";
 import {
   PRIVACY_PRACTICES_PATH,
   TERMS_PATH,
@@ -21,13 +21,15 @@ export function SiteFooter({
   footerBlurbHtml,
   footerTagline,
   footerCopyright,
+  parisHours,
 }: {
   locations?: readonly LocationInfo[];
   giftCardHref?: string;
   footerBlurbHtml?: string | null;
   footerTagline?: string | null;
   footerCopyright?: string | null;
-} = {}) {
+  parisHours: readonly OfficeHoursRow[];
+}) {
   const label = process.env.NEXT_PUBLIC_APP_VERSION ?? "dev";
   const year = new Date().getFullYear();
   const tagline =
@@ -178,7 +180,7 @@ export function SiteFooter({
         <div className="text-sm">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f2d25d]">Hours</p>
           <dl className="mt-3 space-y-1">
-            {MASSAGE.hours.map((row) => (
+            {parisHours.map((row) => (
               <div key={row.day} className="flex justify-between gap-3 border-b border-white/10 py-1">
                 <dt className="font-bold text-white">{row.day}</dt>
                 <dd className="text-white/80">{row.hours}</dd>

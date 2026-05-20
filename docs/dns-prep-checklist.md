@@ -9,6 +9,8 @@ You can do almost everything below **while the site still runs on `rub-club.verc
 | Keep **online booking off** | Admin → Banners & promos → Online booking → uncheck **Online booking enabled** |
 | Paste **Google review URLs** | Same tab → Save review URLs |
 | Edit **site copy / photos** | Admin → Site content |
+| Edit **Paris office hours** | Admin → Site content → **Paris / main office** → Office hours |
+| Edit **Sulphur hours** | Admin → Site content → **Sulphur Springs** → Hours |
 | Banners & specials | Admin → Banners & promos |
 | Gift card link | Admin → Other extras (or env `nav_giftcard_url` in CMS) |
 | Test all public pages on Vercel URL | Home, services, Sulphur hub, locations, reviews, contact |
@@ -18,9 +20,25 @@ You can do almost everything below **while the site still runs on `rub-club.verc
 
 ## Vercel & Firebase (safe to do early)
 
+### Add domain in Vercel (what the modal means)
+
+1. Go to **Project → Settings → Domains → Add**.
+2. Type **`wellnessparistx.com`** (no `https://`).
+3. Leave **“Redirect wellnessparistx.com to www…”** checked if you want `www` as the main address (recommended).
+4. Select **Connect to an environment** → **Production** (not Preview).
+5. Click **Save**.
+6. Repeat for **`www.wellnessparistx.com`** if you only added the apex first — or add both in one flow if Vercel offers it.
+7. After Save, Vercel shows **DNS records** (CNAME/A). Copy those into your registrar — the domain will show “Invalid configuration” until DNS propagates; that is normal.
+
+Do **not** choose “Redirect to Another Domain” unless you are forwarding to a completely different website.
+
 1. Add **production domain** in Vercel → Domains (can stay on “Invalid configuration” until DNS points).
 2. Set **`NEXT_PUBLIC_APP_URL`** to your **final** primary domain (e.g. `https://wellnessparistx.com`) — do this **right before** or **when** DNS goes live, then redeploy once.
-3. Firebase Auth → **Authorized domains**: add `rub-club.vercel.app`, preview URLs if needed, and your future custom domain(s).
+3. Firebase Auth → **Authorized domains** (Authentication → Settings):
+   - **Vercel:** `rub-club.vercel.app`, `project-bav0l.vercel.app` (if you use that hostname)
+   - **Primary:** `wellnessparistx.com`, `www.wellnessparistx.com`
+   - **Legacy (admin login on old brands):** `massageparistexas.com`, `www.massageparistexas.com`, `chiropracticsulphursprings.com`, `www.chiropracticsulphursprings.com`
+   - Defaults (`localhost`, `*.firebaseapp.com`, `*.web.app`) stay as-is
 4. Optional: add `NEXT_PUBLIC_GA_ID` / `NEXT_PUBLIC_GTM_ID` for analytics on the marketing site.
 
 ## DNS cutover day (when ready)

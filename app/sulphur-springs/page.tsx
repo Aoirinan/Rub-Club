@@ -6,6 +6,8 @@ import { BookingCta } from "@/components/BookingCta";
 import { telHref, LOCATIONS } from "@/lib/constants";
 import { publicBookingHref } from "@/lib/public-booking";
 import { getContentMany, renderRichText } from "@/lib/cms";
+import { getSulphurOfficeHours } from "@/lib/office-hours";
+import { OfficeHoursTable } from "@/components/OfficeHoursTable";
 import {
   SS_STAFF,
   SS_SERVICE_NAV,
@@ -68,9 +70,11 @@ const SS_NAV: SSNavEntry[] = [
 ];
 
 export default async function SulphurSpringsPage() {
-  const c = await getContentMany(["ss_hero_heading", "ss_intro_body", "ss_hours"]);
+  const [c, ssOfficeHours] = await Promise.all([
+    getContentMany(["ss_hero_heading", "ss_intro_body", "ss_hours"]),
+    getSulphurOfficeHours(),
+  ]);
   const introParagraphs = (c.ss_intro_body ?? "").split(/\n\n+/).filter(Boolean);
-  const hoursLines = (c.ss_hours ?? "").split(/\n/).filter(Boolean);
 
   return (
     <div className="bg-[#f4f2ea]">
@@ -224,20 +228,11 @@ export default async function SulphurSpringsPage() {
             </div>
             <div>
               <h3 className="text-sm font-black uppercase tracking-wide text-[#2980b9]">Office Hours</h3>
-              <dl className="mt-2 space-y-1 text-sm text-stone-700">
-                {hoursLines.map((line) => {
-                  const sep = line.includes(":") ? ":" : "–";
-                  const parts = line.split(sep);
-                  const day = parts[0]?.trim() ?? line;
-                  const hours = parts.slice(1).join(sep).trim() || line;
-                  return (
-                    <div key={line} className="flex justify-between gap-3 border-b border-stone-100 py-1">
-                      <dt className="font-medium">{day}</dt>
-                      <dd className={/closed/i.test(hours) ? "text-stone-400" : ""}>{hours}</dd>
-                    </div>
-                  );
-                })}
-              </dl>
+              <OfficeHoursTable
+                rows={ssOfficeHours}
+                dayClassName="font-medium text-stone-800"
+                rowClassName="flex justify-between gap-3 border-b border-stone-100 py-1 text-sm text-stone-700"
+              />
             </div>
             <a
               href={telHref(ss.phonePrimary)}

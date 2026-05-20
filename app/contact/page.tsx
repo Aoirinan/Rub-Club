@@ -5,7 +5,8 @@ import { JsonLd } from "@/components/JsonLd";
 import { ContactForm } from "@/components/ContactForm";
 import { LOCATION_LIST, telHref } from "@/lib/constants";
 import { organizationJsonLd } from "@/lib/structured-data";
-import { MASSAGE } from "@/lib/home-verbatim";
+import { getParisOfficeHours } from "@/lib/office-hours";
+import { OfficeHoursTable } from "@/components/OfficeHoursTable";
 import { getContentMany } from "@/lib/cms";
 import {
   contactAppointmentCopy,
@@ -29,9 +30,10 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
-  const [c, bookingConfig] = await Promise.all([
+  const [c, bookingConfig, parisHours] = await Promise.all([
     getContentMany(["contact_heading", "contact_subtext"]),
     getPublicBookingConfig(),
+    getParisOfficeHours(),
   ]);
 
   return (
@@ -111,14 +113,7 @@ export default async function ContactPage() {
           <aside className="space-y-4 text-sm">
             <div className="bg-stone-50 p-5 ring-1 ring-stone-200">
               <h3 className="text-base font-black text-[#173f3b]">Office hours</h3>
-              <dl className="mt-3 space-y-1">
-                {MASSAGE.hours.map((row) => (
-                  <div key={row.day} className="flex justify-between gap-3 border-b border-stone-200 py-1">
-                    <dt className="font-bold text-[#173f3b]">{row.day}</dt>
-                    <dd>{row.hours}</dd>
-                  </div>
-                ))}
-              </dl>
+              <OfficeHoursTable rows={parisHours} rowClassName="flex justify-between gap-3 border-b border-stone-200 py-1" />
             </div>
             <div className="rounded border border-amber-200 bg-amber-50 p-4 text-amber-900">
               <p className="text-sm font-bold">Privacy notice</p>

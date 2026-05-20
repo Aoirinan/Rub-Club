@@ -28,6 +28,7 @@ import {
   getPublicBookingConfig,
   isPublicBookingEnabled,
 } from "@/lib/public-booking-settings";
+import { getParisOfficeHours } from "@/lib/office-hours";
 
 export const revalidate = 60;
 
@@ -85,9 +86,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let salesBanner: SalesBannerPayload | null = null;
-  const [cms, bookingConfig] = await Promise.all([
+  const [cms, bookingConfig, parisHours] = await Promise.all([
     getLayoutCmsContent(),
     getPublicBookingConfig(),
+    getParisOfficeHours(),
   ]);
   const onlineBookingEnabled = isPublicBookingEnabled(bookingConfig);
   let displayLocs = mergedDisplayLocations(undefined, cms);
@@ -139,6 +141,7 @@ export default async function RootLayout({
             footerBlurbHtml={footerBlurbHtml}
             footerTagline={cms.footer_tagline}
             footerCopyright={cms.footer_copyright}
+            parisHours={parisHours}
           />
           <DomainSpecialsPopup />
         </PublicBookingProvider>

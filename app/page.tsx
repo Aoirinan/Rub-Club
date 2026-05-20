@@ -26,6 +26,8 @@ import { HOME_PAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { getContentMany, renderRichText } from "@/lib/cms";
 import { HOME_INTRO } from "@/lib/home-verbatim";
 import { getLayoutCmsContent } from "@/lib/cms-display";
+import { getParisOfficeHours } from "@/lib/office-hours";
+import { OfficeHoursTable } from "@/components/OfficeHoursTable";
 import { getActiveFaqs } from "@/lib/site-faqs";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
@@ -47,7 +49,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const cmsLayout = await getLayoutCmsContent();
+  const [cmsLayout, parisHours] = await Promise.all([getLayoutCmsContent(), getParisOfficeHours()]);
   const c = await getContentMany([
     "home_hero_heading",
     "home_hero_subheading",
@@ -443,17 +445,12 @@ export default async function Home() {
             <div>
               <h3 className="text-lg font-black text-[#f2d25d]">{MASSAGE.hoursTitle}</h3>
               <p className="mt-1 text-sm text-white/80">{MASSAGE.hoursSubtitle}</p>
-              <dl className="mt-4 space-y-2 text-sm">
-                {MASSAGE.hours.map((row) => (
-                  <div
-                    key={row.day}
-                    className="flex justify-between gap-4 border-b border-white/10 py-2"
-                  >
-                    <dt className="font-bold">{row.day}</dt>
-                    <dd>{row.hours}</dd>
-                  </div>
-                ))}
-              </dl>
+              <OfficeHoursTable
+                rows={parisHours}
+                dayClassName="font-bold text-white"
+                hoursClassName="text-white/90"
+                rowClassName="flex justify-between gap-4 border-b border-white/10 py-2 text-sm"
+              />
             </div>
             <div className="space-y-6 text-sm text-white/85">
               <h3 className="text-lg font-black text-[#f2d25d]">{MASSAGE.locationTitle}</h3>
