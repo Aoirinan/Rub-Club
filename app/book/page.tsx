@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BookingWizard } from "@/components/BookingWizard";
+import { BookWhenDisabled } from "@/components/BookWhenDisabled";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
 import { getDisplayLocations } from "@/lib/cms-display";
+import {
+  getPublicBookingConfig,
+  isPublicBookingEnabled,
+} from "@/lib/public-booking-settings";
 
 export const metadata: Metadata = {
   title: "Book an Appointment",
@@ -13,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Book an Appointment",
     description:
-      "Online scheduling for The Rub Club Massage and Chiropractic Associates in Paris and Sulphur Springs, TX.",
+      "Online scheduling for Chiropractic Associates and The Rub Club in Paris and Sulphur Springs, TX.",
     url: "/book",
   },
 };
@@ -32,6 +37,14 @@ export default async function BookPage({
 }) {
   const params = await searchParams;
   const displayLocs = await getDisplayLocations();
+  const bookingConfig = await getPublicBookingConfig();
+
+  if (!isPublicBookingEnabled(bookingConfig)) {
+    return (
+      <BookWhenDisabled message={bookingConfig.disabledMessage} locations={displayLocs} />
+    );
+  }
+
   return (
     <>
       <JsonLd
@@ -59,6 +72,7 @@ export default async function BookPage({
           date: params.date ?? null,
           locations: displayLocs,
         }}
+        onlinePaymentsEnabled={bookingConfig.onlinePaymentsEnabled}
       />
     </>
   );

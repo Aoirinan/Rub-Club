@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     "Answers about insurance, cancellation, what to bring, pricing, and what to expect at your first chiropractic or massage appointment in Paris, TX.",
   alternates: { canonical: "/faq" },
   openGraph: {
-    title: "FAQ — The Rub Club & Chiropractic Associates",
+    title: "FAQ — Chiropractic Associates",
     description:
       "Insurance, scheduling, and first-visit answers for our Paris and Sulphur Springs offices.",
     url: "/faq",

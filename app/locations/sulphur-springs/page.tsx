@@ -3,6 +3,7 @@ import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { LocationDetail } from "@/components/LocationDetail";
 import { LOCATIONS } from "@/lib/constants";
+import { getReviewUrlForLocation } from "@/lib/cms-display";
 import { chiropractorJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
@@ -18,7 +19,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function SulphurSpringsLocationPage() {
+export default async function SulphurSpringsLocationPage() {
+  const reviewUrl = await getReviewUrlForLocation("sulphur_springs");
+
   return (
     <>
       <JsonLd data={chiropractorJsonLd(LOCATIONS.sulphur_springs)} />
@@ -34,7 +37,7 @@ export default function SulphurSpringsLocationPage() {
         title="Sulphur Springs, TX — 207 Jefferson St. E"
         lede="Chiropractic Associates' second location, conveniently located on Jefferson St. E with weekday hours."
       />
-      <LocationDetail location={LOCATIONS.sulphur_springs} />
+      <LocationDetail location={LOCATIONS.sulphur_springs} reviewUrl={reviewUrl} />
     </>
   );
 }

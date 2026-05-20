@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { finalizeOwnerTestimonialVideoAfterDirectUpload } from "@/lib/owner-marketing-upload";
-import { MASSAGE_TEAM_COLLECTION } from "@/lib/massage-team-data";
+import { massageTherapistIdExists } from "@/lib/massage-therapist-options";
 import { assertCanAddTestimonialVideo } from "@/lib/owner-upload-quota";
 import { getFirestore } from "@/lib/firebase-admin";
 import { getSiteOwnerConfig, setSiteOwnerConfigPatch, type TestimonialVideoItem } from "@/lib/site-owner-config";
@@ -37,8 +37,8 @@ export async function POST(req: Request) {
   }
 
   if (massageMemberId) {
-    const memberSnap = await getFirestore().collection(MASSAGE_TEAM_COLLECTION).doc(massageMemberId).get();
-    if (!memberSnap.exists) {
+    const known = await massageTherapistIdExists(getFirestore(), massageMemberId);
+    if (!known) {
       return NextResponse.json({ error: "Unknown massage therapist." }, { status: 400 });
     }
   }

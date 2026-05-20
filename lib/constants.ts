@@ -135,12 +135,25 @@ export function telHref(phone: string): string {
   return `tel:+1${digits}`;
 }
 
-/** Resolve Google Business Profile review URLs from env, falling back to maps. */
-export function reviewUrlForLocation(id: LocationId): string {
+export type ReviewUrlOverrides = {
+  gbpParisReviewUrl?: string;
+  gbpSulphurReviewUrl?: string;
+};
+
+/** Resolve Google review link: Vercel env → owner settings → Google Maps fallback. */
+export function reviewUrlForLocation(id: LocationId, overrides?: ReviewUrlOverrides): string {
+  const parisOverride = overrides?.gbpParisReviewUrl?.trim();
+  const ssOverride = overrides?.gbpSulphurReviewUrl?.trim();
   if (id === "paris") {
-    return process.env.NEXT_PUBLIC_GBP_PARIS_URL ?? LOCATIONS.paris.mapsUrl;
+    return (
+      process.env.NEXT_PUBLIC_GBP_PARIS_URL?.trim() ||
+      parisOverride ||
+      LOCATIONS.paris.mapsUrl
+    );
   }
   return (
-    process.env.NEXT_PUBLIC_GBP_SS_URL ?? LOCATIONS.sulphur_springs.mapsUrl
+    process.env.NEXT_PUBLIC_GBP_SS_URL?.trim() ||
+    ssOverride ||
+    LOCATIONS.sulphur_springs.mapsUrl
   );
 }

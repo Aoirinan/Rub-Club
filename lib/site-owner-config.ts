@@ -60,6 +60,10 @@ export type SiteEditableCopy = {
   sulphurChiroPhone: string;
   rubClubMassagePhone: string;
   giftCardOrderUrl: string;
+  /** Google Business Profile “write a review” or listing URL for Paris. */
+  gbpParisReviewUrl: string;
+  /** Google Business Profile URL for Sulphur Springs. */
+  gbpSulphurReviewUrl: string;
   /** Homepage amber strip under hero (HTML). */
   awardsStripHtml: string;
   /** Footer intro column (HTML). */
@@ -71,8 +75,26 @@ export const DEFAULT_EDITABLE_COPY: SiteEditableCopy = {
   sulphurChiroPhone: "",
   rubClubMassagePhone: "",
   giftCardOrderUrl: "",
+  gbpParisReviewUrl: "",
+  gbpSulphurReviewUrl: "",
   awardsStripHtml: "",
   footerBlurbHtml: "",
+};
+
+/** Clinic-controlled public /book availability and optional Square prepay. */
+export type PublicBookingConfig = {
+  /** When false, /book shows a call-to-schedule message and the API rejects new requests. */
+  enabled: boolean;
+  disabledMessage: string;
+  /** When false (default), no Square payment link is created after online booking. */
+  onlinePaymentsEnabled: boolean;
+};
+
+export const DEFAULT_PUBLIC_BOOKING: PublicBookingConfig = {
+  enabled: true,
+  disabledMessage:
+    "Online booking is temporarily unavailable. Please call our Paris office at 903-785-5551 or Sulphur Springs at 903-919-5020 to schedule.",
+  onlinePaymentsEnabled: false,
 };
 
 export type SiteOwnerSingleton = {
@@ -81,6 +103,7 @@ export type SiteOwnerSingleton = {
   testimonialVideos: TestimonialVideoItem[];
   doctorMedia: DoctorMediaItem[];
   editableCopy: SiteEditableCopy;
+  publicBooking: PublicBookingConfig;
 };
 
 const DEFAULTS: SiteOwnerSingleton = {
@@ -106,6 +129,7 @@ const DEFAULTS: SiteOwnerSingleton = {
   testimonialVideos: [],
   doctorMedia: [],
   editableCopy: DEFAULT_EDITABLE_COPY,
+  publicBooking: DEFAULT_PUBLIC_BOOKING,
 };
 
 function mergeDefaults(partial: Partial<SiteOwnerSingleton> | undefined): SiteOwnerSingleton {
@@ -119,6 +143,10 @@ function mergeDefaults(partial: Partial<SiteOwnerSingleton> | undefined): SiteOw
     editableCopy: {
       ...DEFAULT_EDITABLE_COPY,
       ...(partial?.editableCopy ?? {}),
+    },
+    publicBooking: {
+      ...DEFAULT_PUBLIC_BOOKING,
+      ...(partial?.publicBooking ?? {}),
     },
   };
 }

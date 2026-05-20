@@ -10,6 +10,7 @@ import { getContentMany, renderRichText } from "@/lib/cms";
 import { MASSAGE } from "@/lib/home-verbatim";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { LOCATIONS, telHref } from "@/lib/constants";
+import { serviceBreadcrumbs } from "@/lib/service-breadcrumbs";
 import { publicBookingHref } from "@/lib/public-booking";
 import { massageJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
@@ -80,11 +81,7 @@ export default async function MassageServicePage() {
         ]}
       />
       <Breadcrumbs
-        items={[
-          { name: "Home", url: "/" },
-          { name: "Services", url: "/services/massage" },
-          { name: "Massage", url: "/services/massage" },
-        ]}
+        items={serviceBreadcrumbs({ name: "Massage", url: "/services/massage" })}
       />
 
       <PageHero

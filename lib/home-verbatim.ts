@@ -3,6 +3,8 @@
  * Paraphrased from prior public-site language; facts (providers, phones, addresses, awards) kept accurate.
  */
 
+import { CHIRO_TREATMENT_NAMES } from "@/lib/chiro-treatments";
+
 /** Short home-page blurb linking to dedicated SEO routes. */
 export const HOME_INTRO = {
   title: "Chiropractic and massage in Paris, TX",
@@ -14,7 +16,7 @@ export const CHIRO = {
   spineSub: "A more comfortable, active life is closer than you think.",
   chooseTitle: "Choose Our Chiropractors",
   chooseLead:
-    "Since 1998, Dr. Gregory Thompson, Dr. Sean Welborn, and Dr. Collins at Chiropractic Associates have delivered full-service chiropractic care to families across Northeast Texas and Southeast Oklahoma from Paris—and we now welcome patients at a second office in Sulphur Springs, TX.",
+    "Since 1998, Dr. Gregory Thompson, Dr. Sean Welborn, and Dr. Brandy Collins at our Paris office have delivered full-service chiropractic care to families across Northeast Texas and Southeast Oklahoma—and we now welcome patients at a second office in Sulphur Springs, TX with Dr. Conner Collins.",
   chooseP2:
     "Alongside skilled adjustments, our family-owned clinic offers spinal decompression, hands-on therapeutic care, and rehab-focused exercise—including coach-led stretching when you need extra support. Up-to-date evaluation and treatment approaches help us ease a wide range of conditions while keeping visit counts reasonable whenever it is clinically appropriate.",
   chooseP3:
@@ -28,22 +30,14 @@ export const CHIRO = {
     "Auto injuries",
   ],
   treatmentsIntro: "To maximize the benefits, we offer a combination of some of the following treatments:",
-  treatments: [
-    "Chiropractic adjustments and manipulations",
-    "Therapeutic massage, including lymphatic massage, and trigger point therapy.",
-    "Electric muscle stimulation therapy",
-    "Moist heat and cryotherapy",
-    "Intersegmental traction and spinal decompression therapy",
-    "Acupuncture",
-    "Pediatric care",
-  ],
+  treatments: CHIRO_TREATMENT_NAMES,
   awards:
     "Because of the breadth of services we offer and the relationships we have built locally, readers of The Paris News have honored us as “Best Chiropractic Center” every year since 2005 and “Best Place for Massage” since 2008.",
   contactUsTitle: "Contact Us!",
   mission:
     "We want every visit to feel calm, respectful, and a step above what you expected. Dr. Thompson, Dr. Welborn, and the Chiropractic Associates team are here to deliver that level of attention.",
   bookCta:
-    "Do not let pain or stiffness decide your schedule for you. If you need chiropractic care in Paris or Sulphur Springs, call 903-785-5551 (Paris) or 903-919-5020 (Sulphur Springs) and we will help you find a time that works.",
+    "Do not let pain or stiffness decide your schedule. Book chiropractic online for Paris or Sulphur Springs, or call 903-785-5551 (Paris) or 903-919-5020 (Sulphur Springs) and we will help you find a time that works.",
   stretchP1:
     "We’ve added a new service that will help clients who need more focus on stretching and flexibility!",
   stretchP2: "Ask us about Stretch & Flex Rehab when you call or at your next visit—we will explain how it fits your goals.",
@@ -65,8 +59,8 @@ export const CHIRO = {
 } as const;
 
 /** MP4 served on the public Chiropractic Associates homepage (CMS path unchanged as of integration). */
-export const CHIRO_INTRO_VIDEO_SRC =
-  "https://www.chiropracticparistexas.com/storage/app/media/sedona/paris-chiropractic-associates-jgtvt8zzw-9037855551.mp4" as const;
+/** Hosted on this site under /public/media (migrated from legacy chiropracticparistexas.com). */
+export const CHIRO_INTRO_VIDEO_SRC = "/media/chiro-intro.mp4" as const;
 
 export const MASSAGE = {
   heroTitle: "Relaxing Therapeutic Massage Services",
@@ -125,7 +119,7 @@ export const DOCTORS = [
     name: "Dr. Brandy Collins",
     role: "Chiropractor",
     imageKey: "doctorCollins" as const,
-    bio: "Originally from Kentucky, Dr. Collins graduated from Parker Chiropractic College and cares for the whole family—from infants to seniors. She blends gentle low-force options with traditional adjustments, myofascial release, instrument-assisted care, and pregnancy-focused visits when appropriate.",
+    bio: "Originally from Kentucky, Dr. Brandy Collins graduated from Parker Chiropractic College and cares for the whole family—from infants to seniors. She blends gentle low-force options with traditional adjustments, myofascial release, instrument-assisted care, and pregnancy-focused visits when appropriate.",
     videoFile: null as string | null,
   },
 ] as const;

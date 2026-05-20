@@ -1,4 +1,5 @@
 import sgMail from "@sendgrid/mail";
+import { emailFromName } from "@/lib/site-content";
 
 let configured = false;
 
@@ -95,7 +96,7 @@ export async function sendBookingNotification(params: {
 
   await sgMail.send({
     to: params.to,
-    from: { email: fromEmail, name: params.fromName ?? "Paris Wellness Bookings" },
+    from: { email: fromEmail, name: params.fromName ?? emailFromName },
     subject: params.subject,
     text: params.text,
     html: params.html ?? `<pre>${escapeHtml(params.text)}</pre>`,
@@ -213,7 +214,7 @@ export async function sendStaffInviteEmail(params: {
   try {
     await sgMail.send({
       to: params.to,
-      from: { email: fromEmail, name: "Paris Wellness Staff" },
+      from: { email: fromEmail, name: emailFromName },
       subject,
       text,
       html: `<p>${escapeHtml(note)}</p><p><a href="${safeHref}">Open staff portal link</a></p>`,

@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { isSuperadminRequest } from "@/lib/superadmin-auth";
+import { domainEntryRedirectPath, shouldSkipDomainRedirect } from "@/lib/domain-routing";
 
 const DOMAIN_CTX_COOKIE = "rub_domain_ctx";
 
@@ -44,8 +45,18 @@ export async function middleware(request: NextRequest) {
   const apiBlock = await blockSuperadminApi(request);
   if (apiBlock) return apiBlock;
 
-  const res = NextResponse.next();
   const host = request.headers.get("host")?.split(":")[0] ?? "";
+  const { pathname } = request.nextUrl;
+  if (!shouldSkipDomainRedirect(pathname)) {
+    const dest = domainEntryRedirectPath(host, pathname);
+    if (dest) {
+      const url = request.nextUrl.clone();
+      url.pathname = dest;
+      return NextResponse.redirect(url, 308);
+    }
+  }
+
+  const res = NextResponse.next();
   const utmRaw = request.nextUrl.searchParams.get("utm_source");
   const utm = utmRaw?.toLowerCase() ?? null;
 

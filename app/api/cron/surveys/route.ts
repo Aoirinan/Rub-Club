@@ -103,7 +103,6 @@ export async function GET(req: Request) {
         subject,
         text,
         html,
-        fromName: "The Rub Club & Chiropractic Associates",
       });
       await recordBookingEvent(db, doc.id, {
         type: "survey_sent",

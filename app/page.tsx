@@ -22,7 +22,7 @@ import {
   faqPageJsonLd,
   massageJsonLd,
 } from "@/lib/structured-data";
-import { TESTIMONIALS } from "@/lib/testimonials";
+import { HOME_PAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { getContentMany, renderRichText } from "@/lib/cms";
 import { HOME_INTRO } from "@/lib/home-verbatim";
 import { getLayoutCmsContent } from "@/lib/cms-display";
@@ -71,9 +71,6 @@ export default async function Home() {
     /* keep defaults */
   }
   const homeLocList = [displayLocs.paris, displayLocs.sulphur_springs] as const;
-  const massageHeroPhone =
-    displayLocs.paris.phoneSecondary?.trim() || displayLocs.paris.phonePrimary;
-
   const massageTeam = await getMassageTeamForMarketing();
   return (
     <div className="bg-[#f4f2ea]">
@@ -87,8 +84,8 @@ export default async function Home() {
       />
       <section className="relative min-h-[440px] overflow-hidden bg-[#0f5f5c]">
         <Image
-          src={IMAGES.massageHeroBanner}
-          alt="Calm massage room at The Rub Club"
+          src={IMAGES.chiroBg}
+          alt="Chiropractic care at Chiropractic Associates in Paris, TX"
           fill
           priority
           className="object-cover"
@@ -104,12 +101,21 @@ export default async function Home() {
           </h1>
           <p className="mt-4 max-w-xl text-xl font-semibold text-white/95">{c.home_hero_subheading}</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <BookingCta label={c.home_hero_cta_label || "Book Online"} />
-            <a
+            <BookingCta
+              label="Book chiropractic"
+              query="service=chiropractic"
+              className="focus-ring bg-[#f2d25d] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#173f3b] shadow hover:bg-[#e6c13d]"
+            />
+            <BookingCta
+              label={c.home_hero_cta_label || "Book massage"}
+              query="service=massage&location=paris"
               className="focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#173f3b]"
-              href={telHref(massageHeroPhone)}
+            />
+            <a
+              className="focus-ring border-2 border-white/80 px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white/10"
+              href={telHref(displayLocs.paris.phonePrimary)}
             >
-              Call {massageHeroPhone}
+              Call chiro {displayLocs.paris.phonePrimary}
             </a>
           </div>
         </div>
@@ -218,6 +224,63 @@ export default async function Home() {
         <TestimonialVideosSection />
 
         <section
+          id="chiropractic-associates"
+          className="scroll-mt-32 space-y-10 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10"
+        >
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
+            <div className="space-y-5">
+              <h2 className="text-3xl font-black text-[#173f3b]">{CHIRO.chooseTitle}</h2>
+              <p className="leading-relaxed text-stone-700">{CHIRO.chooseLead}</p>
+              <p className="leading-relaxed text-stone-700">{CHIRO.chooseP2}</p>
+              <p className="leading-relaxed text-stone-700">{CHIRO.chooseP3}</p>
+              <ul className="list-disc space-y-2 pl-6 text-stone-700">
+                {CHIRO.conditions.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+              <div className="flex flex-wrap gap-3">
+                <BookingCta
+                  label="Book chiropractic online"
+                  query="service=chiropractic"
+                  variant="teal"
+                />
+                <Link
+                  href="/services/chiropractic"
+                  className="focus-ring inline-flex border-2 border-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-[#0f5f5c]/5"
+                >
+                  Explore chiropractic care
+                </Link>
+              </div>
+            </div>
+            <div className="relative aspect-[3/2] overflow-hidden shadow-lg lg:min-h-[320px]">
+              <Image
+                src={IMAGES.chiroBg}
+                alt="A chiropractor adjusting a patient at Chiropractic Associates"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+            </div>
+          </div>
+
+          <HomeVideo src={CHIRO_INTRO_VIDEO_SRC} heading={CHIRO.introVideoHeading} />
+
+          <div className="rounded-lg border border-[#0f5f5c]/20 bg-[#f8f8f6] p-5">
+            <h3 className="text-lg font-black text-[#173f3b]">
+              {CHIRO.stretchCallPart1} {CHIRO.stretchCallPart2}
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-stone-700">{CHIRO.stretchP1}</p>
+            <p className="mt-2 text-sm leading-relaxed text-stone-700">{CHIRO.stretchP2}</p>
+            <BookingCta
+              label="Book Stretch & Flex Rehab"
+              query="service=stretch"
+              variant="teal"
+              className="focus-ring mt-4 inline-flex bg-[#0f5f5c] px-5 py-2.5 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
+            />
+          </div>
+        </section>
+
+        <section
           id="the-rub-club"
           className="scroll-mt-32 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10"
         >
@@ -229,12 +292,19 @@ export default async function Home() {
                   {p}
                 </p>
               ))}
-              <Link
-                href="/services/massage"
-                className="focus-ring inline-flex bg-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
-              >
-                Explore massage services
-              </Link>
+              <div className="flex flex-wrap gap-3">
+                <BookingCta
+                  label="Book massage online"
+                  query="service=massage&location=paris"
+                  variant="teal"
+                />
+                <Link
+                  href="/services/massage"
+                  className="focus-ring inline-flex border-2 border-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-[#0f5f5c]/5"
+                >
+                  Explore massage services
+                </Link>
+              </div>
             </div>
             <div className="relative aspect-[4/3] overflow-hidden shadow-md lg:aspect-auto lg:min-h-[360px]">
               <Image
@@ -249,41 +319,6 @@ export default async function Home() {
         </section>
 
         <section
-          id="chiropractic-associates"
-          className="scroll-mt-32 space-y-10 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10"
-        >
-          <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
-            <div className="space-y-5">
-              <h2 className="text-3xl font-black text-[#173f3b]">{CHIRO.chooseTitle}</h2>
-              <p className="leading-relaxed text-stone-700">{CHIRO.chooseLead}</p>
-              <p className="leading-relaxed text-stone-700">{CHIRO.chooseP2}</p>
-              <ul className="list-disc space-y-2 pl-6 text-stone-700">
-                {CHIRO.conditions.map((c) => (
-                  <li key={c}>{c}</li>
-                ))}
-              </ul>
-              <Link
-                href="/services/chiropractic"
-                className="focus-ring inline-flex bg-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
-              >
-                Explore chiropractic care
-              </Link>
-            </div>
-            <div className="relative aspect-[3/2] overflow-hidden shadow-lg lg:min-h-[320px]">
-              <Image
-                src={IMAGES.chiroBg}
-                alt="A chiropractor adjusting a patient at Chiropractic Associates"
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
-            </div>
-          </div>
-
-          <HomeVideo src={CHIRO_INTRO_VIDEO_SRC} heading={CHIRO.introVideoHeading} />
-        </section>
-
-        <section
           aria-labelledby="testimonials"
           className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10"
         >
@@ -291,14 +326,14 @@ export default async function Home() {
             {c.home_testimonials_heading}
           </h2>
           <p className="mt-2 text-sm text-stone-600">
-            Paraphrased from public reviews — read more or leave your own on{" "}
+            Adapted from public Google reviews (paraphrased) — read more or leave your own on{" "}
             <Link className="font-bold text-[#0f5f5c] underline" href="/reviews">
               our reviews page
             </Link>
             .
           </p>
           <div className="mt-8 grid gap-6 md:grid-cols-3">
-            {TESTIMONIALS.slice(0, 3).map((t) => (
+            {HOME_PAGE_TESTIMONIALS.map((t) => (
               <figure
                 key={t.quote}
                 className="flex h-full flex-col justify-between border border-stone-200 bg-stone-50 p-5"
@@ -321,7 +356,11 @@ export default async function Home() {
         >
           <h2 className="text-center text-3xl font-black text-[#173f3b]">Our Chiropractors</h2>
           <p className="mx-auto mt-4 max-w-3xl text-center leading-relaxed text-stone-700">
-            Meet the doctors who lead care at Chiropractic Associates in Paris and Sulphur Springs.
+            Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins serve our Paris office.{" "}
+            <Link href="/sulphur-springs/staff" className="font-bold text-[#0f5f5c] underline">
+              Dr. Conner Collins
+            </Link>{" "}
+            leads care in Sulphur Springs.
           </p>
           <div className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
             {DOCTORS.map((member) => (

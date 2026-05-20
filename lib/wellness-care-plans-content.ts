@@ -17,7 +17,7 @@ export const WELLNESS_PUBLIC_PATH = WELLNESS_CARE_PLANS_PATH;
 export const WELLNESS_HERO_EYEBROW = "Chiro-Fitness · Acu-Fit";
 
 export const WELLNESS_PAGE_LEDE =
-  "Chiro-Fitness memberships use automatic monthly debit and are for wellness care only. Plans below are available through our Paris office — ask the front desk to enroll or to confirm current pricing.";
+  "Chiro-Fitness memberships use automatic monthly debit and are for wellness care only. The pricing below is the same for all Chiropractic Associates patients; enrollment is handled at our Paris office (3305 NE Loop 286). Sulphur Springs patients may use these plans when seen in Paris — call 903-785-5551 to enroll or confirm current pricing.";
 
 export const WELLNESS_SECTION_SPECS: readonly WellnessPlanSection[] = [
   {
@@ -87,7 +87,7 @@ export const WELLNESS_CTA_BODY =
 
 export const CHIRO_WELLNESS_TEASER_HEADING = "Wellness care plans";
 export const CHIRO_WELLNESS_TEASER_BODY =
-  "Monthly Chiro-Fitness and Acu-Fit memberships at our Paris office combine adjustments, roller table, massage, therapy, acupuncture, and rehab options — billed on automatic debit for ongoing wellness care.";
+  "Monthly Chiro-Fitness and Acu-Fit memberships use the same Paris pricing for all Chiropractic Associates patients. Plans combine adjustments, roller table, massage, therapy, acupuncture, and rehab options — enrollment at our Paris office on NE Loop 286.";
 
 export function wellnessSectionFieldId(sectionId: string, part: "title" | "subtitle" | "lines"): string {
   return `wellness_${sectionId}_${part}`;

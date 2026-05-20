@@ -134,7 +134,6 @@ export async function POST(req: Request) {
         subject,
         text,
         html,
-        fromName: "The Rub Club & Chiropractic Associates",
       });
     }
   } catch (err) {
@@ -167,7 +166,6 @@ export async function POST(req: Request) {
           subject,
           text,
           html,
-          fromName: "The Rub Club & Chiropractic Associates",
           attachments: [
             {
               filename: "appointment.ics",

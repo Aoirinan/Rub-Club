@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 import { NextResponse } from "next/server";
-import { listMassageTeamMembers } from "@/lib/massage-team-data";
+import { listMassageTherapistsForOwnerMarketing } from "@/lib/massage-therapist-options";
 import { buildOwnerVideoQuotaSnapshot } from "@/lib/owner-upload-quota";
 import { getFirestore } from "@/lib/firebase-admin";
 import { getSiteOwnerConfig, setSiteOwnerConfigPatch, type SiteOwnerSingleton } from "@/lib/site-owner-config";
@@ -14,11 +14,14 @@ export async function GET(req: Request) {
   if (!marketingAuth.ok) return unauthorizedOwnerMarketing();
   const config = await getSiteOwnerConfig();
   let massageTeamMembers: { id: string; name: string }[] = [];
+  let massageTherapistSource: "team" | "providers" | null = null;
   try {
-    const rows = await listMassageTeamMembers(getFirestore());
-    massageTeamMembers = rows.map((m) => ({ id: m.id, name: m.name }));
+    const listed = await listMassageTherapistsForOwnerMarketing(getFirestore());
+    massageTeamMembers = listed.members;
+    massageTherapistSource = listed.source;
   } catch {
     massageTeamMembers = [];
+    massageTherapistSource = null;
   }
   const videoQuota = buildOwnerVideoQuotaSnapshot(config);
   let appVersion = "";
@@ -29,7 +32,13 @@ export async function GET(req: Request) {
   } catch {
     /* ignore */
   }
-  return NextResponse.json({ config, appVersion, massageTeamMembers, videoQuota });
+  return NextResponse.json({
+    config,
+    appVersion,
+    massageTeamMembers,
+    massageTherapistSource,
+    videoQuota,
+  });
 }
 
 export async function PATCH(req: Request) {

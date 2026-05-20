@@ -9,7 +9,7 @@ export const TERMS_PATH = "/terms" as const;
 
 /** Practice name as it should appear in legal pages. */
 export const LEGAL_PRACTICE_NAME =
-  "The Rub Club Massage & Chiropractic Associates (Chiropractic Associates)";
+  "Chiropractic Associates (massage therapy at The Rub Club)";
 
 /** Shown on legal pages — update when counsel approves a revision. */
 export const LEGAL_EFFECTIVE_DATE = "May 18, 2026";

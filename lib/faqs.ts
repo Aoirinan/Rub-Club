@@ -1,4 +1,4 @@
-import { bookingAvailabilityCopy } from "./public-booking";
+import { siteUrl } from "./site-content";
 
 export type FaqEntry = { q: string; a: string };
 
@@ -25,11 +25,11 @@ export const FAQS: readonly FaqEntry[] = [
   },
   {
     q: "Are children welcome?",
-    a: "Yes — we see patients of every age. Both Dr. Collins and Dr. Welborn have experience with pediatric care, and prenatal massage is available at The Rub Club.",
+    a: "Yes — we see patients of every age. Dr. Brandy Collins and Dr. Sean Welborn welcome pediatric patients at our Paris office; Dr. Conner Collins serves families in Sulphur Springs. Prenatal massage is available at The Rub Club in Paris.",
   },
   {
     q: "Do you offer same-day appointments?",
-    a: `Often, yes. ${bookingAvailabilityCopy()}`,
+    a: `Often, yes. Use ${siteUrl("/book")} when online booking is on, or call the office and we will do our best to fit you in.`,
   },
   {
     q: "Is parking available?",

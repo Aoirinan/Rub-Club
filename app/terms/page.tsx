@@ -9,11 +9,11 @@ import {
   TERMS_PATH,
   WEBSITE_PRIVACY_PATH,
 } from "@/lib/legal";
+import { siteLegalName } from "@/lib/site-content";
 
 export const metadata: Metadata = {
   title: "Terms of Use",
-  description:
-    "Terms of use for The Rub Club & Chiropractic Associates website, including booking, content, and limitations.",
+  description: `Terms of use for the ${siteLegalName} website, including booking, content, and limitations.`,
   alternates: { canonical: TERMS_PATH },
 };
 

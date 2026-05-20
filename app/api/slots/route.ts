@@ -13,6 +13,7 @@ import {
   enumerateCandidateStartsInWindow,
   effectiveDayWindow,
 } from "@/lib/slots-luxon";
+import { getPublicBookingConfig, isPublicBookingEnabled } from "@/lib/public-booking-settings";
 
 export const runtime = "nodejs";
 
@@ -36,6 +37,14 @@ async function bucketsFree(
 
 export async function GET(req: Request) {
   try {
+    const publicBooking = await getPublicBookingConfig();
+    if (!isPublicBookingEnabled(publicBooking)) {
+      return NextResponse.json(
+        { error: publicBooking.disabledMessage, slots: [] },
+        { status: 503 },
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const locationId = searchParams.get("locationId") as LocationId | null;
     const date = searchParams.get("date");

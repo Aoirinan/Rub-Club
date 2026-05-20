@@ -7,7 +7,11 @@ import { LOCATION_LIST, telHref } from "@/lib/constants";
 import { organizationJsonLd } from "@/lib/structured-data";
 import { MASSAGE } from "@/lib/home-verbatim";
 import { getContentMany } from "@/lib/cms";
-import { contactAppointmentCopy } from "@/lib/public-booking";
+import {
+  contactAppointmentCopy,
+  getPublicBookingConfig,
+  isPublicBookingEnabled,
+} from "@/lib/public-booking-settings";
 
 export const revalidate = 60;
 
@@ -17,7 +21,7 @@ export const metadata: Metadata = {
     "Phone numbers, addresses, and hours for The Rub Club and Chiropractic Associates in Paris and Sulphur Springs, TX. Send a message or call us directly.",
   alternates: { canonical: "/contact" },
   openGraph: {
-    title: "Contact The Rub Club & Chiropractic Associates",
+    title: "Contact Chiropractic Associates",
     description:
       "Phone, hours, and contact form for our Paris and Sulphur Springs, TX offices.",
     url: "/contact",
@@ -25,7 +29,10 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
-  const c = await getContentMany(["contact_heading", "contact_subtext"]);
+  const [c, bookingConfig] = await Promise.all([
+    getContentMany(["contact_heading", "contact_subtext"]),
+    getPublicBookingConfig(),
+  ]);
 
   return (
     <>
@@ -95,7 +102,7 @@ export default async function ContactPage() {
           <div>
             <h2 className="text-2xl font-black text-[#173f3b]">Send us a message</h2>
             <p className="mt-2 text-sm text-stone-700">
-              {contactAppointmentCopy()}
+              {contactAppointmentCopy(isPublicBookingEnabled(bookingConfig))}
             </p>
             <div className="mt-6">
               <ContactForm />

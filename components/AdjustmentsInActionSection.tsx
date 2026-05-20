@@ -15,7 +15,7 @@ export async function AdjustmentsInActionSection() {
           Adjustments in Action
         </h2>
         <p className="mt-2 max-w-2xl text-sm text-stone-600">
-          Watch Dr. Greg Thompson and Dr. Sean Welborn at work.
+          Watch our Paris chiropractors — Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins — at work.
         </p>
         <div className="mt-8 flex min-h-[180px] items-center justify-center rounded-xl border-2 border-dashed border-stone-300 bg-stone-50 px-6 text-center text-stone-600">
           Photos and videos of our doctors in action coming soon.

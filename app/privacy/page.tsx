@@ -5,11 +5,11 @@ import { LOCATIONS } from "@/lib/constants";
 import { LegalRelatedLinks } from "@/components/LegalRelatedLinks";
 import { PRIVACY_PRACTICES_PATH } from "@/lib/legal";
 import { getNppDownloadLink } from "@/lib/privacy";
+import { siteLegalName } from "@/lib/site-content";
 
 export const metadata: Metadata = {
   title: "Privacy Practices",
-  description:
-    "Notice of Privacy Practices and how The Rub Club & Chiropractic Associates uses and protects patient information.",
+  description: `Notice of Privacy Practices and how ${siteLegalName} uses and protects patient information.`,
   alternates: { canonical: "/privacy" },
 };
 

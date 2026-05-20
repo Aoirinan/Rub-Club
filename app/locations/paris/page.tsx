@@ -3,6 +3,7 @@ import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { LocationDetail } from "@/components/LocationDetail";
 import { LOCATIONS } from "@/lib/constants";
+import { getReviewUrlForLocation } from "@/lib/cms-display";
 import { chiropractorJsonLd, massageJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
@@ -18,7 +19,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ParisLocationPage() {
+export default async function ParisLocationPage() {
+  const reviewUrl = await getReviewUrlForLocation("paris");
+
   return (
     <>
       <JsonLd
@@ -36,7 +39,7 @@ export default function ParisLocationPage() {
         title="Paris, TX — 3305 NE Loop 286, Suite A"
         lede="Both Chiropractic Associates and The Rub Club operate from this address. Easy parking, friendly front desk, weekday hours."
       />
-      <LocationDetail location={LOCATIONS.paris} />
+      <LocationDetail location={LOCATIONS.paris} reviewUrl={reviewUrl} />
     </>
   );
 }

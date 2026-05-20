@@ -45,8 +45,10 @@ function readInitialLocation(value: string | null): LocationId {
     ? "sulphur_springs"
     : "paris";
 }
-function readInitialVisitKind(value: string | null): "massage" | "stretch" {
-  return value === "stretch" ? "stretch" : "massage";
+function readInitialVisitKind(value: string | null): "massage" | "stretch" | "chiropractic" {
+  if (value === "chiropractic") return "chiropractic";
+  if (value === "stretch") return "stretch";
+  return "massage";
 }
 function readInitialDuration(value: string | null): DurationMin {
   return value === "60" ? 60 : 30;
@@ -61,15 +63,26 @@ export type BookingWizardInitial = {
   locations?: Record<LocationId, LocationInfo>;
 };
 
-export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = {}) {
+export function BookingWizard({
+  initial,
+  onlinePaymentsEnabled = false,
+}: {
+  initial?: BookingWizardInitial;
+  onlinePaymentsEnabled?: boolean;
+} = {}) {
   const locById = initial?.locations ?? LOCATIONS;
   const [locationId, setLocationId] = useState<LocationId>(
     readInitialLocation(initial?.location ?? null),
   );
-  const [visitKind, setVisitKind] = useState<"massage" | "stretch">(
+  const [visitKind, setVisitKind] = useState<"massage" | "stretch" | "chiropractic">(
     readInitialVisitKind(initial?.service ?? null),
   );
-  const serviceLine: ServiceLine = visitKind === "stretch" ? "stretch" : "massage";
+  const serviceLine: ServiceLine =
+    visitKind === "chiropractic"
+      ? "chiropractic"
+      : visitKind === "stretch"
+        ? "stretch"
+        : "massage";
   const [payMode, setPayMode] = useState<"unset" | "cash" | "insurance">("unset");
   const [durationMin, setDurationMin] = useState<DurationMin>(
     readInitialDuration(initial?.duration ?? null),
@@ -290,9 +303,10 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
           ? ` ${data.totalCreated} recurring weekly visits were submitted (each pending office confirmation).`
           : "";
       const conflict = data.conflictsMessage ? ` ${data.conflictsMessage}` : "";
-      const tail = data.paymentUrl
-        ? " Use the secure Square link below to pay for this time. After checkout you will receive a receipt and a confirmed appointment email with a calendar attachment."
-        : " You will receive a confirmation email shortly — check spam if you don't see it. The office will follow up to confirm.";
+      const tail =
+        onlinePaymentsEnabled && data.paymentUrl
+          ? " Use the secure Square link below to pay for this time. After checkout you will receive a receipt and a confirmed appointment email with a calendar attachment."
+          : " You will receive a confirmation email shortly — check spam if you don't see it. The office will follow up to confirm.";
       setSubmitSuccess(true);
       setSubmitMessage(`Request received.${who}${repeat}${conflict} ${tail}`);
       track("booking_succeeded", {
@@ -340,8 +354,10 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
             </h1>
             <p className="mt-3 max-w-2xl text-[0.9375rem] leading-relaxed text-stone-600 sm:text-base">
               Choose your visit, see real openings, then send your request. We&rsquo;ll email you next
-              steps; when online payment is enabled, you&rsquo;ll be able to check out on Square right
-              after you submit.
+              steps.
+              {onlinePaymentsEnabled
+                ? " You may pay online with Square immediately after you submit."
+                : " No payment is collected on this website — the office will confirm your appointment."}
             </p>
           </div>
           <ol className="mt-6 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 pt-0.5 [-webkit-overflow-scrolling:touch] sm:mt-10 sm:flex-wrap sm:overflow-visible sm:pb-0">
@@ -393,7 +409,22 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
               <div className="mt-5 space-y-6 sm:mt-6">
                 <div className="space-y-2">
                   <span className={fieldLabel}>Visit type</span>
-                  <div className="flex flex-col gap-2 sm:flex-row">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                    <button
+                      type="button"
+                      className={`focus-ring min-h-[48px] flex-1 rounded-xl border px-4 py-3 text-sm font-bold ${
+                        visitKind === "chiropractic"
+                          ? "border-[#0f5f5c] bg-[#0f5f5c] text-white"
+                          : "border-stone-300 bg-white text-[#173f3b]"
+                      }`}
+                      onClick={() => {
+                        setVisitKind("chiropractic");
+                        setSlots(null);
+                        setSelectedSlot(null);
+                      }}
+                    >
+                      Chiropractic
+                    </button>
                     <button
                       type="button"
                       className={`focus-ring min-h-[48px] flex-1 rounded-xl border px-4 py-3 text-sm font-bold ${
@@ -426,8 +457,8 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
                     </button>
                   </div>
                   <p className="text-xs leading-relaxed text-stone-600">
-                    Stretch sessions are by appointment only. Walk-ins are welcome for massage when we have
-                    availability.
+                    Chiropractic and stretch are by appointment. Walk-ins are welcome for massage when we
+                    have availability.
                   </p>
                 </div>
 
@@ -903,7 +934,11 @@ export function BookingWizard({ initial }: { initial?: BookingWizardInitial } = 
               <div className="flex justify-between gap-3">
                 <dt className="text-stone-500">Service</dt>
                 <dd className="font-semibold text-[#173f3b]">
-                  {visitKind === "stretch" ? "Stretch" : "Massage"}
+                  {visitKind === "chiropractic"
+                    ? "Chiropractic"
+                    : visitKind === "stretch"
+                      ? "Stretch"
+                      : "Massage"}
                 </dd>
               </div>
               <div className="flex justify-between gap-3">

@@ -6,6 +6,7 @@ type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]["changeFrequenc
 const ENTRIES: { path: string; changeFrequency: ChangeFrequency; priority: number }[] = [
   { path: "/", changeFrequency: "weekly", priority: 1 },
   { path: "/book", changeFrequency: "weekly", priority: 0.95 },
+  { path: "/services", changeFrequency: "monthly", priority: 0.88 },
   { path: "/chiropractic", changeFrequency: "monthly", priority: 0.9 },
   { path: "/massage", changeFrequency: "monthly", priority: 0.9 },
   { path: "/services/chiropractic", changeFrequency: "monthly", priority: 0.85 },

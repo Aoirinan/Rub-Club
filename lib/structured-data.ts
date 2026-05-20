@@ -73,11 +73,7 @@ export function chiropractorJsonLd(location: LocationInfo): JsonLd {
     hasMap: location.mapsUrl,
     openingHoursSpecification: openingHoursSpec(location),
     areaServed: ["Paris, TX", "Sulphur Springs, TX", "Northeast Texas"],
-    medicalSpecialty: [
-      "Chiropractic",
-      "PhysicalTherapy",
-      "SpineAndNerveSurgery",
-    ],
+    medicalSpecialty: ["Chiropractic", "PhysicalTherapy"],
     sameAs: getSocialProfiles(),
   };
 }

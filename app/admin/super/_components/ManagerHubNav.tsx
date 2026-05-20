@@ -23,9 +23,9 @@ const TABS = [
     capability: "siteContent" as const,
   },
   {
-    href: "/admin/super/marketing",
+    href: "/admin/super/marketing?tab=booking",
     label: "Banners & promos",
-    description: "Banner bar, pop-ups, videos",
+    description: "Online booking on/off, banner, videos",
     match: (path: string) => path.startsWith("/admin/super/marketing"),
     capability: "marketing" as const,
   },

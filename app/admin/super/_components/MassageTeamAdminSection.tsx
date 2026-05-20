@@ -26,6 +26,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const [syncingProviders, setSyncingProviders] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -125,6 +126,49 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
       await load();
     } finally {
       setSeeding(false);
+    }
+  }
+
+  async function syncFromBookableProviders() {
+    setSectionAlert(null);
+    onNotify(null);
+    const user = auth?.currentUser;
+    if (!user) return;
+    if (
+      !window.confirm(
+        "Copy active massage providers from the scheduling list into this website team? Existing team members with the same name are skipped. You can edit bios and portraits afterward.",
+      )
+    ) {
+      return;
+    }
+    setSyncingProviders(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/admin/massage-team", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ syncFromProviders: true }),
+      });
+      const data = await parseAdminJson(res);
+      if (!res.ok) {
+        setSectionAlert({
+          kind: "error",
+          text: typeof data.error === "string" ? data.error : "Could not sync from providers.",
+        });
+        return;
+      }
+      const added = typeof data.added === "number" ? data.added : 0;
+      const skipped = typeof data.skipped === "number" ? data.skipped : 0;
+      setSectionAlert({
+        kind: "success",
+        text: `Added ${added} therapist${added === 1 ? "" : "s"} to the website team${skipped > 0 ? ` (${skipped} already listed).` : "."} Public pages and testimonial videos now use this list.`,
+      });
+      await load();
+    } finally {
+      setSyncingProviders(false);
     }
   }
 
@@ -343,10 +387,11 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
       <div>
         <h2 className="text-lg font-semibold text-slate-900">Website — massage team (Meet the team)</h2>
         <p className="mt-2 text-sm text-slate-600">
-          The home page and <code className="rounded bg-slate-100 px-1">/services/massage</code> show this list when
-          Firestore has at least one row. Otherwise they use the built-in list from code. Upload portraits here (JPEG,
-          PNG, or WebP, up to 5 MB). For uploaded files, add a Firebase Storage rule allowing public read on{" "}
-          <code className="rounded bg-slate-100 px-1">public_site/**</code> so visitors can load images.
+          The home page, <code className="rounded bg-slate-100 px-1">/services/massage</code>, and testimonial video
+          tags use this list when Firestore has at least one row. Otherwise they use the built-in list from code or your
+          bookable providers. Upload portraits here (JPEG, PNG, or WebP, up to 5 MB). For uploaded files, add a Firebase
+          Storage rule allowing public read on <code className="rounded bg-slate-100 px-1">public_site/**</code> so
+          visitors can load images.
         </p>
         {sectionAlert ? (
           <div
@@ -369,12 +414,21 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           </p>
         ) : (
           <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
-            Public site is still using the built-in team from code. Seed or add someone below to switch editing here.
+            Public site is still using the built-in team from code. Use &quot;Copy bookable massage providers into
+            team&quot; below to import your scheduling list, or seed the built-in roster.
           </p>
         )}
       </div>
 
       <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={syncingProviders || loading}
+          onClick={() => void syncFromBookableProviders()}
+          className="rounded-full border border-[#0f5f5c] bg-[#0f5f5c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0d524f] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {syncingProviders ? "Syncing…" : "Copy bookable massage providers into team"}
+        </button>
         <button
           type="button"
           disabled={seeding || siteUsesCustomList || loading}

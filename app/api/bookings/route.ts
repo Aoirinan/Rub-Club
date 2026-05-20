@@ -31,6 +31,7 @@ import { sendSms } from "@/lib/twilio";
 import { logSmsSent } from "@/lib/sms-audit";
 import { getSiteOrigin } from "@/lib/site-content";
 import { linkBookingAfterCreate } from "@/lib/patients-db";
+import { getPublicBookingConfig, isPublicBookingEnabled } from "@/lib/public-booking-settings";
 
 export const runtime = "nodejs";
 
@@ -96,13 +97,11 @@ export async function POST(req: Request) {
   }
   const body = parsed.data;
 
-  if (body.serviceLine === "chiropractic") {
+  const publicBooking = await getPublicBookingConfig();
+  if (!isPublicBookingEnabled(publicBooking)) {
     return NextResponse.json(
-      {
-        error:
-          "Chiropractic is not available for online booking. Insurance patients: please call Paris 903-785-5551 or Sulphur Springs 903-919-5020 to schedule.",
-      },
-      { status: 400 },
+      { error: publicBooking.disabledMessage },
+      { status: 503 },
     );
   }
 
@@ -448,7 +447,6 @@ export async function POST(req: Request) {
       subject,
       text,
       html,
-      fromName: "The Rub Club & Chiropractic Associates",
     });
     console.log("[booking] Patient email send completed for", emailContext.email);
   } catch (err) {
@@ -456,7 +454,11 @@ export async function POST(req: Request) {
   }
 
   let paymentUrl: string | undefined;
-  if (createdIds.length === 1 && !body.recurrence) {
+  if (
+    publicBooking.onlinePaymentsEnabled &&
+    createdIds.length === 1 &&
+    !body.recurrence
+  ) {
     const cents = resolvePublicBookingPrepayCents(serviceLine, durationMin);
     if (cents !== null) {
       const primaryId = createdIds[0]!;

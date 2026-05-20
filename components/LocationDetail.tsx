@@ -1,9 +1,15 @@
 import type { LocationInfo } from "@/lib/constants";
-import { telHref, reviewUrlForLocation } from "@/lib/constants";
+import { telHref } from "@/lib/constants";
 import { MASSAGE } from "@/lib/home-verbatim";
 import { BookingCta } from "@/components/BookingCta";
 
-export function LocationDetail({ location }: { location: LocationInfo }) {
+export function LocationDetail({
+  location,
+  reviewUrl,
+}: {
+  location: LocationInfo;
+  reviewUrl: string;
+}) {
   const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(
     `${location.streetAddress}, ${location.addressLocality}, ${location.addressRegion} ${location.postalCode}`,
   )}&output=embed`;
@@ -49,7 +55,7 @@ export function LocationDetail({ location }: { location: LocationInfo }) {
               Get directions
             </a>
             <a
-              href={reviewUrlForLocation(location.id)}
+              href={reviewUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="focus-ring inline-flex items-center gap-2 border-2 border-[#0f5f5c] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-[#0f5f5c]/5"

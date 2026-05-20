@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { TestimonialVideosSection } from "@/components/TestimonialVideosSection";
 import { TESTIMONIALS } from "@/lib/testimonials";
-import { LOCATION_LIST, reviewUrlForLocation } from "@/lib/constants";
+import { LOCATION_LIST } from "@/lib/constants";
+import { getReviewUrlForLocation } from "@/lib/cms-display";
 
 export const metadata: Metadata = {
   title: "Patient Reviews",
@@ -10,20 +11,28 @@ export const metadata: Metadata = {
     "Hear what Paris and Sulphur Springs patients say about Chiropractic Associates and The Rub Club, then leave your own review on Google.",
   alternates: { canonical: "/reviews" },
   openGraph: {
-    title: "Patient Reviews — The Rub Club & Chiropractic Associates",
+    title: "Patient Reviews — Chiropractic Associates",
     description: "Read patient stories and leave us a Google review.",
     url: "/reviews",
   },
 };
 
-export default function ReviewsPage() {
+export default async function ReviewsPage() {
+  const reviewLinks = await Promise.all(
+    LOCATION_LIST.map(async (loc) => ({
+      id: loc.id,
+      shortName: loc.shortName,
+      url: await getReviewUrlForLocation(loc.id),
+    })),
+  );
+
   return (
     <>
       <Breadcrumbs items={[{ name: "Home", url: "/" }, { name: "Reviews", url: "/reviews" }]} />
       <PageHero
         eyebrow="Patient stories"
         title="What our patients say"
-        lede="Voted Best Chiropractic Center and Best Massage in The Paris News reader polls. Below are paraphrased stories from real patient reviews."
+        lede="Voted Best Chiropractic Center and Best Massage in The Paris News reader polls. Below are stories adapted from public Google reviews (paraphrased, not copied word-for-word)."
       />
       <div className="mx-auto max-w-6xl space-y-10 px-4 pb-16">
         <TestimonialVideosSection />
@@ -50,13 +59,14 @@ export default function ReviewsPage() {
           <h2 className="text-2xl font-black">Loved your visit? Leave us a review.</h2>
           <p className="mt-3 max-w-2xl text-white/90">
             A few words on Google help other families find dependable, family-owned care in Northeast
-            Texas.
+            Texas. Each button opens your Google review link when configured in admin, otherwise
+            Google Maps for that office.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            {LOCATION_LIST.map((loc) => (
+            {reviewLinks.map((loc) => (
               <a
                 key={loc.id}
-                href={reviewUrlForLocation(loc.id)}
+                href={loc.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="focus-ring bg-[#f2d25d] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]"

@@ -1,5 +1,5 @@
 import { getContentMany } from "@/lib/cms";
-import type { LocationId, LocationInfo } from "@/lib/constants";
+import { reviewUrlForLocation, type LocationId, type LocationInfo } from "@/lib/constants";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
 
@@ -40,5 +40,14 @@ export async function getPublicGiftCardUrl(): Promise<string> {
     return effectiveGiftCardUrl(cfg.editableCopy, cms);
   } catch {
     return effectiveGiftCardUrl(undefined, cms);
+  }
+}
+
+export async function getReviewUrlForLocation(id: LocationId): Promise<string> {
+  try {
+    const cfg = await getSiteOwnerConfig();
+    return reviewUrlForLocation(id, cfg.editableCopy);
+  } catch {
+    return reviewUrlForLocation(id);
   }
 }

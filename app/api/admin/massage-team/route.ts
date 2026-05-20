@@ -12,6 +12,7 @@ import {
   nextMassageTeamSortOrder,
   parseMassageTeamDoc,
 } from "@/lib/massage-team";
+import { syncMassageTeamFromProviders } from "@/lib/massage-team-sync-from-providers";
 import {
   deleteMassageTeamStorageObject,
   resolveMassageTeamImageContentType,
@@ -34,6 +35,10 @@ const createJsonSchema = z.object({
 
 const seedSchema = z.object({
   seedDefaults: z.literal(true),
+});
+
+const syncFromProvidersSchema = z.object({
+  syncFromProviders: z.literal(true),
 });
 
 function bumpCache(): void {
@@ -131,6 +136,32 @@ export async function POST(req: Request) {
     json = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const syncProviders = syncFromProvidersSchema.safeParse(json);
+  if (syncProviders.success) {
+    const { added, skipped, members } = await syncMassageTeamFromProviders(db, staff.uid);
+    if (added === 0) {
+      return NextResponse.json(
+        {
+          error:
+            skipped === 0
+              ? "No active massage providers in the scheduling list. Add them under Providers first."
+              : "Every active massage provider is already on the website team (matched by name).",
+          added,
+          skipped,
+        },
+        { status: 400 },
+      );
+    }
+    bumpCache();
+    return NextResponse.json({
+      ok: true,
+      added,
+      skipped,
+      members,
+      siteUsesCustomList: members.length > 0,
+    });
   }
 
   const seeded = seedSchema.safeParse(json);

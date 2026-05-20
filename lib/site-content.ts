@@ -6,15 +6,21 @@
 import { getPublicAppOrigin } from "./app-origin";
 
 export const siteTitle =
-  "The Rub Club Massage & Chiropractic Associates | Paris & Sulphur Springs, TX";
+  "Chiropractic Associates | Paris & Sulphur Springs, TX — Massage at The Rub Club";
 
-export const siteTitleTemplate =
-  "%s | The Rub Club & Chiropractic Associates";
+export const siteTitleTemplate = "%s | Chiropractic Associates";
 
-export const siteShortName = "Rub Club & Chiropractic Associates";
+export const siteShortName = "Chiropractic Associates";
+
+/** SendGrid / transactional email "From" display name. */
+export const emailFromName = siteShortName;
+
+/** Privacy, terms, and policy copy — chiro-led brand with massage partner named. */
+export const siteLegalName =
+  "Chiropractic Associates (massage therapy at The Rub Club)";
 
 export const siteDescription =
-  "Family-owned massage therapy and chiropractic care in Paris and Sulphur Springs, TX. Book online or call—licensed therapists, experienced doctors, weekday hours.";
+  "Family-owned chiropractic care in Paris and Sulphur Springs, TX, with licensed massage therapy at The Rub Club in Paris. Book chiropractic, massage, or stretch online or call our offices.";
 
 export const siteKeywords = [
   "massage therapy Paris TX",

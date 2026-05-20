@@ -54,7 +54,7 @@ const CHIRO_TESTIMONIAL_DEFAULTS = [
     attr: "Long-time Paris patient · Chiropractic",
   },
   {
-    text: "I had sciatica so bad I couldn't sit through a workday. Dr. Collins found the problem fast and had me feeling better within two weeks.",
+    text: "I had sciatica so bad I couldn't sit through a workday. Dr. Brandy Collins found the problem fast and had me feeling better within two weeks.",
     attr: "Paris patient · Sciatica",
   },
 ] as const;
@@ -206,7 +206,7 @@ export const DEFAULTS: Record<string, string> = {
   chiro_hero_heading: "Efficient, evidence-informed chiropractic care",
   chiro_hero_subheading:
     "Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins serve patients across Northeast Texas from Paris and Sulphur Springs.",
-  chiro_intro_body: `${CHIRO.chooseLead}\n\n${CHIRO.chooseP2}`,
+  chiro_intro_body: `${CHIRO.chooseLead}\n\n${CHIRO.chooseP2}\n\n${CHIRO.chooseP3}`,
   chiro_conditions_list: CHIRO.conditions.join(", "),
   chiro_cta_heading: CHIRO.contactUsTitle,
   chiro_cta_subtext: CHIRO.bookCta,
@@ -345,6 +345,7 @@ export const CMS_REVALIDATE_PATHS = [
   "/about",
   "/faq",
   "/contact",
+  "/services",
   "/services/chiropractic",
   "/services/chiropractic/wellness-care-plans",
   "/services/massage",

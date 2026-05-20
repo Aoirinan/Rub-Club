@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     "Download chiropractic new patient and personal injury intake paperwork, massage new-client forms, or complete our online intake before your visit in Paris or Sulphur Springs, TX.",
   alternates: { canonical: "/patient-forms" },
   openGraph: {
-    title: "Patient Forms — The Rub Club & Chiropractic Associates",
+    title: "Patient Forms — Chiropractic Associates",
     description:
       "Chiropractic and massage intake forms for Paris and Sulphur Springs — online or printable PDF.",
     url: "/patient-forms",

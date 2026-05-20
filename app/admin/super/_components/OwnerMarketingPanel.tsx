@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useSearchParams } from "next/navigation";
 import { ownerMarketingFetch } from "@/lib/owner-marketing-client";
 import type {
   BannerConfig,
@@ -24,13 +25,22 @@ import {
   type OwnerVideoQuotaSnapshot,
 } from "@/lib/owner-upload-quota";
 
-type Tab = "banner" | "videos" | "specials" | "doctor" | "siteinfo";
+type Tab = "banner" | "booking" | "videos" | "specials" | "doctor" | "siteinfo";
+
+const TAB_IDS: Tab[] = ["banner", "booking", "videos", "specials", "doctor", "siteinfo"];
+
+function tabFromQuery(value: string | null): Tab | null {
+  if (value && TAB_IDS.includes(value as Tab)) return value as Tab;
+  return null;
+}
 
 export function OwnerMarketingPanel() {
-  const [tab, setTab] = useState<Tab>("banner");
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<Tab>(() => tabFromQuery(searchParams.get("tab")) ?? "banner");
   const [msg, setMsg] = useState<string | null>(null);
   const [config, setConfig] = useState<SiteOwnerSingleton | null>(null);
   const [massageTeamMembers, setMassageTeamMembers] = useState<{ id: string; name: string }[]>([]);
+  const [massageTherapistSource, setMassageTherapistSource] = useState<"team" | "providers" | null>(null);
   const [videoQuota, setVideoQuota] = useState<OwnerVideoQuotaSnapshot | null>(null);
   const [bootstrapping, setBootstrapping] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -46,10 +56,12 @@ export function OwnerMarketingPanel() {
       config: SiteOwnerSingleton;
       appVersion?: string;
       massageTeamMembers?: { id: string; name: string }[];
+      massageTherapistSource?: "team" | "providers" | null;
       videoQuota?: OwnerVideoQuotaSnapshot;
     };
     setConfig(data.config);
     setMassageTeamMembers(data.massageTeamMembers ?? []);
+    setMassageTherapistSource(data.massageTherapistSource ?? null);
     setVideoQuota(data.videoQuota ?? null);
     setMsg(null);
   }, []);
@@ -60,6 +72,11 @@ export function OwnerMarketingPanel() {
       .catch(() => setMsg("Could not load settings."))
       .finally(() => setBootstrapping(false));
   }, [loadConfig]);
+
+  useEffect(() => {
+    const fromUrl = tabFromQuery(searchParams.get("tab"));
+    if (fromUrl) setTab(fromUrl);
+  }, [searchParams]);
 
   async function saveBanner(patch: Partial<BannerConfig>) {
     if (!config) return;
@@ -111,6 +128,23 @@ export function OwnerMarketingPanel() {
     }
     setConfig(data.config!);
     setMsg("Site info saved.");
+  }
+
+  async function savePublicBooking() {
+    if (!config) return;
+    const res = await ownerMarketingFetch("/api/superadmin/config", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ publicBooking: config.publicBooking }),
+      credentials: "include",
+    });
+    const data = (await res.json()) as { config?: SiteOwnerSingleton; error?: string };
+    if (!res.ok) {
+      setMsg(data.error ?? "Save failed");
+      return;
+    }
+    setConfig(data.config!);
+    setMsg("Online booking settings saved.");
   }
 
   async function uploadVideo(form: HTMLFormElement) {
@@ -226,10 +260,11 @@ export function OwnerMarketingPanel() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "banner", label: "Sales banner" },
+    { id: "booking", label: "Online booking" },
     { id: "videos", label: "Testimonial videos" },
     { id: "specials", label: "Specials" },
     { id: "doctor", label: "Doctor media" },
-    { id: "siteinfo", label: "Extras" },
+    { id: "siteinfo", label: "Other extras" },
   ];
 
   return (
@@ -237,7 +272,9 @@ export function OwnerMarketingPanel() {
       <div>
         <h1 className="text-xl font-black text-slate-900">Banners &amp; promos</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Homepage banner, specials pop-up, testimonial videos, and doctor media. Page copy and phones are under{" "}
+          Use <strong className="font-semibold">Online booking</strong> to turn the public{" "}
+          <code className="rounded bg-slate-100 px-1">/book</code> page on or off. Also: homepage banner,
+          specials, videos, and doctor media. Page copy and phones are under{" "}
           <strong className="font-semibold">Site content</strong>.
         </p>
       </div>
@@ -311,6 +348,15 @@ export function OwnerMarketingPanel() {
         </section>
       ) : null}
 
+      {tab === "booking" ? (
+        <OnlineBookingSettingsBlock
+          config={config}
+          setConfig={setConfig}
+          onSaveBooking={() => void savePublicBooking()}
+          onSaveReviews={() => void saveEditableCopy()}
+        />
+      ) : null}
+
       {tab === "videos" ? (
         <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold">Testimonial videos</h2>
@@ -345,7 +391,13 @@ export function OwnerMarketingPanel() {
               </select>
               {massageTeamMembers.length === 0 ? (
                 <span className="mt-1 block text-xs text-amber-800">
-                  No massage team in Firestore yet — seed the team in Admin → Super → Massage team first.
+                  No massage therapists found. Add bookable massage providers on Admin → Super, or seed the
+                  website team in Admin → Super → Massage team (Meet the team).
+                </span>
+              ) : massageTherapistSource === "providers" ? (
+                <span className="mt-1 block text-xs text-slate-600">
+                  Using bookable massage providers for now. On Admin → Super, open Massage team and click
+                  &quot;Copy bookable massage providers into team&quot; to sync bios and the public Meet the team page.
                 </span>
               ) : null}
             </label>
@@ -478,6 +530,13 @@ export function OwnerMarketingPanel() {
       ) : null}
 
       {tab === "siteinfo" ? (
+        <div className="space-y-6">
+          <OnlineBookingSettingsBlock
+            config={config}
+            setConfig={setConfig}
+            onSaveBooking={() => void savePublicBooking()}
+            onSaveReviews={() => void saveEditableCopy()}
+          />
         <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold">Gift card &amp; HTML snippets</h2>
           <p className="text-sm text-slate-600">
@@ -530,9 +589,128 @@ export function OwnerMarketingPanel() {
             Save site info
           </button>
         </section>
+        </div>
       ) : null}
 
     </div>
+  );
+}
+
+function OnlineBookingSettingsBlock({
+  config,
+  setConfig,
+  onSaveBooking,
+  onSaveReviews,
+}: {
+  config: SiteOwnerSingleton;
+  setConfig: Dispatch<SetStateAction<SiteOwnerSingleton | null>>;
+  onSaveBooking: () => void;
+  onSaveReviews: () => void;
+}) {
+  const booking = config.publicBooking ?? {
+    enabled: true,
+    disabledMessage:
+      "Online booking is temporarily unavailable. Please call our Paris office at 903-785-5551 or Sulphur Springs at 903-919-5020 to schedule.",
+    onlinePaymentsEnabled: false,
+  };
+
+  return (
+    <section className="space-y-4 rounded-2xl border-2 border-[#0f5f5c]/30 bg-white p-6 shadow-sm">
+      <h2 className="text-lg font-bold text-[#173f3b]">Online booking &amp; Google reviews</h2>
+      <p className="text-sm text-slate-600">
+        Uncheck <strong className="font-semibold">Online booking enabled</strong> to shut down the public{" "}
+        <code className="rounded bg-slate-100 px-1">/book</code> page. Visitors will see your off message and phone
+        numbers instead of the scheduler.
+      </p>
+      <label className="flex items-center gap-2 text-sm font-semibold">
+        <input
+          type="checkbox"
+          checked={booking.enabled}
+          onChange={(e) =>
+            setConfig({
+              ...config,
+              publicBooking: { ...booking, enabled: e.target.checked },
+            })
+          }
+        />
+        Online booking enabled
+      </label>
+      <label className="block text-sm">
+        <span className="font-semibold">Message when booking is off</span>
+        <textarea
+          className="mt-1 min-h-[96px] w-full rounded border border-slate-300 px-2 py-2 text-sm"
+          value={booking.disabledMessage}
+          onChange={(e) =>
+            setConfig({
+              ...config,
+              publicBooking: { ...booking, disabledMessage: e.target.value },
+            })
+          }
+        />
+      </label>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={booking.onlinePaymentsEnabled}
+          onChange={(e) =>
+            setConfig({
+              ...config,
+              publicBooking: { ...booking, onlinePaymentsEnabled: e.target.checked },
+            })
+          }
+        />
+        Collect payment online after booking (Square) — leave unchecked for now
+      </label>
+      <hr className="border-slate-200" />
+      <h3 className="text-base font-bold text-slate-900">Google review links (optional)</h3>
+      <p className="text-sm text-slate-600">
+        Google Maps → your listing → Share or &ldquo;Ask for reviews&rdquo; → paste the HTTPS link for each office.
+      </p>
+      <label className="block text-sm">
+        <span className="font-semibold">Paris — Google review URL</span>
+        <input
+          className="mt-1 w-full rounded border border-slate-300 px-2 py-1 font-mono text-sm"
+          placeholder="https://g.page/r/..."
+          value={config.editableCopy.gbpParisReviewUrl}
+          onChange={(e) =>
+            setConfig({
+              ...config,
+              editableCopy: { ...config.editableCopy, gbpParisReviewUrl: e.target.value },
+            })
+          }
+        />
+      </label>
+      <label className="block text-sm">
+        <span className="font-semibold">Sulphur Springs — Google review URL</span>
+        <input
+          className="mt-1 w-full rounded border border-slate-300 px-2 py-1 font-mono text-sm"
+          placeholder="https://g.page/r/..."
+          value={config.editableCopy.gbpSulphurReviewUrl}
+          onChange={(e) =>
+            setConfig({
+              ...config,
+              editableCopy: { ...config.editableCopy, gbpSulphurReviewUrl: e.target.value },
+            })
+          }
+        />
+      </label>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={onSaveBooking}
+          className="rounded-full bg-[#0f5f5c] px-5 py-2 text-sm font-bold text-white"
+        >
+          Save booking on/off
+        </button>
+        <button
+          type="button"
+          onClick={onSaveReviews}
+          className="rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-bold text-slate-900"
+        >
+          Save review URLs
+        </button>
+      </div>
+    </section>
   );
 }
 

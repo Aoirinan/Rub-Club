@@ -93,7 +93,6 @@ export async function POST(req: Request, ctx: Params) {
       subject,
       text,
       html,
-      fromName: "The Rub Club & Chiropractic Associates",
     });
     emailSent = true;
   } catch (err) {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
 import { WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
+import { chiropracticWellnessBreadcrumbs } from "@/lib/service-breadcrumbs";
 import { getContentMany } from "@/lib/cms";
 import { publicBookingHref } from "@/lib/public-booking";
 import {
@@ -30,14 +31,7 @@ export default async function WellnessCarePlansPage() {
 
   return (
     <>
-      <Breadcrumbs
-        items={[
-          { name: "Home", url: "/" },
-          { name: "Services", url: "/services/chiropractic" },
-          { name: "Chiropractic", url: "/services/chiropractic" },
-          { name: "Wellness care plans", url: WELLNESS_CARE_PLANS_PATH },
-        ]}
-      />
+      <Breadcrumbs items={chiropracticWellnessBreadcrumbs(WELLNESS_CARE_PLANS_PATH)} />
 
       <PageHero
         eyebrow={content.heroEyebrow}

@@ -8,11 +8,11 @@ import {
   PRIVACY_PRACTICES_PATH,
   WEBSITE_PRIVACY_PATH,
 } from "@/lib/legal";
+import { siteLegalName } from "@/lib/site-content";
 
 export const metadata: Metadata = {
   title: "Website Privacy",
-  description:
-    "How The Rub Club & Chiropractic Associates collects and uses information on this website (cookies, contact forms, and booking).",
+  description: `How ${siteLegalName} collects and uses information on this website (cookies, contact forms, and booking).`,
   alternates: { canonical: WEBSITE_PRIVACY_PATH },
 };
 
