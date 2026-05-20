@@ -1,4 +1,5 @@
 import { telHref, type LocationId, type LocationInfo } from "@/lib/constants";
+import { publicBookingHref } from "@/lib/public-booking";
 import {
   DEFAULT_PUBLIC_BOOKING,
   getSiteOwnerConfig,
@@ -34,6 +35,19 @@ export async function getPublicBookingConfig(): Promise<PublicBookingConfig> {
 
 export function isPublicBookingEnabled(config: PublicBookingConfig): boolean {
   return config.enabled !== false;
+}
+
+/** Server components: /book when scheduling is on, /contact for phase 1 marketing. */
+export function scheduleCtaHref(config: PublicBookingConfig, query = ""): string {
+  return isPublicBookingEnabled(config) ? publicBookingHref(query) : "/contact";
+}
+
+export function scheduleCtaLabel(
+  config: PublicBookingConfig,
+  bookLabel: string,
+  contactLabel = "Contact us",
+): string {
+  return isPublicBookingEnabled(config) ? bookLabel : contactLabel;
 }
 
 export function contactAppointmentCopy(bookingEnabled: boolean): string {

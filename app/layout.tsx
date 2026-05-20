@@ -23,6 +23,11 @@ import {
 import { getSiteOwnerConfig, bannerIsActivePublic } from "@/lib/site-owner-config";
 import { getLayoutCmsContent } from "@/lib/cms-display";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
+import { PublicBookingProvider } from "@/components/PublicBookingProvider";
+import {
+  getPublicBookingConfig,
+  isPublicBookingEnabled,
+} from "@/lib/public-booking-settings";
 
 export const revalidate = 60;
 
@@ -80,7 +85,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let salesBanner: SalesBannerPayload | null = null;
-  const cms = await getLayoutCmsContent();
+  const [cms, bookingConfig] = await Promise.all([
+    getLayoutCmsContent(),
+    getPublicBookingConfig(),
+  ]);
+  const onlineBookingEnabled = isPublicBookingEnabled(bookingConfig);
   let displayLocs = mergedDisplayLocations(undefined, cms);
   let giftCardHref = effectiveGiftCardUrl(undefined, cms);
   let footerBlurbHtml: string | null = null;
@@ -114,23 +123,25 @@ export default async function RootLayout({
           Skip to content
         </a>
         <JsonLd data={[organizationJsonLd(schemaLocations), websiteJsonLd()]} />
-        <SiteHeader
-          paris={displayLocs.paris}
-          sulphur={displayLocs.sulphur_springs}
-          giftCardHref={giftCardHref}
-        />
-        {salesBanner ? <SalesBannerBar payload={salesBanner} /> : null}
-        <main id="main" tabIndex={-1} className="outline-none">
-          {children}
-        </main>
-        <SiteFooter
-          locations={schemaLocations}
-          giftCardHref={giftCardHref}
-          footerBlurbHtml={footerBlurbHtml}
-          footerTagline={cms.footer_tagline}
-          footerCopyright={cms.footer_copyright}
-        />
-        <DomainSpecialsPopup />
+        <PublicBookingProvider enabled={onlineBookingEnabled}>
+          <SiteHeader
+            paris={displayLocs.paris}
+            sulphur={displayLocs.sulphur_springs}
+            giftCardHref={giftCardHref}
+          />
+          {salesBanner ? <SalesBannerBar payload={salesBanner} /> : null}
+          <main id="main" tabIndex={-1} className="outline-none">
+            {children}
+          </main>
+          <SiteFooter
+            locations={schemaLocations}
+            giftCardHref={giftCardHref}
+            footerBlurbHtml={footerBlurbHtml}
+            footerTagline={cms.footer_tagline}
+            footerCopyright={cms.footer_copyright}
+          />
+          <DomainSpecialsPopup />
+        </PublicBookingProvider>
         <Analytics />
       </body>
     </html>

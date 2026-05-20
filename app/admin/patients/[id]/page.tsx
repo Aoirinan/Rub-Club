@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { onAuthStateChanged, type Auth } from "firebase/auth";
+import { onAuthStateChanged, type Auth, type User } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import { PatientProfileBody } from "@/app/admin/patients/_components/PatientProfileBody";
 import { staffMeetsMin, type StaffRole } from "@/lib/staff-roles";
@@ -23,6 +23,8 @@ function PatientProfilePageContent() {
   const router = useRouter();
   const patientId = typeof params.id === "string" ? params.id : "";
   const [auth, setAuth] = useState<Auth | null>(null);
+  const [authUser, setAuthUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const [canEdit, setCanEdit] = useState(false);
 
   useEffect(() => {
@@ -30,26 +32,30 @@ function PatientProfilePageContent() {
   }, []);
 
   const getIdToken = useCallback(async () => {
-    const user = auth?.currentUser;
-    if (!user) return null;
-    return user.getIdToken();
-  }, [auth]);
+    if (!authUser) return null;
+    return authUser.getIdToken();
+  }, [authUser]);
 
   useEffect(() => {
     if (!auth) return;
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        setAuthUser(null);
+        setAuthReady(false);
         router.replace("/admin/login");
         return;
       }
+      setAuthUser(user);
       const token = await user.getIdToken();
       const res = await fetch("/api/admin/me", { headers: { Authorization: `Bearer ${token}` } });
       const data = (await res.json()) as { role?: StaffRole | null };
       if (!data.role || !staffMeetsMin(data.role, "front_desk")) {
+        setAuthReady(false);
         router.replace("/admin");
         return;
       }
       setCanEdit(staffMeetsMin(data.role, "manager"));
+      setAuthReady(true);
     });
     return () => unsub();
   }, [auth, router]);
@@ -80,7 +86,15 @@ function PatientProfilePageContent() {
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">
-        <PatientProfileBody patientId={patientId} getIdToken={getIdToken} isSuperadmin={canEdit} />
+        {authReady ? (
+          <PatientProfileBody
+            patientId={patientId}
+            getIdToken={getIdToken}
+            isSuperadmin={canEdit}
+          />
+        ) : (
+          <p className="text-sm text-slate-600">Loading…</p>
+        )}
       </main>
     </div>
   );

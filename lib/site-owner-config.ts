@@ -91,7 +91,8 @@ export type PublicBookingConfig = {
 };
 
 export const DEFAULT_PUBLIC_BOOKING: PublicBookingConfig = {
-  enabled: true,
+  /** Off by default — phase 1 is marketing; turn on in admin when scheduler goes live. */
+  enabled: false,
   disabledMessage:
     "Online booking is temporarily unavailable. Please call our Paris office at 903-785-5551 or Sulphur Springs at 903-919-5020 to schedule.",
   onlinePaymentsEnabled: false,

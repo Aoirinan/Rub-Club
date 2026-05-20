@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { publicBookingHref } from "@/lib/public-booking";
+import { useScheduleHref, usePublicBookingEnabled } from "@/components/PublicBookingProvider";
 
 const PRIMARY =
   "focus-ring bg-[#f2d25d] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#173f3b] shadow hover:bg-[#e6c13d]";
@@ -22,17 +24,26 @@ const VARIANT_CLASS = {
 
 type Props = {
   label: string;
+  /** Shown when online booking is off (defaults to "Contact us"). */
+  disabledLabel?: string;
   query?: string;
   className?: string;
   variant?: keyof typeof VARIANT_CLASS;
 };
 
-export function BookingCta({ label, query = "", className, variant = "default" }: Props) {
-  const href = publicBookingHref(query);
+export function BookingCta({
+  label,
+  disabledLabel = "Contact us",
+  query = "",
+  className,
+  variant = "default",
+}: Props) {
+  const enabled = usePublicBookingEnabled();
+  const href = useScheduleHref(query);
   const classes = className ?? VARIANT_CLASS[variant];
   return (
     <Link href={href} className={classes}>
-      {label}
+      {enabled ? label : disabledLabel}
     </Link>
   );
 }

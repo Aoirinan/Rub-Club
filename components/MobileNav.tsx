@@ -183,6 +183,7 @@ export function MobileNav({
               </a>
               <BookingCta
                 label="Book online"
+                disabledLabel="Contact us"
                 className="focus-ring m-4 bg-[#f2d25d] px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]"
               />
               <div className="border-t border-stone-200 p-4 text-sm">
