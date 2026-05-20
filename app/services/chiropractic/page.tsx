@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
+import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { AdjustmentsInActionSection } from "@/components/AdjustmentsInActionSection";
 import { BookingCta } from "@/components/BookingCta";
@@ -13,7 +13,14 @@ import { DOCTOR_CMS_KEYS, getDoctorsForMarketing } from "@/lib/cms-doctors";
 import { CHIRO_TREATMENT_OFFERINGS } from "@/lib/chiro-treatments";
 import { CHIRO } from "@/lib/home-verbatim";
 import { LOCATIONS, WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
-import { publicBookingHref } from "@/lib/public-booking";
+import {
+  getPublicBookingConfig,
+  isPublicBookingEnabled,
+  scheduleCtaHref,
+  scheduleCtaLabel,
+  scheduleMetaPhrase,
+} from "@/lib/public-booking-settings";
+import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { serviceBreadcrumbs } from "@/lib/service-breadcrumbs";
 import { chiropractorJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
@@ -35,22 +42,27 @@ const CHIRO_CMS_IDS = [
   "chiro_wellness_teaser_body",
 ] as const;
 
-export const metadata: Metadata = {
-  title: "Chiropractor in Paris & Sulphur Springs, TX — Chiropractic Associates",
-  description:
-    "Chiropractic adjustments, spinal decompression, rehab, and acupuncture in Paris and Sulphur Springs, TX. Book online or call — family-owned since 1998.",
-  alternates: { canonical: "/services/chiropractic" },
-  openGraph: {
-    title: "Chiropractor in Paris & Sulphur Springs, TX",
-    description:
-      "Adjustments, decompression, rehab, and acupuncture at Chiropractic Associates. Book online or call either office.",
-    url: "/services/chiropractic",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const booking = await getPublicBookingConfig();
+  const phrase = scheduleMetaPhrase(isPublicBookingEnabled(booking));
+  return {
+    title: "Chiropractor in Paris & Sulphur Springs, TX — Chiropractic Associates",
+    description: `Chiropractic adjustments, spinal decompression, rehab, and acupuncture in Paris and Sulphur Springs, TX. ${phrase} — family-owned since 1998.`,
+    alternates: { canonical: "/services/chiropractic" },
+    openGraph: {
+      title: "Chiropractor in Paris & Sulphur Springs, TX",
+      description: `Adjustments, decompression, rehab, and acupuncture at Chiropractic Associates. ${phrase} either office.`,
+      url: "/services/chiropractic",
+    },
+  };
+}
 
 export const revalidate = 60;
 
 export default async function ChiropracticServicePage() {
+  const booking = await getPublicBookingConfig();
+  const massageHref = scheduleCtaHref(booking, "service=massage");
+  const stretchHref = scheduleCtaHref(booking, "service=stretch");
   const c = await getContentMany([...CHIRO_CMS_IDS, ...DOCTOR_CMS_KEYS]);
   const doctors = await getDoctorsForMarketing(c);
   const paris = LOCATIONS.paris;
@@ -272,12 +284,12 @@ export default async function ChiropracticServicePage() {
             </a>
           </div>
           <p className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-center text-sm text-stone-600">
-            <Link href="/book?service=massage" className="font-semibold text-[#0f5f5c] underline hover:text-[#0f817b]">
-              Massage appointments → Book online
+            <Link href={massageHref} className="font-semibold text-[#0f5f5c] underline hover:text-[#0f817b]">
+              Massage appointments → {scheduleCtaLabel(booking, "Book online")}
             </Link>
             <span aria-hidden>·</span>
-            <Link href="/book?service=stretch" className="font-semibold text-[#0f5f5c] underline hover:text-[#0f817b]">
-              Stretch &amp; Flex Rehab → Book online
+            <Link href={stretchHref} className="font-semibold text-[#0f5f5c] underline hover:text-[#0f817b]">
+              Stretch &amp; Flex Rehab → {scheduleCtaLabel(booking, "Book online")}
             </Link>
             <span aria-hidden>·</span>
             <Link href="/patient-forms" className="font-semibold text-[#0f5f5c] underline hover:text-[#0f817b]">
@@ -286,10 +298,10 @@ export default async function ChiropracticServicePage() {
           </p>
         </section>
 
-        <CtaCard
+        <ScheduleCtaCard
           title="Questions before you book?"
           body="Our front desk can verify insurance for chiropractic visits and help you choose Paris or Sulphur Springs."
-          primary={{ label: "Book online", href: publicBookingHref("service=chiropractic") }}
+          query="service=chiropractic"
           secondary={{ label: `Call Paris ${paris.phonePrimary}`, href: telHref(paris.phonePrimary) }}
         />
       </div>

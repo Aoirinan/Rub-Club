@@ -5,7 +5,8 @@ import { FaqList } from "@/components/FaqList";
 import { getContentMany } from "@/lib/cms";
 import { getActiveFaqs } from "@/lib/site-faqs";
 import { faqPageJsonLd } from "@/lib/structured-data";
-import { publicBookingHref } from "@/lib/public-booking";
+import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
+import { LOCATIONS, telHref } from "@/lib/constants";
 
 export const revalidate = 60;
 
@@ -39,11 +40,14 @@ export default async function FaqPage() {
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
           <FaqList entries={faqs} />
         </section>
-        <CtaCard
+        <ScheduleCtaCard
           title="Still have a question?"
           body="The fastest way to reach us is by phone during office hours, or send a message and we'll respond as soon as we can."
-          primary={{ label: "Contact us", href: "/contact" }}
-          secondary={{ label: "Book online", href: publicBookingHref() }}
+          contactLabel="Contact us"
+          secondary={{
+            label: `Call Paris ${LOCATIONS.paris.phonePrimary}`,
+            href: telHref(LOCATIONS.paris.phonePrimary),
+          }}
         />
       </div>
     </>

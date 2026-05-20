@@ -44,9 +44,10 @@ Do **not** choose “Redirect to Another Domain” unless you are forwarding to 
 ## DNS cutover day (when ready)
 
 1. Point **A/CNAME** for primary domain to Vercel (per Vercel’s DNS instructions).
-2. Point **legacy** domains to the **same** Vercel project:
-   - `massageparistexas.com` → redirects to `/services/massage` (homepage only)
-   - `chiropracticsulphursprings.com` → redirects to `/sulphur-springs` (homepage only)
+2. Point **legacy** domains to the **same** Vercel project. **Homepage only** on each legacy host redirects via app middleware:
+   - `massageparistexas.com` / `www` → `/services/massage`
+   - `chiropracticsulphursprings.com` / `www` → `/sulphur-springs`
+   - Other paths on those hosts work like the main site (no catch-all rewrite).
 3. Wait for SSL “Ready” on all domains in Vercel.
 4. Set `NEXT_PUBLIC_APP_URL` to primary domain → **production redeploy**.
 5. Smoke test: home, contact, reviews, one service page, admin login on the new hostname.

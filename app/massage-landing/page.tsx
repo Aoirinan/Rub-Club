@@ -16,7 +16,7 @@ export default function MassageLandingPage() {
       <PageHero
         eyebrow="The Rub Club"
         title="Massage therapy in Paris, TX"
-        lede="You found us from Massage Paris Texas — welcome. Book online, call the massage desk, or explore our massage services and team."
+        lede="You found us from Massage Paris Texas — welcome. Call the massage desk, contact us online, or explore our massage services and team."
       />
       <div className="mx-auto max-w-3xl space-y-8 px-4 pb-16">
         <section className="rounded-2xl border border-stone-200 bg-white p-8 shadow-md">

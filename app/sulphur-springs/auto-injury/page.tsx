@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
+import { Breadcrumbs, PageHero } from "@/components/PageChrome";
+import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { SS_INJURIES } from "@/lib/sulphur-springs-content";
 import { telHref } from "@/lib/constants";
-import { publicBookingHref } from "@/lib/public-booking";
 
 const INJURY = SS_INJURIES.find((i) => i.slug === "auto-injury")!;
 
@@ -52,10 +52,9 @@ export default function AutoInjuryPage() {
             })}
           </div>
         </section>
-        <CtaCard
+        <ScheduleCtaCard
           title="Need treatment?"
           body="Contact our Sulphur Springs office for a thorough examination."
-          primary={{ label: "Book online", href: publicBookingHref() }}
           secondary={{ label: "Call 903-919-5020", href: telHref("903-919-5020") }}
         />
       </div>

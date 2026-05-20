@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
+import { Breadcrumbs, PageHero } from "@/components/PageChrome";
+import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { telHref, LOCATIONS } from "@/lib/constants";
-import { publicBookingHref } from "@/lib/public-booking";
 import { SS_STAFF, type SSStaffMember } from "@/lib/sulphur-springs-content";
 
 const ss = LOCATIONS.sulphur_springs;
@@ -119,10 +119,9 @@ export default function SulphurSpringsStaffPage() {
           </div>
         </section>
 
-        <CtaCard
+        <ScheduleCtaCard
           title="Ready for relief?"
           body="Book an appointment online or give us a call — we're here to help you feel better and move better."
-          primary={{ label: "Book online", href: publicBookingHref() }}
           secondary={{
             label: "Call 903-919-5020",
             href: telHref(ss.phonePrimary),

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
+import { Breadcrumbs, PageHero } from "@/components/PageChrome";
+import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { JsonLd } from "@/components/JsonLd";
 import { MassageTeamGrid } from "@/components/marketing/MassageTeamGrid";
 import { BookingCta } from "@/components/BookingCta";
@@ -11,24 +12,31 @@ import { MASSAGE } from "@/lib/home-verbatim";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { LOCATIONS, telHref } from "@/lib/constants";
 import { serviceBreadcrumbs } from "@/lib/service-breadcrumbs";
-import { publicBookingHref } from "@/lib/public-booking";
+import {
+  getPublicBookingConfig,
+  isPublicBookingEnabled,
+  scheduleMetaPhrase,
+} from "@/lib/public-booking-settings";
 import { massageJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
-  title: "Massage Therapy in Paris, TX — The Rub Club",
-  description:
-    "Licensed massage therapists offering deep tissue, prenatal, sports, and trigger-point therapy in Paris, TX. Same-week openings; call 903-739-9959 or book online.",
-  alternates: { canonical: "/services/massage" },
-  openGraph: {
+export async function generateMetadata(): Promise<Metadata> {
+  const booking = await getPublicBookingConfig();
+  const phrase = scheduleMetaPhrase(isPublicBookingEnabled(booking));
+  return {
     title: "Massage Therapy in Paris, TX — The Rub Club",
-    description:
-      "Deep tissue, prenatal, sports, and trigger-point massage at The Rub Club in Paris, TX.",
-    url: "/services/massage",
-  },
-};
+    description: `Licensed massage therapists offering deep tissue, prenatal, sports, and trigger-point therapy in Paris, TX. Same-week openings; call 903-739-9959 or ${phrase.toLowerCase()}.`,
+    alternates: { canonical: "/services/massage" },
+    openGraph: {
+      title: "Massage Therapy in Paris, TX — The Rub Club",
+      description:
+        "Deep tissue, prenatal, sports, and trigger-point massage at The Rub Club in Paris, TX.",
+      url: "/services/massage",
+    },
+  };
+}
 
 const SERVICES = [
   {
@@ -174,10 +182,10 @@ export default async function MassageServicePage() {
           </div>
         </section>
 
-        <CtaCard
+        <ScheduleCtaCard
           title="Have a question first?"
           body="The massage desk can verify available times and answer questions about specific conditions."
-          primary={{ label: "Book online", href: publicBookingHref("service=massage") }}
+          query="service=massage"
           secondary={{ label: "Call 903-739-9959", href: telHref("903-739-9959") }}
         />
       </div>

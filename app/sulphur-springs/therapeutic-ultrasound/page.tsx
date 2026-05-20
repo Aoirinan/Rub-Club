@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
+import { Breadcrumbs, PageHero } from "@/components/PageChrome";
+import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { SS_SERVICES } from "@/lib/sulphur-springs-content";
 import { telHref } from "@/lib/constants";
-import { publicBookingHref } from "@/lib/public-booking";
 
 const SERVICE = SS_SERVICES.find((s) => s.slug === "therapeutic-ultrasound")!;
 
@@ -52,10 +52,9 @@ export default function TherapeuticUltrasoundPage() {
             })}
           </div>
         </section>
-        <CtaCard
+        <ScheduleCtaCard
           title="Schedule an appointment"
           body="Contact our Sulphur Springs office to discuss whether this treatment is right for you."
-          primary={{ label: "Book online", href: publicBookingHref() }}
           secondary={{ label: "Call 903-919-5020", href: telHref("903-919-5020") }}
         />
       </div>

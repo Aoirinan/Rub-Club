@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
+import { Breadcrumbs, PageHero } from "@/components/PageChrome";
+import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
 import { chiropracticWellnessBreadcrumbs } from "@/lib/service-breadcrumbs";
 import { getContentMany } from "@/lib/cms";
-import { publicBookingHref } from "@/lib/public-booking";
 import {
   WELLNESS_PAGE_CMS_FIELD_IDS,
   buildWellnessCarePlansContent,
@@ -87,10 +87,11 @@ export default async function WellnessCarePlansPage() {
           </p>
         </section>
 
-        <CtaCard
+        <ScheduleCtaCard
           title={content.ctaTitle}
           body={content.ctaBody}
-          primary={{ label: "Book chiropractic online", href: publicBookingHref("service=chiropractic") }}
+          bookLabel="Book chiropractic online"
+          query="service=chiropractic"
           secondary={{ label: "Call Paris 903-785-5551", href: telHref("903-785-5551") }}
         />
       </div>

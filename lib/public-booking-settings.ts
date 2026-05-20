@@ -50,6 +50,13 @@ export function scheduleCtaLabel(
   return isPublicBookingEnabled(config) ? bookLabel : contactLabel;
 }
 
+/** Meta descriptions / hero copy when booking may be off. */
+export function scheduleMetaPhrase(bookingEnabled: boolean): string {
+  return bookingEnabled
+    ? "Book online or call"
+    : "Call or contact us to schedule";
+}
+
 export function contactAppointmentCopy(bookingEnabled: boolean): string {
   if (bookingEnabled) {
     return "For appointments, please use our online booking page so we can see availability live. Use this form for everything else.";

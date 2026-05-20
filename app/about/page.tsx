@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
+import { Breadcrumbs, PageHero } from "@/components/PageChrome";
+import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { JsonLd } from "@/components/JsonLd";
 import { ChiropracticDoctorCard } from "@/components/ChiropracticDoctorCard";
 import { getContentMany, renderRichText } from "@/lib/cms";
@@ -9,7 +10,6 @@ import { DOCTOR_CMS_KEYS, getDoctorsForMarketing } from "@/lib/cms-doctors";
 import { CHIRO } from "@/lib/home-verbatim";
 import { IMAGES } from "@/lib/home-images";
 import { organizationJsonLd } from "@/lib/structured-data";
-import { publicBookingHref } from "@/lib/public-booking";
 
 export const revalidate = 60;
 
@@ -90,10 +90,11 @@ export default async function AboutPage() {
           </div>
         </section>
 
-        <CtaCard
+        <ScheduleCtaCard
           title="Ready to visit?"
           body="Book chiropractic or massage online, or call either office and we will help you find a time."
-          primary={{ label: "Book chiropractic", href: publicBookingHref("service=chiropractic") }}
+          bookLabel="Book chiropractic"
+          query="service=chiropractic"
           secondary={{ label: "Contact us", href: "/contact" }}
         />
       </div>

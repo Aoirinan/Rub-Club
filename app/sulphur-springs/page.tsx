@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { CtaCard } from "@/components/PageChrome";
 import { BookingCta } from "@/components/BookingCta";
+import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { telHref, LOCATIONS } from "@/lib/constants";
-import { publicBookingHref } from "@/lib/public-booking";
 import { getContentMany, renderRichText } from "@/lib/cms";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
 import { OfficeHoursTable } from "@/components/OfficeHoursTable";
@@ -329,10 +328,10 @@ export default async function SulphurSpringsPage() {
           </Link>
         </section>
 
-        <CtaCard
+        <ScheduleCtaCard
           title="Ready for relief?"
           body="Book an appointment online or give us a call — we're here to help you feel better and move better."
-          primary={{ label: "Request appointment", href: publicBookingHref() }}
+          bookLabel="Request appointment"
           secondary={{ label: "Call (903) 919-5020", href: telHref(ss.phonePrimary) }}
         />
       </div>

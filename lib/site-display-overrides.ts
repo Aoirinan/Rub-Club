@@ -59,5 +59,5 @@ export function effectiveGiftCardUrl(
 export function effectiveBookUrl(cms?: Record<string, string>): string {
   const u = cms?.nav_book_url?.trim();
   if (u && (u.startsWith("/") || /^https?:\/\//i.test(u))) return u;
-  return "/book";
+  return "/contact";
 }

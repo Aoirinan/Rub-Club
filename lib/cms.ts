@@ -8,7 +8,6 @@ import {
   MASSAGE,
 } from "@/lib/home-verbatim";
 import { PARIS_HOURS_DEFAULT_TEXT } from "@/lib/office-hours";
-import { publicBookingHref } from "@/lib/public-booking";
 import { siteShortName } from "@/lib/site-content";
 import {
   WELLNESS_SECTION_SPECS,
@@ -280,7 +279,7 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
   footer_copyright: `© ${new Date().getFullYear()} ${siteShortName}. All rights reserved.`,
 
   nav_giftcard_url: GIFT_CARD_ORDER_URL,
-  nav_book_url: publicBookingHref(),
+  nav_book_url: "/contact",
 
   ...wellnessCarePlansDefaults(),
 };
