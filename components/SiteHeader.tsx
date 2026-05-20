@@ -16,7 +16,7 @@ function buildNavItems(giftCardHref: string): NavItem[] {
         { href: WELLNESS_CARE_PLANS_PATH, label: "Wellness care plans" },
       ],
     },
-    { href: "/locations/paris", label: "Paris Texas" },
+    { href: "/", label: "Paris Texas" },
     { href: "/sulphur-springs", label: "Sulphur Springs" },
     {
       href: "/locations/paris",
