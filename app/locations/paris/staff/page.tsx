@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { telHref, LOCATIONS } from "@/lib/constants";
-import { getParisOfficeStaffForDisplay } from "@/lib/paris-staff-cms";
+import { getParisOfficeStaffForDisplay, getParisStaffPageContent } from "@/lib/paris-staff-cms";
+import { renderRichText } from "@/lib/cms";
 import type { ParisOfficeStaffMember } from "@/lib/paris-office-staff";
 
 const paris = LOCATIONS.paris;
@@ -65,14 +66,20 @@ function BioBlock({ bio }: { bio: string }) {
   return (
     <div className="space-y-4 leading-relaxed text-stone-700">
       {bio.split("\n\n").map((paragraph, i) => (
-        <p key={i}>{paragraph}</p>
+        <p
+          key={i}
+          dangerouslySetInnerHTML={{ __html: renderRichText(paragraph) }}
+        />
       ))}
     </div>
   );
 }
 
 export default async function ParisOfficeStaffPage() {
-  const staff = await getParisOfficeStaffForDisplay();
+  const [staff, page] = await Promise.all([
+    getParisOfficeStaffForDisplay(),
+    getParisStaffPageContent(),
+  ]);
 
   return (
     <>
@@ -86,8 +93,8 @@ export default async function ParisOfficeStaffPage() {
       />
       <PageHero
         eyebrow="Chiropractic Associates · Paris, TX"
-        title="Meet Our Paris Office Team"
-        lede="Insurance, personal injury, front desk, therapy, and marketing — the people who keep our Paris office running smoothly. Licensed massage therapists are listed separately at The Rub Club."
+        title={page.heroTitle}
+        lede={page.heroLede}
       />
 
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
@@ -100,7 +107,7 @@ export default async function ParisOfficeStaffPage() {
         </p>
 
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">Our Team</h2>
+          <h2 className="text-2xl font-black text-[#173f3b]">{page.sectionHeading}</h2>
           <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {staff.map((member) => (
               <article
@@ -119,8 +126,8 @@ export default async function ParisOfficeStaffPage() {
         </section>
 
         <ScheduleCtaCard
-          title="Questions about insurance or billing?"
-          body="Call our Paris office and our team will help verify benefits or walk you through personal injury and auto-injury paperwork."
+          title={page.ctaTitle}
+          body={page.ctaBody}
           secondary={{
             label: "Call 903-785-5551",
             href: telHref(paris.phonePrimary),

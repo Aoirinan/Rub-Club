@@ -33,6 +33,10 @@ function revalidatePublicPages(fieldId?: string): void {
     revalidatePath("/sulphur-springs/staff");
     revalidatePath("/sulphur-springs/patient-resources");
   }
+  if (fieldId?.startsWith("paris_staff_")) {
+    revalidatePath("/locations/paris/staff");
+    revalidatePath("/locations/paris");
+  }
 }
 
 export async function PATCH(

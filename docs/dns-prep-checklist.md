@@ -10,7 +10,7 @@ You can do almost everything below **while the site still runs on `rub-club.verc
 | Paste **Google review URLs** | Same tab → Save review URLs |
 | Edit **site copy / photos** | Admin → Site content |
 | Edit **massage team** (Meet the team) | Admin → Site content → **Massage team** |
-| Edit **Paris office staff bios** | Admin → Site content → **Paris staff** |
+| Edit **Paris office staff** (photos, bios, page copy) | Admin → Site content → **Paris staff** |
 | Edit **Paris office hours** | Admin → Site content → **Paris / main office** → Office hours |
 | Edit **Sulphur hours** | Admin → Site content → **Sulphur Springs** → Hours |
 | Banners & specials | Admin → Banners & promos |

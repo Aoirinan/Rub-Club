@@ -97,8 +97,11 @@ export async function POST(
     changedBy: staff.email ?? staff.uid,
   });
 
-  for (const p of ["/", "/about", "/services/chiropractic"]) {
+  for (const p of ["/", "/about", "/services/chiropractic", "/locations/paris/staff", "/locations/paris"]) {
     revalidatePath(p);
+  }
+  if (id.startsWith("paris_staff_")) {
+    revalidatePath("/locations/paris/staff");
   }
 
   return NextResponse.json({ ok: true, value: url });

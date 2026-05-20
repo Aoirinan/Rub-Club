@@ -40,6 +40,7 @@ Paris chiropractors (Greg Thompson, Sean Welborn, Brandy Collins): `/about` and 
 
 ## CMS smoke test (superadmin)
 
-1. Admin → Site content → **Paris staff** → edit one bio → Save.
-2. Open `/locations/paris/staff` within ~60 seconds and confirm the bio updated.
-3. Admin → Site content → **Massage team** → confirm Channety’s optional Role field matches what you want on massage pages (defaults to Licensed Massage Therapist if using code fallbacks).
+1. Admin → Site content → **Paris staff** → confirm all six staff show **photos** (defaults from legacy chiropracticparistexas.com).
+2. Edit one **bio** and one **photo** (upload) → Save → reload `/locations/paris/staff` within ~60 seconds.
+3. Edit **Page hero** intro under Paris staff → confirm heading/lede update on the public page.
+4. Admin → Site content → **Massage team** → confirm Channety’s optional Role field matches what you want on massage pages (defaults to Licensed Massage Therapist if using code fallbacks).

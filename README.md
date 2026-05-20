@@ -30,7 +30,7 @@ Other scripts:
 
 **Massage team (superadmin):** edit under Admin → Site content → **Massage team** (home and `/services/massage` “Meet the team” section). Portrait uploads land in Storage at `public_site/massage_team/<FirestoreDocId>.<ext>` with `photoUrl` stored on the document. Deploy rules so visitors can read them: `firebase deploy --only storage` (see `storage.rules` → `public_site/**` read).
 
-**Paris office staff (superadmin):** edit bios under Admin → Site content → **Paris staff** (`/locations/paris/staff`). Names and job titles are defined in code; bios are CMS fields. Massage therapists also appear on the Rub Club “Meet the team” sections with massage-focused titles — use the Paris staff page for insurance, marketing, front desk, and similar roles.
+**Paris office staff (superadmin):** edit under Admin → Site content → **Paris staff** (`/locations/paris/staff`): page heading/intro, team section heading, bottom CTA, and **per person** photo (upload) + bio. Default photos are pulled from the legacy Paris chiropractic site CDN; uploads replace them in Firebase Storage like doctor photos. Names and job titles stay in code. Massage therapists also appear on Rub Club “Meet the team” sections — use Paris staff for insurance, marketing, front desk, and similar roles.
 
 **Who can edit the website?** **Managers** handle scheduling, patients, and bookable providers. **Superadmins** (plus the one-time bootstrap on `/admin/super`) can edit site copy, hours, FAQs, massage team, Paris/SS staff bios, and marketing banners.
 

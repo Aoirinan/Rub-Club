@@ -389,4 +389,6 @@ export const CMS_REVALIDATE_PATHS = [
   "/insurance",
   "/reviews",
   "/patient-forms",
+  "/locations/paris",
+  "/locations/paris/staff",
 ] as const;
