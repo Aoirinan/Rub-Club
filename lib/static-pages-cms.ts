@@ -253,7 +253,8 @@ export function buildStaticPagesCmsDefaults(): Record<string, string> {
 
 - Bring your insurance card and photo ID to your first visit.
 - We bill your plan directly so you don't pay the full amount up front.
-- Auto injuries: ask us about med-pay and personal injury protection — we frequently coordinate with attorneys and adjusters.`,
+- Auto injuries: ask us about med-pay and personal injury protection — we frequently coordinate with attorneys and adjusters.
+- Personal injury questions: our Paris case manager and office team can help with paperwork and coordination.`,
     insurance_massage_heading: "Massage therapy",
     insurance_massage_body:
       "Massage therapy is generally a self-pay service. Some HSA/FSA cards may apply with a doctor's note. The massage desk can walk you through pricing for 30- and 60-minute visits.",

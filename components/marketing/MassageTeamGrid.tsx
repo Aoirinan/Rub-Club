@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { MassageTeamCard } from "@/lib/massage-team";
 
 type Variant = "home" | "service";
@@ -6,6 +7,8 @@ type Props = {
   members: MassageTeamCard[];
   title: string;
   subtitle?: string;
+  /** Shown below the grid (e.g. link to Paris office staff roles). */
+  footnote?: ReactNode;
   titleAs?: "h1" | "h2";
   variant?: Variant;
 };
@@ -14,6 +17,7 @@ export function MassageTeamGrid({
   members,
   title,
   subtitle,
+  footnote,
   titleAs = "h2",
   variant = "home",
 }: Props) {
@@ -70,6 +74,17 @@ export function MassageTeamGrid({
           </article>
         ))}
       </div>
+      {footnote ? (
+        <p
+          className={
+            isHome
+              ? "mx-auto mt-8 max-w-3xl text-center text-sm text-stone-600"
+              : "mt-6 text-sm text-stone-600"
+          }
+        >
+          {footnote}
+        </p>
+      ) : null}
     </section>
   );
 }

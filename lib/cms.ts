@@ -14,6 +14,7 @@ import {
   wellnessCarePlansDefaults,
   wellnessSectionFieldId,
 } from "@/lib/wellness-care-plans-content";
+import { buildParisStaffCmsDefaults, buildParisStaffCmsRegistry } from "@/lib/paris-staff-cms";
 import { buildSSCmsDefaults, buildSSCmsRegistry } from "@/lib/ss-cms-registry";
 import {
   STATIC_PAGES_CMS_REGISTRY,
@@ -33,6 +34,7 @@ export type ContentPageKey =
   | "Chiropractic"
   | "Massage"
   | "Paris / main office"
+  | "Paris staff"
   | "Sulphur Springs"
   | "SS subpages"
   | "Insurance"
@@ -219,6 +221,7 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   },
 
   ...buildSSCmsRegistry(),
+  ...buildParisStaffCmsRegistry(),
   ...STATIC_PAGES_CMS_REGISTRY,
 ];
 
@@ -296,6 +299,7 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
 
   ...wellnessCarePlansDefaults(),
   ...buildSSCmsDefaults(),
+  ...buildParisStaffCmsDefaults(),
   ...buildStaticPagesCmsDefaults(),
 };
 

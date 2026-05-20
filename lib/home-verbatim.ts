@@ -142,6 +142,7 @@ export const TEAM = [
   },
   {
     name: "Channety Wooten",
+    role: "Licensed Massage Therapist",
     imageKey: "staffChannety" as const,
     bio: "I am Channety, a Paris High School graduate (2005) who finished massage training at Bodywork Study School of Massage in 2009 and later earned an associate degree in radiology from Paris Junior College. Since 2011 I have blended Swedish, deep tissue, and sports modalities to help patients feel strong and pain free.",
   },

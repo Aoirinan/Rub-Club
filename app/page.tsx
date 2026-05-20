@@ -396,6 +396,16 @@ export default async function Home() {
           title="Meet the Team"
           subtitle="Massage therapy — The Rub Club"
           variant="home"
+          footnote={
+            <>
+              Titles here reflect massage therapy roles. Insurance, personal injury, front desk, and
+              other Paris office roles are on{" "}
+              <Link href="/locations/paris/staff" className="font-bold text-[#0f5f5c] underline">
+                our Paris office team page
+              </Link>
+              .
+            </>
+          }
         />
 
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">

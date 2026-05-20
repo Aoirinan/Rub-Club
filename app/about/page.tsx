@@ -70,6 +70,10 @@ export default async function AboutPage() {
           <h2 className="text-2xl font-black text-[#173f3b]">Our Paris chiropractors</h2>
           <p className="mt-2 max-w-2xl text-sm text-stone-600">
             Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins practice in Paris.{" "}
+            <Link href="/locations/paris/staff" className="font-bold text-[#0f5f5c] underline">
+              Meet our Paris office team
+            </Link>
+            .{" "}
             <Link href="/sulphur-springs/staff" className="font-bold text-[#0f5f5c] underline">
               Dr. Conner Collins
             </Link>{" "}

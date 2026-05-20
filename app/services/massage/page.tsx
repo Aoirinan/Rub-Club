@@ -154,6 +154,16 @@ export default async function MassageServicePage() {
           title="Meet the team"
           subtitle="Licensed massage therapists at The Rub Club"
           variant="service"
+          footnote={
+            <>
+              For insurance coordination, personal injury case management, and other Paris office
+              roles, see{" "}
+              <Link href="/locations/paris/staff" className="font-bold text-[#0f5f5c] underline">
+                Meet our Paris office team
+              </Link>
+              .
+            </>
+          }
         />
 
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { MarkdownBulletList } from "@/components/SsMarkdownBody";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
@@ -41,6 +42,13 @@ export default async function InsurancePage() {
               </p>
             ),
           )}
+          <p className="text-sm text-stone-600">
+            Auto-injury and personal-injury paperwork:{" "}
+            <Link href="/locations/paris/staff" className="font-bold text-[#0f5f5c] underline">
+              meet our Paris office team
+            </Link>{" "}
+            (including our personal injury case manager).
+          </p>
         </section>
 
         <section className="space-y-4 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">

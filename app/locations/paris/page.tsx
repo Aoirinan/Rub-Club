@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { LocationDetail } from "@/components/LocationDetail";
@@ -44,6 +45,17 @@ export default async function ParisLocationPage() {
         lede="Both Chiropractic Associates and The Rub Club operate from this address. Easy parking, friendly front desk, weekday hours."
       />
       <LocationDetail location={LOCATIONS.paris} reviewUrl={reviewUrl} officeHours={officeHours} />
+      <div className="mx-auto max-w-6xl px-4 pb-16">
+        <p className="text-center text-sm text-stone-600">
+          <Link href="/locations/paris/staff" className="font-bold text-[#0f5f5c] underline">
+            Meet our Paris office team
+          </Link>
+          {" · "}
+          <Link href="/services/massage" className="font-bold text-[#0f5f5c] underline">
+            Meet The Rub Club massage therapists
+          </Link>
+        </p>
+      </div>
     </>
   );
 }

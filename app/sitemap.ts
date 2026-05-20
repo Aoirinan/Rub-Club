@@ -15,6 +15,7 @@ const ENTRIES: { path: string; changeFrequency: ChangeFrequency; priority: numbe
   { path: "/meet-the-doctors", changeFrequency: "monthly", priority: 0.85 },
   { path: "/locations", changeFrequency: "monthly", priority: 0.85 },
   { path: "/locations/paris", changeFrequency: "monthly", priority: 0.82 },
+  { path: "/locations/paris/staff", changeFrequency: "monthly", priority: 0.7 },
   { path: "/locations/sulphur-springs", changeFrequency: "monthly", priority: 0.82 },
   { path: "/contact", changeFrequency: "monthly", priority: 0.75 },
   { path: "/about", changeFrequency: "monthly", priority: 0.65 },
