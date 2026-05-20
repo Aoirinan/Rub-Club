@@ -15,7 +15,11 @@ Use this when deploying to Vercel (or similar). Copy `env.example` to Vercel **P
 
 Add your Vercel hostname and final domain under **Firebase Auth → Settings → Authorized domains** so admin login and password reset work.
 
-## Required for online booking + payments
+## Online booking (no payment required)
+
+Public `/book` works with Firebase + SendGrid only. Turn scheduling on/off under **Admin → Banners & promos → Online booking**. Online Square prepay stays **off** unless you enable it in that panel.
+
+## Square (only if you enable online prepay or admin payment links)
 
 | Variable | What to provide |
 |----------|-----------------|

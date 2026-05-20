@@ -9,7 +9,7 @@ import { chiropractorJsonLd } from "@/lib/structured-data";
 export const metadata: Metadata = {
   title: "Sulphur Springs, TX chiropractor — Chiropractic Associates",
   description:
-    "Visit our Sulphur Springs chiropractic office at 207 Jefferson St. E. Adjustments, decompression, and rehab care from Dr. Welborn and the Chiropractic Associates team.",
+    "Visit our Sulphur Springs chiropractic office at 207 Jefferson St. E. Adjustments, decompression, and rehab care from Dr. Conner Collins and the Chiropractic Associates team.",
   alternates: { canonical: "/locations/sulphur-springs" },
   openGraph: {
     title: "Sulphur Springs, TX — Chiropractic Associates",

@@ -5,7 +5,7 @@ import { DateTime } from "luxon";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
 import type { DurationMin, LocationId, ServiceLine } from "@/lib/constants";
-import { LOCATIONS, TIME_ZONE } from "@/lib/constants";
+import { LOCATIONS, TIME_ZONE, serviceLineEmailLabel } from "@/lib/constants";
 import { assertRateLimitOk, getClientIp } from "@/lib/rate-limit";
 import {
   fetchActiveProvidersForPublicBooking,
@@ -38,8 +38,8 @@ export const runtime = "nodejs";
 const bodySchema = z
   .object({
     locationId: z.enum(["paris", "sulphur_springs"]),
-    serviceLine: z.enum(["massage", "chiropractic"]),
-    visitKind: z.enum(["massage", "stretch"]).optional(),
+    serviceLine: z.enum(["massage", "chiropractic", "stretch"]),
+    visitKind: z.enum(["massage", "stretch", "chiropractic"]).optional(),
     paymentType: z.enum(["cash", "insurance"]).optional(),
     durationMin: z.union([z.literal(30), z.literal(60)]),
     startIso: z.string().min(8),
@@ -143,8 +143,9 @@ export async function POST(req: Request) {
 
   const locationId = body.locationId as LocationId;
   const durationMin = body.durationMin as DurationMin;
-  const visitKind = body.visitKind === "stretch" ? "stretch" : "massage";
-  const serviceLine: ServiceLine = visitKind === "stretch" ? "stretch" : "massage";
+  const serviceLine = body.serviceLine as ServiceLine;
+  const visitKind: "massage" | "stretch" =
+    serviceLine === "stretch" || body.visitKind === "stretch" ? "stretch" : "massage";
 
   const db = getFirestore();
   const eligible = await fetchActiveProvidersForPublicBooking(db, locationId, serviceLine, {
@@ -466,7 +467,7 @@ export async function POST(req: Request) {
         amountCents: cents,
         patientName: body.name.trim(),
         bookingId: primaryId,
-        description: `${visitKind === "stretch" ? "Stretch" : "Massage"} · ${durationMin} min (online booking)`,
+        description: `${serviceLineEmailLabel(serviceLine)} · ${durationMin} min (online booking)`,
       });
       if (linkResult.created) {
         const ref = db.collection("bookings").doc(primaryId);
@@ -474,7 +475,7 @@ export async function POST(req: Request) {
           paymentLinkUrl: linkResult.url,
           paymentLinkId: linkResult.paymentLinkId,
           paymentAmountCents: cents,
-          paymentDescription: `${visitKind === "stretch" ? "Stretch" : "Massage"} · ${durationMin} min (online booking)`,
+          paymentDescription: `${serviceLineEmailLabel(serviceLine)} · ${durationMin} min (online booking)`,
           paymentRequestedAt: FieldValue.serverTimestamp(),
           paymentRequestedByUid: null,
           prepaidOnline: true,

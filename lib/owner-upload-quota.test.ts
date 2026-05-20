@@ -33,8 +33,15 @@ const emptyConfig = {
     sulphurChiroPhone: "",
     rubClubMassagePhone: "",
     giftCardOrderUrl: "",
+    gbpParisReviewUrl: "",
+    gbpSulphurReviewUrl: "",
     awardsStripHtml: "",
     footerBlurbHtml: "",
+  },
+  publicBooking: {
+    enabled: true,
+    disabledMessage: "",
+    onlinePaymentsEnabled: false,
   },
 } satisfies SiteOwnerSingleton;
 
