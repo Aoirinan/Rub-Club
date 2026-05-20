@@ -3,10 +3,12 @@ import Image from "next/image";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { telHref, LOCATIONS } from "@/lib/constants";
-import { SS_STAFF, type SSStaffMember } from "@/lib/sulphur-springs-content";
+import { getSSStaffForDisplay } from "@/lib/ss-cms-content";
+import type { SSStaffMember } from "@/lib/sulphur-springs-content";
 
 const ss = LOCATIONS.sulphur_springs;
-const [featured, ...rest] = SS_STAFF;
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Meet the Staff — Sulphur Springs Chiropractic",
@@ -55,7 +57,9 @@ function StaffPhoto({ member, className }: { member: SSStaffMember; className?: 
   );
 }
 
-export default function SulphurSpringsStaffPage() {
+export default async function SulphurSpringsStaffPage() {
+  const staff = await getSSStaffForDisplay();
+  const [featured, ...rest] = staff;
   return (
     <>
       <Breadcrumbs

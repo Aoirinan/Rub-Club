@@ -4,7 +4,7 @@
 
 | Location | Admin path | Format (one line per row) |
 |----------|------------|---------------------------|
-| **Paris** (home footer, contact, `/locations/paris`) | Site content → **Paris / main office** → Office hours | `Monday\|9:00 AM – 5:00 PM` |
+| **Paris** (home footer, contact, `/locations/paris`) | Site content → **Paris office** → Office hours | `Monday\|9:00 AM – 5:00 PM` |
 | **Sulphur Springs** (SS hub, `/locations/sulphur-springs`) | Site content → **Sulphur Springs** → Hours | `Monday – Friday\|9:00 AM – 5:00 PM` or `Saturday – Sunday\|Closed` |
 
 You can also use `Monday: 9:00 AM – 5:00 PM` or `Monday – 9:00 AM – 5:00 PM` — the site parses common formats.

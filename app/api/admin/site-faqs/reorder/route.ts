@@ -37,6 +37,7 @@ export async function POST(req: Request) {
   await batch.commit();
 
   revalidatePath("/faq");
+  revalidatePath("/sulphur-springs/q-and-a");
   revalidatePath("/");
 
   return NextResponse.json({ ok: true });

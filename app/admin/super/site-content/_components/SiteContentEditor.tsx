@@ -4,6 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import type { ContentFieldType, ContentPageKey } from "@/lib/cms";
+import { MassageTeamAdminSection } from "@/app/admin/super/_components/MassageTeamAdminSection";
+
+type SiteContentNavKey = ContentPageKey | "FAQ Items" | "Massage team";
 
 type FieldRow = {
   id: string;
@@ -34,12 +37,19 @@ type FaqRow = {
   active: boolean;
 };
 
-const PAGE_NAV: { key: ContentPageKey | "FAQ Items"; label: string }[] = [
+const PAGE_NAV: { key: SiteContentNavKey; label: string }[] = [
   { key: "Home", label: "Home" },
   { key: "Chiropractic", label: "Chiropractic" },
   { key: "Wellness care plans", label: "Wellness plans" },
   { key: "Massage", label: "Massage" },
+  { key: "Massage team", label: "Massage team" },
+  { key: "Paris / main office", label: "Paris office" },
   { key: "Sulphur Springs", label: "Sulphur Springs" },
+  { key: "SS subpages", label: "SS subpages" },
+  { key: "Insurance", label: "Insurance" },
+  { key: "Services hub", label: "Services hub" },
+  { key: "Reviews", label: "Reviews" },
+  { key: "Patient forms", label: "Patient forms" },
   { key: "About", label: "About" },
   { key: "FAQ", label: "FAQ" },
   { key: "Contact", label: "Contact" },
@@ -55,6 +65,12 @@ const BADGE_CLASS: Record<string, string> = {
   "Wellness care plans": "bg-emerald-100 text-emerald-900",
   Massage: "bg-purple-100 text-purple-900",
   "Sulphur Springs": "bg-orange-100 text-orange-900",
+  "Paris / main office": "bg-amber-100 text-amber-950",
+  "SS subpages": "bg-orange-50 text-orange-950",
+  Insurance: "bg-sky-100 text-sky-900",
+  "Services hub": "bg-indigo-100 text-indigo-900",
+  Reviews: "bg-rose-100 text-rose-900",
+  "Patient forms": "bg-violet-100 text-violet-900",
   About: "bg-green-100 text-green-900",
   FAQ: "bg-yellow-100 text-yellow-900",
   Contact: "bg-slate-200 text-slate-800",
@@ -124,7 +140,7 @@ export function SiteContentEditor() {
   const [fields, setFields] = useState<FieldRow[]>([]);
   const [changelog, setChangelog] = useState<ChangelogEntry[]>([]);
   const [faqs, setFaqs] = useState<FaqRow[]>([]);
-  const [selectedPage, setSelectedPage] = useState<ContentPageKey | "FAQ Items">("Home");
+  const [selectedPage, setSelectedPage] = useState<SiteContentNavKey>("Home");
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
@@ -181,8 +197,9 @@ export function SiteContentEditor() {
   const filteredFields = useMemo(() => {
     const q = search.trim().toLowerCase();
     return fields.filter((f) => {
-      if (selectedPage !== "FAQ Items" && f.pageLabel !== selectedPage) return false;
-      if (selectedPage === "FAQ Items") return false;
+      if (selectedPage !== "FAQ Items" && selectedPage !== "Massage team" && f.pageLabel !== selectedPage)
+        return false;
+      if (selectedPage === "FAQ Items" || selectedPage === "Massage team") return false;
       if (!q) return true;
       return (
         f.pageLabel.toLowerCase().includes(q) ||
@@ -205,7 +222,10 @@ export function SiteContentEditor() {
     );
   }, [fields, search]);
 
-  const displayFields = search.trim() && selectedPage !== "FAQ Items" ? globalSearchFields : filteredFields;
+  const displayFields =
+    search.trim() && selectedPage !== "FAQ Items" && selectedPage !== "Massage team"
+      ? globalSearchFields
+      : filteredFields;
 
   async function saveField(id: string, value: string, file?: File) {
     setBusy(true);
@@ -329,7 +349,8 @@ export function SiteContentEditor() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-slate-900">Site content</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Edit public page copy, images, and FAQs. Changes appear on the live site within about 60 seconds.
+          Edit public page copy, images, massage team bios, and FAQs. Changes appear on the live site within about 60
+          seconds.
         </p>
       </div>
 
@@ -343,13 +364,15 @@ export function SiteContentEditor() {
         </p>
       ) : null}
 
-      <input
-        type="search"
-        placeholder="Search fields across all pages…"
-        className="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      {selectedPage !== "Massage team" ? (
+        <input
+          type="search"
+          placeholder="Search fields across all pages…"
+          className="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      ) : null}
 
       <div className="flex flex-col gap-6 lg:flex-row">
         <nav className="lg:w-48 shrink-0 space-y-1">
@@ -371,10 +394,25 @@ export function SiteContentEditor() {
         </nav>
 
         <div className="min-w-0 flex-1 space-y-3">
-          {selectedPage === "FAQ Items" ? (
+          {selectedPage === "Massage team" ? (
+            <MassageTeamAdminSection
+              auth={auth}
+              onNotify={(message) => {
+                if (message) showToast("ok", message);
+              }}
+            />
+          ) : selectedPage === "FAQ Items" ? (
             <>
               <div className="flex justify-between">
-                <h2 className="text-lg font-semibold text-slate-900">FAQ items</h2>
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">FAQ items</h2>
+                  <p className="mt-1 text-xs text-slate-600">
+                    Category <code className="rounded bg-slate-100 px-1">general</code> shows on{" "}
+                    <strong>/faq</strong>. Category{" "}
+                    <code className="rounded bg-slate-100 px-1">sulphur-springs</code> shows on{" "}
+                    <strong>/sulphur-springs/q-and-a</strong>.
+                  </p>
+                </div>
                 <button
                   type="button"
                   className="rounded-full bg-slate-900 px-4 py-1.5 text-xs font-bold text-white"
@@ -597,6 +635,7 @@ export function SiteContentEditor() {
         </div>
       </div>
 
+      {selectedPage !== "Massage team" ? (
       <section className="mt-10 rounded-xl border border-slate-200 bg-white p-4">
         <h2 className="text-lg font-semibold text-slate-900">Recent changes</h2>
         <table className="mt-3 w-full text-left text-sm">
@@ -627,6 +666,7 @@ export function SiteContentEditor() {
           </tbody>
         </table>
       </section>
+      ) : null}
     </div>
   );
 }

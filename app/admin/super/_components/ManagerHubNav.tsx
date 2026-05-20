@@ -10,7 +10,7 @@ const TABS = [
   {
     href: "/admin/super",
     label: "Operations",
-    description: "Staff, providers, massage team",
+    description: "Staff, providers",
     match: (path: string) =>
       path === "/admin/super" || path.startsWith("/admin/super/slot-inspector"),
     capability: "operations" as const,
@@ -18,7 +18,7 @@ const TABS = [
   {
     href: "/admin/super/site-content",
     label: "Site content",
-    description: "Page copy, photos, FAQs",
+    description: "Page copy, photos, massage team, FAQs",
     match: (path: string) => path.startsWith("/admin/super/site-content"),
     capability: "siteContent" as const,
   },

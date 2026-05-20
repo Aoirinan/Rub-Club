@@ -14,6 +14,11 @@ import {
   wellnessCarePlansDefaults,
   wellnessSectionFieldId,
 } from "@/lib/wellness-care-plans-content";
+import { buildSSCmsDefaults, buildSSCmsRegistry } from "@/lib/ss-cms-registry";
+import {
+  STATIC_PAGES_CMS_REGISTRY,
+  buildStaticPagesCmsDefaults,
+} from "@/lib/static-pages-cms";
 
 export type ContentFieldType =
   | "text"
@@ -29,6 +34,11 @@ export type ContentPageKey =
   | "Massage"
   | "Paris / main office"
   | "Sulphur Springs"
+  | "SS subpages"
+  | "Insurance"
+  | "Services hub"
+  | "Reviews"
+  | "Patient forms"
   | "About"
   | "FAQ"
   | "Contact"
@@ -207,6 +217,9 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
     fieldLabel: "Body copy",
     type: "text",
   },
+
+  ...buildSSCmsRegistry(),
+  ...STATIC_PAGES_CMS_REGISTRY,
 ];
 
 export const DEFAULTS: Record<string, string> = {
@@ -282,6 +295,8 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
   nav_book_url: "/contact",
 
   ...wellnessCarePlansDefaults(),
+  ...buildSSCmsDefaults(),
+  ...buildStaticPagesCmsDefaults(),
 };
 
 export const CONTENT_IDS = CONTENT_REGISTRY.map((f) => f.id);
@@ -367,4 +382,7 @@ export const CMS_REVALIDATE_PATHS = [
   "/services/chiropractic/wellness-care-plans",
   "/services/massage",
   "/sulphur-springs",
+  "/insurance",
+  "/reviews",
+  "/patient-forms",
 ] as const;

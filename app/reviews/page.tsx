@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { TestimonialVideosSection } from "@/components/TestimonialVideosSection";
-import { TESTIMONIALS } from "@/lib/testimonials";
 import { LOCATION_LIST } from "@/lib/constants";
 import { getReviewUrlForLocation } from "@/lib/cms-display";
+import { getReviewsPageContent } from "@/lib/static-pages-content";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Patient Reviews",
@@ -18,28 +20,31 @@ export const metadata: Metadata = {
 };
 
 export default async function ReviewsPage() {
-  const reviewLinks = await Promise.all(
-    LOCATION_LIST.map(async (loc) => ({
-      id: loc.id,
-      shortName: loc.shortName,
-      url: await getReviewUrlForLocation(loc.id),
-    })),
-  );
+  const [content, reviewLinks] = await Promise.all([
+    getReviewsPageContent(),
+    Promise.all(
+      LOCATION_LIST.map(async (loc) => ({
+        id: loc.id,
+        shortName: loc.shortName,
+        url: await getReviewUrlForLocation(loc.id),
+      })),
+    ),
+  ]);
 
   return (
     <>
       <Breadcrumbs items={[{ name: "Home", url: "/" }, { name: "Reviews", url: "/reviews" }]} />
       <PageHero
-        eyebrow="Patient stories"
-        title="What our patients say"
-        lede="Voted Best Chiropractic Center and Best Massage in The Paris News reader polls. Below are stories adapted from public Google reviews (paraphrased, not copied word-for-word)."
+        eyebrow={content.heroEyebrow}
+        title={content.heroTitle}
+        lede={content.heroLede}
       />
       <div className="mx-auto max-w-6xl space-y-10 px-4 pb-16">
         <TestimonialVideosSection />
         <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {TESTIMONIALS.map((t) => (
+          {content.testimonials.map((t) => (
             <figure
-              key={t.quote}
+              key={`${t.author}-${t.quote.slice(0, 24)}`}
               className="flex h-full flex-col justify-between border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md"
             >
               <blockquote className="text-base italic leading-relaxed text-stone-700">
@@ -56,12 +61,8 @@ export default async function ReviewsPage() {
         </section>
 
         <section className="border-t-4 border-[#0f5f5c] bg-[#173f3b] p-6 text-white shadow-md sm:p-10">
-          <h2 className="text-2xl font-black">Loved your visit? Leave us a review.</h2>
-          <p className="mt-3 max-w-2xl text-white/90">
-            A few words on Google help other families find dependable, family-owned care in Northeast
-            Texas. Each button opens your Google review link when configured in admin, otherwise
-            Google Maps for that office.
-          </p>
+          <h2 className="text-2xl font-black">{content.ctaHeading}</h2>
+          <p className="mt-3 max-w-2xl text-white/90">{content.ctaBody}</p>
           <div className="mt-6 flex flex-wrap gap-3">
             {reviewLinks.map((loc) => (
               <a

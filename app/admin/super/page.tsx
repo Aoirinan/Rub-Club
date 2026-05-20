@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
-import { MassageTeamAdminSection } from "./_components/MassageTeamAdminSection";
 import {
   STAFF_ROLE_OPTIONS,
   staffMeetsMin,
@@ -915,6 +914,14 @@ export default function SuperAdminPage() {
               slots are tracked per provider. Optional custom hours override the default 9:00 AM–5:00 PM Chicago window for
               that person only.
             </p>
+            <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              Public &ldquo;Meet the team&rdquo; bios and photos:{" "}
+              <Link href="/admin/super/site-content" className="font-semibold text-[#0f5f5c] underline">
+                Site content → Massage team
+              </Link>
+              . After adding providers here, use &ldquo;Copy bookable massage providers into team&rdquo; there to sync
+              the website roster.
+            </p>
 
             <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-4 space-y-3">
               <p className="text-sm font-medium text-slate-800">Add provider</p>
@@ -1330,8 +1337,6 @@ export default function SuperAdminPage() {
               ) : null}
             </ul>
           </section>
-
-          <MassageTeamAdminSection auth={auth} onNotify={setMessage} />
 
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
             <h2 className="text-lg font-semibold text-slate-900">Bootstrap again (optional)</h2>

@@ -9,6 +9,7 @@ You can do almost everything below **while the site still runs on `rub-club.verc
 | Keep **online booking off** | Admin → Banners & promos → Online booking → uncheck **Online booking enabled** |
 | Paste **Google review URLs** | Same tab → Save review URLs |
 | Edit **site copy / photos** | Admin → Site content |
+| Edit **massage team** (Meet the team) | Admin → Site content → **Massage team** |
 | Edit **Paris office hours** | Admin → Site content → **Paris / main office** → Office hours |
 | Edit **Sulphur hours** | Admin → Site content → **Sulphur Springs** → Hours |
 | Banners & specials | Admin → Banners & promos |

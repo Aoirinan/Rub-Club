@@ -18,9 +18,20 @@ const patchSchema = z.object({
   value: z.string().max(100_000),
 });
 
-function revalidatePublicPages(): void {
+function revalidatePublicPages(fieldId?: string): void {
   for (const p of CMS_REVALIDATE_PATHS) {
     revalidatePath(p);
+  }
+  if (fieldId?.startsWith("ss_page_")) {
+    const slug = fieldId.replace(/^ss_page_/, "").replace(/_(body|meta)$/, "");
+    if (slug) revalidatePath(`/sulphur-springs/${slug}`);
+  }
+  if (
+    fieldId?.startsWith("ss_staff_") ||
+    fieldId === "ss_patient_resources_intro"
+  ) {
+    revalidatePath("/sulphur-springs/staff");
+    revalidatePath("/sulphur-springs/patient-resources");
   }
 }
 
@@ -83,7 +94,7 @@ export async function PATCH(
     changedBy: staff.email ?? staff.uid,
   });
 
-  revalidatePublicPages();
+  revalidatePublicPages(id);
 
   return NextResponse.json({ ok: true, value: newValue });
 }

@@ -28,7 +28,7 @@ Other scripts:
 - `npm run lint` — ESLint on the app + components
 - `npm run verify:massage-team` — checks Firestore `massage_team_members` rows: anonymous `HEAD` on each `photoUrl`, and that `photoStoragePath` objects exist under `public_site/massage_team/**` when present. Uses the same env as Next (`.env.local`). Exit code 1 if any portrait is not publicly reachable.
 
-**Massage team portraits (superadmin):** uploads land in Storage at `public_site/massage_team/<FirestoreDocId>.<ext>` with `photoUrl` stored on the document. Deploy rules so visitors can read them: `firebase deploy --only storage` (see `storage.rules` → `public_site/**` read). Public “Meet the team” blocks live on `/` and `/services/massage` (scroll past the hero on the massage page).
+**Massage team (superadmin):** edit under Admin → Site content → **Massage team** (home and `/services/massage` “Meet the team” section). Portrait uploads land in Storage at `public_site/massage_team/<FirestoreDocId>.<ext>` with `photoUrl` stored on the document. Deploy rules so visitors can read them: `firebase deploy --only storage` (see `storage.rules` → `public_site/**` read).
 
 ---
 

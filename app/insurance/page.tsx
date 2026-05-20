@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
-import { telHref } from "@/lib/constants";
+import { MarkdownBulletList } from "@/components/SsMarkdownBody";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
+import { telHref } from "@/lib/constants";
+import { getInsurancePageContent } from "@/lib/static-pages-content";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Insurance & Billing",
@@ -16,51 +20,37 @@ export const metadata: Metadata = {
   },
 };
 
-export default function InsurancePage() {
+export default async function InsurancePage() {
+  const c = await getInsurancePageContent();
+
   return (
     <>
       <Breadcrumbs
         items={[{ name: "Home", url: "/" }, { name: "Insurance", url: "/insurance" }]}
       />
-      <PageHero
-        eyebrow="Insurance & billing"
-        title="Plain-language insurance answers"
-        lede="We work with most major medical plans for chiropractic care and file claims on your behalf. Massage therapy is generally self-pay."
-      />
+      <PageHero eyebrow="Insurance & billing" title={c.heroTitle} lede={c.heroLede} />
       <div className="mx-auto max-w-4xl space-y-8 px-4 pb-16">
         <section className="space-y-4 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-xl font-black text-[#173f3b]">Chiropractic coverage</h2>
-          <p className="text-stone-700">
-            Most commercial insurance, Medicare, and many auto-injury and worker&rsquo;s comp plans
-            cover chiropractic visits. We will verify your benefits and explain copays, deductibles,
-            and visit limits up front. If your plan does not cover chiropractic, we offer a
-            transparent self-pay rate.
-          </p>
-          <ul className="list-disc space-y-2 pl-6 text-stone-700">
-            <li>Bring your insurance card and photo ID to your first visit.</li>
-            <li>We bill your plan directly so you don&rsquo;t pay the full amount up front.</li>
-            <li>
-              Auto injuries: ask us about med-pay and personal injury protection — we frequently
-              coordinate with attorneys and adjusters.
-            </li>
-          </ul>
+          <h2 className="text-xl font-black text-[#173f3b]">{c.chiroHeading}</h2>
+          {c.chiroBody.split("\n\n").map((block, i) =>
+            block.trim().startsWith("- ") ? (
+              <MarkdownBulletList key={i} text={block} />
+            ) : (
+              <p key={i} className="text-stone-700">
+                {block}
+              </p>
+            ),
+          )}
         </section>
 
         <section className="space-y-4 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-xl font-black text-[#173f3b]">Massage therapy</h2>
-          <p className="text-stone-700">
-            Massage therapy is generally a self-pay service. Some HSA/FSA cards may apply with a
-            doctor&rsquo;s note. The massage desk can walk you through pricing for 30- and 60-minute
-            visits.
-          </p>
+          <h2 className="text-xl font-black text-[#173f3b]">{c.massageHeading}</h2>
+          <p className="text-stone-700">{c.massageBody}</p>
         </section>
 
         <section className="space-y-4 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-xl font-black text-[#173f3b]">Verify before your visit</h2>
-          <p className="text-stone-700">
-            The fastest way to confirm coverage is to call us with your plan details handy. Have your
-            insurance card, group number, and date of birth available.
-          </p>
+          <h2 className="text-xl font-black text-[#173f3b]">{c.verifyHeading}</h2>
+          <p className="text-stone-700">{c.verifyBody}</p>
           <p className="text-sm font-bold text-[#0f5f5c]">
             <a className="focus-ring underline" href={telHref("903-785-5551")}>
               Call Paris: 903-785-5551

@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
-import { SERVICES_HUB_PATH } from "@/lib/service-breadcrumbs";
 import { WELLNESS_CARE_PLANS_PATH } from "@/lib/constants";
+import {
+  getPublicBookingConfig,
+  scheduleCtaHref,
+  scheduleCtaLabel,
+} from "@/lib/public-booking-settings";
+import { SERVICES_HUB_PATH } from "@/lib/service-breadcrumbs";
+import { getServicesHubContent } from "@/lib/static-pages-content";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Services — Chiropractic & Massage in Paris & Sulphur Springs, TX",
@@ -11,7 +19,9 @@ export const metadata: Metadata = {
   alternates: { canonical: SERVICES_HUB_PATH },
 };
 
-export default function ServicesHubPage() {
+export default async function ServicesHubPage() {
+  const [c, booking] = await Promise.all([getServicesHubContent(), getPublicBookingConfig()]);
+
   return (
     <>
       <Breadcrumbs
@@ -20,26 +30,30 @@ export default function ServicesHubPage() {
           { name: "Services", url: SERVICES_HUB_PATH },
         ]}
       />
-      <PageHero
-        eyebrow="Chiropractic Associates & The Rub Club"
-        title="Our services"
-        lede="Family-owned chiropractic in Paris and Sulphur Springs, plus licensed massage therapy at our Paris office."
-      />
+      <PageHero eyebrow={c.heroEyebrow} title={c.heroTitle} lede={c.heroLede} />
       <div className="mx-auto grid max-w-6xl gap-6 px-4 pb-16 sm:grid-cols-2">
         <ServiceCard
-          title="Chiropractic care"
-          body="Adjustments, decompression, rehab, acupuncture, and pediatric care at our Paris and Sulphur Springs offices."
+          title={c.chiroTitle}
+          body={c.chiroBody}
           href="/services/chiropractic"
           links={[
             { label: "Wellness care plans (Paris)", href: WELLNESS_CARE_PLANS_PATH },
-            { label: "Book chiropractic online", href: "/book?service=chiropractic" },
+            {
+              label: scheduleCtaLabel(booking, "Book chiropractic online"),
+              href: scheduleCtaHref(booking, "service=chiropractic"),
+            },
           ]}
         />
         <ServiceCard
-          title="Massage therapy — The Rub Club"
-          body="Deep tissue, prenatal, sports, and therapeutic massage at our Paris location, coordinated with chiropractic when helpful."
+          title={c.massageTitle}
+          body={c.massageBody}
           href="/services/massage"
-          links={[{ label: "Book massage online", href: "/book?service=massage&location=paris" }]}
+          links={[
+            {
+              label: scheduleCtaLabel(booking, "Book massage online"),
+              href: scheduleCtaHref(booking, "service=massage&location=paris"),
+            },
+          ]}
         />
       </div>
     </>
@@ -68,7 +82,10 @@ function ServiceCard({
       <ul className="mt-4 space-y-2">
         {links.map((l) => (
           <li key={l.href}>
-            <Link href={l.href} className="text-sm font-bold text-[#0f5f5c] underline hover:text-[#173f3b]">
+            <Link
+              href={l.href}
+              className="text-sm font-bold text-[#0f5f5c] underline hover:text-[#173f3b]"
+            >
               {l.label}
             </Link>
           </li>

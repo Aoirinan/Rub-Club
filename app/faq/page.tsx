@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Breadcrumbs, CtaCard, PageHero } from "@/components/PageChrome";
+import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { FaqList } from "@/components/FaqList";
 import { getContentMany } from "@/lib/cms";

@@ -18,6 +18,7 @@ const faqSchema = z.object({
 
 function bumpFaqCache(): void {
   revalidatePath("/faq");
+  revalidatePath("/sulphur-springs/q-and-a");
   revalidatePath("/");
 }
 

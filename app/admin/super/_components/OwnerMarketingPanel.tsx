@@ -391,13 +391,13 @@ export function OwnerMarketingPanel() {
               </select>
               {massageTeamMembers.length === 0 ? (
                 <span className="mt-1 block text-xs text-amber-800">
-                  No massage therapists found. Add bookable massage providers on Admin → Super, or seed the
-                  website team in Admin → Super → Massage team (Meet the team).
+                  No massage therapists found. Add bookable massage providers under Operations, or seed the website team
+                  in Site content → Massage team.
                 </span>
               ) : massageTherapistSource === "providers" ? (
                 <span className="mt-1 block text-xs text-slate-600">
-                  Using bookable massage providers for now. On Admin → Super, open Massage team and click
-                  &quot;Copy bookable massage providers into team&quot; to sync bios and the public Meet the team page.
+                  Using bookable massage providers for now. In Site content → Massage team, click &quot;Copy bookable
+                  massage providers into team&quot; to sync bios and the public Meet the team page.
                 </span>
               ) : null}
             </label>

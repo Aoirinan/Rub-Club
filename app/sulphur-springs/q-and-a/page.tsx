@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { FaqList } from "@/components/FaqList";
-import { SS_QA } from "@/lib/sulphur-springs-content";
 import { telHref } from "@/lib/constants";
+import { getSulphurSpringsFaqs } from "@/lib/site-faqs";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Q & A — Sulphur Springs Chiropractic",
@@ -18,7 +20,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function QAndAPage() {
+export default async function QAndAPage() {
+  const faqs = await getSulphurSpringsFaqs();
+
   return (
     <>
       <Breadcrumbs
@@ -34,7 +38,7 @@ export default function QAndAPage() {
       />
       <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <FaqList entries={SS_QA} />
+          <FaqList entries={faqs} />
         </section>
         <ScheduleCtaCard
           title="Still have questions?"
