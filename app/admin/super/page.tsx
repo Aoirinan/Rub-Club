@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
-import { IntakePhiSection } from "./IntakePhiSection";
 import { MassageTeamAdminSection } from "./_components/MassageTeamAdminSection";
 import {
   STAFF_ROLE_OPTIONS,
@@ -749,10 +748,6 @@ export default function SuperAdminPage() {
                 </p>
               )}
             </div>
-          ) : null}
-
-          {auth?.currentUser ? (
-            <IntakePhiSection getIdToken={() => auth.currentUser!.getIdToken()} />
           ) : null}
 
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">

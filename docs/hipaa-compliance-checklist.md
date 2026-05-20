@@ -68,7 +68,9 @@ Then you also need:
 6. **PHI-free email notifications**, opaque tokens for any "complete your intake" links, no PHI in URLs or analytics.
 7. **Breach response plan** (60-day notification to patients; ≥500 records → HHS notice).
 
-The code that previously implemented an online intake form is still in the repo (`components/IntakeForm.tsx`, `lib/intake-office-notification.ts`, `lib/intake-form-fields.ts`, `lib/privacy.ts`, etc.) — it's just not wired up to any page. It can be re-enabled when the compliance items above are signed and in place.
+The code that previously implemented an online intake form and admin-side insurance-card uploads has been **fully removed** from this repo. Deleted modules include `components/IntakeForm.tsx`, `lib/patient-insurance-upload.ts`, `lib/intake-documents.ts`, `lib/intake-phi-audit.ts`, `lib/intake-office-notification.ts`, `lib/intake-form-fields.ts`, the entire `app/api/admin/intake-forms/` folder, `app/api/admin/patients/[id]/insurance/route.ts`, and the superadmin `IntakePhiSection.tsx` viewer. The `insuranceCardFront` / `insuranceCardBack` URL fields have been removed from the patient data model and admin patient profile UI. If the clinic later decides to accept online intake or insurance uploads, the compliance items above must be signed and in place first, and the upload/intake code must be re-implemented from scratch under that scope.
+
+A one-time cleanup script `scripts/purge-insurance-uploads.ts` is provided (run with `npm run purge:insurance-uploads`) to delete any historical Storage objects under `patients/*/insurance_*` and `intake_documents/**`, strip `insuranceCardFront` / `insuranceCardBack` fields from existing Firestore patient docs, and optionally drop the `intake_forms` collection. It is not executed automatically.
 
 ## References
 

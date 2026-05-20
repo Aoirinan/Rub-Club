@@ -27,8 +27,6 @@ const patchSchema = z.object({
   paymentType: z.enum(["cash", "insurance", "mixed"]).optional(),
   insuranceCarrier: z.string().max(120).nullable().optional(),
   insuranceMemberId: z.string().max(80).nullable().optional(),
-  insuranceCardFront: z.string().max(800).nullable().optional(),
-  insuranceCardBack: z.string().max(800).nullable().optional(),
   notes: z.string().max(4000).nullable().optional(),
 });
 
@@ -106,8 +104,6 @@ export async function PATCH(req: Request, ctx: Params) {
     "paymentType",
     "insuranceCarrier",
     "insuranceMemberId",
-    "insuranceCardFront",
-    "insuranceCardBack",
     "notes",
   ] as const;
 

@@ -15,8 +15,6 @@ export type PatientApiRow = {
   paymentType: PatientPaymentType;
   insuranceCarrier?: string;
   insuranceMemberId?: string;
-  insuranceCardFront?: string;
-  insuranceCardBack?: string;
   notes?: string;
   source: "online_booking" | "manual" | "csv_import";
   totalVisits: number;

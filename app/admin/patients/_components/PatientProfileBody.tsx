@@ -245,32 +245,6 @@ export function PatientProfileBody({ patientId, getIdToken, isSuperadmin, compac
           </dl>
         )}
 
-        {(patient.insuranceCardFront || patient.insuranceCardBack) && !editing ? (
-          <div className="flex gap-2">
-            {patient.insuranceCardFront ? (
-              <a href={patient.insuranceCardFront} target="_blank" rel="noreferrer">
-                <img
-                  src={patient.insuranceCardFront}
-                  alt="Insurance front"
-                  className="h-20 w-32 rounded border object-cover"
-                />
-              </a>
-            ) : null}
-            {patient.insuranceCardBack ? (
-              <a href={patient.insuranceCardBack} target="_blank" rel="noreferrer">
-                <img
-                  src={patient.insuranceCardBack}
-                  alt="Insurance back"
-                  className="h-20 w-32 rounded border object-cover"
-                />
-              </a>
-            ) : null}
-          </div>
-        ) : null}
-
-        {/* Insurance card uploads are disabled in this admin to keep PHI out of website infrastructure.
-            Scan or photograph cards in-office and store them in the clinic's EMR / paper file. */}
-
         <label className="block text-sm">
           <span className="text-xs font-medium text-slate-500">Scheduling notes (staff)</span>
           <textarea

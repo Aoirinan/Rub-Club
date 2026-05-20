@@ -18,10 +18,10 @@ export async function GET(req: Request) {
   }
 
   if (parsed.mode === "phone") {
-    const { bookings, intakes, smsLog } = await fetchPatientRecordByPhoneDigits(parsed.digits);
-    return NextResponse.json({ bookings, intakes, smsLog, mode: "phone" as const });
+    const { bookings, smsLog } = await fetchPatientRecordByPhoneDigits(parsed.digits);
+    return NextResponse.json({ bookings, smsLog, mode: "phone" as const });
   }
 
-  const { bookings, intakes, smsLog } = await fetchPatientRecordByNameQuery(parsed.name);
-  return NextResponse.json({ bookings, intakes, smsLog, mode: "name" as const });
+  const { bookings, smsLog } = await fetchPatientRecordByNameQuery(parsed.name);
+  return NextResponse.json({ bookings, smsLog, mode: "name" as const });
 }

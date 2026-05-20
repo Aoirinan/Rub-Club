@@ -8,7 +8,6 @@ import {
 import { DateTime } from "luxon";
 import { getFirestore } from "@/lib/firebase-admin";
 import { TIME_ZONE } from "@/lib/constants";
-import { deletePatientStorage } from "@/lib/patient-insurance-upload";
 import { phoneVariantsForLookup, normalizeSmsDigits } from "@/lib/patient-record-lookup";
 
 export const PATIENTS_COLLECTION = "patients";
@@ -33,8 +32,6 @@ export type PatientDoc = {
   paymentType: PatientPaymentType;
   insuranceCarrier?: string;
   insuranceMemberId?: string;
-  insuranceCardFront?: string;
-  insuranceCardBack?: string;
   notes?: string;
   source: PatientSource;
   deleted?: boolean;
@@ -106,10 +103,6 @@ export function parsePatientDoc(id: string, data: DocumentData): PatientDoc | nu
       typeof data.insuranceCarrier === "string" ? data.insuranceCarrier.trim() : undefined,
     insuranceMemberId:
       typeof data.insuranceMemberId === "string" ? data.insuranceMemberId.trim() : undefined,
-    insuranceCardFront:
-      typeof data.insuranceCardFront === "string" ? data.insuranceCardFront.trim() : undefined,
-    insuranceCardBack:
-      typeof data.insuranceCardBack === "string" ? data.insuranceCardBack.trim() : undefined,
     notes: typeof data.notes === "string" ? data.notes.trim() : undefined,
     source:
       data.source === "online_booking" || data.source === "manual" || data.source === "csv_import"
@@ -554,7 +547,7 @@ export function inferBookingPatientSource(data: DocumentData): PatientSource {
   return "manual";
 }
 
-/** Remove patient record, insurance files, and booking links. */
+/** Remove patient record and unlink bookings. */
 export async function deletePatientPermanently(db: Firestore, patientId: string): Promise<void> {
   const bookingsSnap = await db.collection("bookings").where("patientId", "==", patientId).get();
   const batchSize = 400;
@@ -566,6 +559,5 @@ export async function deletePatientPermanently(db: Firestore, patientId: string)
     await batch.commit();
   }
 
-  await deletePatientStorage(patientId).catch(() => {});
   await db.collection(PATIENTS_COLLECTION).doc(patientId).delete();
 }

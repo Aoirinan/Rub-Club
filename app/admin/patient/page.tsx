@@ -7,7 +7,6 @@ import { DateTime } from "luxon";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { TIME_ZONE } from "@/lib/constants";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
-import type { PatientIntakeRow } from "@/lib/patient-record-lookup";
 import { committedPatientSearchFromRaw } from "@/lib/patient-search-parse";
 
 type BookingDoc = Record<string, unknown> & { id?: string };
@@ -44,7 +43,6 @@ function AdminPatientContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bookings, setBookings] = useState<BookingDoc[]>([]);
-  const [intakes, setIntakes] = useState<PatientIntakeRow[]>([]);
   const [smsLog, setSmsLog] = useState<Record<string, unknown>[]>([]);
 
   useEffect(() => {
@@ -68,7 +66,6 @@ function AdminPatientContent() {
   const load = useCallback(async () => {
     if (!searchQuery) {
       setBookings([]);
-      setIntakes([]);
       setSmsLog([]);
       setError(null);
       return;
@@ -84,7 +81,6 @@ function AdminPatientContent() {
       const data = (await res.json()) as {
         error?: string;
         bookings?: BookingDoc[];
-        intakes?: PatientIntakeRow[];
         smsLog?: Record<string, unknown>[];
       };
       if (!res.ok) {
@@ -92,7 +88,6 @@ function AdminPatientContent() {
         return;
       }
       setBookings(data.bookings ?? []);
-      setIntakes(data.intakes ?? []);
       setSmsLog(data.smsLog ?? []);
     } finally {
       setLoading(false);
@@ -122,7 +117,7 @@ function AdminPatientContent() {
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-4">
           <div>
             <h1 className="text-xl font-semibold text-slate-900">Patient record</h1>
-            <p className="text-xs text-slate-500">Bookings, intake, and SMS — search by phone or patient name.</p>
+            <p className="text-xs text-slate-500">Bookings and SMS — search by phone or patient name.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
@@ -207,47 +202,6 @@ function AdminPatientContent() {
                   })
                 )}
               </ul>
-            </section>
-
-            <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <header className="border-b border-slate-200 px-4 py-3">
-                <h2 className="text-sm font-semibold text-slate-900">Intake / insurance ({intakes.length})</h2>
-              </header>
-              {intakes.length === 0 ? (
-                <p className="px-4 py-6 text-sm text-slate-600">No intake forms matched this search.</p>
-              ) : (
-                <ul className="divide-y divide-slate-100">
-                  {intakes.map((row) => (
-                    <li key={row.id} className="space-y-3 px-4 py-4">
-                      <p className="text-sm font-medium text-slate-900">
-                        {[row.firstName, row.lastName].filter(Boolean).join(" ") || "Intake"}
-                      </p>
-                      <div className="flex flex-wrap gap-4">
-                        {row.insuranceFrontUrl ? (
-                          <a
-                            href={row.insuranceFrontUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-semibold text-sky-800 underline"
-                          >
-                            Insurance card front
-                          </a>
-                        ) : null}
-                        {row.insuranceBackUrl ? (
-                          <a
-                            href={row.insuranceBackUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-semibold text-sky-800 underline"
-                          >
-                            Insurance card back
-                          </a>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">

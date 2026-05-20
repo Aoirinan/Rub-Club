@@ -1,6 +1,5 @@
 import type { Firestore } from "firebase-admin/firestore";
 import { getFirestore } from "@/lib/firebase-admin";
-import { signedIntakeDocumentUrl } from "@/lib/intake-documents";
 import { nameSearchVariants } from "@/lib/patient-search-parse";
 
 export { parsePatientLookupSearchParams, type PatientLookupParse } from "@/lib/patient-search-parse";
@@ -21,16 +20,6 @@ export function normalizeSmsDigits(digits: string): string {
   if (d.length >= 10) return d.slice(-10);
   return d;
 }
-
-export type PatientIntakeRow = {
-  id: string;
-  firstName: unknown;
-  lastName: unknown;
-  phone: unknown;
-  email: unknown;
-  insuranceFrontUrl: string | null;
-  insuranceBackUrl: string | null;
-};
 
 function sentAtSeconds(row: Record<string, unknown>): number {
   const s = row.sentAt as { seconds?: number; _seconds?: number } | undefined;
@@ -70,61 +59,13 @@ async function mergeSmsLogsForPhoneDigits(
   return merged.slice(0, 200);
 }
 
-async function mapIntakeDocsToRows(
-  intakeMap: Map<string, Record<string, unknown>>,
-): Promise<PatientIntakeRow[]> {
-  const intakes: PatientIntakeRow[] = [];
-  for (const data of intakeMap.values()) {
-    const insuranceFront = data.insuranceCardFront as
-      | { storagePath?: string; originalFilename?: string; contentType?: string }
-      | undefined;
-    const insuranceBack = data.insuranceCardBack as
-      | { storagePath?: string; originalFilename?: string; contentType?: string }
-      | undefined;
-    let frontUrl: string | null = null;
-    let backUrl: string | null = null;
-    try {
-      if (insuranceFront?.storagePath && insuranceFront.contentType) {
-        frontUrl = await signedIntakeDocumentUrl({
-          storagePath: insuranceFront.storagePath,
-          originalFilename: insuranceFront.originalFilename ?? "front.jpg",
-          contentType: insuranceFront.contentType,
-          mode: "inline",
-          expiresMs: 15 * 60 * 1000,
-        });
-      }
-      if (insuranceBack?.storagePath && insuranceBack.contentType) {
-        backUrl = await signedIntakeDocumentUrl({
-          storagePath: insuranceBack.storagePath,
-          originalFilename: insuranceBack.originalFilename ?? "back.jpg",
-          contentType: insuranceBack.contentType,
-          mode: "inline",
-          expiresMs: 15 * 60 * 1000,
-        });
-      }
-    } catch {
-      /* ignore */
-    }
-    intakes.push({
-      id: String(data.id),
-      firstName: data.firstName,
-      lastName: data.lastName,
-      phone: data.phone,
-      email: data.email,
-      insuranceFrontUrl: frontUrl,
-      insuranceBackUrl: backUrl,
-    });
-  }
-  return intakes;
-}
-
 /**
- * Loads bookings, intake rows (with signed insurance URLs), and SMS log for a phone query.
- * Used by superadmin and staff patient views.
+ * Loads bookings and SMS log for a phone query. Used by superadmin and staff
+ * patient views. This website never stores clinical intake or insurance uploads,
+ * so no PHI documents are returned here.
  */
 export async function fetchPatientRecordByPhoneDigits(digits: string): Promise<{
   bookings: Record<string, unknown>[];
-  intakes: PatientIntakeRow[];
   smsLog: Record<string, unknown>[];
 }> {
   const smsDigits = normalizeSmsDigits(digits);
@@ -143,16 +84,6 @@ export async function fetchPatientRecordByPhoneDigits(digits: string): Promise<{
     return ta.localeCompare(tb);
   });
 
-  const intakeMap = new Map<string, Record<string, unknown>>();
-  for (const pv of phoneVariantsForLookup(digits)) {
-    const intakeSnap = await db.collection("intake_forms").where("phone", "==", pv).limit(20).get();
-    for (const doc of intakeSnap.docs) {
-      intakeMap.set(doc.id, { id: doc.id, ...doc.data() });
-    }
-  }
-
-  const intakes = await mapIntakeDocsToRows(intakeMap);
-
   let smsLog: Record<string, unknown>[] = [];
   try {
     const smsSnap = await db
@@ -166,21 +97,20 @@ export async function fetchPatientRecordByPhoneDigits(digits: string): Promise<{
     smsLog = [];
   }
 
-  return { bookings, intakes, smsLog };
+  return { bookings, smsLog };
 }
 
 /**
- * Prefix match on `bookings.name` and `intake_forms.firstName` / `lastName`, then SMS logs for phones found.
+ * Prefix match on `bookings.name`, then SMS logs for phones found.
  */
 export async function fetchPatientRecordByNameQuery(name: string): Promise<{
   bookings: Record<string, unknown>[];
-  intakes: PatientIntakeRow[];
   smsLog: Record<string, unknown>[];
 }> {
   const db = getFirestore();
   const variants = nameSearchVariants(name);
   if (variants.length === 0) {
-    return { bookings: [], intakes: [], smsLog: [] };
+    return { bookings: [], smsLog: [] };
   }
 
   const bookingMap = new Map<string, Record<string, unknown>>();
@@ -193,29 +123,11 @@ export async function fetchPatientRecordByNameQuery(name: string): Promise<{
     }
   }
 
-  const intakeMap = new Map<string, Record<string, unknown>>();
-  for (const v of variants) {
-    const end = `${v}\uf8ff`;
-    for (const field of ["firstName", "lastName"] as const) {
-      const snap = await db
-        .collection("intake_forms")
-        .where(field, ">=", v)
-        .where(field, "<=", end)
-        .limit(35)
-        .get();
-      for (const doc of snap.docs) {
-        intakeMap.set(doc.id, { id: doc.id, ...doc.data() });
-      }
-    }
-  }
-
   const bookings = [...bookingMap.values()].sort((a, b) => {
     const ta = typeof a.startIso === "string" ? a.startIso : "";
     const tb = typeof b.startIso === "string" ? b.startIso : "";
     return ta.localeCompare(tb);
   });
-
-  const intakes = await mapIntakeDocsToRows(intakeMap);
 
   const phoneDigits: string[] = [];
   for (const b of bookings) {
@@ -223,13 +135,8 @@ export async function fetchPatientRecordByNameQuery(name: string): Promise<{
     const d = normalizeSmsDigits(p);
     if (d.length === 10) phoneDigits.push(d);
   }
-  for (const data of intakeMap.values()) {
-    const p = typeof data.phone === "string" ? data.phone : "";
-    const d = normalizeSmsDigits(p);
-    if (d.length === 10) phoneDigits.push(d);
-  }
 
   const smsLog = await mergeSmsLogsForPhoneDigits(phoneDigits, db);
 
-  return { bookings, intakes, smsLog };
+  return { bookings, smsLog };
 }

@@ -122,7 +122,7 @@ function PatientsListContent() {
   async function deletePatient(id: string) {
     if (
       !confirm(
-        "Permanently delete this patient? Their profile and insurance files will be removed. This cannot be undone.",
+        "Permanently delete this patient? Their profile will be removed and any linked appointments unlinked. This cannot be undone.",
       )
     ) {
       return;
