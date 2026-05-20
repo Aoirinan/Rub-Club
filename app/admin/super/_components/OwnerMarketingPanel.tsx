@@ -49,7 +49,11 @@ export function OwnerMarketingPanel() {
     const res = await ownerMarketingFetch("/api/superadmin/config");
     if (!res.ok) {
       setConfig(null);
-      setMsg(res.status === 401 ? "Sign in as a superadmin to edit banners and promos." : "Could not load settings.");
+      setMsg(
+        res.status === 401
+          ? "Could not verify superadmin access. Sign in at /admin/login with a Superadmin staff account, or use the legacy owner password if configured."
+          : "Could not load settings.",
+      );
       return;
     }
     const data = (await res.json()) as {

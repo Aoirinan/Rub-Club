@@ -34,6 +34,9 @@ async function blockSuperadminApi(request: NextRequest): Promise<NextResponse | 
   if (!pathname.startsWith("/api/superadmin")) return null;
   if (pathname === "/api/superadmin/login" && request.method === "POST") return null;
   if (pathname === "/api/superadmin/logout" && request.method === "POST") return null;
+  // Firebase staff tokens are verified in route handlers (authorizeOwnerMarketing).
+  const authHeader = request.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) return null;
   const cookieHeader = request.headers.get("cookie");
   if (!(await isSuperadminRequest(cookieHeader))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
