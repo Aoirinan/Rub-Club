@@ -4,8 +4,12 @@ import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { telHref, LOCATIONS } from "@/lib/constants";
 import { renderRichText } from "@/lib/cms";
-import { getSSStaffForDisplay, getSSStaffPageContent } from "@/lib/ss-cms-content";
-import type { SSStaffMember } from "@/lib/sulphur-springs-content";
+import { getSSStaffPageContent } from "@/lib/ss-cms-content";
+import {
+  resolveSiteStaffForBrand,
+  splitFeaturedAndGrid,
+  type SiteStaffDisplayMember,
+} from "@/lib/site-staff";
 
 const ss = LOCATIONS.sulphur_springs;
 
@@ -24,13 +28,14 @@ export const metadata: Metadata = {
   },
 };
 
-function StaffPhoto({ member, className }: { member: SSStaffMember; className?: string }) {
+function StaffPhoto({ member, className }: { member: SiteStaffDisplayMember; className?: string }) {
   if (member.image) {
     return (
       <div className={`relative aspect-[3/4] w-full overflow-hidden bg-stone-200 ${className ?? ""}`}>
         <Image
           src={member.image}
           alt={`Portrait of ${member.name}, ${member.role}`}
+          unoptimized={member.image ? /^https?:\/\//i.test(member.image) : false}
           fill
           className="object-cover object-top"
           sizes="(max-width: 640px) 100vw, 33vw"
@@ -73,8 +78,11 @@ function BioBlock({ bio }: { bio: string }) {
 }
 
 export default async function SulphurSpringsStaffPage() {
-  const [staff, page] = await Promise.all([getSSStaffForDisplay(), getSSStaffPageContent()]);
-  const [featured, ...rest] = staff;
+  const [allStaff, page] = await Promise.all([
+    resolveSiteStaffForBrand("sulphur"),
+    getSSStaffPageContent(),
+  ]);
+  const { featured, grid: rest } = splitFeaturedAndGrid(allStaff);
 
   return (
     <>
@@ -92,25 +100,27 @@ export default async function SulphurSpringsStaffPage() {
       />
 
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_2fr]">
-            <StaffPhoto member={featured} />
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-2xl font-black text-[#173f3b]">{featured.name}</h2>
-                <p className="text-sm font-bold text-stone-600">{featured.role}</p>
+        {featured ? (
+          <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_2fr]">
+              <StaffPhoto member={featured} />
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-2xl font-black text-[#173f3b]">{featured.name}</h2>
+                  <p className="text-sm font-bold text-stone-600">{featured.role}</p>
+                </div>
+                <BioBlock bio={featured.bio} />
               </div>
-              <BioBlock bio={featured.bio} />
             </div>
-          </div>
-        </section>
+          </section>
+        ) : null}
 
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
           <h2 className="text-2xl font-black text-[#173f3b]">{page.sectionHeading}</h2>
           <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {rest.map((member) => (
               <article
-                key={member.name}
+                key={member.id}
                 className="flex flex-col overflow-hidden border border-stone-200 bg-stone-50 shadow-sm"
               >
                 <StaffPhoto member={member} />

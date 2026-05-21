@@ -1,6 +1,6 @@
 {
   "name": "wellness-paris-tx",
-  "version": "0.20.1",
+  "version": "0.21.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -17,6 +17,7 @@
     "seed:content": "npx tsx scripts/seedContentBlocks.ts",
     "purge:insurance-uploads": "npx tsx scripts/purge-insurance-uploads.ts",
     "generate:baa-pdf": "npx tsx scripts/generate-baa-pdf.ts",
+    "generate:sow-pdf": "npx tsx scripts/generate-sow-pdf.ts",
     "build:chiro-packet": "node scripts/build-chiro-packet.mjs",
     "vercel:login": "npx vercel@50 login",
     "vercel:link": "npx vercel@50 link",

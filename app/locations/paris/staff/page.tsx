@@ -4,9 +4,9 @@ import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { telHref, LOCATIONS } from "@/lib/constants";
-import { getParisOfficeStaffForDisplay, getParisStaffPageContent } from "@/lib/paris-staff-cms";
+import { getParisStaffPageContent } from "@/lib/paris-staff-cms";
 import { renderRichText } from "@/lib/cms";
-import type { ParisOfficeStaffMember } from "@/lib/paris-office-staff";
+import { resolveSiteStaffForBrand, type SiteStaffDisplayMember } from "@/lib/site-staff";
 
 const paris = LOCATIONS.paris;
 
@@ -25,13 +25,14 @@ export const metadata: Metadata = {
   },
 };
 
-function StaffPhoto({ member, className }: { member: ParisOfficeStaffMember; className?: string }) {
+function StaffPhoto({ member, className }: { member: SiteStaffDisplayMember; className?: string }) {
   if (member.image) {
     return (
       <div className={`relative aspect-[3/4] w-full overflow-hidden bg-stone-200 ${className ?? ""}`}>
         <Image
           src={member.image}
           alt={`Portrait of ${member.name}, ${member.role}`}
+          unoptimized={member.image ? /^https?:\/\//i.test(member.image) : false}
           fill
           className="object-cover object-top"
           sizes="(max-width: 640px) 100vw, 33vw"
@@ -77,7 +78,7 @@ function BioBlock({ bio }: { bio: string }) {
 
 export default async function ParisOfficeStaffPage() {
   const [staff, page] = await Promise.all([
-    getParisOfficeStaffForDisplay(),
+    resolveSiteStaffForBrand("paris"),
     getParisStaffPageContent(),
   ]);
 
@@ -111,7 +112,7 @@ export default async function ParisOfficeStaffPage() {
           <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {staff.map((member) => (
               <article
-                key={member.name}
+                key={member.id}
                 className="flex flex-col overflow-hidden border border-stone-200 bg-stone-50 shadow-sm"
               >
                 <StaffPhoto member={member} />

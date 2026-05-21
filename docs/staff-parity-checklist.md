@@ -40,7 +40,8 @@ Paris chiropractors (Greg Thompson, Sean Welborn, Brandy Collins): `/about` and 
 
 ## CMS smoke test (superadmin)
 
-1. Admin → Site content → **Paris staff** → confirm all six staff show **photos** (defaults from legacy chiropracticparistexas.com).
-2. Edit one **bio** and one **photo** (upload) → Save → reload `/locations/paris/staff` within ~60 seconds.
-3. Edit **Page hero** intro under Paris staff → confirm heading/lede update on the public page.
-4. Admin → Site content → **Massage team** → confirm Channety’s optional Role field matches what you want on massage pages (defaults to Licensed Massage Therapist if using code fallbacks).
+1. Admin → **Office staff** (`/admin/super/site-staff`) → run **Copy current site roster into Firestore** once if the list is empty.
+2. Confirm Paris and Sulphur staff appear on `/locations/paris/staff` and `/sulphur-springs/staff` (revalidate ~60s).
+3. Add a test staff member, then hide with **Active** unchecked — confirm they disappear from the public page.
+4. Admin → Site content → **Paris staff** / **Sulphur staff** → edit **page hero** and CTA only (team members are no longer edited here).
+5. Admin → Site content → **Massage team** → massage therapists on home and `/services/massage` (separate from office staff).

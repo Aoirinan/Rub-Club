@@ -8,7 +8,7 @@ import {
 } from "@/lib/sulphur-springs-content";
 import { ssPageBodyId, ssPageMetaId } from "@/lib/ss-cms-registry";
 
-export { getSSStaffForDisplay, getSSStaffPageContent } from "@/lib/ss-staff-cms";
+export { getSSStaffPageContent } from "@/lib/ss-staff-cms";
 
 export type SSPageContent = {
   slug: string;

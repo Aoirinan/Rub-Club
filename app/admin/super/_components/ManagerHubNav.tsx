@@ -23,6 +23,13 @@ const TABS = [
     capability: "siteContent" as const,
   },
   {
+    href: "/admin/super/site-staff",
+    label: "Office staff",
+    description: "Paris & Sulphur staff pages",
+    match: (path: string) => path.startsWith("/admin/super/site-staff"),
+    capability: "siteContent" as const,
+  },
+  {
     href: "/admin/super/marketing?tab=booking",
     label: "Banners & promos",
     description: "Online booking on/off, banner, videos",

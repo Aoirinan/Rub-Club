@@ -7,14 +7,17 @@ import { telHref, LOCATIONS } from "@/lib/constants";
 import { getContentMany, renderRichText } from "@/lib/cms";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
 import { OfficeHoursTable } from "@/components/OfficeHoursTable";
-import {
-  SS_STAFF,
-  SS_SERVICE_NAV,
-  SS_INJURY_NAV,
-} from "@/lib/sulphur-springs-content";
+import { SS_SERVICE_NAV, SS_INJURY_NAV } from "@/lib/sulphur-springs-content";
+import { resolveSiteStaffForBrand, splitFeaturedAndGrid } from "@/lib/site-staff";
 
 const ss = LOCATIONS.sulphur_springs;
-const doctor = SS_STAFF[0];
+
+const SS_DOCTOR_FALLBACK = {
+  name: "Dr. Conner Collins",
+  role: "Chiropractor",
+  image: "/images/staff-ss/conner-collins.webp",
+  bio: "Dr. Conner Collins is a chiropractor who takes a practical, hands-on approach to patient care.",
+};
 
 export const revalidate = 60;
 
@@ -69,10 +72,20 @@ const SS_NAV: SSNavEntry[] = [
 ];
 
 export default async function SulphurSpringsPage() {
-  const [c, ssOfficeHours] = await Promise.all([
+  const [c, ssOfficeHours, staff] = await Promise.all([
     getContentMany(["ss_hero_heading", "ss_intro_body", "ss_hours"]),
     getSulphurOfficeHours(),
+    resolveSiteStaffForBrand("sulphur"),
   ]);
+  const { featured } = splitFeaturedAndGrid(staff);
+  const doctor = featured
+    ? {
+        name: featured.name,
+        role: featured.role,
+        image: featured.image,
+        bio: featured.bio || SS_DOCTOR_FALLBACK.bio,
+      }
+    : SS_DOCTOR_FALLBACK;
   const introParagraphs = (c.ss_intro_body ?? "").split(/\n\n+/).filter(Boolean);
 
   return (
