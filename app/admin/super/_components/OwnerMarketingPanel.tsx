@@ -546,6 +546,38 @@ export function OwnerMarketingPanel() {
           <p className="text-sm text-slate-600">
             Phone numbers and most page copy are edited under <strong className="font-semibold">Site content</strong>.
           </p>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={config.editableCopy.giftCardStickyEnabled !== false}
+              onChange={(e) =>
+                setConfig({
+                  ...config,
+                  editableCopy: {
+                    ...config.editableCopy,
+                    giftCardStickyEnabled: e.target.checked,
+                  },
+                })
+              }
+            />
+            <span className="font-semibold">Show gift card bar on public pages</span>
+          </label>
+          <label className="block text-sm">
+            <span className="font-semibold">Gift card bar label</span>
+            <input
+              className="mt-1 w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              value={config.editableCopy.giftCardStickyLabel ?? ""}
+              onChange={(e) =>
+                setConfig({
+                  ...config,
+                  editableCopy: {
+                    ...config.editableCopy,
+                    giftCardStickyLabel: e.target.value,
+                  },
+                })
+              }
+            />
+          </label>
           <label className="block text-sm">
             <span className="font-semibold">Square gift card order URL</span>
             <input

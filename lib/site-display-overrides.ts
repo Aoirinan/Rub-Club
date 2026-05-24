@@ -5,6 +5,7 @@ import {
   type LocationInfo,
 } from "@/lib/constants";
 import type { SiteEditableCopy } from "@/lib/site-owner-config";
+import { DEFAULT_EDITABLE_COPY } from "@/lib/site-owner-config";
 
 function applyAddressLine(loc: LocationInfo, line: string): LocationInfo {
   const trimmed = line.trim();
@@ -54,6 +55,26 @@ export function effectiveGiftCardUrl(
   const u = copy?.giftCardOrderUrl?.trim();
   if (u && /^https?:\/\//i.test(u)) return u;
   return GIFT_CARD_ORDER_URL;
+}
+
+export type GiftCardStickyConfig = {
+  enabled: boolean;
+  label: string;
+  href: string;
+  dismissKey: string;
+};
+
+export function effectiveGiftCardSticky(
+  copy: SiteEditableCopy | undefined,
+  cms?: Record<string, string>,
+): GiftCardStickyConfig {
+  const href = effectiveGiftCardUrl(copy, cms);
+  const label =
+    copy?.giftCardStickyLabel?.trim() ||
+    DEFAULT_EDITABLE_COPY.giftCardStickyLabel;
+  const enabled = copy?.giftCardStickyEnabled !== false;
+  const dismissKey = `${label.length}_${href.length}`;
+  return { enabled, label, href, dismissKey };
 }
 
 export function effectiveBookUrl(cms?: Record<string, string>): string {

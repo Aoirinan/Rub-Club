@@ -19,7 +19,6 @@ import {
 } from "@/lib/public-booking-settings";
 import { massageJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
-import { BrandLogoStrip } from "@/components/BrandLogoStrip";
 import { pageKeywords } from "@/lib/seo-keywords";
 
 export const revalidate = 60;
@@ -94,10 +93,6 @@ export default async function MassageServicePage() {
       <Breadcrumbs
         items={serviceBreadcrumbs({ name: "Massage", url: "/services/massage" })}
       />
-
-      <div className="mx-auto max-w-7xl border-b border-stone-200 bg-white px-4 py-4">
-        <BrandLogoStrip variant="massage" paris={paris} sulphur={LOCATIONS.sulphur_springs} />
-      </div>
 
       <PageHero
         eyebrow="The Rub Club · Paris, TX"

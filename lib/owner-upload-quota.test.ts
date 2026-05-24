@@ -33,6 +33,8 @@ const emptyConfig = {
     sulphurChiroPhone: "",
     rubClubMassagePhone: "",
     giftCardOrderUrl: "",
+    giftCardStickyEnabled: true,
+    giftCardStickyLabel: "Give the Gift of Wellness — Buy a Gift Card",
     gbpParisReviewUrl: "",
     gbpSulphurReviewUrl: "",
     awardsStripHtml: "",

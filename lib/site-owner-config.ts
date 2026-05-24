@@ -60,6 +60,9 @@ export type SiteEditableCopy = {
   sulphurChiroPhone: string;
   rubClubMassagePhone: string;
   giftCardOrderUrl: string;
+  /** Fixed bottom bar on public pages linking to Square gift cards. */
+  giftCardStickyEnabled: boolean;
+  giftCardStickyLabel: string;
   /** Google Business Profile “write a review” or listing URL for Paris. */
   gbpParisReviewUrl: string;
   /** Google Business Profile URL for Sulphur Springs. */
@@ -75,6 +78,8 @@ export const DEFAULT_EDITABLE_COPY: SiteEditableCopy = {
   sulphurChiroPhone: "",
   rubClubMassagePhone: "",
   giftCardOrderUrl: "",
+  giftCardStickyEnabled: true,
+  giftCardStickyLabel: "Give the Gift of Wellness — Buy a Gift Card",
   gbpParisReviewUrl: "",
   gbpSulphurReviewUrl: "",
   awardsStripHtml: "",

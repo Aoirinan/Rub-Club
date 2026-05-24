@@ -9,9 +9,7 @@ import { getSulphurOfficeHours } from "@/lib/office-hours";
 import { OfficeHoursTable } from "@/components/OfficeHoursTable";
 import { SS_SERVICE_NAV, SS_INJURY_NAV } from "@/lib/sulphur-springs-content";
 import { resolveSiteStaffForBrand, splitFeaturedAndGrid } from "@/lib/site-staff";
-import { BrandLogoStrip } from "@/components/BrandLogoStrip";
 import { pageKeywords } from "@/lib/seo-keywords";
-import { LOCATIONS as ALL_LOCATIONS } from "@/lib/constants";
 
 const ss = LOCATIONS.sulphur_springs;
 
@@ -94,17 +92,6 @@ export default async function SulphurSpringsPage() {
 
   return (
     <div className="bg-[#f4f2ea]">
-      {/* SS Header — Sulphur logo large, partner logos small, phones under each */}
-      <div className="border-b border-stone-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-5">
-          <BrandLogoStrip
-            variant="sulphur-springs"
-            paris={ALL_LOCATIONS.paris}
-            sulphur={ss}
-          />
-        </div>
-      </div>
-
       {/* SS Navigation bar */}
       <nav
         aria-label="Sulphur Springs navigation"

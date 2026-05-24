@@ -6,7 +6,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { JsonLd } from "@/components/JsonLd";
 import { Analytics } from "@/components/Analytics";
 import { DomainSpecialsPopup } from "@/components/DomainSpecialsPopup";
-import { SalesBannerBar, type SalesBannerPayload } from "@/components/SalesBannerBar";
+import { HomepageSalesBanner } from "@/components/HomepageSalesBanner";
+import type { SalesBannerPayload } from "@/components/SalesBannerBar";
 import {
   getSiteOrigin,
   siteDescription,
@@ -22,7 +23,10 @@ import {
 } from "@/lib/structured-data";
 import { getSiteOwnerConfig, bannerIsActivePublic } from "@/lib/site-owner-config";
 import { getLayoutCmsContent } from "@/lib/cms-display";
-import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
+import {
+  effectiveGiftCardSticky,
+  mergedDisplayLocations,
+} from "@/lib/site-display-overrides";
 import { PublicBookingProvider } from "@/components/PublicBookingProvider";
 import { ConditionalMarketingChrome } from "@/components/ConditionalMarketingChrome";
 import {
@@ -94,12 +98,12 @@ export default async function RootLayout({
   ]);
   const onlineBookingEnabled = isPublicBookingEnabled(bookingConfig);
   let displayLocs = mergedDisplayLocations(undefined, cms);
-  let giftCardHref = effectiveGiftCardUrl(undefined, cms);
+  let giftCardSticky = effectiveGiftCardSticky(undefined, cms);
   let footerBlurbHtml: string | null = null;
   try {
     const cfg = await getSiteOwnerConfig();
     displayLocs = mergedDisplayLocations(cfg.editableCopy, cms);
-    giftCardHref = effectiveGiftCardUrl(cfg.editableCopy, cms);
+    giftCardSticky = effectiveGiftCardSticky(cfg.editableCopy, cms);
     const fb = cfg.editableCopy.footerBlurbHtml.trim();
     footerBlurbHtml = fb.length > 0 ? fb : null;
     if (bannerIsActivePublic(cfg.banner) && cfg.banner.showOnHomepage && cfg.banner.html.trim()) {
@@ -128,22 +132,22 @@ export default async function RootLayout({
         <JsonLd data={[organizationJsonLd(schemaLocations), websiteJsonLd()]} />
         <PublicBookingProvider enabled={onlineBookingEnabled}>
           <ConditionalMarketingChrome
-            giftCardHref={giftCardHref}
+            giftCardSticky={giftCardSticky}
             header={
               <>
                 <SiteHeader
                   paris={displayLocs.paris}
                   sulphur={displayLocs.sulphur_springs}
-                  giftCardHref={giftCardHref}
+                  giftCardHref={giftCardSticky.href}
                 />
-                {salesBanner ? <SalesBannerBar payload={salesBanner} /> : null}
+                {salesBanner ? <HomepageSalesBanner payload={salesBanner} /> : null}
               </>
             }
             footer={
               <>
                 <SiteFooter
                   locations={schemaLocations}
-                  giftCardHref={giftCardHref}
+                  giftCardHref={giftCardSticky.href}
                   footerBlurbHtml={footerBlurbHtml}
                   footerTagline={cms.footer_tagline}
                   footerCopyright={cms.footer_copyright}
