@@ -2,7 +2,6 @@ import { DateTime } from "luxon";
 import {
   LOCATIONS,
   reviewUrlForLocation,
-  type DurationMin,
   type LocationId,
   serviceLineEmailLabel,
   serviceLineEmailLabelLower,
@@ -19,7 +18,7 @@ export type BookingEmailContext = {
   bookingId: string;
   locationId: LocationId;
   serviceLine: ServiceLine;
-  durationMin: DurationMin;
+  durationMin: number;
   start: DateTime;
   name: string;
   phone: string;

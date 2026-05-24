@@ -5,6 +5,10 @@ import { getFirestore } from "@/lib/firebase-admin";
 import { requireStaff } from "@/lib/staff-auth";
 import { isBookingStatus, type BookingStatus } from "@/lib/booking-status";
 import { TIME_ZONE } from "@/lib/constants";
+import {
+  bookingMatchesSchedulerBusiness,
+  isSchedulerBusinessId,
+} from "@/lib/scheduler-business";
 
 export const runtime = "nodejs";
 
@@ -36,6 +40,8 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const daysBack = Math.min(180, Math.max(7, Number(searchParams.get("days")) || 30));
   const locationId = searchParams.get("locationId") || null;
+  const businessRaw = searchParams.get("business");
+  const business = isSchedulerBusinessId(businessRaw) ? businessRaw : "all";
 
   const now = DateTime.now().setZone(TIME_ZONE).startOf("day");
   const fromDt = now.minus({ days: daysBack });
@@ -70,6 +76,18 @@ export async function GET(req: Request) {
     const data = doc.data();
 
     if (locationId && data.locationId !== locationId) continue;
+    if (
+      business !== "all" &&
+      !bookingMatchesSchedulerBusiness(
+        {
+          locationId: typeof data.locationId === "string" ? data.locationId : undefined,
+          serviceLine: typeof data.serviceLine === "string" ? data.serviceLine : undefined,
+        },
+        business,
+      )
+    ) {
+      continue;
+    }
 
     totalBookings++;
     const status: BookingStatus = isBookingStatus(data.status) ? data.status : "pending";

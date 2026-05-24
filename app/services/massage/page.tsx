@@ -19,6 +19,8 @@ import {
 } from "@/lib/public-booking-settings";
 import { massageJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
+import { BrandLogoStrip } from "@/components/BrandLogoStrip";
+import { pageKeywords } from "@/lib/seo-keywords";
 
 export const revalidate = 60;
 
@@ -28,6 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Massage Therapy in Paris, TX — The Rub Club",
     description: `Licensed massage therapists offering deep tissue, prenatal, sports, and trigger-point therapy in Paris, TX. Same-week openings; call 903-739-9959 or ${phrase.toLowerCase()}.`,
+    keywords: pageKeywords(["Paris TX massage", "The Rub Club"]),
     alternates: { canonical: "/services/massage" },
     openGraph: {
       title: "Massage Therapy in Paris, TX — The Rub Club",
@@ -91,6 +94,10 @@ export default async function MassageServicePage() {
       <Breadcrumbs
         items={serviceBreadcrumbs({ name: "Massage", url: "/services/massage" })}
       />
+
+      <div className="mx-auto max-w-7xl border-b border-stone-200 bg-white px-4 py-4">
+        <BrandLogoStrip variant="massage" paris={paris} sulphur={LOCATIONS.sulphur_springs} />
+      </div>
 
       <PageHero
         eyebrow="The Rub Club · Paris, TX"

@@ -25,8 +25,7 @@ export function usePublicBookingEnabled(): boolean {
   return useContext(PublicBookingContext).enabled;
 }
 
-/** Link for schedule CTAs: /book when on, /contact when off (phase 1 marketing). */
+/** Link for schedule CTAs — always /book (wizard or call-to-confirm preview). */
 export function useScheduleHref(query = ""): string {
-  const enabled = usePublicBookingEnabled();
-  return enabled ? publicBookingHref(query) : "/contact";
+  return publicBookingHref(query);
 }

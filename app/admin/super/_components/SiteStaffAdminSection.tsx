@@ -7,6 +7,8 @@ import type { SiteStaffBrand, SiteStaffMemberStored } from "@/lib/site-staff";
 type Props = {
   auth: Auth | null;
   onNotify: (message: string | null) => void;
+  /** When set (Site content → Paris/Sulphur staff), list and add form target one location. */
+  locationFocus?: "paris" | "sulphur";
 };
 
 type BrandFilter = "all" | SiteStaffBrand;

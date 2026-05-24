@@ -3,6 +3,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { DateTime } from "luxon";
 import { TIME_ZONE } from "@/lib/constants";
+import type { PatientApiRow } from "@/lib/patient-types";
+import {
+  businessTagFromSchedulerBusiness,
+  schedulerDefaultsFromBusiness,
+  type PatientBusinessTag,
+} from "@/lib/patient-business";
+import {
+  providerMatchesSchedulerBusiness,
+  SCHEDULER_BUSINESS_LABELS,
+  type SchedulerBusinessId,
+} from "@/lib/scheduler-business";
 import type { ProviderRow } from "./types";
 
 type Props = {
@@ -25,11 +36,20 @@ export function NewBookingDrawer({
   defaultDate,
   defaultServiceLine = "massage",
 }: Props) {
+  const [business, setBusiness] = useState<Exclude<SchedulerBusinessId, "all">>("rub_club");
   const [locationId, setLocationId] = useState<"paris" | "sulphur_springs">("paris");
   const [serviceLine, setServiceLine] = useState<"massage" | "chiropractic" | "stretch">(
     defaultServiceLine,
   );
-  const [durationMin, setDurationMin] = useState<30 | 60>(60);
+  const [patientBusinessTag, setPatientBusinessTag] = useState<PatientBusinessTag>("rub_club");
+  const [patientSearch, setPatientSearch] = useState("");
+  const [patientHits, setPatientHits] = useState<PatientApiRow[]>([]);
+  const [sendFirstTimeNotification, setSendFirstTimeNotification] = useState(true);
+  const [durationMin, setDurationMin] = useState<number>(60);
+  const [schedulerServiceId, setSchedulerServiceId] = useState("");
+  const [schedulerServices, setSchedulerServices] = useState<
+    { id: string; name: string; durationMinutes: number }[]
+  >([]);
   const [date, setDate] = useState(defaultDate ?? DateTime.now().setZone(TIME_ZONE).toFormat("yyyy-LL-dd"));
   const [time, setTime] = useState("09:00");
   const [providerId, setProviderId] = useState("");
@@ -58,6 +78,62 @@ export function NewBookingDrawer({
     }
   }, [open, defaultDate, defaultServiceLine]);
 
+  useEffect(() => {
+    if (!open) return;
+    void (async () => {
+      const token = await getIdToken();
+      if (!token) return;
+      const res = await fetch("/api/admin/scheduler-services", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data = (await res.json()) as {
+        services?: { id: string; name: string; durationMinutes: number; active: boolean }[];
+      };
+      setSchedulerServices(
+        (data.services ?? []).filter((s) => s.active).map((s) => ({
+          id: s.id,
+          name: s.name,
+          durationMinutes: s.durationMinutes,
+        })),
+      );
+    })();
+  }, [open, getIdToken]);
+
+  useEffect(() => {
+    const d = schedulerDefaultsFromBusiness(business);
+    setLocationId(d.locationId);
+    setServiceLine(d.serviceLine);
+    setPatientBusinessTag(businessTagFromSchedulerBusiness(business));
+  }, [business]);
+
+  useEffect(() => {
+    if (!open || patientSearch.trim().length < 2) {
+      setPatientHits([]);
+      return;
+    }
+    const t = setTimeout(() => {
+      void (async () => {
+        const token = await getIdToken();
+        if (!token) return;
+        const res = await fetch(
+          `/api/admin/patients?search=${encodeURIComponent(patientSearch.trim())}&limit=12`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (!res.ok) return;
+        const data = (await res.json()) as { patients?: PatientApiRow[] };
+        setPatientHits(data.patients ?? []);
+      })();
+    }, 300);
+    return () => clearTimeout(t);
+  }, [open, patientSearch, getIdToken]);
+
+  const endTimeLabel = useMemo(() => {
+    const startDt = DateTime.fromISO(`${date}T${time}`, { zone: TIME_ZONE });
+    if (!startDt.isValid) return "—";
+    return startDt.plus({ minutes: durationMin }).toFormat("h:mm a");
+  }, [date, time, durationMin]);
+
   const filteredProviders = useMemo(
     () =>
       providers
@@ -65,10 +141,11 @@ export function NewBookingDrawer({
           (p) =>
             p.active &&
             p.locationIds.includes(locationId) &&
-            p.serviceLines.includes(serviceLine),
+            p.serviceLines.includes(serviceLine) &&
+            providerMatchesSchedulerBusiness(p, business),
         )
         .sort((a, b) => a.sortOrder - b.sortOrder || a.displayName.localeCompare(b.displayName)),
-    [providers, locationId, serviceLine],
+    [providers, locationId, serviceLine, business],
   );
 
   useEffect(() => {
@@ -118,7 +195,7 @@ export function NewBookingDrawer({
       const payload: Record<string, unknown> = {
         locationId,
         serviceLine,
-        durationMin,
+        ...(schedulerServiceId ? { schedulerServiceId } : { durationMin }),
         startIso,
         providerId: provider.id,
         providerDisplayName: provider.displayName,
@@ -128,6 +205,8 @@ export function NewBookingDrawer({
         notes: notes.trim() || undefined,
         status,
         skipConflictCheck,
+        sendFirstTimeNotification,
+        patientBusinessTag,
       };
       if (recurring && recurrenceCount > 1) {
         payload.recurrence = { frequency: recurrenceFreq, count: recurrenceCount };
@@ -238,61 +317,69 @@ export function NewBookingDrawer({
                 </label>
               </div>
               <label className="block space-y-1">
-                <span className="text-xs font-medium text-slate-700">Duration</span>
-                <div className="flex gap-2">
-                  {([30, 60] as const).map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => setDurationMin(d)}
-                      className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
-                        durationMin === d
-                          ? "border-slate-900 bg-slate-900 text-white"
-                          : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
-                      }`}
-                    >
-                      {d} min
-                    </button>
+                <span className="text-xs font-medium text-slate-700">Service type</span>
+                <select
+                  value={schedulerServiceId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setSchedulerServiceId(id);
+                    const svc = schedulerServices.find((s) => s.id === id);
+                    if (svc) setDurationMin(svc.durationMinutes);
+                  }}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                >
+                  <option value="">Custom duration…</option>
+                  {schedulerServices.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.durationMinutes} min)
+                    </option>
                   ))}
-                </div>
+                </select>
               </label>
+              {!schedulerServiceId ? (
+                <label className="block space-y-1">
+                  <span className="text-xs font-medium text-slate-700">Duration</span>
+                  <div className="flex flex-wrap gap-2">
+                    {([30, 60, 90, 120] as const).map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setDurationMin(d)}
+                        className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
+                          durationMin === d
+                            ? "border-slate-900 bg-slate-900 text-white"
+                            : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+                        }`}
+                      >
+                        {d} min
+                      </button>
+                    ))}
+                  </div>
+                </label>
+              ) : (
+                <p className="text-xs text-slate-600">Duration: {durationMin} minutes (from service type)</p>
+              )}
+              <p className="text-xs text-slate-600">
+                End time: <strong>{endTimeLabel}</strong> (Chicago)
+              </p>
             </fieldset>
 
-            {/* Location and Service */}
             <fieldset className="space-y-2">
               <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Service details
+                Business & provider
               </legend>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block space-y-1">
-                  <span className="text-xs font-medium text-slate-700">Location</span>
-                  <select
-                    value={locationId}
-                    onChange={(e) => setLocationId(e.target.value as "paris" | "sulphur_springs")}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                  >
-                    <option value="paris">Paris, TX</option>
-                    <option value="sulphur_springs">Sulphur Springs, TX</option>
-                  </select>
-                </label>
-                <label className="block space-y-1">
-                  <span className="text-xs font-medium text-slate-700">Service</span>
-                  <select
-                    value={serviceLine}
-                    onChange={(e) => setServiceLine(e.target.value as "massage" | "chiropractic" | "stretch")}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                  >
-                    {defaultServiceLine === "chiropractic" ? (
-                      <option value="chiropractic">Chiropractic</option>
-                    ) : (
-                      <>
-                        <option value="massage">Massage</option>
-                        <option value="stretch">Stretch</option>
-                      </>
-                    )}
-                  </select>
-                </label>
-              </div>
+              <label className="block space-y-1">
+                <span className="text-xs font-medium text-slate-700">Business</span>
+                <select
+                  value={business}
+                  onChange={(e) => setBusiness(e.target.value as Exclude<SchedulerBusinessId, "all">)}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                >
+                  <option value="rub_club">{SCHEDULER_BUSINESS_LABELS.rub_club}</option>
+                  <option value="paris_chiro">{SCHEDULER_BUSINESS_LABELS.paris_chiro}</option>
+                  <option value="sulphur_springs">{SCHEDULER_BUSINESS_LABELS.sulphur_springs}</option>
+                </select>
+              </label>
               <label className="block space-y-1">
                 <span className="text-xs font-medium text-slate-700">Provider</span>
                 <select
@@ -313,11 +400,55 @@ export function NewBookingDrawer({
               </label>
             </fieldset>
 
-            {/* Patient info */}
             <fieldset className="space-y-2">
               <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Patient
               </legend>
+              <label className="block space-y-1">
+                <span className="text-xs font-medium text-slate-700">Search existing</span>
+                <input
+                  type="search"
+                  value={patientSearch}
+                  onChange={(e) => setPatientSearch(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                  placeholder="Name or phone…"
+                />
+              </label>
+              {patientHits.length > 0 ? (
+                <ul className="max-h-36 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 text-sm">
+                  {patientHits.map((p) => (
+                    <li key={p.id}>
+                      <button
+                        type="button"
+                        className="w-full px-3 py-2 text-left hover:bg-white"
+                        onClick={() => {
+                          setName(`${p.firstName} ${p.lastName}`.trim());
+                          setPhone(p.phone);
+                          setEmail(p.email);
+                          if (p.businessTag) setPatientBusinessTag(p.businessTag);
+                          setPatientSearch("");
+                          setPatientHits([]);
+                        }}
+                      >
+                        {p.firstName} {p.lastName} · {p.phone}
+                        {p.businessTag ? ` · ${p.businessTag}` : ""}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <label className="block space-y-1">
+                <span className="text-xs font-medium text-slate-700">Patient business tag</span>
+                <select
+                  value={patientBusinessTag}
+                  onChange={(e) => setPatientBusinessTag(e.target.value as PatientBusinessTag)}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                >
+                  <option value="rub_club">Rub Club</option>
+                  <option value="chiro">Chiro</option>
+                  <option value="both">Both</option>
+                </select>
+              </label>
               <label className="block space-y-1">
                 <span className="text-xs font-medium text-slate-700">Name *</span>
                 <input
@@ -399,6 +530,15 @@ export function NewBookingDrawer({
                   className="h-4 w-4 rounded border-slate-300"
                 />
                 Allow double-booking (skip conflict check)
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={sendFirstTimeNotification}
+                  onChange={(e) => setSendFirstTimeNotification(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+                Send first-time confirmation text (when phone provided)
               </label>
               <label className="flex items-center gap-2 text-sm text-slate-700">
                 <input

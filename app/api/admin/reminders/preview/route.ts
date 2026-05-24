@@ -4,6 +4,7 @@ import { getFirestore } from "@/lib/firebase-admin";
 import { requireStaff } from "@/lib/staff-auth";
 import { bookingDocToEmailContext } from "@/lib/booking-doc";
 import { formatChicagoDateTimeLong } from "@/lib/chicago-datetime-format";
+import { providerAllowsReminderChannel } from "@/lib/provider-reminders";
 
 export const runtime = "nodejs";
 
@@ -55,6 +56,11 @@ export async function GET(req: Request) {
     if (!events.empty) continue;
     const ctx = bookingDocToEmailContext(doc);
     if (!ctx) continue;
+    const providerId =
+      typeof doc.get("providerId") === "string" ? (doc.get("providerId") as string) : "";
+    const allowEmail = await providerAllowsReminderChannel(providerId, "email");
+    const allowSms = await providerAllowsReminderChannel(providerId, "sms");
+    if (!allowEmail && !allowSms) continue;
     rows.push({
       bookingId: docId,
       name: ctx.name,

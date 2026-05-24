@@ -37,9 +37,9 @@ export function isPublicBookingEnabled(config: PublicBookingConfig): boolean {
   return config.enabled !== false;
 }
 
-/** Server components: /book when scheduling is on, /contact for phase 1 marketing. */
-export function scheduleCtaHref(config: PublicBookingConfig, query = ""): string {
-  return isPublicBookingEnabled(config) ? publicBookingHref(query) : "/contact";
+/** Server components: always /book (full wizard when on, availability preview when off). */
+export function scheduleCtaHref(_config: PublicBookingConfig, query = ""): string {
+  return publicBookingHref(query);
 }
 
 export function scheduleCtaLabel(

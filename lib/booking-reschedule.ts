@@ -4,12 +4,12 @@ import type { LocationId } from "./constants";
 import { TIME_ZONE } from "./constants";
 import { recordBookingEventInTx } from "./booking-events";
 import type { BookingStatus } from "./booking-status";
+import { providerAllowsAppointmentTime } from "./provider-scheduling";
 import { fetchActiveProvidersForService } from "./providers-db";
 import {
   bucketDocIdsForAppointment,
   holdBucketIdsForAppointment,
   isAlignedToSlotGrid,
-  isWithinScheduleWindow,
   parseStartIsoToDateTime,
 } from "./slots-luxon";
 
@@ -100,7 +100,7 @@ export async function rescheduleBookingForStartChange(
   if (!provider) {
     return { ok: false, code: "no_provider", status: 400 };
   }
-  if (!isWithinScheduleWindow(newStart, durationMin, provider.schedule ?? null)) {
+  if (!providerAllowsAppointmentTime(provider, newStart, durationMin)) {
     return { ok: false, code: "outside_hours", status: 400 };
   }
 
@@ -137,7 +137,14 @@ export async function rescheduleBookingForStartChange(
       }
 
       const oldBucketIds = (snap.get("bucketIds") as string[]) ?? [];
-      const nb = bucketDocIdsForAppointment(locId, pid, nStart, dur);
+      const bufferBefore =
+        typeof snap.get("bufferBeforeMinutes") === "number" ? snap.get("bufferBeforeMinutes") : 0;
+      const bufferAfter =
+        typeof snap.get("bufferAfterMinutes") === "number" ? snap.get("bufferAfterMinutes") : 0;
+      const nb = bucketDocIdsForAppointment(locId, pid, nStart, dur, {
+        bufferBeforeMinutes: bufferBefore,
+        bufferAfterMinutes: bufferAfter,
+      });
       const hids = holdBucketIdsForAppointment(locId, svc, nStart, dur);
       const bucketRefs = nb.map((id) => db.collection("slot_buckets").doc(id));
       const holdRefs = hids.map((id) => db.collection("slot_buckets").doc(id));

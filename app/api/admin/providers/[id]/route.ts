@@ -4,6 +4,7 @@ import { FieldValue, type DocumentData } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
 import type { LocationId, ServiceLine } from "@/lib/constants";
+import { PROVIDER_BG_COLOR_IDS, PROVIDER_TEXT_COLOR_IDS } from "@/lib/provider-colors";
 import { parseProviderDoc } from "@/lib/providers-db";
 import {
   deleteProviderStorageObject,
@@ -31,6 +32,13 @@ const patchSchema = z.object({
     })
     .nullable()
     .optional(),
+  textColor: z.enum(PROVIDER_TEXT_COLOR_IDS).nullable().optional(),
+  bgColor: z.enum(PROVIDER_BG_COLOR_IDS).nullable().optional(),
+  hours: z.record(z.string(), z.unknown()).optional(),
+  weeklyHours: z.record(z.string(), z.unknown()).optional(),
+  blockOutTimes: z.array(z.record(z.string(), z.unknown())).optional(),
+  notificationWindows: z.record(z.string(), z.unknown()).optional(),
+  calendarVisibility: z.enum(["all", "paris", "sulphur_springs"]).optional(),
 });
 
 const httpsUrl = z.string().url().refine((u) => u.startsWith("https:"), "Must be an https URL");
@@ -146,6 +154,46 @@ export async function PATCH(req: Request, ctx: Params) {
       updates.schedule = schedule;
     }
 
+    if (form.has("hours")) {
+      try {
+        const hours = JSON.parse(String(form.get("hours") ?? "")) as unknown;
+        if (hours && typeof hours === "object") updates.hours = hours;
+      } catch {
+        return NextResponse.json({ error: "Invalid hours" }, { status: 400 });
+      }
+    }
+    if (form.has("blockOutTimes")) {
+      const blockOutTimes = parseJsonArray<Record<string, unknown>>(
+        String(form.get("blockOutTimes") ?? ""),
+        "blockOutTimes",
+      );
+      if (blockOutTimes) updates.blockOutTimes = blockOutTimes;
+    }
+    if (form.has("notificationWindows")) {
+      try {
+        const nw = JSON.parse(String(form.get("notificationWindows") ?? "")) as unknown;
+        if (nw && typeof nw === "object") updates.notificationWindows = nw;
+      } catch {
+        return NextResponse.json({ error: "Invalid notification windows" }, { status: 400 });
+      }
+    }
+    if (form.has("calendarVisibility")) {
+      const cv = String(form.get("calendarVisibility") ?? "").trim();
+      if (cv === "all" || cv === "paris" || cv === "sulphur_springs") {
+        updates.calendarVisibility = cv;
+      }
+    }
+    if (form.has("textColor")) {
+      const tc = String(form.get("textColor") ?? "").trim();
+      const parsed = patchSchema.shape.textColor.safeParse(tc || null);
+      if (parsed.success) updates.textColor = parsed.data;
+    }
+    if (form.has("bgColor")) {
+      const bc = String(form.get("bgColor") ?? "").trim();
+      const parsed = patchSchema.shape.bgColor.safeParse(bc || null);
+      if (parsed.success) updates.bgColor = parsed.data;
+    }
+
     const file = form.get("photo");
     if (file instanceof File && file.size > 0) {
       const buf = Buffer.from(await file.arrayBuffer());
@@ -201,6 +249,17 @@ export async function PATCH(req: Request, ctx: Params) {
     if (body.acceptsNewClients !== undefined) updates.acceptsNewClients = body.acceptsNewClients;
     if (body.about !== undefined) {
       updates.about = body.about === null ? null : body.about.trim() || null;
+    }
+    if (body.textColor !== undefined) updates.textColor = body.textColor;
+    if (body.bgColor !== undefined) updates.bgColor = body.bgColor;
+    if (body.hours !== undefined) updates.hours = body.hours;
+    if (body.weeklyHours !== undefined) updates.hours = body.weeklyHours;
+    if (body.blockOutTimes !== undefined) updates.blockOutTimes = body.blockOutTimes;
+    if (body.notificationWindows !== undefined) {
+      updates.notificationWindows = body.notificationWindows;
+    }
+    if (body.calendarVisibility !== undefined) {
+      updates.calendarVisibility = body.calendarVisibility;
     }
     if (body.photoUrl !== undefined) {
       if (body.photoUrl === null || !body.photoUrl.trim()) {

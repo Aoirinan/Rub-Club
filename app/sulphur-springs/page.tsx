@@ -9,6 +9,9 @@ import { getSulphurOfficeHours } from "@/lib/office-hours";
 import { OfficeHoursTable } from "@/components/OfficeHoursTable";
 import { SS_SERVICE_NAV, SS_INJURY_NAV } from "@/lib/sulphur-springs-content";
 import { resolveSiteStaffForBrand, splitFeaturedAndGrid } from "@/lib/site-staff";
+import { BrandLogoStrip } from "@/components/BrandLogoStrip";
+import { pageKeywords } from "@/lib/seo-keywords";
+import { LOCATIONS as ALL_LOCATIONS } from "@/lib/constants";
 
 const ss = LOCATIONS.sulphur_springs;
 
@@ -25,6 +28,7 @@ export const metadata: Metadata = {
   title: "Sulphur Springs, TX Chiropractor — Chiropractic Associates",
   description:
     "Chiropractic Associates of Sulphur Springs offers chiropractic adjustments, spinal decompression, massage therapy, and rehabilitation at 207 Jefferson St. E. Call 903-919-5020.",
+  keywords: pageKeywords(["Sulphur Springs chiropractor", "Sulphur Springs massage"]),
   alternates: { canonical: "/sulphur-springs" },
   openGraph: {
     title: "Sulphur Springs, TX Chiropractor — Chiropractic Associates",
@@ -90,27 +94,14 @@ export default async function SulphurSpringsPage() {
 
   return (
     <div className="bg-[#f4f2ea]">
-      {/* SS Header with logo and phone */}
-      <div className="bg-white border-b border-stone-200">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-5">
-          <Link href="/sulphur-springs" className="flex items-center gap-4">
-            <Image
-              src="/images/staff-ss/ss-logo.webp"
-              alt="Chiropractic Associates of Sulphur Springs"
-              width={280}
-              height={36}
-              className="h-9 w-auto object-contain sm:h-11"
-            />
-          </Link>
-          <div className="text-right text-sm">
-            <p className="font-bold text-[#173f3b]">Chiropractic Associates</p>
-            <a
-              href={telHref(ss.phonePrimary)}
-              className="text-lg font-black text-[#0f5f5c] hover:underline"
-            >
-              (903) 919-5020
-            </a>
-          </div>
+      {/* SS Header — Sulphur logo large, partner logos small, phones under each */}
+      <div className="border-b border-stone-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-5">
+          <BrandLogoStrip
+            variant="sulphur-springs"
+            paris={ALL_LOCATIONS.paris}
+            sulphur={ss}
+          />
         </div>
       </div>
 

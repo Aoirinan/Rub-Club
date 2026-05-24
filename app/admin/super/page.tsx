@@ -11,6 +11,14 @@ import {
   staffRoleLabel,
   type StaffRole,
 } from "@/lib/staff-roles";
+import type { ProviderRow } from "@/lib/provider-types";
+import {
+  ProviderProfileEditor,
+  providerToProfileDraft,
+  type ProviderProfileDraft,
+} from "@/components/admin/ProviderProfileEditor";
+import { NotificationSettingsEditor } from "@/components/admin/NotificationSettingsEditor";
+import { SchedulerServicesEditor } from "@/components/admin/SchedulerServicesEditor";
 
 type Me = {
   authenticated: boolean;
@@ -49,24 +57,6 @@ type InviteStaffResponse = {
   linkedProviderDisplayName?: string;
 };
 
-type BookableProviderRow = {
-  id: string;
-  displayName: string;
-  active: boolean;
-  locationIds: string[];
-  serviceLines: string[];
-  sortOrder: number;
-  acceptsNewClients: boolean;
-  photoUrl?: string | null;
-  about?: string | null;
-  schedule?: {
-    openHour: number;
-    openMinute: number;
-    closeHour: number;
-    closeMinute: number;
-  } | null;
-};
-
 function hour24To12Parts(hour24: number): { h12: number; pm: boolean } {
   const h = ((hour24 % 24) + 24) % 24;
   if (h === 0) return { h12: 12, pm: false };
@@ -75,75 +65,10 @@ function hour24To12Parts(hour24: number): { h12: number; pm: boolean } {
   return { h12: h - 12, pm: true };
 }
 
-function hour12To24(h12: number, pm: boolean): number {
-  const h = Math.min(12, Math.max(1, Math.round(h12)));
-  if (!pm) return h === 12 ? 0 : h;
-  return h === 12 ? 12 : h + 12;
-}
-
 function formatTime12h(hour24: number, minute: number): string {
   const m = Math.min(59, Math.max(0, minute));
   const { h12, pm } = hour24To12Parts(hour24);
   return `${h12}:${String(m).padStart(2, "0")} ${pm ? "PM" : "AM"}`;
-}
-
-function ProviderSchedule12hRow(props: {
-  label: string;
-  hour24: number;
-  minute: number;
-  onPatch: (patch: { hour24?: number; minute?: number }) => void;
-}) {
-  const { h12, pm } = hour24To12Parts(props.hour24);
-  const min = Math.min(59, Math.max(0, props.minute));
-  return (
-    <div className="flex flex-wrap items-end gap-2">
-      <span className="w-full text-xs font-medium text-slate-600 sm:mb-6 sm:w-14 sm:shrink-0">{props.label}</span>
-      <label className="space-y-1">
-        <span className="text-xs text-slate-600">Hour</span>
-        <input
-          type="number"
-          min={1}
-          max={12}
-          className="w-16 rounded border border-slate-300 px-2 py-1"
-          value={h12}
-          onChange={(e) => {
-            const raw = Number(e.target.value);
-            const v = Number.isFinite(raw) ? Math.min(12, Math.max(1, raw)) : 1;
-            props.onPatch({ hour24: hour12To24(v, pm) });
-          }}
-        />
-      </label>
-      <label className="space-y-1">
-        <span className="text-xs text-slate-600">Min</span>
-        <input
-          type="number"
-          min={0}
-          max={59}
-          className="w-16 rounded border border-slate-300 px-2 py-1"
-          value={min}
-          onChange={(e) => {
-            const raw = Number(e.target.value);
-            const v = Number.isFinite(raw) ? Math.min(59, Math.max(0, raw)) : 0;
-            props.onPatch({ minute: v });
-          }}
-        />
-      </label>
-      <label className="space-y-1">
-        <span className="text-xs text-slate-600">AM/PM</span>
-        <select
-          className="rounded border border-slate-300 bg-white px-2 py-1 text-sm"
-          value={pm ? "pm" : "am"}
-          onChange={(e) => {
-            const nextPm = e.target.value === "pm";
-            props.onPatch({ hour24: hour12To24(h12, nextPm) });
-          }}
-        >
-          <option value="am">AM</option>
-          <option value="pm">PM</option>
-        </select>
-      </label>
-    </div>
-  );
 }
 
 type ProviderIssue = {
@@ -152,11 +77,11 @@ type ProviderIssue = {
   displayName: string;
   locationIds: string[];
   serviceLines: string[];
-  providers: BookableProviderRow[];
+  providers: ProviderRow[];
 };
 
-function detectProviderIssues(rows: BookableProviderRow[]): ProviderIssue[] {
-  const groups = new Map<string, BookableProviderRow[]>();
+function detectProviderIssues(rows: ProviderRow[]): ProviderIssue[] {
+  const groups = new Map<string, ProviderRow[]>();
   for (const p of rows) {
     if (!p.active) continue;
     const locKey = [...p.locationIds].sort().join(",");
@@ -212,7 +137,7 @@ export default function SuperAdminPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [deletingUid, setDeletingUid] = useState<string | null>(null);
   const [emailStatus, setEmailStatus] = useState<EmailStatus | null>(null);
-  const [bookableProviders, setBookableProviders] = useState<BookableProviderRow[]>([]);
+  const [bookableProviders, setBookableProviders] = useState<ProviderRow[]>([]);
   const [newProviderName, setNewProviderName] = useState("");
   const [newParis, setNewParis] = useState(true);
   const [newSulphur, setNewSulphur] = useState(true);
@@ -220,7 +145,7 @@ export default function SuperAdminPage() {
   const [newChiro, setNewChiro] = useState(true);
   const [newStretch, setNewStretch] = useState(false);
   const [newSort, setNewSort] = useState(0);
-  const [editingProvider, setEditingProvider] = useState<BookableProviderRow | null>(null);
+  const [editingProvider, setEditingProvider] = useState<ProviderProfileDraft | null>(null);
   const [editProviderPhoto, setEditProviderPhoto] = useState<File | null>(null);
   const [savingProvider, setSavingProvider] = useState(false);
   const [deletingProviderId, setDeletingProviderId] = useState<string | null>(null);
@@ -257,7 +182,7 @@ export default function SuperAdminPage() {
       setBookableProviders([]);
       return;
     }
-    const data = (await res.json()) as { providers?: BookableProviderRow[] };
+    const data = (await res.json()) as { providers?: ProviderRow[] };
     setBookableProviders(data.providers ?? []);
   }
 
@@ -475,6 +400,12 @@ export default function SuperAdminPage() {
         acceptsNewClients: editingProvider.acceptsNewClients,
         photoUrl: editingProvider.photoUrl?.trim() || null,
         about: editingProvider.about?.trim() || null,
+        textColor: editingProvider.textColor ?? null,
+        bgColor: editingProvider.bgColor ?? null,
+        hours: editingProvider.weeklyHours,
+        blockOutTimes: editingProvider.blockOutTimes,
+        notificationWindows: editingProvider.notificationWindows,
+        calendarVisibility: editingProvider.calendarVisibility,
       };
 
       let res: Response;
@@ -490,6 +421,12 @@ export default function SuperAdminPage() {
         form.set("schedule", JSON.stringify(payload.schedule));
         form.set("photoUrl", payload.photoUrl ?? "");
         form.set("photo", editProviderPhoto);
+        form.set("hours", JSON.stringify(payload.hours));
+        form.set("blockOutTimes", JSON.stringify(payload.blockOutTimes));
+        form.set("notificationWindows", JSON.stringify(payload.notificationWindows));
+        form.set("calendarVisibility", payload.calendarVisibility);
+        if (payload.textColor) form.set("textColor", payload.textColor);
+        if (payload.bgColor) form.set("bgColor", payload.bgColor);
         res = await fetch(`/api/admin/providers/${editingProvider.id}`, {
           method: "PATCH",
           headers: { Authorization: `Bearer ${token}` },
@@ -508,7 +445,7 @@ export default function SuperAdminPage() {
 
       const data = (await res.json().catch(() => ({}))) as {
         error?: string;
-        provider?: BookableProviderRow;
+        provider?: ProviderRow;
       };
       if (!res.ok) {
         setMessage(typeof data.error === "string" ? data.error : "Could not save provider.");
@@ -869,7 +806,7 @@ export default function SuperAdminPage() {
                               type="button"
                               onClick={() => {
                                 setEditProviderPhoto(null);
-                                setEditingProvider({ ...p });
+                                setEditingProvider(providerToProfileDraft(p));
                               }}
                               className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-900 hover:border-slate-400"
                             >
@@ -909,6 +846,20 @@ export default function SuperAdminPage() {
               </p>
             </section>
           ) : null}
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <h2 className="text-lg font-semibold text-slate-900">Notifications (text & email)</h2>
+            <NotificationSettingsEditor
+              getIdToken={async () => auth?.currentUser?.getIdToken() ?? null}
+            />
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <h2 className="text-lg font-semibold text-slate-900">Scheduler service types</h2>
+            <SchedulerServicesEditor
+              getIdToken={async () => auth?.currentUser?.getIdToken() ?? null}
+            />
+          </section>
 
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">Bookable providers (public scheduling)</h2>
@@ -983,271 +934,66 @@ export default function SuperAdminPage() {
             </div>
 
             {editingProvider ? (
-              <div className="space-y-3 rounded-xl border border-indigo-200 bg-indigo-50/40 p-4 text-sm">
-                <p className="font-medium text-slate-900">Edit provider</p>
-                <label className="block space-y-1">
-                  <span className="font-medium text-slate-800">Display name</span>
-                  <input
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                    value={editingProvider.displayName}
-                    onChange={(e) =>
-                      setEditingProvider((prev) => (prev ? { ...prev, displayName: e.target.value } : prev))
-                    }
-                  />
-                </label>
-                <div className="flex flex-wrap gap-4">
-                  <span className="font-medium text-slate-800">Locations</span>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={editingProvider.locationIds.includes("paris")}
-                      onChange={(e) => {
-                        const on = e.target.checked;
-                        setEditingProvider((prev) => {
-                          if (!prev) return prev;
-                          const next = new Set(prev.locationIds);
-                          if (on) next.add("paris");
-                          else next.delete("paris");
-                          return { ...prev, locationIds: Array.from(next) };
-                        });
-                      }}
-                    />
-                    Paris
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={editingProvider.locationIds.includes("sulphur_springs")}
-                      onChange={(e) => {
-                        const on = e.target.checked;
-                        setEditingProvider((prev) => {
-                          if (!prev) return prev;
-                          const next = new Set(prev.locationIds);
-                          if (on) next.add("sulphur_springs");
-                          else next.delete("sulphur_springs");
-                          return { ...prev, locationIds: Array.from(next) };
-                        });
-                      }}
-                    />
-                    Sulphur Springs
-                  </label>
-                </div>
-                <div className="flex flex-wrap gap-4">
-                  <span className="font-medium text-slate-800">Services</span>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={editingProvider.serviceLines.includes("massage")}
-                      onChange={(e) => {
-                        const on = e.target.checked;
-                        setEditingProvider((prev) => {
-                          if (!prev) return prev;
-                          const next = new Set(prev.serviceLines);
-                          if (on) next.add("massage");
-                          else next.delete("massage");
-                          return { ...prev, serviceLines: Array.from(next) };
-                        });
-                      }}
-                    />
-                    Massage
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={editingProvider.serviceLines.includes("chiropractic")}
-                      onChange={(e) => {
-                        const on = e.target.checked;
-                        setEditingProvider((prev) => {
-                          if (!prev) return prev;
-                          const next = new Set(prev.serviceLines);
-                          if (on) next.add("chiropractic");
-                          else next.delete("chiropractic");
-                          return { ...prev, serviceLines: Array.from(next) };
-                        });
-                      }}
-                    />
-                    Chiropractic
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={editingProvider.serviceLines.includes("stretch")}
-                      onChange={(e) => {
-                        const on = e.target.checked;
-                        setEditingProvider((prev) => {
-                          if (!prev) return prev;
-                          const next = new Set(prev.serviceLines);
-                          if (on) next.add("stretch");
-                          else next.delete("stretch");
-                          return { ...prev, serviceLines: Array.from(next) };
-                        });
-                      }}
-                    />
-                    Stretch
-                  </label>
-                </div>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={editingProvider.active}
-                    onChange={(e) =>
-                      setEditingProvider((prev) => (prev ? { ...prev, active: e.target.checked } : prev))
-                    }
-                  />
-                  Active (shown on public booking)
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={editingProvider.acceptsNewClients !== false}
-                    onChange={(e) =>
-                      setEditingProvider((prev) =>
-                        prev ? { ...prev, acceptsNewClients: e.target.checked } : prev,
-                      )
-                    }
-                  />
-                  Accepting new clients on the public book page (uncheck for existing clients only)
-                </label>
-                <div className="space-y-2">
-                  <span className="font-medium text-slate-800">Photo (optional)</span>
-                  {editingProvider.photoUrl && !editProviderPhoto ? (
-                    <div className="flex items-center gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={editingProvider.photoUrl}
-                        alt=""
-                        className="h-16 w-16 rounded-lg border border-slate-200 object-cover"
+              <div className="space-y-4 rounded-xl border border-indigo-200 bg-indigo-50/40 p-4 text-sm">
+                <p className="font-medium text-slate-900">Provider profile</p>
+                <ProviderProfileEditor
+                  draft={editingProvider}
+                  onChange={setEditingProvider}
+                  photoSlot={
+                    <div className="space-y-2">
+                      <span className="font-medium text-slate-800">Photo (optional)</span>
+                      {editingProvider.photoUrl && !editProviderPhoto ? (
+                        <div className="flex items-center gap-3">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={editingProvider.photoUrl}
+                            alt=""
+                            className="h-16 w-16 rounded-lg border border-slate-200 object-cover"
+                          />
+                        </div>
+                      ) : null}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="w-full text-sm"
+                        onChange={(e) => setEditProviderPhoto(e.target.files?.[0] ?? null)}
                       />
-                      <p className="text-xs text-slate-600">Current photo — upload a new file to replace it.</p>
+                      <input
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        value={editingProvider.photoUrl ?? ""}
+                        onChange={(e) => {
+                          setEditProviderPhoto(null);
+                          setEditingProvider((prev) =>
+                            prev ? { ...prev, photoUrl: e.target.value } : prev,
+                          );
+                        }}
+                        placeholder="https://…"
+                        disabled={!!editProviderPhoto}
+                      />
+                      <textarea
+                        className="min-h-[80px] w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        value={editingProvider.about ?? ""}
+                        onChange={(e) =>
+                          setEditingProvider((prev) => (prev ? { ...prev, about: e.target.value } : prev))
+                        }
+                        placeholder="Short bio for public booking"
+                      />
+                      <label className="block space-y-1">
+                        <span className="font-medium text-slate-800">Sort order</span>
+                        <input
+                          type="number"
+                          className="w-32 rounded-lg border border-slate-300 bg-white px-3 py-2"
+                          value={editingProvider.sortOrder}
+                          onChange={(e) =>
+                            setEditingProvider((prev) =>
+                              prev ? { ...prev, sortOrder: Number(e.target.value) || 0 } : prev,
+                            )
+                          }
+                        />
+                      </label>
                     </div>
-                  ) : null}
-                  <label className="block space-y-1">
-                    <span className="text-xs text-slate-600">Upload image (JPEG, PNG, or WebP, max 5 MB)</span>
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="w-full text-sm"
-                      onChange={(e) => setEditProviderPhoto(e.target.files?.[0] ?? null)}
-                    />
-                  </label>
-                  <label className="block space-y-1">
-                    <span className="text-xs text-slate-600">Or paste an https URL</span>
-                    <input
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                      value={editingProvider.photoUrl ?? ""}
-                      onChange={(e) => {
-                        setEditProviderPhoto(null);
-                        setEditingProvider((prev) =>
-                          prev ? { ...prev, photoUrl: e.target.value } : prev,
-                        );
-                      }}
-                      placeholder="https://…"
-                      disabled={!!editProviderPhoto}
-                    />
-                  </label>
-                </div>
-                <label className="block space-y-1">
-                  <span className="font-medium text-slate-800">About (plain text, optional)</span>
-                  <textarea
-                    className="min-h-[100px] w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                    value={editingProvider.about ?? ""}
-                    onChange={(e) =>
-                      setEditingProvider((prev) => (prev ? { ...prev, about: e.target.value } : prev))
-                    }
-                    placeholder="Short bio shown when someone picks this provider to book."
-                  />
-                </label>
-                <label className="block space-y-1">
-                  <span className="font-medium text-slate-800">Sort order</span>
-                  <input
-                    type="number"
-                    className="w-32 rounded-lg border border-slate-300 bg-white px-3 py-2"
-                    value={editingProvider.sortOrder}
-                    onChange={(e) =>
-                      setEditingProvider((prev) =>
-                        prev ? { ...prev, sortOrder: Number(e.target.value) || 0 } : prev,
-                      )
-                    }
-                  />
-                </label>
-                <div className="space-y-2">
-                  <p className="font-medium text-slate-800">Custom hours (optional)</p>
-                  {editingProvider.schedule ? (
-                    <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/80 p-3">
-                      <ProviderSchedule12hRow
-                        label="Opens"
-                        hour24={editingProvider.schedule.openHour}
-                        minute={editingProvider.schedule.openMinute}
-                        onPatch={(patch) =>
-                          setEditingProvider((prev) =>
-                            prev?.schedule
-                              ? {
-                                  ...prev,
-                                  schedule: {
-                                    ...prev.schedule,
-                                    ...(patch.hour24 !== undefined ? { openHour: patch.hour24 } : {}),
-                                    ...(patch.minute !== undefined ? { openMinute: patch.minute } : {}),
-                                  },
-                                }
-                              : prev,
-                          )
-                        }
-                      />
-                      <ProviderSchedule12hRow
-                        label="Closes"
-                        hour24={editingProvider.schedule.closeHour}
-                        minute={editingProvider.schedule.closeMinute}
-                        onPatch={(patch) =>
-                          setEditingProvider((prev) =>
-                            prev?.schedule
-                              ? {
-                                  ...prev,
-                                  schedule: {
-                                    ...prev.schedule,
-                                    ...(patch.hour24 !== undefined ? { closeHour: patch.hour24 } : {}),
-                                    ...(patch.minute !== undefined ? { closeMinute: patch.minute } : {}),
-                                  },
-                                }
-                              : prev,
-                          )
-                        }
-                      />
-                    </div>
-                  ) : null}
-                  <div className="flex flex-wrap gap-2">
-                    {editingProvider.schedule ? (
-                      <button
-                        type="button"
-                        className="text-xs font-semibold text-slate-700 underline"
-                        onClick={() => setEditingProvider((prev) => (prev ? { ...prev, schedule: null } : prev))}
-                      >
-                        Use default site hours (9 AM–5 PM)
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-900"
-                        onClick={() =>
-                          setEditingProvider((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  schedule: {
-                                    openHour: 9,
-                                    openMinute: 0,
-                                    closeHour: 17,
-                                    closeMinute: 0,
-                                  },
-                                }
-                              : prev,
-                          )
-                        }
-                      >
-                        Set custom hours
-                      </button>
-                    )}
-                  </div>
-                </div>
+                  }
+                />
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
@@ -1255,7 +1001,7 @@ export default function SuperAdminPage() {
                     onClick={saveBookableProviderEdit}
                     className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
                   >
-                    Save
+                    Save profile
                   </button>
                   <button
                     type="button"
@@ -1309,7 +1055,7 @@ export default function SuperAdminPage() {
                       type="button"
                       onClick={() => {
                         setEditProviderPhoto(null);
-                        setEditingProvider({ ...p });
+                        setEditingProvider(providerToProfileDraft(p));
                       }}
                       className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 hover:border-slate-400"
                     >

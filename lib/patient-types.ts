@@ -1,3 +1,5 @@
+import type { PatientBusinessTag } from "./patient-business";
+
 export type PatientPaymentType = "cash" | "insurance" | "mixed";
 
 export type PatientApiRow = {
@@ -16,6 +18,9 @@ export type PatientApiRow = {
   insuranceCarrier?: string;
   insuranceMemberId?: string;
   notes?: string;
+  businessTag?: PatientBusinessTag;
+  notesUpdatedAtMs?: number | null;
+  notesUpdatedByEmail?: string | null;
   source: "online_booking" | "manual" | "csv_import";
   totalVisits: number;
   totalCanceled: number;

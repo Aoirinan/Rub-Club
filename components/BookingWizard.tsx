@@ -6,11 +6,18 @@ import {
   LOCATIONS,
   TIME_ZONE,
   telHref,
-  type DurationMin,
   type LocationId,
   type LocationInfo,
   type ServiceLine,
 } from "@/lib/constants";
+import { formatServicePrice } from "@/lib/scheduler-service-types";
+
+type PublicCatalogService = {
+  id: string;
+  name: string;
+  priceCents: number;
+  durationMinutes: number;
+};
 import { track } from "@/lib/analytics";
 
 type Slot = { startIso: string; label: string };
@@ -50,8 +57,9 @@ function readInitialVisitKind(value: string | null): "massage" | "stretch" | "ch
   if (value === "stretch") return "stretch";
   return "massage";
 }
-function readInitialDuration(value: string | null): DurationMin {
-  return value === "60" ? 60 : 30;
+function readInitialDuration(value: string | null): number {
+  const n = value ? Number(value) : 30;
+  return n === 60 || n === 90 || n === 120 ? n : 30;
 }
 
 export type BookingWizardInitial = {
@@ -84,9 +92,11 @@ export function BookingWizard({
         ? "stretch"
         : "massage";
   const [payMode, setPayMode] = useState<"unset" | "cash" | "insurance">("unset");
-  const [durationMin, setDurationMin] = useState<DurationMin>(
+  const [durationMin, setDurationMin] = useState<number>(
     readInitialDuration(initial?.duration ?? null),
   );
+  const [catalogServices, setCatalogServices] = useState<PublicCatalogService[]>([]);
+  const [schedulerServiceId, setSchedulerServiceId] = useState("");
   const [date, setDate] = useState<string>(initial?.date || todayIso());
 
   const [slots, setSlots] = useState<Slot[] | null>(null);
@@ -129,6 +139,38 @@ export function BookingWizard({
       duration: durationMin,
     });
   }, [visitKind, locationId, durationMin, serviceLine]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadCatalog() {
+      try {
+        const qs = new URLSearchParams({ serviceLine });
+        const res = await fetch(`/api/public/scheduler-services?${qs}`, { cache: "no-store" });
+        const data = (await res.json()) as { services?: PublicCatalogService[] };
+        if (cancelled) return;
+        const list = data.services ?? [];
+        setCatalogServices(list);
+        if (list.length > 0) {
+          const match = list.find((s) => s.durationMinutes === durationMin) ?? list[0]!;
+          setSchedulerServiceId(match.id);
+          setDurationMin(match.durationMinutes);
+        } else {
+          setSchedulerServiceId("");
+        }
+      } catch {
+        if (!cancelled) {
+          setCatalogServices([]);
+          setSchedulerServiceId("");
+        }
+      }
+    }
+    void loadCatalog();
+    return () => {
+      cancelled = true;
+    };
+    // Pick default service when the visit type changes, not on every duration tweak.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- serviceLine only
+  }, [serviceLine]);
 
   useEffect(() => {
     let cancelled = false;
@@ -244,6 +286,7 @@ export function BookingWizard({
         visitKind,
         paymentType: "cash",
         durationMin,
+        ...(schedulerServiceId ? { schedulerServiceId } : {}),
         startIso: selectedSlot.startIso,
         name: name.trim(),
         phone: phone.trim(),
@@ -539,21 +582,48 @@ export function BookingWizard({
               </select>
             </label>
 
-            <label className="block space-y-1.5 text-sm">
-              <span className={fieldLabel}>Duration</span>
-              <select
-                className={fieldControl}
-                value={durationMin}
-                onChange={(e) => {
-                  setDurationMin(Number(e.target.value) as DurationMin);
-                  setSelectedSlot(null);
-                  setSlots(null);
-                }}
-              >
-                <option value={30}>30 minutes</option>
-                <option value={60}>60 minutes</option>
-              </select>
-            </label>
+            {catalogServices.length > 0 ? (
+              <label className="block space-y-1.5 text-sm">
+                <span className={fieldLabel}>Service</span>
+                <select
+                  className={fieldControl}
+                  value={schedulerServiceId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    const svc = catalogServices.find((s) => s.id === id);
+                    setSchedulerServiceId(id);
+                    if (svc) setDurationMin(svc.durationMinutes);
+                    setSelectedSlot(null);
+                    setSlots(null);
+                  }}
+                >
+                  {catalogServices.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} — {s.durationMinutes} min
+                      {s.priceCents > 0 ? ` (${formatServicePrice(s.priceCents)})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <label className="block space-y-1.5 text-sm">
+                <span className={fieldLabel}>Duration</span>
+                <select
+                  className={fieldControl}
+                  value={durationMin}
+                  onChange={(e) => {
+                    setDurationMin(Number(e.target.value));
+                    setSelectedSlot(null);
+                    setSlots(null);
+                  }}
+                >
+                  <option value={30}>30 minutes</option>
+                  <option value={60}>60 minutes</option>
+                  <option value={90}>90 minutes</option>
+                  <option value={120}>120 minutes</option>
+                </select>
+              </label>
+            )}
 
             <label className="block space-y-1.5 text-sm sm:col-span-2">
               <span className={fieldLabel}>Date ({TIME_ZONE})</span>

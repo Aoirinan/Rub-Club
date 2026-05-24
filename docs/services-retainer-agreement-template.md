@@ -172,6 +172,8 @@ Date: ____________________
 ## Exhibit A — Description of Services
 
 > Fill this in honestly. If something isn't here, it isn't included in the retainer.
+>
+> **Optional:** For a one-time phased rollout (consolidate three legacy sites, then HIPAA + scheduler + PHI features), attach or reference the signed [`two-phase-client-sow.md`](./two-phase-client-sow.md) dated **[SOW DATE]**.
 
 ### Included in monthly retainer (up to [N] hours per month)
 

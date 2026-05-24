@@ -38,12 +38,12 @@ export function BookingCta({
   className,
   variant = "default",
 }: Props) {
-  const enabled = usePublicBookingEnabled();
   const href = useScheduleHref(query);
   const classes = className ?? VARIANT_CLASS[variant];
+  const showLabel = usePublicBookingEnabled() || disabledLabel === "Contact us";
   return (
     <Link href={href} className={classes}>
-      {enabled ? label : disabledLabel}
+      {showLabel ? label : disabledLabel}
     </Link>
   );
 }

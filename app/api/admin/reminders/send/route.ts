@@ -7,9 +7,13 @@ import { patientReminderEmail } from "@/lib/email-templates";
 import { sendBookingNotification } from "@/lib/sendgrid";
 import { sendSms } from "@/lib/twilio";
 import { recordBookingEvent } from "@/lib/booking-events";
-import { formatChicagoDateTimeLong } from "@/lib/chicago-datetime-format";
 import { LOCATIONS } from "@/lib/constants";
 import { logSmsSent } from "@/lib/sms-audit";
+import { providerAllowsReminderChannel } from "@/lib/provider-reminders";
+import { getNotificationTemplates } from "@/lib/notification-settings-db";
+import { applyMergeTemplate, buildReminderSmsBody } from "@/lib/notification-templates";
+import { logNotificationSent } from "@/lib/notifications-log";
+import { serviceLineEmailLabel } from "@/lib/constants";
 
 export const runtime = "nodejs";
 
@@ -52,6 +56,7 @@ export async function POST(req: Request) {
     }
   }
 
+  const templates = await getNotificationTemplates(db);
   let sent = 0;
   const errors: string[] = [];
 
@@ -69,29 +74,90 @@ export async function POST(req: Request) {
     const emailCtx = bookingDocToEmailContext(doc);
     if (!emailCtx) continue;
 
+    const providerId =
+      typeof doc.get("providerId") === "string" ? (doc.get("providerId") as string) : "";
+    const allowEmail = await providerAllowsReminderChannel(providerId, "email");
+    const allowSms = await providerAllowsReminderChannel(providerId, "sms");
+    if (!allowEmail && !allowSms) continue;
+
+    const loc = LOCATIONS[emailCtx.locationId];
+    const serviceName =
+      typeof doc.get("serviceTypeName") === "string" && doc.get("serviceTypeName")
+        ? String(doc.get("serviceTypeName"))
+        : serviceLineEmailLabel(emailCtx.serviceLine);
+    const mergeCtx = {
+      AppointmentId: docId,
+      CompanyName: loc.shortName,
+      CompanyAddress: loc.streetAddress,
+      CompanyPhone: loc.phonePrimary,
+      AppointmentSubject: serviceName,
+      AppointmentDate: emailCtx.start.toFormat("LLLL d, yyyy"),
+      AppointmentStartTime: emailCtx.start.toFormat("h:mm a"),
+      AppointmentEndTime: emailCtx.start.plus({ minutes: emailCtx.durationMin }).toFormat("h:mm a"),
+      Service: serviceName,
+      ServiceProvider: emailCtx.providerDisplayName || "First available",
+      ResourceName: emailCtx.providerDisplayName || "",
+      CustomerFirstLastName: emailCtx.name,
+      AppointmentConfirmation: `To reschedule or cancel, call ${loc.phonePrimary}.`,
+      AppointmentConfirmReschedule: "",
+      AppointmentConfirmOnly: "",
+      AppointmentICSLink: "",
+    };
+
     let emailSent = false;
     let smsSent = false;
+    let emailText = "";
+    let emailSubject = "";
     try {
-      const { subject, text, html } = patientReminderEmail(emailCtx);
-      await sendBookingNotification({
-        to: emailCtx.email,
-        subject,
-        text,
-        html,
-      });
-      emailSent = true;
+      if (allowEmail) {
+        const emailTpl = templates.email.customer.standard;
+        const customSubject = applyMergeTemplate(emailTpl.subject, mergeCtx).trim();
+        const customBody = applyMergeTemplate(emailTpl.body, mergeCtx).trim();
+        let subject: string;
+        let text: string;
+        let html: string;
+        if (customSubject && customBody) {
+          subject = customSubject;
+          text = customBody;
+          html = customBody
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .split("\n")
+            .map((line) => `<p style="margin:0 0 1em;font-family:sans-serif;">${line || "&nbsp;"}</p>`)
+            .join("");
+        } else {
+          const built = patientReminderEmail(emailCtx);
+          subject = built.subject;
+          text = built.text;
+          html = built.html;
+        }
+        emailSubject = subject;
+        emailText = text;
+        await sendBookingNotification({
+          to: emailCtx.email,
+          subject,
+          text,
+          html,
+        });
+        emailSent = true;
+        await logNotificationSent({
+          type: "email",
+          email: emailCtx.email,
+          message: emailText,
+          subject: emailSubject,
+          bookingId: docId,
+          patientId: typeof doc.get("patientId") === "string" ? doc.get("patientId") : null,
+        }).catch(() => {});
+      }
     } catch (err) {
       errors.push(`email-${docId}: ${err instanceof Error ? err.message : String(err)}`);
     }
 
-    if (emailCtx.phone) {
-      const loc = LOCATIONS[emailCtx.locationId];
-      const smsBody = [
-        `Reminder: Your ${emailCtx.serviceLine === "massage" ? "massage" : emailCtx.serviceLine === "stretch" ? "stretch" : "chiropractic"} appointment is on ${formatChicagoDateTimeLong(emailCtx.start)}.`,
-        `Provider: ${emailCtx.providerDisplayName || "First available"}`,
-        `Location: ${loc.shortName} — ${loc.streetAddress}`,
-        `To reschedule or cancel, call ${loc.phonePrimary}.`,
-      ].join("\n");
+    if (emailCtx.phone && allowSms) {
+      const smsBody =
+        buildReminderSmsBody(templates, "standard", mergeCtx) ||
+        applyMergeTemplate(templates.sms.customer.standard, mergeCtx);
       const result = await sendSms(emailCtx.phone, smsBody);
       smsSent = result.sent;
       if (smsSent) {
@@ -99,6 +165,13 @@ export async function POST(req: Request) {
           phone: emailCtx.phone,
           message: smsBody,
           bookingId: docId,
+        }).catch(() => {});
+        await logNotificationSent({
+          type: "sms",
+          phone: emailCtx.phone,
+          message: smsBody,
+          bookingId: docId,
+          patientId: typeof doc.get("patientId") === "string" ? doc.get("patientId") : null,
         }).catch(() => {});
       }
     }

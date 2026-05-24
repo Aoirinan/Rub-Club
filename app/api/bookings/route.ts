@@ -4,20 +4,23 @@ import { FieldValue, Timestamp, type DocumentReference } from "firebase-admin/fi
 import { DateTime } from "luxon";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
-import type { DurationMin, LocationId, ServiceLine } from "@/lib/constants";
+import type { LocationId, ServiceLine } from "@/lib/constants";
+import { isValidBookingDurationMin } from "@/lib/booking-duration";
+import { fetchSchedulerServiceById } from "@/lib/scheduler-services-db";
+import { isCustomerVisibleService, schedulerServiceMatchesLine } from "@/lib/scheduler-service-lines";
 import { LOCATIONS, TIME_ZONE, serviceLineEmailLabel } from "@/lib/constants";
 import { assertRateLimitOk, getClientIp } from "@/lib/rate-limit";
 import {
   fetchActiveProvidersForPublicBooking,
   orderProvidersForAnyBooking,
 } from "@/lib/providers-db";
+import { providerAllowsAppointmentTime } from "@/lib/provider-scheduling";
 import { createPaymentLink } from "@/lib/square";
 import { sendBookingNotification } from "@/lib/sendgrid";
 import {
   bucketDocIdsForAppointment,
   holdBucketIdsForPublicBooking,
   isAlignedToSlotGrid,
-  isWithinScheduleWindow,
   parseStartIsoToDateTime,
 } from "@/lib/slots-luxon";
 import {
@@ -41,7 +44,8 @@ const bodySchema = z
     serviceLine: z.enum(["massage", "chiropractic", "stretch"]),
     visitKind: z.enum(["massage", "stretch", "chiropractic"]).optional(),
     paymentType: z.enum(["cash", "insurance"]).optional(),
-    durationMin: z.union([z.literal(30), z.literal(60)]),
+    durationMin: z.number().int().refine(isValidBookingDurationMin, "Invalid duration"),
+    schedulerServiceId: z.string().max(200).optional(),
     startIso: z.string().min(8),
     name: z.string().min(2).max(120),
     phone: z.string().min(7).max(40),
@@ -142,12 +146,35 @@ export async function POST(req: Request) {
   }
 
   const locationId = body.locationId as LocationId;
-  const durationMin = body.durationMin as DurationMin;
   const serviceLine = body.serviceLine as ServiceLine;
   const visitKind: "massage" | "stretch" =
     serviceLine === "stretch" || body.visitKind === "stretch" ? "stretch" : "massage";
 
   const db = getFirestore();
+  const durationMin = body.durationMin;
+  let schedulerServiceId: string | undefined;
+  let serviceTypeName: string | undefined;
+  if (body.schedulerServiceId?.trim()) {
+    const svc = await fetchSchedulerServiceById(db, body.schedulerServiceId.trim());
+    if (
+      !svc ||
+      !isCustomerVisibleService(svc) ||
+      !schedulerServiceMatchesLine(svc, serviceLine)
+    ) {
+      return NextResponse.json({ error: "Invalid service selection" }, { status: 400 });
+    }
+    if (svc.durationMinutes !== durationMin) {
+      return NextResponse.json(
+        { error: "Duration does not match the selected service" },
+        { status: 400 },
+      );
+    }
+    schedulerServiceId = svc.id;
+    serviceTypeName = svc.name;
+  }
+  const publicServiceFields = schedulerServiceId
+    ? { schedulerServiceId, serviceTypeName: serviceTypeName ?? "" }
+    : {};
   const eligible = await fetchActiveProvidersForPublicBooking(db, locationId, serviceLine, {
     publicBooking: true,
   });
@@ -176,7 +203,7 @@ export async function POST(req: Request) {
       );
     }
     for (const t of starts) {
-      if (!isWithinScheduleWindow(t, durationMin, provider.schedule ?? null)) {
+      if (!providerAllowsAppointmentTime(provider, t, durationMin)) {
         return NextResponse.json(
           { error: "One of the repeated visits falls outside that provider's bookable hours" },
           { status: 400 },
@@ -187,7 +214,7 @@ export async function POST(req: Request) {
     assignedDisplayName = provider.displayName;
   } else {
     const canAny = eligible.some((p) =>
-      isWithinScheduleWindow(start, durationMin, p.schedule ?? null),
+      providerAllowsAppointmentTime(p, start, durationMin),
     );
     if (!canAny) {
       return NextResponse.json({ error: "Outside bookable hours for this service" }, { status: 400 });
@@ -261,6 +288,7 @@ export async function POST(req: Request) {
             status: "pending",
             sourceIp: getClientIp(req.headers),
             createdAt: FieldValue.serverTimestamp(),
+            ...publicServiceFields,
             ...(body.recurrence
               ? {
                   recurrence: body.recurrence,
@@ -290,7 +318,7 @@ export async function POST(req: Request) {
 
           const bucketRefsByProvider: { id: string; name: string; refs: DocumentReference[] }[] = [];
           for (const p of tryOrder) {
-            if (!isWithinScheduleWindow(thisStart, durationMin, p.schedule ?? null)) continue;
+            if (!providerAllowsAppointmentTime(p, thisStart, durationMin)) continue;
             const ids = bucketDocIdsForAppointment(locationId, p.id, thisStart, durationMin);
             const refs = ids.map((id) => db.collection("slot_buckets").doc(id));
             bucketRefsByProvider.push({ id: p.id, name: p.displayName, refs });
@@ -352,6 +380,7 @@ export async function POST(req: Request) {
             status: "pending",
             sourceIp: getClientIp(req.headers),
             createdAt: FieldValue.serverTimestamp(),
+            ...publicServiceFields,
           });
           recordBookingEventInTx(db, tx, bookingRef.id, {
             type: "created",

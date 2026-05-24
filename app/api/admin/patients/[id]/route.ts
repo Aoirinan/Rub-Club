@@ -3,6 +3,8 @@ import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
 import { requireStaff } from "@/lib/staff-auth";
+import { staffMeetsMin } from "@/lib/staff-roles";
+import { isPatientBusinessTag } from "@/lib/patient-business";
 import {
   deletePatientPermanently,
   getPatientBookings,
@@ -28,6 +30,7 @@ const patchSchema = z.object({
   insuranceCarrier: z.string().max(120).nullable().optional(),
   insuranceMemberId: z.string().max(80).nullable().optional(),
   notes: z.string().max(4000).nullable().optional(),
+  businessTag: z.enum(["rub_club", "chiro", "both"]).optional(),
 });
 
 type Params = { params: Promise<{ id: string }> };
@@ -55,7 +58,7 @@ export async function GET(req: Request, ctx: Params) {
 }
 
 export async function PATCH(req: Request, ctx: Params) {
-  const staff = await requireStaff(req.headers.get("authorization"), "manager");
+  const staff = await requireStaff(req.headers.get("authorization"), "front_desk");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -115,6 +118,25 @@ export async function PATCH(req: Request, ctx: Params) {
     } else if (typeof v === "string") {
       updates[key] = key === "email" ? v.trim().toLowerCase() : v.trim();
     }
+  }
+
+  if (body.notes !== undefined) {
+    updates.notesUpdatedAt = FieldValue.serverTimestamp();
+    updates.notesUpdatedByEmail = staff.email ?? null;
+  }
+
+  const managerOnly =
+    body.firstName !== undefined ||
+    body.lastName !== undefined ||
+    body.phone !== undefined ||
+    body.paymentType !== undefined ||
+    body.businessTag !== undefined;
+  if (managerOnly && !staffMeetsMin(staff.role, "manager")) {
+    return NextResponse.json({ error: "Manager role required for this change" }, { status: 403 });
+  }
+
+  if (body.businessTag !== undefined && isPatientBusinessTag(body.businessTag)) {
+    updates.businessTag = body.businessTag;
   }
 
   await ref.update(updates);

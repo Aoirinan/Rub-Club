@@ -15,10 +15,21 @@ import {
   type ProviderRow,
   type SchedulerView,
 } from "./_scheduler/types";
+import { buildProviderStylesMap } from "@/lib/provider-colors";
+import { buildServiceStylesMap } from "@/lib/service-calendar-styles";
+import type { SchedulerServiceRow } from "@/lib/scheduler-service-types";
+import {
+  providerMatchesSchedulerBusiness,
+  readSchedulerBusinessFromSession,
+  SCHEDULER_BUSINESS_LABELS,
+  writeSchedulerBusinessToSession,
+  type SchedulerBusinessId,
+} from "@/lib/scheduler-business";
 import {
   bookingsApiQuery,
   chicagoDayStart,
   chicagoStartOfWeek,
+  filterByBusiness,
   filterByService,
   pickColumnProviders,
   providerMatchesServiceScope,
@@ -32,7 +43,6 @@ import type { SchedulerMode } from "./_scheduler/SchedulerChrome";
 import {
   bookingStatusLabel,
   bookingStatusPillClasses,
-  SERVICE_LINE_COLORS,
   type BookingStatus,
 } from "@/lib/booking-status";
 import { BookingDrawer } from "./_scheduler/BookingDrawer";
@@ -87,6 +97,7 @@ function AdminDashboard() {
 
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [providers, setProviders] = useState<ProviderRow[]>([]);
+  const [schedulerServices, setSchedulerServices] = useState<SchedulerServiceRow[]>([]);
   const [holds, setHolds] = useState<HoldRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -107,9 +118,14 @@ function AdminDashboard() {
   const [patientLookupOpen, setPatientLookupOpen] = useState(false);
   const [patientCsvImportOpen, setPatientCsvImportOpen] = useState(false);
   const [patientCsvImportBusy, setPatientCsvImportBusy] = useState(false);
+  const [businessFilter, setBusinessFilter] = useState<SchedulerBusinessId>("all");
 
   useEffect(() => {
     setAuth(getFirebaseClientAuth());
+  }, []);
+
+  useEffect(() => {
+    setBusinessFilter(readSchedulerBusinessFromSession());
   }, []);
 
   const filtersFromUrl = useMemo<FilterState>(
@@ -118,8 +134,14 @@ function AdminDashboard() {
   );
 
   const filters = useMemo<FilterState>(
-    () => ({ ...filtersFromUrl, serviceLine: serviceScope }),
-    [filtersFromUrl, serviceScope],
+    () => ({ ...filtersFromUrl, business: businessFilter, serviceLine: serviceScope }),
+    [filtersFromUrl, businessFilter, serviceScope],
+  );
+
+  const providerStyles = useMemo(() => buildProviderStylesMap(providers), [providers]);
+  const serviceStyles = useMemo(
+    () => buildServiceStylesMap(schedulerServices),
+    [schedulerServices],
   );
 
   const getIdToken = useCallback(async (): Promise<string | null> => {
@@ -130,7 +152,16 @@ function AdminDashboard() {
 
   const updateFilters = useCallback(
     (patch: Partial<FilterState>) => {
-      const next: FilterState = { ...filters, ...patch, serviceLine: serviceScope };
+      if (patch.business !== undefined) {
+        setBusinessFilter(patch.business);
+        writeSchedulerBusinessToSession(patch.business);
+      }
+      const next: FilterState = {
+        ...filters,
+        ...patch,
+        business: patch.business ?? filters.business,
+        serviceLine: serviceScope,
+      };
       const qs = writeFilters(next);
       router.replace(qs ? `${basePath}?${qs}` : basePath);
       if (patch.date !== undefined || patch.locationId !== undefined) {
@@ -220,6 +251,17 @@ function AdminDashboard() {
     setProviders(payload.providers);
   }, [getIdToken]);
 
+  const refreshSchedulerServices = useCallback(async () => {
+    const token = await getIdToken();
+    if (!token) return;
+    const res = await fetch("/api/admin/scheduler-services", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return;
+    const payload = (await res.json()) as { services?: SchedulerServiceRow[] };
+    setSchedulerServices(payload.services ?? []);
+  }, [getIdToken]);
+
   const refreshHolds = useCallback(async () => {
     const token = await getIdToken();
     if (!token) return;
@@ -277,11 +319,12 @@ function AdminDashboard() {
         return;
       }
       await refreshProviders();
+      await refreshSchedulerServices();
       await refreshBookings();
       await refreshHolds();
     });
     return () => unsub();
-  }, [auth, router, refreshBookings, refreshProviders, refreshHolds]);
+  }, [auth, router, refreshBookings, refreshProviders, refreshSchedulerServices, refreshHolds]);
 
   useEffect(() => {
     if (!me?.role) return;
@@ -304,8 +347,8 @@ function AdminDashboard() {
   }, [searchParams]);
 
   const viewBookings = useMemo(
-    () => filterByService(bookings, filters.serviceLine),
-    [bookings, filters.serviceLine],
+    () => filterByBusiness(filterByService(bookings, filters.serviceLine), filters.business),
+    [bookings, filters.serviceLine, filters.business],
   );
 
   const columnProviders = useMemo(
@@ -318,8 +361,11 @@ function AdminDashboard() {
       providers
         .filter((p) => p.active || filters.providerId === p.id)
         .filter((p) => providerMatchesServiceScope(p, serviceScope))
+        .filter((p) =>
+          filters.business === "all" ? true : providerMatchesSchedulerBusiness(p, filters.business),
+        )
         .sort((a, b) => a.sortOrder - b.sortOrder || a.displayName.localeCompare(b.displayName)),
-    [providers, filters.providerId, serviceScope],
+    [providers, filters.providerId, serviceScope, filters.business],
   );
 
   const pendingRows = useMemo(
@@ -562,6 +608,7 @@ function AdminDashboard() {
             <Toolbar
               filters={filters}
               providers={scopedProviders}
+              providerStyles={providerStyles}
               schedulerMode={schedulerMode}
               onChange={updateFilters}
             />
@@ -572,11 +619,11 @@ function AdminDashboard() {
                   Day view legend
                 </summary>
                 <p className="mt-2 text-slate-500">
-                  <span className="font-bold text-emerald-700">✓</span> confirmed online ·{" "}
-                  <span className="text-slate-500">○</span> not yet online ·{" "}
-                  <span className="text-sky-600">★</span> checked in ·{" "}
-                  <span className="font-bold text-amber-700">✕</span> needs reschedule · Same patient,
-                  multiple visits: <span className="font-semibold">(2×)</span> and ↳ on later times.
+                  <span className="font-bold">✓</span> confirmed · <span className="font-bold">○</span>{" "}
+                  pending · <span className="font-bold">✗</span> declined/cancelled · Colors use the
+                  service type when set, otherwise the provider (Super Admin → Service types /
+                  Providers). Same patient, multiple visits:{" "}
+                  <span className="font-semibold">(2×)</span>.
                 </p>
               </details>
             ) : null}
@@ -599,6 +646,8 @@ function AdminDashboard() {
               <DayView
                 bookings={viewBookings}
                 providers={columnProviders}
+                providerStyles={providerStyles}
+                serviceStyles={serviceStyles}
                 filters={filters}
                 isManager={isOperationsManager}
                 onSelect={setSelectedId}
@@ -611,6 +660,8 @@ function AdminDashboard() {
               <WeekView
                 bookings={viewBookings}
                 providers={scopedProviders}
+                providerStyles={providerStyles}
+                serviceStyles={serviceStyles}
                 filters={filters}
                 onSelect={setSelectedId}
               />
@@ -619,6 +670,8 @@ function AdminDashboard() {
               <ListView
                 bookings={viewBookings}
                 providers={scopedProviders}
+                providerStyles={providerStyles}
+                serviceStyles={serviceStyles}
                 filters={filters}
                 isManager={isOperationsManager}
                 onSelect={setSelectedId}
@@ -775,11 +828,13 @@ function AdminDashboard() {
 function Toolbar({
   filters,
   providers,
+  providerStyles,
   schedulerMode,
   onChange,
 }: {
   filters: FilterState;
   providers: ProviderRow[];
+  providerStyles: Map<string, import("@/lib/provider-colors").ProviderCalendarStyle>;
   schedulerMode: SchedulerMode;
   onChange: (patch: Partial<FilterState>) => void;
 }) {
@@ -828,12 +883,6 @@ function Toolbar({
     }, 250);
   }
 
-  const legendColors = SERVICE_LINE_COLORS.filter((c) =>
-    schedulerMode === "chiropractic"
-      ? c.serviceLine === "chiropractic"
-      : c.serviceLine === "massage" || c.serviceLine === "stretch",
-  );
-
   const dateLabel = (() => {
     if (filters.view === "week") {
       const ws = chicagoStartOfWeek(filters.date);
@@ -846,6 +895,26 @@ function Toolbar({
 
   return (
     <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-end gap-3 border-b border-slate-100 pb-4">
+        <label className="inline-flex min-w-[12rem] flex-col gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Business
+          <select
+            value={filters.business}
+            onChange={(e) => onChange({ business: e.target.value as SchedulerBusinessId })}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900"
+          >
+            {(Object.keys(SCHEDULER_BUSINESS_LABELS) as SchedulerBusinessId[]).map((id) => (
+              <option key={id} value={id}>
+                {SCHEDULER_BUSINESS_LABELS[id]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p className="text-xs text-slate-500">
+          Filters day, week, list, and reports appointment lookup. Saved in this browser session.
+        </p>
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex rounded-lg border border-slate-300 bg-white p-0.5 text-sm">
           {(["day", "week", "list"] as SchedulerView[]).map((v) => (
@@ -977,14 +1046,23 @@ function Toolbar({
 
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Colors
+            Provider colors
           </span>
-          {legendColors.map((c) => (
-            <span key={c.serviceLine} className="inline-flex items-center gap-1 text-xs text-slate-700">
-              <span className={`inline-block h-2.5 w-2.5 rounded-full ${c.dotClass}`} />
-              {c.label}
-            </span>
-          ))}
+          {providers.slice(0, 8).map((p) => {
+            const style = providerStyles.get(p.id);
+            return (
+              <span key={p.id} className="inline-flex items-center gap-1 text-xs text-slate-700">
+                <span
+                  className="inline-block h-3 w-3 rounded border border-black/10"
+                  style={style?.style}
+                />
+                {p.displayName.split(/\s+/)[0]}
+              </span>
+            );
+          })}
+          {providers.length > 8 ? (
+            <span className="text-xs text-slate-500">+{providers.length - 8} more</span>
+          ) : null}
         </div>
       </div>
     </div>

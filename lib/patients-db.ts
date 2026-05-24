@@ -12,6 +12,12 @@ import { phoneVariantsForLookup, normalizeSmsDigits } from "@/lib/patient-record
 
 export const PATIENTS_COLLECTION = "patients";
 
+import {
+  inferPatientBusinessFromBooking,
+  isPatientBusinessTag,
+  mergePatientBusinessTag,
+  type PatientBusinessTag,
+} from "@/lib/patient-business";
 import type { PatientApiRow, PatientPaymentType } from "@/lib/patient-types";
 
 export type { PatientApiRow, PatientPaymentType } from "@/lib/patient-types";
@@ -33,6 +39,9 @@ export type PatientDoc = {
   insuranceCarrier?: string;
   insuranceMemberId?: string;
   notes?: string;
+  businessTag?: PatientBusinessTag;
+  notesUpdatedAt?: Timestamp | null;
+  notesUpdatedByEmail?: string | null;
   source: PatientSource;
   deleted?: boolean;
   deletedAt?: Timestamp;
@@ -103,7 +112,11 @@ export function parsePatientDoc(id: string, data: DocumentData): PatientDoc | nu
       typeof data.insuranceCarrier === "string" ? data.insuranceCarrier.trim() : undefined,
     insuranceMemberId:
       typeof data.insuranceMemberId === "string" ? data.insuranceMemberId.trim() : undefined,
-    notes: typeof data.notes === "string" ? data.notes.trim() : undefined,
+    notes: typeof data.notes === "string" ? data.notes : undefined,
+    businessTag: isPatientBusinessTag(data.businessTag) ? data.businessTag : undefined,
+    notesUpdatedAt: data.notesUpdatedAt instanceof Timestamp ? data.notesUpdatedAt : null,
+    notesUpdatedByEmail:
+      typeof data.notesUpdatedByEmail === "string" ? data.notesUpdatedByEmail : null,
     source:
       data.source === "online_booking" || data.source === "manual" || data.source === "csv_import"
         ? data.source
@@ -124,7 +137,15 @@ export function parsePatientDoc(id: string, data: DocumentData): PatientDoc | nu
 }
 
 export function patientToApiRow(p: PatientDoc): PatientApiRow {
-  const { createdAt, updatedAt, lastVisitDate, nextAppointmentDate, deletedAt, ...rest } = p;
+  const {
+    createdAt,
+    updatedAt,
+    lastVisitDate,
+    nextAppointmentDate,
+    deletedAt,
+    notesUpdatedAt,
+    ...rest
+  } = p;
   void deletedAt;
   return {
     ...rest,
@@ -132,6 +153,7 @@ export function patientToApiRow(p: PatientDoc): PatientApiRow {
     updatedAtMs: tsToMs(updatedAt),
     lastVisitDateMs: tsToMs(lastVisitDate),
     nextAppointmentDateMs: tsToMs(nextAppointmentDate),
+    notesUpdatedAtMs: tsToMs(notesUpdatedAt),
   };
 }
 
@@ -179,6 +201,7 @@ export type CreatePatientInput = {
   insuranceCarrier?: string;
   insuranceMemberId?: string;
   notes?: string;
+  businessTag?: PatientBusinessTag;
   source: PatientSource;
 };
 
@@ -230,6 +253,7 @@ export async function createPatient(
     const v = input[key];
     if (typeof v === "string" && v.trim()) doc[key] = v.trim();
   }
+  if (input.businessTag) doc.businessTag = input.businessTag;
 
   await ref.set(doc);
   const snap = await ref.get();
@@ -245,6 +269,7 @@ export async function findOrCreatePatientFromBooking(
     phone: string;
     email?: string;
     paymentType?: PatientPaymentType;
+    businessTag?: PatientBusinessTag;
     source: PatientSource;
     startAt?: Timestamp | null;
   },
@@ -259,10 +284,22 @@ export async function findOrCreatePatientFromBooking(
     phone,
     email: opts.email,
     paymentType: opts.paymentType,
+    businessTag: opts.businessTag,
     source: opts.source,
   });
 
   const patientId = result.patient.id;
+
+  if (!result.created && opts.businessTag && opts.businessTag !== "both") {
+    const ref = db.collection(PATIENTS_COLLECTION).doc(patientId);
+    const snap = await ref.get();
+    const cur = snap.get("businessTag");
+    const next = mergePatientBusinessTag(
+      isPatientBusinessTag(cur) ? cur : undefined,
+      opts.businessTag,
+    );
+    await ref.update({ businessTag: next, updatedAt: FieldValue.serverTimestamp() });
+  }
 
   if (opts.startAt) {
     await maybeUpdateNextAppointment(db, patientId, opts.startAt);
@@ -336,6 +373,24 @@ export async function linkBookingToPatient(
 
   await bookingRef.update({ patientId });
 
+  const inferred = inferPatientBusinessFromBooking(
+    typeof bookingData.locationId === "string" ? bookingData.locationId : undefined,
+    typeof bookingData.serviceLine === "string" ? bookingData.serviceLine : undefined,
+  );
+  const patientRef = db.collection(PATIENTS_COLLECTION).doc(patientId);
+  const patientSnap = await patientRef.get();
+  if (patientSnap.exists) {
+    const cur = patientSnap.get("businessTag");
+    const next = mergePatientBusinessTag(
+      isPatientBusinessTag(cur) ? cur : undefined,
+      inferred,
+    );
+    await patientRef.update({
+      businessTag: next,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  }
+
   if (opts?.bumpStats !== false && bookingData.status === "confirmed") {
     await incrementPatientStat(db, patientId, "totalConfirmed", 1);
   }
@@ -404,6 +459,7 @@ export async function listPatients(opts: {
   page?: number;
   limit?: number;
   paymentType?: PatientPaymentType | "all";
+  businessTag?: PatientBusinessTag | "all";
   activeOnly?: boolean;
 }): Promise<{ patients: PatientApiRow[]; total: number; page: number; limit: number }> {
   const db = getFirestore();
@@ -422,6 +478,10 @@ export async function listPatients(opts: {
 
   if (opts.paymentType && opts.paymentType !== "all") {
     rows = rows.filter((p) => p.paymentType === opts.paymentType);
+  }
+
+  if (opts.businessTag && opts.businessTag !== "all") {
+    rows = rows.filter((p) => p.businessTag === opts.businessTag || p.businessTag === "both");
   }
 
   if (opts.activeOnly) {

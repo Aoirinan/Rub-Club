@@ -219,7 +219,7 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
             </div>
           );
         })}
-        <BookingCta label="Book Now" disabledLabel="Contact us" variant="nav" />
+        <BookingCta label="Book Now" variant="nav" />
       </div>
     </nav>
   );

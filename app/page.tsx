@@ -32,6 +32,7 @@ import { getActiveFaqs } from "@/lib/site-faqs";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
 import { siteDescription, siteTitle } from "@/lib/site-content";
+import { pageKeywords } from "@/lib/seo-keywords";
 import { homeBookingFooterCopy } from "@/lib/public-booking";
 
 export const revalidate = 60;
@@ -39,6 +40,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: { absolute: siteTitle },
   description: siteDescription,
+  keywords: pageKeywords(),
   alternates: { canonical: "/" },
   openGraph: {
     title: siteTitle,
@@ -466,7 +468,9 @@ export default async function Home() {
               <h3 className="text-lg font-black text-[#f2d25d]">{MASSAGE.locationTitle}</h3>
               {homeLocList.map((loc) => (
                 <div key={loc.id}>
-                  <p className="text-base font-black text-white">{loc.name}</p>
+                  <p className="text-base font-black text-white">
+                    {loc.id === "paris" ? "Paris TX" : "Sulphur Springs"}
+                  </p>
                   <p className="mt-1">
                     {loc.addressLines.map((line) => (
                       <span key={line} className="block">

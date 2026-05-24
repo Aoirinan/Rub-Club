@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BookingWizard } from "@/components/BookingWizard";
-import { BookWhenDisabled } from "@/components/BookWhenDisabled";
+import { BookAvailabilityPreview } from "@/components/BookAvailabilityPreview";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
+import { pageKeywords } from "@/lib/seo-keywords";
 import { getDisplayLocations } from "@/lib/cms-display";
 import {
   getPublicBookingConfig,
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
   title: "Book an Appointment",
   description:
     "Book massage therapy or chiropractic care online in Paris or Sulphur Springs, TX. See real-time openings and request a time in under a minute.",
+  keywords: pageKeywords(),
   alternates: { canonical: "/book" },
   openGraph: {
     title: "Book an Appointment",
@@ -41,7 +43,26 @@ export default async function BookPage({
 
   if (!isPublicBookingEnabled(bookingConfig)) {
     return (
-      <BookWhenDisabled message={bookingConfig.disabledMessage} locations={displayLocs} />
+      <div className="min-h-screen bg-[#f4f2ea] pb-20">
+        <div className="mx-auto max-w-2xl px-4 py-12 sm:py-16">
+          <nav aria-label="Breadcrumb" className="text-xs text-stone-600">
+            <Link href="/" className="hover:underline">
+              Home
+            </Link>
+            <span aria-hidden className="mx-1">
+              ›
+            </span>
+            <span className="font-semibold text-stone-900">Book</span>
+          </nav>
+          <h1 className="mt-8 text-2xl font-black text-[#173f3b] sm:text-3xl">Book an appointment</h1>
+          {bookingConfig.disabledMessage ? (
+            <p className="mt-3 text-sm text-stone-600">{bookingConfig.disabledMessage}</p>
+          ) : null}
+          <div className="mt-8">
+            <BookAvailabilityPreview locations={displayLocs} />
+          </div>
+        </div>
+      </div>
     );
   }
 

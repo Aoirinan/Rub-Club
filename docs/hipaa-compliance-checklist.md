@@ -4,6 +4,7 @@
 
 **Developer ↔ clinic services agreement / retainer (template, local-only):**
 - Source: [`services-retainer-agreement-template.md`](services-retainer-agreement-template.md)
+- **Client-facing phased SOW (Phase 1 → 2A HIPAA → 2B scheduler/PHI):** [`two-phase-client-sow.md`](two-phase-client-sow.md)
 - BAA template (only if the scope changes to include PHI later): [`business-associate-agreement-template.md`](business-associate-agreement-template.md), generate PDF with `npm run generate:baa-pdf`
 
 ## Current scope of this website
@@ -71,6 +72,20 @@ Then you also need:
 The code that previously implemented an online intake form and admin-side insurance-card uploads has been **fully removed** from this repo. Deleted modules include `components/IntakeForm.tsx`, `lib/patient-insurance-upload.ts`, `lib/intake-documents.ts`, `lib/intake-phi-audit.ts`, `lib/intake-office-notification.ts`, `lib/intake-form-fields.ts`, the entire `app/api/admin/intake-forms/` folder, `app/api/admin/patients/[id]/insurance/route.ts`, and the superadmin `IntakePhiSection.tsx` viewer. The `insuranceCardFront` / `insuranceCardBack` URL fields have been removed from the patient data model and admin patient profile UI. If the clinic later decides to accept online intake or insurance uploads, the compliance items above must be signed and in place first, and the upload/intake code must be re-implemented from scratch under that scope.
 
 A one-time cleanup script `scripts/purge-insurance-uploads.ts` is provided (run with `npm run purge:insurance-uploads`) to delete any historical Storage objects under `patients/*/insurance_*` and `intake_documents/**`, strip `insuranceCardFront` / `insuranceCardBack` fields from existing Firestore patient docs, and optionally drop the `intake_forms` collection. It is not executed automatically.
+
+### Automated scheduling data retention (7 years)
+
+The app can **permanently delete** old operational scheduling data so it no longer appears in admin patient lookup, reports, or the scheduler:
+
+- Firestore `bookings` (and each booking’s `events` subcollection) whose appointment `startAt` is older than the retention window (default **7 years**; falls back to `createdAt` when `startAt` is missing).
+- `sms_send_log` entries with `sentAt` before the cutoff.
+- `patients` profiles with `lastVisitDate` before the cutoff (or no visits and `createdAt` before the cutoff) **and** no remaining linked bookings.
+
+**Defaults:** retention is **off** until `DATA_RETENTION_ENABLED=true` in Vercel production. A weekly cron hits `GET /api/cron/data-retention` (Sunday 03:00 UTC; see `vercel.json`). Requires `CRON_SECRET` like other crons.
+
+**Optional env:** `DATA_RETENTION_YEARS` (default `7`), `DATA_RETENTION_MAX_BOOKINGS`, `DATA_RETENTION_MAX_SMS`, `DATA_RETENTION_MAX_PATIENTS` (per-run caps so large backlogs purge over multiple weeks).
+
+**Manual preview / one-off run:** `npm run purge:old-records` (dry-run) or `npm run purge:old-records -- --execute`. Confirm the retention period with the clinic’s accountant and Texas counsel before enabling in production. Deletion is **irreversible** in the live database; recovery is only from [Firestore export backups](ownership-transfer-runbook.md) if configured.
 
 ## References
 

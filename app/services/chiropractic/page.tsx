@@ -24,6 +24,8 @@ import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { serviceBreadcrumbs } from "@/lib/service-breadcrumbs";
 import { chiropractorJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
+import { BrandLogoStrip } from "@/components/BrandLogoStrip";
+import { pageKeywords } from "@/lib/seo-keywords";
 
 const CHIRO_CMS_IDS = [
   "chiro_hero_heading",
@@ -48,6 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Chiropractor in Paris & Sulphur Springs, TX — Chiropractic Associates",
     description: `Chiropractic adjustments, spinal decompression, rehab, and acupuncture in Paris and Sulphur Springs, TX. ${phrase} — family-owned since 1998.`,
+    keywords: pageKeywords(["Paris TX chiropractor", "Sulphur Springs chiropractor"]),
     alternates: { canonical: "/services/chiropractic" },
     openGraph: {
       title: "Chiropractor in Paris & Sulphur Springs, TX",
@@ -94,6 +97,10 @@ export default async function ChiropracticServicePage() {
       <Breadcrumbs
         items={serviceBreadcrumbs({ name: "Chiropractic", url: "/services/chiropractic" })}
       />
+
+      <div className="mx-auto max-w-7xl border-b border-stone-200 bg-white px-4 py-4">
+        <BrandLogoStrip variant="chiropractic" paris={paris} sulphur={ss} />
+      </div>
 
       <PageHero
         eyebrow="Chiropractic Associates · Family-owned since 1998"

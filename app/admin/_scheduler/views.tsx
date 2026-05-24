@@ -2,17 +2,17 @@
 
 import Link from "next/link";
 import { DateTime } from "luxon";
-import {
-  bookingStatusBlockClasses,
-  bookingStatusLabel,
-  bookingStatusPillClasses,
-  serviceLineColor,
-} from "@/lib/booking-status";
+import { bookingStatusLabel, bookingStatusPillClasses } from "@/lib/booking-status";
+import { bufferOnlyIntervals } from "@/lib/appointment-buffers";
+import { blockOutIntervalsForDay } from "@/lib/provider-blockouts";
+import { providerHoursContext } from "@/lib/provider-profile";
+import { providerCalendarStyle, type ProviderCalendarStyle } from "@/lib/provider-colors";
 import {
   blockGeometry,
   chicagoDayStart,
   chicagoStartOfWeek,
   formatChicagoTime,
+  formatChicagoTimeRange,
   formatGutterHour,
   groupBookingsForList,
   patientKeyFromBooking,
@@ -61,6 +61,8 @@ function intervalsOverlap(a0: number, a1: number, b0: number, b1: number): boole
 type ViewProps = {
   bookings: BookingRow[];
   providers: ProviderRow[];
+  providerStyles: Map<string, ProviderCalendarStyle>;
+  serviceStyles: Map<string, ProviderCalendarStyle>;
   filters: FilterState;
   onSelect: (id: string) => void;
   /** Manager or superadmin: reschedule and expanded list rows. */
@@ -72,6 +74,26 @@ type ViewProps = {
   /** Proposed time overlaps another patient’s visit in the same column. */
   onInvalidCrossPatientTimeDrop?: () => void;
 };
+
+function blockStyleForBooking(
+  booking: BookingRow,
+  providerStyles: Map<string, ProviderCalendarStyle>,
+  serviceStyles: Map<string, ProviderCalendarStyle>,
+  providers: ProviderRow[],
+): ProviderCalendarStyle {
+  const sid = booking.schedulerServiceId;
+  if (sid && serviceStyles.has(sid)) return serviceStyles.get(sid)!;
+  const pid = booking.providerId;
+  if (pid && providerStyles.has(pid)) return providerStyles.get(pid)!;
+  const row = pid ? providers.find((p) => p.id === pid) : null;
+  if (row) return providerCalendarStyle(row);
+  return providerCalendarStyle({
+    id: "unknown",
+    displayName: booking.providerDisplayName ?? "Staff",
+    textColor: null,
+    bgColor: null,
+  });
+}
 
 function patientProfileHref(b: BookingRow): string | null {
   if (b.patientId) return `/admin/patients/${encodeURIComponent(b.patientId)}`;
@@ -99,7 +121,7 @@ function SchedulerListRow({
         onClick={() => onSelect(b.id)}
         className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50"
       >
-        <DeskStatusIcons booking={b} layout="inline" />
+        <BlockStatusIcon booking={b} />
         <div className="min-w-0 flex-1">
           <div className="truncate font-semibold text-slate-900">{b.name ?? "Unknown"}</div>
           <div className="truncate text-xs text-slate-600">
@@ -113,7 +135,7 @@ function SchedulerListRow({
   return (
     <div className="flex w-full items-center gap-2 px-4 py-3 hover:bg-slate-50">
       <button type="button" onClick={() => onSelect(b.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-        <DeskStatusIcons booking={b} layout="inline" />
+        <BlockStatusIcon booking={b} />
         <div className="min-w-0 flex-1">
           <div className="truncate font-semibold text-slate-900">{b.name ?? "Unknown"}</div>
           <div className="truncate text-xs text-slate-600">
@@ -233,6 +255,8 @@ function unassignedBookingsForDay(rows: BookingRow[], dayStart: DateTime): Booki
 export function DayView({
   bookings,
   providers,
+  providerStyles,
+  serviceStyles,
   filters,
   onSelect,
   isManager = false,
@@ -365,11 +389,70 @@ export function DayView({
                   />,
                 ])}
 
+                {blockOutIntervalsForDay(
+                  filters.date,
+                  p.blockOutTimes ?? [],
+                  providerHoursContext(p),
+                ).map((iv, idx) => {
+                  const startMs = iv.open.toMillis();
+                  const endMs = iv.close.toMillis();
+                  const durationMin = Math.max(30, Math.round((endMs - startMs) / 60000));
+                  const geom = blockGeometry(
+                    startMs,
+                    durationMin,
+                    DAY_OPEN_HOUR,
+                    DAY_CLOSE_HOUR,
+                    SLOT_PX,
+                  );
+                  if (geom.heightPx <= 0) return null;
+                  return (
+                    <div
+                      key={`block-${idx}-${startMs}`}
+                      className="pointer-events-none absolute left-0 right-0 rounded-md bg-slate-300/55 ring-1 ring-slate-400/40"
+                      style={{ top: `${geom.topPx}px`, height: `${geom.heightPx}px` }}
+                      title="Provider block out"
+                    />
+                  );
+                })}
+
+                {sortedRows.flatMap((b) => {
+                  const startMs = b.startAtMs;
+                  const dur = b.durationMin ?? 30;
+                  if (!startMs) return [];
+                  const before = b.bufferBeforeMinutes ?? 0;
+                  const after = b.bufferAfterMinutes ?? 0;
+                  if (before === 0 && after === 0) return [];
+                  return bufferOnlyIntervals(startMs, {
+                    durationMinutes: dur,
+                    bufferBeforeMinutes: before,
+                    bufferAfterMinutes: after,
+                  }).map((iv, idx) => {
+                    const blockDur = Math.max(30, Math.round((iv.endMs - iv.startMs) / 60000));
+                    const geom = blockGeometry(
+                      iv.startMs,
+                      blockDur,
+                      DAY_OPEN_HOUR,
+                      DAY_CLOSE_HOUR,
+                      SLOT_PX,
+                    );
+                    if (geom.heightPx <= 0) return null;
+                    return (
+                      <div
+                        key={`buf-${b.id}-${idx}`}
+                        className="pointer-events-none absolute left-0 right-0 rounded-md bg-slate-200/70 ring-1 ring-slate-300/50"
+                        style={{ top: `${geom.topPx}px`, height: `${geom.heightPx}px` }}
+                        title="Service buffer"
+                      />
+                    );
+                  });
+                })}
+
                 {sortedRows.map((b) => (
                   <CalendarBlock
                     key={b.id}
                     booking={b}
                     stackMeta={stackMeta.get(b.id)}
+                    blockStyle={blockStyleForBooking(b, providerStyles, serviceStyles, providers)}
                     onSelect={onSelect}
                     onRescheduleBooking={onRescheduleBooking}
                     openHour={DAY_OPEN_HOUR}
@@ -396,7 +479,9 @@ export function DayView({
                   onClick={() => onSelect(b.id)}
                   className="relative w-full rounded-lg bg-white px-3 py-2 pr-8 text-left text-sm shadow-sm ring-1 ring-amber-200 hover:ring-amber-400"
                 >
-                  <DeskStatusIcons booking={b} />
+                  <div className="absolute right-2 top-2">
+                    <BlockStatusIcon booking={b} />
+                  </div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="truncate font-semibold text-slate-900">
                       {b.name ?? "Unknown"}
@@ -421,50 +506,34 @@ export function DayView({
   );
 }
 
-function DeskStatusIcons({
-  booking,
-  layout = "overlay",
-}: {
-  booking: BookingRow;
-  layout?: "overlay" | "inline";
-}) {
+/** Compact status glyph for calendar blocks: confirmed ✓, pending ○, no-show ✗. */
+function BlockStatusIcon({ booking }: { booking: BookingRow }) {
   const status = booking.status ?? "pending";
-  const live = status === "pending" || status === "confirmed";
-  const online = booking.confirmationStatus === "confirmed_online";
-  const wrap =
-    layout === "overlay"
-      ? "pointer-events-none absolute right-0.5 top-0.5 flex items-center gap-0.5 text-[10px] leading-none"
-      : "pointer-events-none flex shrink-0 items-center gap-0.5 text-[10px] leading-none";
+  if (status === "confirmed") {
+    return (
+      <span className="shrink-0 font-bold opacity-90" title="Confirmed" aria-hidden>
+        ✓
+      </span>
+    );
+  }
+  if (status === "pending") {
+    return (
+      <span className="shrink-0 font-bold opacity-80" title="Pending" aria-hidden>
+        ○
+      </span>
+    );
+  }
   return (
-    <div className={wrap} aria-hidden>
-      {booking.needsReschedule ? (
-        <span className="font-bold text-amber-700" title="Needs reschedule">
-          ✕
-        </span>
-      ) : null}
-      {typeof booking.checkedInAtMs === "number" ? (
-        <span className="text-sky-600" title="Checked in at office">
-          ★
-        </span>
-      ) : null}
-      {live ? (
-        online ? (
-          <span className="font-bold text-emerald-700" title="Confirmed online (SMS link)">
-            ✓
-          </span>
-        ) : (
-          <span className="text-slate-500" title="Not confirmed online yet">
-            ○
-          </span>
-        )
-      ) : null}
-    </div>
+    <span className="shrink-0 font-bold opacity-90" title={bookingStatusLabel(status)} aria-hidden>
+      ✗
+    </span>
   );
 }
 
 function CalendarBlock({
   booking,
   stackMeta,
+  blockStyle,
   onSelect,
   onRescheduleBooking,
   openHour,
@@ -473,6 +542,7 @@ function CalendarBlock({
 }: {
   booking: BookingRow;
   stackMeta?: SameDayStackMeta;
+  blockStyle: ProviderCalendarStyle;
   onSelect: (id: string) => void;
   onRescheduleBooking?: (bookingId: string, startIso: string) => Promise<void>;
   openHour: number;
@@ -485,16 +555,22 @@ function CalendarBlock({
   const geom = blockGeometry(booking.startAtMs, booking.durationMin, openHour, closeHour, slotPx);
   if (geom.heightPx <= 0) return null;
   const status = booking.status ?? "pending";
-  const providerLabel = booking.providerDisplayName || "First available";
-  const svcColor = serviceLineColor(booking.serviceLine);
+  const serviceLabel =
+    booking.serviceTypeName?.trim() ||
+    (booking.serviceLine === "massage"
+      ? "Massage"
+      : booking.serviceLine === "chiropractic"
+        ? "Chiropractic"
+        : booking.serviceLine === "stretch"
+          ? "Stretch"
+          : (booking.serviceLine ?? "Visit"));
   const dragEnabled =
     Boolean(onRescheduleBooking) &&
     (status === "confirmed" || status === "pending") &&
     Boolean(booking.providerId);
   const multi = stackMeta && stackMeta.sameDayCount > 1;
-  const cont = stackMeta && stackMeta.indexInPatient > 1;
-  const ringClass =
-    multi && cont ? "ring-1 ring-slate-400 ring-offset-1 ring-offset-transparent" : "";
+  const ringClass = multi ? "ring-1 ring-black/20" : "";
+  const timeRange = formatChicagoTimeRange(booking.startAtMs, booking.durationMin);
   return (
     <button
       type="button"
@@ -509,48 +585,33 @@ function CalendarBlock({
         e.dataTransfer.effectAllowed = "move";
       }}
       onClick={() => onSelect(booking.id)}
-      className={`group absolute left-1 right-1 overflow-hidden rounded-md px-2 py-1 text-left text-xs shadow-sm transition focus:outline-none focus:ring-2 focus:ring-slate-500 ${bookingStatusBlockClasses(status)} ${svcColor.borderClass} ${ringClass}`}
-      style={{ top: `${geom.topPx}px`, height: `${geom.heightPx}px` }}
-      title={`${booking.name ?? ""} · ${booking.serviceLine ?? ""} · ${booking.durationMin}m · ${providerLabel}${multi ? ` · ${stackMeta!.sameDayCount} visits this day` : ""}${paymentHintSuffix(booking)}`}
+      className={`group absolute left-1 right-1 overflow-hidden rounded-md border border-black/10 px-2 py-1 text-left text-xs shadow-sm transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-slate-700 ${ringClass} ${status === "declined" || status === "cancelled" ? "opacity-75 line-through" : ""}`}
+      style={{ top: `${geom.topPx}px`, height: `${geom.heightPx}px`, ...blockStyle.style }}
+      title={`${booking.name ?? "Unknown"} · ${serviceLabel} · ${timeRange}${paymentHintSuffix(booking)}`}
     >
-      {booking.patientId ? (
-        <a
-          href={`/admin/patients/${encodeURIComponent(booking.patientId)}`}
-          target="_blank"
-          rel="noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="absolute right-1 top-1 rounded bg-white/80 px-1 py-0.5 text-[10px] font-semibold text-violet-800 opacity-0 shadow hover:opacity-100 focus:opacity-100 group-hover:opacity-100"
-          title="Patient profile"
-        >
-          👤
-        </a>
-      ) : null}
-      <DeskStatusIcons booking={booking} />
-      <div className={`truncate pr-6 font-semibold ${cont ? "text-[11px]" : ""}`}>
-        {cont ? (
-          <>
-            <span className="text-slate-600">↳</span> {formatChicagoTime(booking.startAtMs)}
-            <span className="text-slate-700"> · {booking.name ?? "Unknown"}</span>
-          </>
-        ) : (
-          <>
-            {formatChicagoTime(booking.startAtMs)} · {booking.name ?? "Unknown"}
-            {multi ? (
-              <span className="ml-1 font-normal text-slate-600">({stackMeta!.sameDayCount}×)</span>
-            ) : null}
-          </>
-        )}
+      <div className="flex items-start gap-1 truncate font-semibold leading-tight">
+        <BlockStatusIcon booking={booking} />
+        <span className="min-w-0 truncate">{booking.name ?? "Unknown"}</span>
+        {multi ? (
+          <span className="shrink-0 font-normal opacity-80">({stackMeta!.sameDayCount}×)</span>
+        ) : null}
       </div>
-      <div className="truncate text-[11px] font-medium opacity-90">
-        {providerLabel} · {booking.serviceLine} · {booking.durationMin}m
-      </div>
+      <div className="truncate text-[11px] font-medium opacity-95">{serviceLabel}</div>
+      <div className="truncate text-[10px] font-medium opacity-90">{timeRange}</div>
     </button>
   );
 }
 
 /* ---------------- Week view ---------------- */
 
-export function WeekView({ bookings, providers, filters, onSelect }: ViewProps) {
+export function WeekView({
+  bookings,
+  providers,
+  providerStyles,
+  serviceStyles,
+  filters,
+  onSelect,
+}: ViewProps) {
   const weekStart = chicagoStartOfWeek(filters.date);
   const days = Array.from({ length: 7 }, (_, i) => weekStart.plus({ days: i }));
   const provider =
@@ -563,6 +624,8 @@ export function WeekView({ bookings, providers, filters, onSelect }: ViewProps) 
       <AllProvidersWeekSummary
         bookings={bookings}
         providers={providers}
+        providerStyles={providerStyles}
+        serviceStyles={serviceStyles}
         days={days}
         onSelect={onSelect}
       />
@@ -622,6 +685,7 @@ export function WeekView({ bookings, providers, filters, onSelect }: ViewProps) 
                     key={b.id}
                     booking={b}
                     stackMeta={stackMeta.get(b.id)}
+                    blockStyle={blockStyleForBooking(b, providerStyles, serviceStyles, providers)}
                     onSelect={onSelect}
                     openHour={DAY_OPEN_HOUR}
                     closeHour={DAY_CLOSE_HOUR}
@@ -640,11 +704,15 @@ export function WeekView({ bookings, providers, filters, onSelect }: ViewProps) 
 function AllProvidersWeekSummary({
   bookings,
   providers,
+  providerStyles,
+  serviceStyles,
   days,
   onSelect,
 }: {
   bookings: BookingRow[];
   providers: ProviderRow[];
+  providerStyles: Map<string, ProviderCalendarStyle>;
+  serviceStyles: Map<string, ProviderCalendarStyle>;
   days: DateTime[];
   onSelect: (id: string) => void;
 }) {
@@ -684,26 +752,41 @@ function AllProvidersWeekSummary({
                 <p className="text-xs text-slate-500">No appointments.</p>
               ) : (
                 <ul className="space-y-1.5">
-                  {rows.map((b) => (
-                    <li key={b.id}>
-                      <button
-                        type="button"
-                        onClick={() => onSelect(b.id)}
-                        title={`${b.name ?? ""} · ${b.serviceLine ?? ""} · ${b.durationMin}m · ${b.providerDisplayName || "First avail"}${paymentHintSuffix(b)}`}
-                        className={`relative w-full rounded-md px-2 py-1.5 pr-7 text-left text-xs ${bookingStatusBlockClasses(b.status ?? "pending")} ${serviceLineColor(b.serviceLine).borderClass}`}
-                      >
-                        <DeskStatusIcons booking={b} />
-                        <div className="font-semibold">
-                          {b.startAtMs ? formatChicagoTime(b.startAtMs) : "—"} ·{" "}
-                          {b.name ?? "Unknown"}
-                        </div>
-                        <div className="text-[11px] opacity-90">
-                          {b.providerDisplayName || "First avail"} · {b.serviceLine} · {b.durationMin}m
-                          {paymentHintSuffix(b)}
-                        </div>
-                      </button>
-                    </li>
-                  ))}
+                  {rows.map((b) => {
+                    const style = blockStyleForBooking(b, providerStyles, serviceStyles, providers);
+                    const svc =
+                      b.serviceLine === "massage"
+                        ? "Massage"
+                        : b.serviceLine === "chiropractic"
+                          ? "Chiropractic"
+                          : b.serviceLine === "stretch"
+                            ? "Stretch"
+                            : (b.serviceLine ?? "Visit");
+                    const range =
+                      typeof b.startAtMs === "number" && typeof b.durationMin === "number"
+                        ? formatChicagoTimeRange(b.startAtMs, b.durationMin)
+                        : "—";
+                    return (
+                      <li key={b.id}>
+                        <button
+                          type="button"
+                          onClick={() => onSelect(b.id)}
+                          title={`${b.name ?? "Unknown"} · ${svc} · ${range}${paymentHintSuffix(b)}`}
+                          className="relative w-full rounded-md border border-black/10 px-2 py-1.5 pr-7 text-left text-xs shadow-sm hover:brightness-95"
+                          style={style.style}
+                        >
+                          <div className="absolute right-1.5 top-1.5">
+                            <BlockStatusIcon booking={b} />
+                          </div>
+                          <div className="flex items-center gap-1 truncate font-semibold">
+                            {b.name ?? "Unknown"}
+                          </div>
+                          <div className="truncate text-[11px] opacity-95">{svc}</div>
+                          <div className="truncate text-[10px] opacity-90">{range}</div>
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </section>

@@ -1,11 +1,13 @@
 import { DateTime } from "luxon";
 import {
   BUSINESS,
-  type DurationMin,
   type LocationId,
   type ServiceLine,
   TIME_ZONE,
 } from "./constants";
+import { dayHoursForDate, type ProviderHoursContext } from "./provider-profile";
+import type { BufferSpec } from "./appointment-buffers";
+import { blockedSlotStartsForAppointment } from "./appointment-buffers";
 import type { ProviderDaySchedule } from "./provider-types";
 
 export type DayWindow = { open: DateTime; close: DateTime };
@@ -23,15 +25,15 @@ export function bucketDocIdsForAppointment(
   locationId: LocationId,
   providerId: string,
   start: DateTime,
-  durationMin: DurationMin,
+  durationMin: number,
+  buffers?: Pick<BufferSpec, "bufferBeforeMinutes" | "bufferAfterMinutes">,
 ): string[] {
-  const z = start.setZone(TIME_ZONE);
-  const first = z.startOf("minute");
-  if (durationMin === 30) return [bucketDocId(locationId, providerId, first)];
-  return [
-    bucketDocId(locationId, providerId, first),
-    bucketDocId(locationId, providerId, first.plus({ minutes: 30 })),
-  ];
+  const starts = blockedSlotStartsForAppointment(start, {
+    durationMinutes: durationMin,
+    bufferBeforeMinutes: buffers?.bufferBeforeMinutes ?? 0,
+    bufferAfterMinutes: buffers?.bufferAfterMinutes ?? 0,
+  });
+  return starts.map((s) => bucketDocId(locationId, providerId, s));
 }
 
 /* ---------------- Hold (block-all-providers) bucket ids ---------------- */
@@ -71,7 +73,7 @@ export function holdBucketIdsForAppointment(
   locationId: LocationId,
   serviceLine: ServiceLine,
   start: DateTime,
-  durationMin: DurationMin,
+  durationMin: number,
 ): string[] {
   const slots = enumerateThirtyMinuteStarts(start, durationMin);
   const out: string[] = [];
@@ -87,7 +89,7 @@ export function holdBucketIdsForPublicBooking(
   locationId: LocationId,
   serviceLine: ServiceLine,
   start: DateTime,
-  durationMin: DurationMin,
+  durationMin: number,
 ): string[] {
   if (serviceLine === "stretch") {
     const massage = holdBucketIdsForAppointment(locationId, "massage", start, durationMin);
@@ -142,19 +144,37 @@ function dayBoundsFromSchedule(dateStr: string, schedule: ProviderDaySchedule): 
   return { open, close };
 }
 
+export function effectiveDayWindowFromHours(
+  dateStr: string,
+  hoursCtx: ProviderHoursContext,
+): DayWindow {
+  const day = dayHoursForDate(dateStr, hoursCtx);
+  if (!day || !day.open) {
+    const d = DateTime.fromISO(dateStr, { zone: TIME_ZONE }).startOf("day");
+    return { open: d, close: d };
+  }
+  return dayBoundsFromSchedule(dateStr, {
+    openHour: day.openHour,
+    openMinute: day.openMinute,
+    closeHour: day.closeHour,
+    closeMinute: day.closeMinute,
+  });
+}
+
+/** @deprecated Use effectiveDayWindowFromHours with providerHoursContext(). */
 export function effectiveDayWindow(
   dateStr: string,
   schedule: ProviderDaySchedule | null | undefined,
 ): DayWindow {
-  if (schedule && typeof schedule.openHour === "number") {
-    return dayBoundsFromSchedule(dateStr, schedule);
-  }
-  return dayBoundsFromBusiness(dateStr);
+  return effectiveDayWindowFromHours(dateStr, {
+    weeklyHours: null,
+    legacySchedule: schedule ?? null,
+  });
 }
 
 export function enumerateCandidateStartsInWindow(
   dateStr: string,
-  durationMin: DurationMin,
+  durationMin: number,
   window: DayWindow,
 ): DateTime[] {
   const { open, close } = window;
@@ -173,7 +193,7 @@ export function enumerateCandidateStartsInWindow(
 }
 
 /** Default site hours (no per-provider override). */
-export function enumerateCandidateStarts(dateStr: string, durationMin: DurationMin): DateTime[] {
+export function enumerateCandidateStarts(dateStr: string, durationMin: number): DateTime[] {
   const w = dayBoundsFromBusiness(dateStr);
   return enumerateCandidateStartsInWindow(dateStr, durationMin, w);
 }
@@ -181,13 +201,25 @@ export function enumerateCandidateStarts(dateStr: string, durationMin: DurationM
 /** Union of slot starts across several provider schedules (deduped, sorted). */
 export function unionCandidateStartsFromSchedules(
   dateStr: string,
-  durationMin: DurationMin,
+  durationMin: number,
   schedules: Array<ProviderDaySchedule | null | undefined>,
 ): DateTime[] {
+  return unionCandidateStartsFromHoursContexts(
+    dateStr,
+    durationMin,
+    schedules.map((sch) => ({ weeklyHours: null, legacySchedule: sch ?? null })),
+  );
+}
+
+export function unionCandidateStartsFromHoursContexts(
+  dateStr: string,
+  durationMin: number,
+  contexts: ProviderHoursContext[],
+): DateTime[] {
   const unique = new Map<string, DateTime>();
-  for (const sch of schedules) {
-    const w = effectiveDayWindow(dateStr, sch ?? null);
-    if (!w.open.isValid) continue;
+  for (const ctx of contexts) {
+    const w = effectiveDayWindowFromHours(dateStr, ctx);
+    if (!w.open.isValid || w.close <= w.open) continue;
     const starts = enumerateCandidateStartsInWindow(dateStr, durationMin, w);
     for (const t of starts) {
       const k = t.toUTC().toISO()!;
@@ -211,17 +243,29 @@ export function isAlignedToSlotGrid(dt: DateTime): boolean {
 
 export function isWithinScheduleWindow(
   start: DateTime,
-  durationMin: DurationMin,
+  durationMin: number,
   schedule: ProviderDaySchedule | null | undefined,
+): boolean {
+  return isWithinProviderHours(start, durationMin, {
+    weeklyHours: null,
+    legacySchedule: schedule ?? null,
+  });
+}
+
+export function isWithinProviderHours(
+  start: DateTime,
+  durationMin: number,
+  hoursCtx: ProviderHoursContext,
 ): boolean {
   const z = start.setZone(TIME_ZONE);
   const dateStr = z.toFormat("yyyy-LL-dd");
-  const { open, close } = effectiveDayWindow(dateStr, schedule ?? null);
+  const { open, close } = effectiveDayWindowFromHours(dateStr, hoursCtx);
+  if (close <= open) return false;
   const end = z.plus({ minutes: durationMin });
   return z >= open && z < close && end <= close && end > z;
 }
 
 /** @deprecated Prefer isWithinScheduleWindow; kept for call sites using default hours only. */
-export function isWithinBusinessWindow(start: DateTime, durationMin: DurationMin): boolean {
+export function isWithinBusinessWindow(start: DateTime, durationMin: number): boolean {
   return isWithinScheduleWindow(start, durationMin, null);
 }

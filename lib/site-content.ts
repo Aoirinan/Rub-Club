@@ -4,6 +4,7 @@
  */
 
 import { getPublicAppOrigin } from "./app-origin";
+import { SITE_SEO_KEYWORDS } from "@/lib/seo-keywords";
 
 export const siteTitle =
   "Chiropractic Associates | Paris & Sulphur Springs, TX — Massage at The Rub Club";
@@ -22,17 +23,7 @@ export const siteLegalName =
 export const siteDescription =
   "Family-owned chiropractic care in Paris and Sulphur Springs, TX, with licensed massage therapy at The Rub Club in Paris. Book chiropractic, massage, or stretch online or call our offices.";
 
-export const siteKeywords = [
-  "massage therapy Paris TX",
-  "chiropractor Paris TX",
-  "deep tissue massage",
-  "prenatal massage",
-  "sports massage",
-  "chiropractic care Sulphur Springs TX",
-  "spinal decompression",
-  "The Rub Club",
-  "Chiropractic Associates",
-];
+export const siteKeywords = [...SITE_SEO_KEYWORDS];
 
 /** Default Open Graph image — served from /public/og/og-default.svg. */
 export const siteOgImage = "/og/og-default.svg";

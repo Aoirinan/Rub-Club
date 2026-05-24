@@ -46,7 +46,8 @@ export function serviceLineEmailLabelLower(line: ServiceLine): string {
   }
 }
 
-export type DurationMin = 30 | 60;
+/** Legacy public-booking duration union; scheduling APIs accept any 30-min grid length. */
+export type DurationMin = 30 | 60 | 90 | 120;
 
 export type Weekday = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
 

@@ -7,6 +7,8 @@ family-owned, dual-brand wellness practice serving **Paris, TX** (main office, b
 Built with Next.js 15 (App Router) + React 19 + Tailwind, backed by Firebase (Firestore + Admin
 Auth) and SendGrid for transactional email.
 
+**Monthly vendor / API costs:** [`docs/monthly-vendor-costs.md`](docs/monthly-vendor-costs.md) (Phase 1 ~$0–15/mo pass-through; booking-on scenarios).
+
 ---
 
 ## Quick start

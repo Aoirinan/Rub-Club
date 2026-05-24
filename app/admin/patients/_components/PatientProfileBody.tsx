@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { DateTime } from "luxon";
 import { TIME_ZONE } from "@/lib/constants";
+import { PatientBusinessBadge } from "@/components/PatientBusinessBadge";
 import type { PatientApiRow } from "@/lib/patient-types";
 import {
   deriveVisitDisplayStatus,
@@ -116,7 +117,8 @@ export function PatientProfileBody({ patientId, getIdToken, isSuperadmin, compac
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <h1 className="text-xl font-bold text-slate-900">
-            {patient.firstName} {patient.lastName}
+            {patient.firstName} {patient.lastName}{" "}
+            <PatientBusinessBadge tag={patient.businessTag} className="ml-2 align-middle" />
           </h1>
           {isSuperadmin && !editing ? (
             <button
@@ -260,6 +262,13 @@ export function PatientProfileBody({ patientId, getIdToken, isSuperadmin, compac
           <span className="mt-1 block text-[11px] text-slate-500">
             Do not enter health or clinical information here. Clinical notes belong in the EMR / paper chart.
           </span>
+          {patient.notesUpdatedAtMs ? (
+            <span className="mt-1 block text-[11px] text-slate-400">
+              Last edited{" "}
+              {DateTime.fromMillis(patient.notesUpdatedAtMs).setZone(TIME_ZONE).toFormat("LLL d, yyyy h:mm a")}
+              {patient.notesUpdatedByEmail ? ` by ${patient.notesUpdatedByEmail}` : ""}
+            </span>
+          ) : null}
         </label>
       </section>
 

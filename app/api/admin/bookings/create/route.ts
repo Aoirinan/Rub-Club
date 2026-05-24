@@ -3,11 +3,13 @@ import { NextResponse } from "next/server";
 import { DateTime } from "luxon";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
-import type { DurationMin, LocationId, ServiceLine } from "@/lib/constants";
+import type { LocationId, ServiceLine } from "@/lib/constants";
 import { LOCATIONS, TIME_ZONE } from "@/lib/constants";
 import { requireStaff } from "@/lib/staff-auth";
 import { isAlignedToSlotGrid, parseStartIsoToDateTime } from "@/lib/slots-luxon";
 import { insertAdminBookingInTransaction } from "@/lib/admin-booking-insert";
+import { fetchSchedulerServiceById } from "@/lib/scheduler-services-db";
+import { isPatientBusinessTag, mergePatientBusinessTag } from "@/lib/patient-business";
 import { linkBookingAfterCreate } from "@/lib/patients-db";
 import { sendSms } from "@/lib/twilio";
 import { logSmsSent } from "@/lib/sms-audit";
@@ -18,7 +20,8 @@ export const runtime = "nodejs";
 const bodySchema = z.object({
   locationId: z.enum(["paris", "sulphur_springs"]),
   serviceLine: z.enum(["massage", "chiropractic", "stretch"]),
-  durationMin: z.union([z.literal(30), z.literal(60)]),
+  durationMin: z.union([z.literal(30), z.literal(60), z.literal(90), z.literal(120)]).optional(),
+  schedulerServiceId: z.string().max(200).optional(),
   startIso: z.string().min(8),
   providerId: z.string().min(1).max(200),
   providerDisplayName: z.string().min(1).max(200),
@@ -32,6 +35,8 @@ const bodySchema = z.object({
     frequency: z.enum(["weekly", "biweekly"]),
     count: z.number().int().min(2).max(26),
   }).optional(),
+  sendFirstTimeNotification: z.boolean().optional(),
+  patientBusinessTag: z.enum(["rub_club", "chiro", "both"]).optional(),
 });
 
 export async function POST(req: Request) {
@@ -62,9 +67,29 @@ export async function POST(req: Request) {
   }
 
   const locationId = body.locationId as LocationId;
-  const durationMin = body.durationMin as DurationMin;
   const serviceLine = body.serviceLine as ServiceLine;
   const status = body.status ?? "confirmed";
+
+  const db = getFirestore();
+  let durationMin: number | undefined = body.durationMin;
+  let schedulerServiceId: string | undefined;
+  let serviceTypeName: string | undefined;
+  let bufferBeforeMinutes = 0;
+  let bufferAfterMinutes = 0;
+  if (body.schedulerServiceId?.trim()) {
+    const svc = await fetchSchedulerServiceById(db, body.schedulerServiceId.trim());
+    if (!svc || !svc.active) {
+      return NextResponse.json({ error: "Unknown service type" }, { status: 400 });
+    }
+    schedulerServiceId = svc.id;
+    serviceTypeName = svc.name;
+    durationMin = svc.durationMinutes;
+    bufferBeforeMinutes = svc.bufferBeforeMinutes;
+    bufferAfterMinutes = svc.bufferAfterMinutes;
+  }
+  if (!durationMin) {
+    return NextResponse.json({ error: "Duration or service type required" }, { status: 400 });
+  }
 
   const intervalDays = body.recurrence?.frequency === "biweekly" ? 14 : 7;
   const occurrences = body.recurrence?.count ?? 1;
@@ -76,7 +101,6 @@ export async function POST(req: Request) {
 
   const seriesId = occurrences > 1 ? `series_${Date.now()}_${Math.random().toString(36).slice(2, 8)}` : undefined;
 
-  const db = getFirestore();
   const createdIds: string[] = [];
   const conflicts: string[] = [];
 
@@ -101,6 +125,10 @@ export async function POST(req: Request) {
         skipConflictCheck: body.skipConflictCheck ?? false,
         staff: staffActor,
         createMetaVia: "admin_manual",
+        schedulerServiceId,
+        serviceTypeName: serviceTypeName ?? undefined,
+        bufferBeforeMinutes,
+        bufferAfterMinutes,
         ...(seriesId ? { seriesId, recurrence: body.recurrence } : {}),
       });
 
@@ -109,6 +137,25 @@ export async function POST(req: Request) {
         await linkBookingAfterCreate(db, bookingRef.id, "manual").catch((e) =>
           console.error("[patients] link after admin create", e),
         );
+        if (body.patientBusinessTag && bookingRef.id) {
+          const bSnap = await bookingRef.get();
+          const pid = bSnap.get("patientId");
+          if (typeof pid === "string" && pid) {
+            const pref = db.collection("patients").doc(pid);
+            const pSnap = await pref.get();
+            if (pSnap.exists) {
+              const cur = pSnap.get("businessTag");
+              const tag =
+                body.patientBusinessTag === "both"
+                  ? "both"
+                  : mergePatientBusinessTag(
+                      isPatientBusinessTag(cur) ? cur : undefined,
+                      body.patientBusinessTag,
+                    );
+              await pref.update({ businessTag: tag });
+            }
+          }
+        }
         continue;
       }
 
@@ -134,7 +181,7 @@ export async function POST(req: Request) {
     }
   }
 
-  if (createdIds.length > 0 && body.phone?.trim()) {
+  if (createdIds.length > 0 && body.phone?.trim() && body.sendFirstTimeNotification !== false) {
     const phone = body.phone.trim();
     const primaryId = createdIds[0]!;
     const confirmToken = randomBytes(18).toString("hex");

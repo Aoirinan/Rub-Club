@@ -77,3 +77,7 @@ When you are ready:
 ## Ownership / HIPAA note
 
 This project is scoped as **scheduling and marketing only** (no clinical PHI in the app). You are not required to transfer Firebase/Vercel to the clinic for HIPAA on the developer side if that matches your agreement—keep accounts wherever you prefer, but use a **clinic-owned** `SENDGRID_FROM_EMAIL` and notification inbox for production.
+
+## Monthly vendor costs
+
+See [`monthly-vendor-costs.md`](monthly-vendor-costs.md) for production baseline (Vercel/Firebase/SendGrid), domain renewal budget, Phase 1 estimates, and what to re-check when online booking is enabled.

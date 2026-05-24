@@ -1,5 +1,12 @@
 import type { DocumentData, Firestore } from "firebase-admin/firestore";
 import type { LocationId, ServiceLine } from "./constants";
+import { isProviderBgColorId, isProviderTextColorId } from "./provider-colors";
+import {
+  parseBlockOuts,
+  parseCalendarVisibility,
+  parseNotificationWindows,
+  parseWeeklyHours,
+} from "./provider-profile";
 import type { ProviderDaySchedule, ProviderDoc, ProviderRow } from "./provider-types";
 
 function asLocationIds(raw: unknown): LocationId[] | null {
@@ -69,6 +76,17 @@ export function parseProviderDoc(id: string, data: DocumentData): ProviderRow | 
   const photoUrl = asHttpsPhotoUrl(data.photoUrl);
   const about = asAboutText(data.about);
   const schedule = asSchedule(data.schedule);
+  const weeklyHours =
+    parseWeeklyHours(data.hours) ?? parseWeeklyHours(data.weeklyHours) ?? undefined;
+  const blockOutTimes = parseBlockOuts(data.blockOutTimes);
+  const notificationWindows = parseNotificationWindows(data.notificationWindows) ?? undefined;
+  const calendarVisibility = data.calendarVisibility
+    ? parseCalendarVisibility(data.calendarVisibility)
+    : undefined;
+  const textColorRaw = data.textColor;
+  const bgColorRaw = data.bgColor;
+  const textColor = isProviderTextColorId(textColorRaw) ? textColorRaw : undefined;
+  const bgColor = isProviderBgColorId(bgColorRaw) ? bgColorRaw : undefined;
   const doc: ProviderDoc = {
     displayName,
     active,
@@ -79,6 +97,12 @@ export function parseProviderDoc(id: string, data: DocumentData): ProviderRow | 
     ...(photoUrl !== undefined ? { photoUrl } : {}),
     ...(about !== undefined ? { about } : {}),
     ...(schedule !== undefined ? { schedule } : {}),
+    ...(weeklyHours !== undefined ? { weeklyHours } : {}),
+    ...(blockOutTimes.length > 0 ? { blockOutTimes } : {}),
+    ...(notificationWindows !== undefined ? { notificationWindows } : {}),
+    ...(calendarVisibility !== undefined ? { calendarVisibility } : {}),
+    ...(textColor !== undefined ? { textColor } : {}),
+    ...(bgColor !== undefined ? { bgColor } : {}),
   };
   return { id, ...doc };
 }

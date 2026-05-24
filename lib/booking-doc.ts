@@ -24,7 +24,7 @@ export function bookingDocToEmailContext(
 
   if (locationId !== "paris" && locationId !== "sulphur_springs") return null;
   if (serviceLine !== "massage" && serviceLine !== "chiropractic" && serviceLine !== "stretch") return null;
-  if (durationMin !== 30 && durationMin !== 60) return null;
+  if (typeof durationMin !== "number" || durationMin < 15) return null;
   if (typeof startIso !== "string" || !startIso.length) return null;
   if (typeof email !== "string" || !email.length) return null;
   if (typeof name !== "string" || !name.length) return null;
@@ -39,7 +39,7 @@ export function bookingDocToEmailContext(
     bookingId: snap.id,
     locationId: locationId as LocationId,
     serviceLine: serviceLine as ServiceLine,
-    durationMin: durationMin as DurationMin,
+    durationMin: durationMin as DurationMin, // legacy type; values may be 90/120 for admin bookings
     start,
     name,
     phone,

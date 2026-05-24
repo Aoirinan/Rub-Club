@@ -1,5 +1,10 @@
 import { DateTime } from "luxon";
 import { TIME_ZONE } from "@/lib/constants";
+import { providerVisibleOnCalendar } from "@/lib/provider-profile";
+import {
+  bookingMatchesSchedulerBusiness,
+  providerMatchesSchedulerBusiness,
+} from "@/lib/scheduler-business";
 import type { BookingRow, FilterState, ProviderRow, SchedulerView } from "./types";
 import { ALL_STATUSES, DEFAULT_STATUSES } from "./types";
 import { isBookingStatus, type BookingStatus } from "@/lib/booking-status";
@@ -52,12 +57,19 @@ export function readFilters(params: URLSearchParams): FilterState {
   return {
     view,
     date,
+    business: "all",
     locationId,
     serviceLine,
     providerId,
     statuses,
     q: params.get("q") ?? "",
   };
+}
+
+/** Client-side business filter (sessionStorage-backed in admin page). */
+export function filterByBusiness(rows: BookingRow[], business: FilterState["business"]): BookingRow[] {
+  if (business === "all") return rows;
+  return rows.filter((r) => bookingMatchesSchedulerBusiness(r, business));
 }
 
 /** Serialize a `FilterState` back to a URL search string. */
@@ -142,6 +154,8 @@ export function pickColumnProviders(
 ): ProviderRow[] {
   return providers
     .filter((p) => p.active)
+    .filter((p) => providerMatchesSchedulerBusiness(p, filters.business))
+    .filter((p) => providerVisibleOnCalendar(p, filters.locationId))
     .filter((p) =>
       filters.locationId === "all" ? true : p.locationIds.includes(filters.locationId),
     )
@@ -259,6 +273,13 @@ export function formatGutterHour(hour: number): string {
 /** Format a Chicago start time as "h:mm a". */
 export function formatChicagoTime(startMs: number): string {
   return DateTime.fromMillis(startMs).setZone(TIME_ZONE).toFormat("h:mm a");
+}
+
+/** Start – end range for calendar blocks. */
+export function formatChicagoTimeRange(startMs: number, durationMin: number): string {
+  const start = DateTime.fromMillis(startMs).setZone(TIME_ZONE);
+  const end = start.plus({ minutes: durationMin });
+  return `${start.toFormat("h:mm a")} – ${end.toFormat("h:mm a")}`;
 }
 
 /** Friendly relative phrase (Today/Tomorrow/Wed Aug 7) for a millisecond timestamp. */

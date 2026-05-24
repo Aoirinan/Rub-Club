@@ -1,4 +1,7 @@
 import type { BookingStatus } from "@/lib/booking-status";
+import type { SchedulerBusinessId } from "@/lib/scheduler-business";
+
+export type { ProviderRow } from "@/lib/provider-types";
 
 export type StaffActor = {
   uid: string | null;
@@ -14,6 +17,10 @@ export type BookingRow = {
   locationId?: string;
   serviceLine?: string;
   durationMin?: number;
+  schedulerServiceId?: string;
+  serviceTypeName?: string;
+  bufferBeforeMinutes?: number;
+  bufferAfterMinutes?: number;
   providerId?: string;
   providerDisplayName?: string;
   providerMode?: string;
@@ -65,21 +72,6 @@ export type BookingEvent = {
   prevStatus?: BookingStatus;
 };
 
-export type ProviderRow = {
-  id: string;
-  displayName: string;
-  active: boolean;
-  locationIds: string[];
-  serviceLines: string[];
-  sortOrder: number;
-  schedule?: {
-    openHour: number;
-    openMinute: number;
-    closeHour: number;
-    closeMinute: number;
-  } | null;
-};
-
 export type SchedulerView = "day" | "week" | "list";
 
 export type StatusFilter = BookingStatus | "all";
@@ -88,6 +80,8 @@ export type FilterState = {
   view: SchedulerView;
   /** Chicago-local date in yyyy-MM-dd. */
   date: string;
+  /** Persisted in sessionStorage — not in URL. */
+  business: SchedulerBusinessId;
   locationId: "all" | "paris" | "sulphur_springs";
   /** Massage + stretch combined (main desk scheduler). */
   serviceLine: "all" | "bodywork" | "massage" | "chiropractic" | "stretch";

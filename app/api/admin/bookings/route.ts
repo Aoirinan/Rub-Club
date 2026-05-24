@@ -22,6 +22,10 @@ type BookingRowDto = {
   locationId?: string;
   serviceLine?: string;
   durationMin?: number;
+  schedulerServiceId?: string;
+  serviceTypeName?: string;
+  bufferBeforeMinutes?: number;
+  bufferAfterMinutes?: number;
   providerId?: string;
   providerDisplayName?: string;
   providerMode?: string;
@@ -182,6 +186,14 @@ export async function GET(req: Request) {
       locationId: typeof data.locationId === "string" ? data.locationId : undefined,
       serviceLine: typeof data.serviceLine === "string" ? data.serviceLine : undefined,
       durationMin: typeof data.durationMin === "number" ? data.durationMin : undefined,
+      schedulerServiceId:
+        typeof data.schedulerServiceId === "string" ? data.schedulerServiceId : undefined,
+      serviceTypeName:
+        typeof data.serviceTypeName === "string" ? data.serviceTypeName : undefined,
+      bufferBeforeMinutes:
+        typeof data.bufferBeforeMinutes === "number" ? data.bufferBeforeMinutes : undefined,
+      bufferAfterMinutes:
+        typeof data.bufferAfterMinutes === "number" ? data.bufferAfterMinutes : undefined,
       providerId: typeof data.providerId === "string" ? data.providerId : undefined,
       providerDisplayName:
         typeof data.providerDisplayName === "string" ? data.providerDisplayName : undefined,

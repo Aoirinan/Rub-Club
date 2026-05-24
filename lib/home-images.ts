@@ -1,9 +1,13 @@
-/** Image URLs from the practices’ live sites (Baystone / cdcssl CDN). */
+/**
+ * Image URLs from the practices’ own legacy public websites (Baystone / cdcssl CDN).
+ * These are clinic marketing assets — not scheduling-vendor (e.g. EZnet) branding.
+ * Prefer self-hosted files under /public or Firebase when the clinic supplies final art.
+ */
 
 export const IMAGES = {
   rubClubLogo:
     "https://cdcssl.ibsrv.net/ibimg/smb/768x156_80/webmgr/1w/3/z/ple/RC-logo2.png.webp?2d7b966d7ecb9dae0791ca79bceae7b8",
-  /** Legacy Sedona CDN lockup (very low contrast on white). Kept for reference; header uses SVG + type instead. */
+  /** Legacy site CDN — prefer `BRAND_LOGOS.chiropractic` in `BrandLogoStrip`. Unused in UI. */
   chiroLogo:
     "https://cdcssl.ibsrv.net/ibimg/smb/768x90_80/webmgr/1x/5/c/sedona/logo1_g2b15gukTcuMWaVGgkCA-566x161-377w.png.webp?9937e103856e4c581bdc303dc0e48633",
   massageHeroBanner:

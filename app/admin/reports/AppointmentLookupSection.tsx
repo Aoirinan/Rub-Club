@@ -6,7 +6,15 @@ import { DateTime } from "luxon";
 import { TIME_ZONE } from "@/lib/constants";
 import { bookingStatusLabel } from "@/lib/booking-status";
 import { ALL_STATUSES, type BookingRow, type ProviderRow } from "@/app/admin/_scheduler/types";
-import { paymentStatusShort } from "@/app/admin/_scheduler/helpers";
+import { filterByBusiness, paymentStatusShort } from "@/app/admin/_scheduler/helpers";
+import type { PatientApiRow } from "@/lib/patient-types";
+import { patientDisambiguatorLabel } from "@/lib/patient-business";
+import {
+  readSchedulerBusinessFromSession,
+  SCHEDULER_BUSINESS_LABELS,
+  writeSchedulerBusinessToSession,
+  type SchedulerBusinessId,
+} from "@/lib/scheduler-business";
 
 type Mode = "future" | "past";
 
@@ -29,6 +37,7 @@ export function AppointmentLookupSection({
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [locationId, setLocationId] = useState("");
+  const [business, setBusiness] = useState<SchedulerBusinessId>("all");
   const [serviceLine, setServiceLine] = useState<"all" | "massage" | "chiropractic" | "stretch">("all");
   const [providerId, setProviderId] = useState("");
   const [confirmationStatus, setConfirmationStatus] = useState("");
@@ -39,6 +48,9 @@ export function AppointmentLookupSection({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+  const [patientById, setPatientById] = useState<Record<string, PatientApiRow>>({});
+  const [nameFilterPatientId, setNameFilterPatientId] = useState<string | null>(null);
+  const [allRowsForNames, setAllRowsForNames] = useState<BookingRow[]>([]);
 
   const defaults = useMemo(() => {
     const now = DateTime.now().setZone(TIME_ZONE).startOf("day");
@@ -52,6 +64,10 @@ export function AppointmentLookupSection({
     setFromDate(defaults.from);
     setToDate(defaults.to);
   }, [defaults.from, defaults.to]);
+
+  useEffect(() => {
+    setBusiness(readSchedulerBusinessFromSession());
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,7 +128,28 @@ export function AppointmentLookupSection({
       if (serviceLine !== "all") {
         list = list.filter((b) => b.serviceLine === serviceLine);
       }
+      list = filterByBusiness(list, business);
       list.sort((a, b) => (a.startAtMs ?? 0) - (b.startAtMs ?? 0));
+
+      const ids = [...new Set(list.map((b) => b.patientId).filter(Boolean))] as string[];
+      if (ids.length > 0) {
+        const pres = await fetch(`/api/admin/patients?ids=${ids.join(",")}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (pres.ok) {
+          const pdata = (await pres.json()) as { patients?: PatientApiRow[] };
+          const map: Record<string, PatientApiRow> = {};
+          for (const p of pdata.patients ?? []) map[p.id] = p;
+          setPatientById(map);
+        }
+      } else {
+        setPatientById({});
+      }
+
+      setAllRowsForNames(list);
+      if (nameFilterPatientId) {
+        list = list.filter((b) => b.patientId === nameFilterPatientId);
+      }
       setRows(list);
     } finally {
       setLoading(false);
@@ -125,13 +162,15 @@ export function AppointmentLookupSection({
     providerId,
     confirmationStatus,
     serviceLine,
+    business,
     qDebounced,
+    nameFilterPatientId,
   ]);
 
   useEffect(() => {
     if (!fromDate || !toDate) return;
     void load();
-  }, [fromDate, toDate, locationId, providerId, confirmationStatus, serviceLine, qDebounced, load]);
+  }, [fromDate, toDate, locationId, providerId, confirmationStatus, serviceLine, business, qDebounced, load]);
 
   function toggleExpand(id: string) {
     setExpanded((prev) => {
@@ -212,6 +251,24 @@ export function AppointmentLookupSection({
             onChange={(e) => setToDate(e.target.value)}
             className="mt-1 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
           />
+        </label>
+        <label className="text-xs font-semibold text-slate-700">
+          Business
+          <select
+            value={business}
+            onChange={(e) => {
+              const next = e.target.value as SchedulerBusinessId;
+              setBusiness(next);
+              writeSchedulerBusinessToSession(next);
+            }}
+            className="mt-1 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
+          >
+            {(Object.keys(SCHEDULER_BUSINESS_LABELS) as SchedulerBusinessId[]).map((id) => (
+              <option key={id} value={id}>
+                {SCHEDULER_BUSINESS_LABELS[id]}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="text-xs font-semibold text-slate-700">
           Location
@@ -332,16 +389,55 @@ export function AppointmentLookupSection({
                   <tr className="hover:bg-slate-50">
                     <td className="px-5 py-3 text-slate-800">{when}</td>
                     <td className="px-5 py-3 font-medium text-slate-900">
-                      {b.phone && b.phone.replace(/\D/g, "").length >= 7 ? (
-                        <Link
-                          href={`/admin/patient?phone=${encodeURIComponent(b.phone)}`}
-                          className="text-sky-800 underline hover:text-sky-950"
-                        >
-                          {b.name ?? "—"}
-                        </Link>
-                      ) : (
-                        b.name ?? "—"
-                      )}
+                      {(() => {
+                        const p = b.patientId ? patientById[b.patientId] : undefined;
+                        const label = patientDisambiguatorLabel({
+                          name: b.name ?? "—",
+                          locationId: b.locationId,
+                          dateOfBirth: p?.dateOfBirth,
+                          phone: b.phone ?? p?.phone,
+                          businessTag: p?.businessTag,
+                        });
+                        const sameNameCount = allRowsForNames.filter(
+                          (o) =>
+                            (o.name ?? "").trim().toLowerCase() ===
+                            (b.name ?? "").trim().toLowerCase(),
+                        ).length;
+                        const showPick =
+                          sameNameCount > 1 && b.patientId && nameFilterPatientId !== b.patientId;
+                        return (
+                          <span className="inline-flex flex-col gap-0.5">
+                            {b.phone && b.phone.replace(/\D/g, "").length >= 7 ? (
+                              <Link
+                                href={`/admin/patient?phone=${encodeURIComponent(b.phone)}`}
+                                className="text-sky-800 underline hover:text-sky-950"
+                              >
+                                {label}
+                              </Link>
+                            ) : (
+                              label
+                            )}
+                            {showPick ? (
+                              <button
+                                type="button"
+                                className="text-left text-[10px] font-semibold text-sky-800 underline"
+                                onClick={() => setNameFilterPatientId(b.patientId!)}
+                              >
+                                Show only this patient
+                              </button>
+                            ) : null}
+                            {nameFilterPatientId === b.patientId ? (
+                              <button
+                                type="button"
+                                className="text-left text-[10px] text-slate-500 underline"
+                                onClick={() => setNameFilterPatientId(null)}
+                              >
+                                Clear name filter
+                              </button>
+                            ) : null}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-5 py-3 capitalize text-slate-700">{b.serviceLine ?? "—"}</td>
                     <td className="px-5 py-3 text-slate-700">{b.providerDisplayName ?? "—"}</td>

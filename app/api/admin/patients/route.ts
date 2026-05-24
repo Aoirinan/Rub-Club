@@ -2,7 +2,15 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
 import { requireStaff } from "@/lib/staff-auth";
-import { createPatient, listPatients, type PatientPaymentType } from "@/lib/patients-db";
+import type { PatientBusinessTag } from "@/lib/patient-business";
+import {
+  createPatient,
+  listPatients,
+  parsePatientDoc,
+  patientToApiRow,
+  PATIENTS_COLLECTION,
+  type PatientPaymentType,
+} from "@/lib/patients-db";
 
 export const runtime = "nodejs";
 
@@ -20,6 +28,7 @@ const createSchema = z.object({
   insuranceCarrier: z.string().max(120).optional(),
   insuranceMemberId: z.string().max(80).optional(),
   notes: z.string().max(4000).optional(),
+  businessTag: z.enum(["rub_club", "chiro", "both"]).optional(),
 });
 
 export async function GET(req: Request) {
@@ -29,6 +38,20 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url);
+  const idsRaw = searchParams.get("ids");
+  if (idsRaw?.trim()) {
+    const db = getFirestore();
+    const ids = idsRaw.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 80);
+    const patients = [];
+    for (const id of ids) {
+      const snap = await db.collection(PATIENTS_COLLECTION).doc(id).get();
+      if (!snap.exists) continue;
+      const p = parsePatientDoc(snap.id, snap.data() ?? {});
+      if (p && !p.deleted) patients.push(patientToApiRow(p));
+    }
+    return NextResponse.json({ patients, total: patients.length, page: 1, limit: patients.length });
+  }
+
   const search = searchParams.get("search") ?? undefined;
   const page = Number(searchParams.get("page")) || 1;
   const limit = Number(searchParams.get("limit")) || 50;
@@ -38,12 +61,18 @@ export async function GET(req: Request) {
       ? (paymentRaw as PatientPaymentType)
       : "all";
   const activeOnly = searchParams.get("active") === "true";
+  const businessRaw = searchParams.get("business");
+  const businessTag =
+    businessRaw === "rub_club" || businessRaw === "chiro" || businessRaw === "both"
+      ? (businessRaw as PatientBusinessTag)
+      : "all";
 
   const result = await listPatients({
     search,
     page,
     limit,
     paymentType,
+    businessTag,
     activeOnly,
   });
 

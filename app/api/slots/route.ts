@@ -2,16 +2,18 @@ import { NextResponse } from "next/server";
 import type { Firestore } from "firebase-admin/firestore";
 import type { DateTime } from "luxon";
 import { getFirestore } from "@/lib/firebase-admin";
-import type { DurationMin, LocationId, ServiceLine } from "@/lib/constants";
+import type { LocationId, ServiceLine } from "@/lib/constants";
+import { isValidBookingDurationMin } from "@/lib/booking-duration";
 import { formatChicagoSlotChoice } from "@/lib/chicago-datetime-format";
 import { fetchActiveProvidersForPublicBooking } from "@/lib/providers-db";
+import { providerAllowsAppointmentTime } from "@/lib/provider-scheduling";
+import { providerHoursContext } from "@/lib/provider-profile";
 import {
   bucketDocIdsForAppointment,
   holdBucketIdsForPublicBooking,
-  isWithinScheduleWindow,
-  unionCandidateStartsFromSchedules,
+  unionCandidateStartsFromHoursContexts,
   enumerateCandidateStartsInWindow,
-  effectiveDayWindow,
+  effectiveDayWindowFromHours,
 } from "@/lib/slots-luxon";
 import { getPublicBookingConfig, isPublicBookingEnabled } from "@/lib/public-booking-settings";
 
@@ -25,7 +27,7 @@ async function bucketsFree(
   providerId: string,
   serviceLine: ServiceLine,
   start: DateTime,
-  durationMin: DurationMin,
+  durationMin: number,
 ): Promise<boolean> {
   const providerIds = bucketDocIdsForAppointment(locationId, providerId, start, durationMin);
   const holdIds = holdBucketIdsForPublicBooking(locationId, serviceLine, start, durationMin);
@@ -37,15 +39,15 @@ async function bucketsFree(
 
 export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const previewOnly = searchParams.get("preview") === "1";
     const publicBooking = await getPublicBookingConfig();
-    if (!isPublicBookingEnabled(publicBooking)) {
+    if (!isPublicBookingEnabled(publicBooking) && !previewOnly) {
       return NextResponse.json(
         { error: publicBooking.disabledMessage, slots: [] },
         { status: 503 },
       );
     }
-
-    const { searchParams } = new URL(req.url);
     const locationId = searchParams.get("locationId") as LocationId | null;
     const date = searchParams.get("date");
     const durationRaw = searchParams.get("durationMin");
@@ -59,8 +61,8 @@ export async function GET(req: Request) {
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return NextResponse.json({ error: "Invalid date" }, { status: 400 });
     }
-    const durationMin = Number(durationRaw) as DurationMin;
-    if (durationMin !== 30 && durationMin !== 60) {
+    const durationMin = Number(durationRaw);
+    if (!isValidBookingDurationMin(durationMin)) {
       return NextResponse.json({ error: "Invalid durationMin" }, { status: 400 });
     }
     if (serviceLine !== "massage" && serviceLine !== "chiropractic" && serviceLine !== "stretch") {
@@ -95,10 +97,11 @@ export async function GET(req: Request) {
       if (!provider) {
         return NextResponse.json({ error: "Unknown or inactive provider for this location/service" }, { status: 400 });
       }
-      const window = effectiveDayWindow(date, provider.schedule ?? null);
+      const hoursCtx = providerHoursContext(provider);
+      const window = effectiveDayWindowFromHours(date, hoursCtx);
       const candidates = enumerateCandidateStartsInWindow(date, durationMin, window);
       for (const start of candidates) {
-        if (!isWithinScheduleWindow(start, durationMin, provider.schedule ?? null)) continue;
+        if (!providerAllowsAppointmentTime(provider, start, durationMin)) continue;
         if (await bucketsFree(db, locationId, providerId, serviceLine, start, durationMin)) {
           available.push({
             startIso: start.toUTC().toISO()!,
@@ -107,12 +110,10 @@ export async function GET(req: Request) {
         }
       }
     } else {
-      const schedules = eligible.map((p) => p.schedule ?? null);
-      const candidates = unionCandidateStartsFromSchedules(date, durationMin, schedules);
+      const contexts = eligible.map((p) => providerHoursContext(p));
+      const candidates = unionCandidateStartsFromHoursContexts(date, durationMin, contexts);
       for (const start of candidates) {
-        const usable = eligible.filter((p) =>
-          isWithinScheduleWindow(start, durationMin, p.schedule ?? null),
-        );
+        const usable = eligible.filter((p) => providerAllowsAppointmentTime(p, start, durationMin));
         let open = false;
         for (const p of usable) {
           if (await bucketsFree(db, locationId, p.id, serviceLine, start, durationMin)) {

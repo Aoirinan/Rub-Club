@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { linkifyHtmlUrls } from "@/lib/linkify-html";
 import type { SpecialsConfig } from "@/lib/site-owner-config";
 
 const SESSION_KEY = "rub_specials_popup_seen";
@@ -100,7 +101,7 @@ export function DomainSpecialsPopup() {
           {bodyHtml ? (
             <div
               className="prose prose-sm max-w-none text-stone-800 prose-a:text-[#0f5f5c]"
-              dangerouslySetInnerHTML={{ __html: bodyHtml }}
+              dangerouslySetInnerHTML={{ __html: linkifyHtmlUrls(bodyHtml) }}
             />
           ) : null}
         </div>

@@ -128,6 +128,7 @@ export default async function RootLayout({
         <JsonLd data={[organizationJsonLd(schemaLocations), websiteJsonLd()]} />
         <PublicBookingProvider enabled={onlineBookingEnabled}>
           <ConditionalMarketingChrome
+            giftCardHref={giftCardHref}
             header={
               <>
                 <SiteHeader

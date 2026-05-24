@@ -1,4 +1,4 @@
-import type { DurationMin, ServiceLine } from "./constants";
+import type { ServiceLine } from "./constants";
 
 function parsePositiveCents(raw: string | undefined): number | null {
   if (!raw?.trim()) return null;
@@ -13,7 +13,7 @@ function parsePositiveCents(raw: string | undefined): number | null {
  */
 export function resolvePublicBookingPrepayCents(
   serviceLine: ServiceLine,
-  durationMin: DurationMin,
+  durationMin: number,
 ): number | null {
   let specific: string | undefined;
   if (serviceLine === "massage") {

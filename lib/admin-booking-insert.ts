@@ -1,7 +1,7 @@
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import type { Firestore, DocumentReference } from "firebase-admin/firestore";
 import { DateTime } from "luxon";
-import type { DurationMin, LocationId, ServiceLine } from "@/lib/constants";
+import type { LocationId, ServiceLine } from "@/lib/constants";
 import {
   bucketDocIdsForAppointment,
   holdBucketIdsForPublicBooking,
@@ -15,7 +15,7 @@ export type InsertAdminBookingArgs = {
   start: DateTime;
   locationId: LocationId;
   serviceLine: ServiceLine;
-  durationMin: DurationMin;
+  durationMin: number;
   providerId: string;
   providerDisplayName: string;
   name: string;
@@ -29,6 +29,11 @@ export type InsertAdminBookingArgs = {
   createMetaVia: "admin_manual" | "csv_import";
   seriesId?: string;
   recurrence?: { frequency: "weekly" | "biweekly"; count: number };
+  schedulerServiceId?: string;
+  serviceTypeName?: string;
+  /** Denormalized for calendar display */
+  bufferBeforeMinutes?: number;
+  bufferAfterMinutes?: number;
 };
 
 export type InsertAdminBookingResult = "ok" | "slot_taken" | "slot_blocked";
@@ -59,12 +64,19 @@ export async function insertAdminBookingInTransaction(
     createMetaVia,
     seriesId,
     recurrence,
+    schedulerServiceId,
+    serviceTypeName,
+    bufferBeforeMinutes = 0,
+    bufferAfterMinutes = 0,
   } = args;
 
   const portalHash =
     status === "confirmed" ? hashPatientPortalToken(generatePatientPortalToken()) : "";
 
-  const bucketIds = bucketDocIdsForAppointment(locationId, providerId, thisStart, durationMin);
+  const bucketIds = bucketDocIdsForAppointment(locationId, providerId, thisStart, durationMin, {
+    bufferBeforeMinutes,
+    bufferAfterMinutes,
+  });
 
   try {
     await db.runTransaction(async (tx) => {
@@ -112,6 +124,10 @@ export async function insertAdminBookingInTransaction(
         email: email.trim().toLowerCase(),
         notes: notes.trim(),
         status,
+        ...(schedulerServiceId ? { schedulerServiceId } : {}),
+        ...(serviceTypeName ? { serviceTypeName } : {}),
+        ...(bufferBeforeMinutes > 0 ? { bufferBeforeMinutes } : {}),
+        ...(bufferAfterMinutes > 0 ? { bufferAfterMinutes } : {}),
         ...(seriesId ? { seriesId, recurrence } : {}),
         ...(status === "confirmed"
           ? {

@@ -6,6 +6,12 @@ import { useRouter } from "next/navigation";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import { AppointmentLookupSection } from "./AppointmentLookupSection";
+import {
+  readSchedulerBusinessFromSession,
+  SCHEDULER_BUSINESS_LABELS,
+  writeSchedulerBusinessToSession,
+  type SchedulerBusinessId,
+} from "@/lib/scheduler-business";
 
 type Summary = {
   totalBookings: number;
@@ -54,6 +60,11 @@ export default function ReportsPage() {
   const [error, setError] = useState<string | null>(null);
   const [days, setDays] = useState(30);
   const [locationId, setLocationId] = useState("");
+  const [business, setBusiness] = useState<SchedulerBusinessId>("all");
+
+  useEffect(() => {
+    setBusiness(readSchedulerBusinessFromSession());
+  }, []);
 
   useEffect(() => {
     setAuth(getFirebaseClientAuth());
@@ -73,6 +84,7 @@ export default function ReportsPage() {
     try {
       const qs = new URLSearchParams({ days: String(days) });
       if (locationId) qs.set("locationId", locationId);
+      if (business !== "all") qs.set("business", business);
       const res = await fetch(`/api/admin/reports?${qs.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -84,7 +96,7 @@ export default function ReportsPage() {
     } finally {
       setLoading(false);
     }
-  }, [getIdToken, days, locationId]);
+  }, [getIdToken, days, locationId, business]);
 
   useEffect(() => {
     if (!auth) return;
@@ -171,6 +183,24 @@ export default function ReportsPage() {
               <option value={60}>Last 60 days</option>
               <option value={90}>Last 90 days</option>
               <option value={180}>Last 180 days</option>
+            </select>
+          </label>
+          <label className="inline-flex items-center gap-1.5 text-sm">
+            <span className="font-semibold text-slate-700">Business</span>
+            <select
+              value={business}
+              onChange={(e) => {
+                const next = e.target.value as SchedulerBusinessId;
+                setBusiness(next);
+                writeSchedulerBusinessToSession(next);
+              }}
+              className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm"
+            >
+              {(Object.keys(SCHEDULER_BUSINESS_LABELS) as SchedulerBusinessId[]).map((id) => (
+                <option key={id} value={id}>
+                  {SCHEDULER_BUSINESS_LABELS[id]}
+                </option>
+              ))}
             </select>
           </label>
           <label className="inline-flex items-center gap-1.5 text-sm">
