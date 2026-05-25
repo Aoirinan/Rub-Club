@@ -1,5 +1,5 @@
 import { FACEBOOK_URL, WELLNESS_CARE_PLANS_PATH, telHref, type LocationInfo } from "@/lib/constants";
-import { BrandLogoStrip } from "@/components/BrandLogoStrip";
+import { HeaderBrandLogoStrip } from "@/components/HeaderBrandLogoStrip";
 import { MobileNav } from "@/components/MobileNav";
 import { DesktopNav, type NavItem } from "@/components/DesktopNav";
 
@@ -83,7 +83,7 @@ export function SiteHeader({
       <div className="bg-white px-4 py-3 sm:py-4">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <BrandLogoStrip variant="home" paris={paris} sulphur={sulphur} />
+            <HeaderBrandLogoStrip paris={paris} sulphur={sulphur} />
           </div>
 
           <div className="hidden items-center justify-end gap-2 text-xs lg:flex">
