@@ -13,7 +13,9 @@ import { serviceBreadcrumbs } from "@/lib/service-breadcrumbs";
 import { chiropractorJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
 import { pageKeywords } from "@/lib/seo-keywords";
+import { getScopeVisualLayout } from "@/lib/cms-display";
 import { getPageBlockOrder } from "@/lib/page-layout-db";
+import { ServicePageVisualSection } from "@/components/ServicePageVisualSection";
 import { ChiroPageBlock } from "./ChiroPageBlocks";
 
 const CHIRO_CMS_IDS = [
@@ -54,9 +56,10 @@ export const revalidate = 60;
 export default async function ChiropracticServicePage() {
   const booking = await getPublicBookingConfig();
   const c = await getContentMany([...CHIRO_CMS_IDS, ...DOCTOR_CMS_KEYS]);
-  const [doctors, blockOrder] = await Promise.all([
+  const [doctors, blockOrder, visual] = await Promise.all([
     getDoctorsForMarketing(c),
     getPageBlockOrder("chiropractic"),
+    getScopeVisualLayout("chiropractic"),
   ]);
   const paris = LOCATIONS.paris;
   const ss = LOCATIONS.sulphur_springs;
@@ -100,11 +103,20 @@ export default async function ChiropracticServicePage() {
         title={c.chiro_hero_heading}
         lede={c.chiro_hero_subheading}
       />
-      <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
-        {blockOrder.map((id) => (
-          <ChiroPageBlock key={id} id={id} data={blockData} />
-        ))}
-      </div>
+      {visual ? (
+        <ServicePageVisualSection
+          pageId="chiropractic"
+          visual={visual}
+          cms={c as Record<string, string>}
+          renderBlock={(id) => <ChiroPageBlock id={id} data={blockData} />}
+        />
+      ) : (
+        <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
+          {blockOrder.map((id) => (
+            <ChiroPageBlock key={id} id={id} data={blockData} />
+          ))}
+        </div>
+      )}
     </>
   );
 }

@@ -7,7 +7,9 @@ import { getContentMany } from "@/lib/cms";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
 import { resolveSiteStaffForBrand, splitFeaturedAndGrid } from "@/lib/site-staff";
 import { pageKeywords } from "@/lib/seo-keywords";
+import { getScopeVisualLayout } from "@/lib/cms-display";
 import { getPageBlockOrder } from "@/lib/page-layout-db";
+import { ServicePageVisualSection } from "@/components/ServicePageVisualSection";
 import { SulphurPageBlock } from "./SulphurPageBlocks";
 
 const ss = LOCATIONS.sulphur_springs;
@@ -72,11 +74,12 @@ const SS_NAV: SSNavEntry[] = [
 ];
 
 export default async function SulphurSpringsPage() {
-  const [c, ssOfficeHours, staff, blockOrder] = await Promise.all([
+  const [c, ssOfficeHours, staff, blockOrder, visual] = await Promise.all([
     getContentMany(["ss_hero_heading", "ss_intro_body", "ss_hours"]),
     getSulphurOfficeHours(),
     resolveSiteStaffForBrand("sulphur"),
     getPageBlockOrder("sulphur-springs"),
+    getScopeVisualLayout("sulphur-springs"),
   ]);
   const { featured } = splitFeaturedAndGrid(staff);
   const doctor = featured
@@ -155,11 +158,20 @@ export default async function SulphurSpringsPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
-        {blockOrder.map((id) => (
-          <SulphurPageBlock key={id} id={id} data={blockData} />
-        ))}
-      </div>
+      {visual ? (
+        <ServicePageVisualSection
+          pageId="sulphur-springs"
+          visual={visual}
+          cms={c as Record<string, string>}
+          renderBlock={(id) => <SulphurPageBlock id={id} data={blockData} />}
+        />
+      ) : (
+        <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
+          {blockOrder.map((id) => (
+            <SulphurPageBlock key={id} id={id} data={blockData} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

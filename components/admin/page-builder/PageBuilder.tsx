@@ -2,73 +2,34 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Auth } from "firebase/auth";
-import {
-  DndContext,
-  DragOverlay,
-  KeyboardSensor,
-  PointerSensor,
-  closestCenter,
-  useDroppable,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
 import { useSiteContentFields } from "@/components/admin/cms/useSiteContentFields";
-import { HERO_BLOCK_ID } from "@/lib/page-builder-cms";
 import {
   CONTENT_SCOPES,
   isContentScopeId,
   isFaqItemsScope,
-  type ContentScopeId,
 } from "@/lib/page-builder-content-scopes";
-import { scopeKind } from "@/lib/page-builder-cms";
-import {
-  blockDef,
-  isPageLayoutId,
-  pageLayoutDef,
-  type PageLayoutId,
-  type PageLayoutState,
-} from "@/lib/page-layout";
+import { isPageLayoutId, PAGE_LAYOUT_PAGES, type PageLayoutId } from "@/lib/page-layout";
 import type { PageBuilderScopeId } from "@/lib/page-builder-content-scopes";
 import { FaqItemsPanel } from "@/components/admin/FaqItemsPanel";
-import { ContentScopeCanvas } from "./ContentScopeCanvas";
-import { HeaderBrandingCanvas } from "./HeaderBrandingCanvas";
-import { resetHeaderLayoutValue } from "./HeaderBrandingInspector";
-import { HeroPreviewCard } from "./HeroPreviewCard";
-import { PageBuilderInspector } from "./PageBuilderInspector";
-import { PaletteItem } from "./PaletteItem";
-import { SectionPreviewCard } from "./SectionPreviewCard";
-import { SectionPreviewBody } from "./previews/SectionPreviewBody";
-import type { PageBuilderPageMeta, PagePreviewData } from "./types";
 import {
   HEADER_BRANDING_LAYOUT_FIELD,
   parseHeaderBrandingLayout,
   serializeHeaderBrandingLayout,
-  type HeaderBrandKey,
   type HeaderBrandingLayout,
 } from "@/lib/header-branding-cms";
+import {
+  headerVisualToBrandingLayout,
+} from "@/lib/visual-page-migrations";
+import { isVisualScopeId, type VisualPageLayout } from "@/lib/visual-page-layout";
+import { VisualLayoutInspector } from "./VisualLayoutInspector";
+import { VisualPageEditorCanvas } from "./VisualPageEditorCanvas";
+import type { PageBuilderPageMeta, PagePreviewData } from "./types";
 
 type Props = {
   getIdToken: () => Promise<string | null>;
   auth: Auth | null;
   initialScope?: string;
 };
-
-function layoutsEqual(a: PageLayoutState, b: PageLayoutState): boolean {
-  if (a.blockOrder.length !== b.blockOrder.length) return false;
-  if (a.hiddenBlocks.length !== b.hiddenBlocks.length) return false;
-  return (
-    a.blockOrder.every((id, i) => id === b.blockOrder[i]) &&
-    [...a.hiddenBlocks].sort().join() === [...b.hiddenBlocks].sort().join()
-  );
-}
 
 function parseInitialScope(raw?: string): PageBuilderScopeId {
   if (raw && isPageLayoutId(raw)) return raw;
@@ -77,54 +38,38 @@ function parseInitialScope(raw?: string): PageBuilderScopeId {
   return "massage";
 }
 
-function DroppableZone({
-  id,
-  label,
-  children,
-  className,
-}: {
-  id: string;
-  label: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const { setNodeRef, isOver } = useDroppable({ id });
-  return (
-    <div
-      ref={setNodeRef}
-      aria-label={label}
-      className={`${className ?? ""} ${isOver ? "ring-2 ring-[#0f5f5c]/40" : ""}`}
-    >
-      {children}
-    </div>
-  );
+function scopeLivePath(scope: PageBuilderScopeId): string | null {
+  if (isPageLayoutId(scope)) {
+    return PAGE_LAYOUT_PAGES.find((p) => p.id === scope)?.path ?? null;
+  }
+  if (scope === "home") return "/";
+  if (scope === "header-branding") return "/";
+  if (scope === "about") return "/about";
+  if (scope === "contact") return "/contact";
+  if (scope === "wellness") return "/wellness-care-plans";
+  if (scope === "insurance") return "/insurance";
+  if (scope === "reviews") return "/reviews";
+  if (scope === "patient-forms") return "/patient-forms";
+  if (scope === "faq-copy") return "/faq";
+  if (scope === "services-hub") return "/services";
+  return null;
 }
 
-export function PageBuilder({ getIdToken, auth, initialScope }: Props) {
+export function PageBuilder({ getIdToken, initialScope }: Props) {
   const [scope, setScope] = useState<PageBuilderScopeId>(() => parseInitialScope(initialScope));
   const [pages, setPages] = useState<PageBuilderPageMeta[]>([]);
-  const [saved, setSaved] = useState<PageLayoutState>({ blockOrder: [], hiddenBlocks: [] });
-  const [draft, setDraft] = useState<PageLayoutState>({ blockOrder: [], hiddenBlocks: [] });
   const [preview, setPreview] = useState<PagePreviewData>({
     cms: {},
     teamNames: [],
     doctorNames: [],
   });
-  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
-  const [activeDragId, setActiveDragId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
+  const [visualDraft, setVisualDraft] = useState<VisualPageLayout | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [notifyMessage, setNotifyMessage] = useState<string | null>(null);
-  const [headerSelectedBrand, setHeaderSelectedBrand] = useState<HeaderBrandKey | null>(null);
 
-  const isLayout = scopeKind(scope) === "layout";
   const isFaqScope = scope === "faq-items";
-  const pageId = isLayout ? (scope as PageLayoutId) : undefined;
-  const contentScopeId =
-    !isLayout && !isFaqScope && isContentScopeId(scope) ? (scope as ContentScopeId) : undefined;
-  const isHeaderBrandingScope = contentScopeId === "header-branding";
+  const visualScope = isVisualScopeId(scope) ? scope : null;
+  const pageId = isPageLayoutId(scope) ? (scope as PageLayoutId) : undefined;
 
   const syncPreviewFromFields = useCallback(
     (fieldRows: { id: string; value: string }[]) => {
@@ -166,11 +111,14 @@ export function PageBuilder({ getIdToken, auth, initialScope }: Props) {
   }, [cms.fields]);
 
   const headerLayout = useMemo(
-    () => parseHeaderBrandingLayout(cmsFieldMap),
-    [cmsFieldMap],
+    () =>
+      scope === "header-branding" && visualDraft
+        ? headerVisualToBrandingLayout(visualDraft)
+        : parseHeaderBrandingLayout(cmsFieldMap),
+    [scope, visualDraft, cmsFieldMap],
   );
 
-  const saveHeaderLayout = useCallback(
+  const saveHeaderLayoutToCms = useCallback(
     async (layout: HeaderBrandingLayout) => {
       await cms.saveField(HEADER_BRANDING_LAYOUT_FIELD, serializeHeaderBrandingLayout(layout));
     },
@@ -180,26 +128,6 @@ export function PageBuilder({ getIdToken, auth, initialScope }: Props) {
   useEffect(() => {
     syncPreviewFromFields(cms.fields);
   }, [cms.fields, syncPreviewFromFields]);
-
-  const dirty = isLayout && pageId ? !layoutsEqual(draft, saved) : false;
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
-
-  const def = pageId ? pageLayoutDef(pageId) : null;
-  const paletteIds = useMemo(() => {
-    if (!pageId || !def) return [];
-    return def.blocks.map((b) => b.id).filter((id) => !draft.blockOrder.includes(id));
-  }, [def, draft.blockOrder, pageId]);
-  const paletteBlocks = useMemo(
-    () =>
-      paletteIds
-        .map((id) => (pageId ? blockDef(pageId, id) : undefined))
-        .filter((b): b is NonNullable<typeof b> => Boolean(b)),
-    [pageId, paletteIds],
-  );
 
   const loadPages = useCallback(async () => {
     const token = await getIdToken();
@@ -211,38 +139,6 @@ export function PageBuilder({ getIdToken, auth, initialScope }: Props) {
     if (res.ok && data.pages?.length) setPages(data.pages);
   }, [getIdToken]);
 
-  const loadLayout = useCallback(async () => {
-    if (!pageId) return;
-    setLoading(true);
-    setMessage(null);
-    const token = await getIdToken();
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-    const layoutRes = await fetch(`/api/admin/page-layout?page=${encodeURIComponent(pageId)}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const layoutData = (await layoutRes.json()) as {
-      blockOrder?: string[];
-      hiddenBlocks?: string[];
-      error?: string;
-    };
-    if (!layoutRes.ok) {
-      setMessage(layoutData.error ?? "Could not load layout.");
-      setLoading(false);
-      return;
-    }
-    const layout: PageLayoutState = {
-      blockOrder: layoutData.blockOrder ?? [],
-      hiddenBlocks: layoutData.hiddenBlocks ?? [],
-    };
-    setSaved(layout);
-    setDraft(layout);
-    await loadPreviewForLayout();
-    setLoading(false);
-  }, [getIdToken, pageId, loadPreviewForLayout]);
-
   const loadCms = cms.load;
   useEffect(() => {
     void loadPages();
@@ -250,238 +146,98 @@ export function PageBuilder({ getIdToken, auth, initialScope }: Props) {
   }, [loadPages, loadCms]);
 
   useEffect(() => {
-    setSelectedBlockId(null);
-    if (contentScopeId === "header-branding") {
-      setSelectedSectionId(null);
-      setHeaderSelectedBrand(null);
-    } else {
-      setSelectedSectionId(null);
-    }
-    if (isLayout && pageId) {
-      void loadLayout();
-    } else {
-      setLoading(false);
-    }
-  }, [scope, isLayout, pageId, loadLayout, contentScopeId]);
+    if (pageId) void loadPreviewForLayout();
+  }, [pageId, loadPreviewForLayout]);
 
   useEffect(() => {
-    if (!dirty) return;
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-    };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [dirty]);
-
-  async function saveLayout() {
-    if (!pageId) return;
-    setSaving(true);
+    setSelectedLayerId(null);
+    setVisualDraft(null);
     setMessage(null);
-    const token = await getIdToken();
-    if (!token) {
-      setSaving(false);
-      return;
-    }
-    const res = await fetch("/api/admin/page-layout", {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        page: pageId,
-        blockOrder: draft.blockOrder,
-        hiddenBlocks: draft.hiddenBlocks,
-      }),
-    });
-    const data = (await res.json().catch(() => ({}))) as {
-      error?: string;
-      blockOrder?: string[];
-      hiddenBlocks?: string[];
-    };
-    if (!res.ok) {
-      setMessage(data.error ?? "Save failed.");
-    } else {
-      const next: PageLayoutState = {
-        blockOrder: data.blockOrder ?? draft.blockOrder,
-        hiddenBlocks: data.hiddenBlocks ?? draft.hiddenBlocks,
-      };
-      setSaved(next);
-      setDraft(next);
-      setMessage("Layout published — live page updates within about a minute.");
-    }
-    setSaving(false);
-  }
+  }, [scope]);
 
-  function insertBlock(blockId: string, beforeId: string | null) {
-    setDraft((prev) => {
-      if (prev.blockOrder.includes(blockId)) return prev;
-      const order = [...prev.blockOrder];
-      if (beforeId && order.includes(beforeId)) {
-        order.splice(order.indexOf(beforeId), 0, blockId);
-      } else {
-        order.push(blockId);
+  const selectedLayer = useMemo(
+    () => visualDraft?.layers.find((l) => l.id === selectedLayerId) ?? null,
+    [visualDraft, selectedLayerId],
+  );
+
+  const persistVisualDraft = useCallback(
+    async (layoutOverride?: VisualPageLayout) => {
+      const toSave = layoutOverride ?? visualDraft;
+      if (!toSave || !visualScope) return;
+      const token = await getIdToken();
+      if (!token) return;
+      const res = await fetch("/api/admin/visual-layout", {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ scope: visualScope, layout: toSave }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { layout?: VisualPageLayout };
+        const normalized = data.layout ?? toSave;
+        setVisualDraft(normalized);
+        if (scope === "header-branding") {
+          await saveHeaderLayoutToCms(headerVisualToBrandingLayout(normalized));
+        }
       }
-      return { ...prev, blockOrder: order };
-    });
-  }
+    },
+    [visualDraft, visualScope, getIdToken, scope, saveHeaderLayoutToCms],
+  );
 
-  function removeBlock(blockId: string) {
-    setDraft((prev) => ({
-      blockOrder: prev.blockOrder.filter((id) => id !== blockId),
-      hiddenBlocks: prev.hiddenBlocks.filter((id) => id !== blockId),
-    }));
-    if (selectedBlockId === blockId) setSelectedBlockId(null);
-  }
+  const livePath = scopeLivePath(scope);
 
-  function handleDragStart(event: DragStartEvent) {
-    setActiveDragId(String(event.active.id));
-  }
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    setActiveDragId(null);
-    if (!over || !pageId) return;
-
-    const activeId = String(active.id);
-    const overId = String(over.id);
-
-    if (activeId.startsWith("palette-")) {
-      const blockId = activeId.replace(/^palette-/, "");
-      if (overId === "palette-drop" || overId === "trash") return;
-      if (draft.blockOrder.includes(overId)) {
-        insertBlock(blockId, overId);
-      } else {
-        insertBlock(blockId, null);
-      }
-      return;
-    }
-
-    if (!draft.blockOrder.includes(activeId)) return;
-
-    if (overId === "palette-drop" || overId === "trash") {
-      removeBlock(activeId);
-      return;
-    }
-
-    if (draft.blockOrder.includes(overId) && activeId !== overId) {
-      setDraft((prev) => ({
-        ...prev,
-        blockOrder: arrayMove(
-          prev.blockOrder,
-          prev.blockOrder.indexOf(activeId),
-          prev.blockOrder.indexOf(overId),
-        ),
-      }));
-    }
-  }
-
-  const activeBlock =
-    pageId && activeDragId && !activeDragId.startsWith("palette-")
-      ? blockDef(pageId, activeDragId)
-      : pageId && activeDragId?.startsWith("palette-")
-        ? blockDef(pageId, activeDragId.replace(/^palette-/, ""))
-        : undefined;
-
-  const activePage = pageId ? pages.find((p) => p.id === pageId) : undefined;
-
-  const inspector = (
-    <PageBuilderInspector
-      mode={isLayout ? "layout" : "content"}
-      pageId={pageId}
-      contentScopeId={contentScopeId}
-      selectedBlockId={selectedBlockId}
-      selectedSectionId={selectedSectionId}
-      hiddenBlocks={draft.hiddenBlocks}
+  const inspector = visualScope ? (
+    <VisualLayoutInspector
+      scopeId={visualScope}
+      selectedLayer={selectedLayer}
       fields={cms.fields}
       cmsBusy={cms.busy}
       cmsMessage={cms.message}
-      auth={auth}
-      onToggleHidden={(blockId) => {
-        setDraft((prev) => {
-          const hidden = new Set(prev.hiddenBlocks);
-          if (hidden.has(blockId)) hidden.delete(blockId);
-          else hidden.add(blockId);
-          return { ...prev, hiddenBlocks: [...hidden] };
-        });
-      }}
-      onRemove={removeBlock}
       onSaveField={cms.saveField}
       onResetField={cms.resetField}
-      onNotify={setNotifyMessage}
-      headerSelectedBrand={headerSelectedBrand}
-      onHeaderResetLayout={() => {
-        void cms.saveField(HEADER_BRANDING_LAYOUT_FIELD, resetHeaderLayoutValue());
+      onUpdateLayerContent={(layerId, content) => {
+        setVisualDraft((prev) => {
+          if (!prev) return prev;
+          const next = {
+            ...prev,
+            layers: prev.layers.map((l) => (l.id === layerId ? { ...l, content } : l)),
+          };
+          void persistVisualDraft(next);
+          return next;
+        });
       }}
-      onHeaderIconScale={(value) => {
-        const next = {
-          ...headerLayout,
-          brands: {
-            ...headerLayout.brands,
-            ss: { ...headerLayout.brands.ss, iconScale: value },
-          },
-        };
-        void saveHeaderLayout(next);
+      onUpdateLayerSrc={(layerId, src) => {
+        setVisualDraft((prev) => {
+          if (!prev) return prev;
+          const next = {
+            ...prev,
+            layers: prev.layers.map((l) => (l.id === layerId ? { ...l, src } : l)),
+          };
+          void persistVisualDraft(next);
+          return next;
+        });
       }}
+      onHeaderIconScale={
+        scope === "header-branding"
+          ? (value) => {
+              const key = "ss";
+              setVisualDraft((prev) => {
+                if (!prev) return prev;
+                const next = {
+                  ...prev,
+                  layers: prev.layers.map((l) =>
+                    l.brandKey === key ? { ...l, iconScale: value } : l,
+                  ),
+                };
+                void saveHeaderLayoutToCms(headerVisualToBrandingLayout(next));
+                return next;
+              });
+            }
+          : undefined
+      }
       headerIconScale={headerLayout.brands.ss.iconScale}
-    />
-  );
-
-  const layoutCanvas = pageId ? (
-    <DroppableZone id="canvas-drop" label="Page canvas" className="mx-auto max-w-2xl">
-      <div className="space-y-4">
-        <HeroPreviewCard
-          pageId={pageId}
-          preview={preview}
-          selected={selectedBlockId === HERO_BLOCK_ID}
-          onSelect={() => setSelectedBlockId(HERO_BLOCK_ID)}
-        />
-        <SortableContext items={draft.blockOrder} strategy={verticalListSortingStrategy}>
-          <div className="space-y-4">
-            {draft.blockOrder.length === 0 ? (
-              <p className="rounded-xl border-2 border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
-                Drag sections from the left palette to build this page
-              </p>
-            ) : (
-              draft.blockOrder.map((id) => {
-                const block = blockDef(pageId, id);
-                if (!block) return null;
-                return (
-                  <SectionPreviewCard
-                    key={id}
-                    block={block}
-                    preview={preview}
-                    selected={selectedBlockId === id}
-                    hidden={draft.hiddenBlocks.includes(id)}
-                    onSelect={() => setSelectedBlockId(id)}
-                  />
-                );
-              })
-            )}
-          </div>
-        </SortableContext>
-      </div>
-    </DroppableZone>
-  ) : null;
-
-  const contentCanvas = isHeaderBrandingScope ? (
-    cms.loading ? (
-      <p className="text-sm text-slate-600">Loading header layout…</p>
-    ) : (
-      <HeaderBrandingCanvas
-        layout={headerLayout}
-        busy={cms.busy}
-        selectedBrand={headerSelectedBrand}
-        onSelectBrand={setHeaderSelectedBrand}
-        onSaveLayout={saveHeaderLayout}
-      />
-    )
-  ) : contentScopeId && !loading ? (
-    <ContentScopeCanvas
-      scopeId={contentScopeId}
-      preview={preview}
-      selectedSectionId={selectedSectionId}
-      onSelectSection={setSelectedSectionId}
     />
   ) : null;
 
@@ -489,11 +245,6 @@ export function PageBuilder({ getIdToken, auth, initialScope }: Props) {
     <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-slate-100">
       <header className="sticky top-0 z-20 flex flex-wrap items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
         <h1 className="text-lg font-bold text-slate-900">Website editor</h1>
-        {dirty ? (
-          <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-900">
-            Unsaved layout
-          </span>
-        ) : null}
         <div className="flex flex-1 flex-wrap items-center justify-end gap-3">
           <label className="text-sm">
             <span className="sr-only">Page or section</span>
@@ -519,25 +270,15 @@ export function PageBuilder({ getIdToken, auth, initialScope }: Props) {
               </optgroup>
             </select>
           </label>
-          {activePage ? (
+          {livePath ? (
             <a
-              href={activePage.path}
+              href={livePath}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm font-semibold text-[#0f5f5c] underline"
             >
-              Preview live ↗
+              View live ↗
             </a>
-          ) : null}
-          {isLayout ? (
-            <button
-              type="button"
-              disabled={saving || loading || !dirty}
-              onClick={() => void saveLayout()}
-              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-            >
-              {saving ? "Saving…" : "Save layout"}
-            </button>
           ) : null}
         </div>
       </header>
@@ -547,87 +288,34 @@ export function PageBuilder({ getIdToken, auth, initialScope }: Props) {
           {message}
         </p>
       ) : null}
-      {notifyMessage ? (
-        <p className="mx-4 mt-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800">
-          {notifyMessage}
-        </p>
-      ) : null}
-
-      {isLayout ? (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="flex flex-1 flex-col gap-0 lg:flex-row">
-            <aside className="w-full shrink-0 border-b border-slate-200 bg-white p-4 lg:w-60 lg:border-b-0 lg:border-r">
-              <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">Add sections</h2>
-              <p className="mt-1 text-[11px] text-slate-500">Drag onto the canvas or drop here to remove</p>
-              <DroppableZone
-                id="palette-drop"
-                label="Remove section drop zone"
-                className="mt-3 min-h-[80px] space-y-2"
-              >
-                {paletteBlocks.length === 0 ? (
-                  <p className="text-xs text-slate-400">All sections are on the page</p>
-                ) : (
-                  paletteBlocks.map((b) => (b ? <PaletteItem key={b.id} block={b} /> : null))
-                )}
-              </DroppableZone>
-              <DroppableZone
-                id="trash"
-                label="Trash"
-                className="mt-4 rounded-lg border border-dashed border-rose-200 bg-rose-50/50 p-3 text-center text-xs font-semibold text-rose-700"
-              >
-                Drop here to remove from page
-              </DroppableZone>
-            </aside>
-
-            <main className="min-w-0 flex-1 p-4 lg:p-6">
-              {loading ? (
-                <p className="text-sm text-slate-600">Loading canvas…</p>
-              ) : (
-                layoutCanvas
-              )}
-            </main>
-
-            <aside className="w-full shrink-0 border-t border-slate-200 bg-slate-50 p-4 lg:w-[360px] lg:border-l lg:border-t-0">
-              <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Inspector</h2>
-              {inspector}
-            </aside>
-          </div>
-
-          <DragOverlay>
-            {activeBlock ? (
-              <div className="max-w-md rounded-xl border-2 border-[#0f5f5c] bg-white p-4 shadow-2xl opacity-95">
-                <p className="text-sm font-bold text-slate-900">{activeBlock.label}</p>
-                <div className="pointer-events-none mt-2">
-                  <SectionPreviewBody block={activeBlock} preview={preview} />
-                </div>
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-      ) : isFaqScope ? (
+      {isFaqScope ? (
         <main className="min-w-0 flex-1 p-4 lg:p-6">
           <FaqItemsPanel getIdToken={getIdToken} />
         </main>
-      ) : (
+      ) : visualScope ? (
         <div className="flex flex-1 flex-col gap-0 lg:flex-row">
           <main className="min-w-0 flex-1 p-4 lg:p-6">
-            {cms.loading ? (
-              <p className="text-sm text-slate-600">Loading fields…</p>
-            ) : (
-              contentCanvas
-            )}
+            <VisualPageEditorCanvas
+              scopeId={visualScope}
+              getIdToken={getIdToken}
+              preview={preview}
+              cms={cmsFieldMap}
+              selectedLayerId={selectedLayerId}
+              onSelectLayer={setSelectedLayerId}
+              onLayoutChange={setVisualDraft}
+              onSyncHeaderLayout={(layout) => {
+                if (scope === "header-branding") {
+                  void saveHeaderLayoutToCms(layout);
+                }
+              }}
+            />
           </main>
           <aside className="w-full shrink-0 border-t border-slate-200 bg-slate-50 p-4 lg:w-[360px] lg:border-l lg:border-t-0">
             <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Inspector</h2>
             {inspector}
           </aside>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

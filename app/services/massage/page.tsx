@@ -13,7 +13,9 @@ import {
 import { massageJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
 import { pageKeywords } from "@/lib/seo-keywords";
+import { getScopeVisualLayout } from "@/lib/cms-display";
 import { getPageBlockOrder } from "@/lib/page-layout-db";
+import { ServicePageVisualSection } from "@/components/ServicePageVisualSection";
 import { MassagePageBlock } from "./MassagePageBlocks";
 
 export const revalidate = 60;
@@ -43,14 +45,16 @@ export default async function MassageServicePage() {
     "massage_services_list",
     "massage_cta_heading",
   ]);
-  const [massageTeam, blockOrder] = await Promise.all([
+  const [massageTeam, blockOrder, visual] = await Promise.all([
     getMassageTeamForMarketing(),
     getPageBlockOrder("massage"),
+    getScopeVisualLayout("massage"),
   ]);
   const paris = LOCATIONS.paris;
   const introParagraphs = (c.massage_intro_body ?? "").split(/\n\n+/).filter(Boolean);
   const serviceLines = (c.massage_services_list ?? "").split(/\n\n+/).filter(Boolean);
   const blockData = { introParagraphs, serviceLines, massageTeam, paris };
+  const cmsMap = c as Record<string, string>;
 
   return (
     <>
@@ -73,11 +77,20 @@ export default async function MassageServicePage() {
         title={c.massage_hero_heading}
         lede={c.massage_hero_subheading}
       />
-      <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
-        {blockOrder.map((id) => (
-          <MassagePageBlock key={id} id={id} data={blockData} />
-        ))}
-      </div>
+      {visual ? (
+        <ServicePageVisualSection
+          pageId="massage"
+          visual={visual}
+          cms={cmsMap}
+          renderBlock={(id) => <MassagePageBlock id={id} data={blockData} />}
+        />
+      ) : (
+        <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
+          {blockOrder.map((id) => (
+            <MassagePageBlock key={id} id={id} data={blockData} />
+          ))}
+        </div>
+      )}
     </>
   );
 }

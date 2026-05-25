@@ -5,6 +5,9 @@ import {
   parseHeaderBrandingLayout,
   type HeaderBrandingLayout,
 } from "@/lib/header-branding-cms";
+import { headerVisualToBrandingLayout } from "@/lib/visual-page-migrations";
+import { getVisualPageLayoutIfSet } from "@/lib/visual-page-layout-db";
+import type { VisualPageLayout, VisualScopeId } from "@/lib/visual-page-layout";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
 
@@ -28,11 +31,20 @@ export async function getLayoutCmsContent(): Promise<LayoutCmsContent> {
 }
 
 export async function getHeaderBrandingLayout(): Promise<HeaderBrandingLayout> {
+  const visual = await getVisualPageLayoutIfSet("header-branding");
+  if (visual) return headerVisualToBrandingLayout(visual);
   const values = await getContentMany([...HEADER_BRANDING_FIELD_IDS]);
   return parseHeaderBrandingLayout(values);
 }
 
+export async function getScopeVisualLayout(
+  scopeId: VisualScopeId,
+): Promise<VisualPageLayout | null> {
+  return getVisualPageLayoutIfSet(scopeId);
+}
+
 export type { HeaderBrandingLayout };
+export type { VisualPageLayout };
 
 /** Paris + Sulphur locations with CMS → owner settings → constants merge. */
 export async function getDisplayLocations(): Promise<Record<LocationId, LocationInfo>> {

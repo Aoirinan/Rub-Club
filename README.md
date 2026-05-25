@@ -46,6 +46,8 @@ Other scripts:
 
 **Who can edit the website?** **Managers** (and superadmins) can use **Site content** and **Massage team** for everything above. **Superadmins** also get **Banners & promos** (booking toggle, specials, videos). Front desk can use the scheduler and **Contact inbox**. Promote trusted clinic leads to **Manager** in Operations → Staff so they do not need to call you for copy changes.
 
+**Visual website editor:** Operations → **Website** (or `/admin/super/page-builder`) opens a Wix-style canvas for every page/scope: drag layers to move, use corner handles to resize, **Add text** / **Add image** for extra content, and edit CMS fields in the inspector when a layer is selected. Layouts save to Firestore `site_visual_layouts`. Service pages and header logos apply on the live site once saved; other scopes keep CMS-driven copy until a visual layout is published for that scope.
+
 **Adding/removing people:** Editing names on an existing slot is self-serve. Adding a brand-new team member to Paris, Sulphur, or doctors still needs a developer deploy (roster slots are defined in code).
 
 ---
