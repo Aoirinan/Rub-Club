@@ -16,17 +16,12 @@ const TABS = [
     capability: "operations" as const,
   },
   {
-    href: "/admin/super/site-content",
-    label: "Site content",
-    description: "Page copy, photos, massage team, FAQs",
-    match: (path: string) => path.startsWith("/admin/super/site-content"),
-    capability: "siteContent" as const,
-  },
-  {
     href: "/admin/super/page-builder",
-    label: "Page builder",
-    description: "Drag sections, hide blocks, page layout",
-    match: (path: string) => path.startsWith("/admin/super/page-builder"),
+    label: "Website editor",
+    description: "Page layout, copy, photos, team",
+    match: (path: string) =>
+      path.startsWith("/admin/super/page-builder") ||
+      path.startsWith("/admin/super/site-content"),
     capability: "siteContent" as const,
   },
   {

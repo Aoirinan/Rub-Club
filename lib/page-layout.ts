@@ -22,8 +22,10 @@ export type PageLayoutBlockDef = {
   description?: string;
   cmsFieldIds?: string[];
   siteContentPage?: ContentPageKey;
-  /** Admin-only link when no CMS fields (e.g. massage team). */
+  /** Admin-only link when no CMS fields (legacy). */
   adminLink?: { href: string; label: string };
+  /** Embedded admin UI in page builder inspector. */
+  embedKey?: "massage-team" | "doctors" | "sulphur-staff";
   previewKey: PageLayoutPreviewKey;
 };
 
@@ -71,11 +73,8 @@ export const PAGE_LAYOUT_PAGES: PageLayoutPageDef[] = [
         id: "team",
         label: "Meet the team",
         description: "Licensed massage therapists",
-        adminLink: {
-          href: "/admin/super/site-content?section=Massage%20team",
-          label: "Edit massage team",
-        },
         previewKey: "teamGrid",
+        embedKey: "massage-team",
       },
       {
         id: "visit",
@@ -124,11 +123,24 @@ export const PAGE_LAYOUT_PAGES: PageLayoutPageDef[] = [
         description: "Doctor cards from CMS",
         cmsFieldIds: [
           "doctor_greg_name",
+          "doctor_greg_role",
+          "doctor_greg_bio",
+          "doctor_greg_photo",
+          "doctor_greg_video",
           "doctor_sean_name",
+          "doctor_sean_role",
+          "doctor_sean_bio",
+          "doctor_sean_photo",
+          "doctor_sean_video",
           "doctor_brandy_name",
+          "doctor_brandy_role",
+          "doctor_brandy_bio",
+          "doctor_brandy_photo",
+          "doctor_brandy_video",
         ],
         siteContentPage: "Doctors",
         previewKey: "doctorCards",
+        embedKey: "doctors",
       },
       {
         id: "locations",
@@ -156,8 +168,11 @@ export const PAGE_LAYOUT_PAGES: PageLayoutPageDef[] = [
         description: "Up to three quotes",
         cmsFieldIds: [
           "chiro_testimonial_1_text",
+          "chiro_testimonial_1_attr",
           "chiro_testimonial_2_text",
+          "chiro_testimonial_2_attr",
           "chiro_testimonial_3_text",
+          "chiro_testimonial_3_attr",
         ],
         siteContentPage: "Chiropractic",
         previewKey: "testimonials",
@@ -202,11 +217,8 @@ export const PAGE_LAYOUT_PAGES: PageLayoutPageDef[] = [
         label: "Doctor spotlight",
         description: "Featured chiropractor",
         siteContentPage: "Sulphur staff",
-        adminLink: {
-          href: "/admin/super/site-content?section=Sulphur%20staff",
-          label: "Edit Sulphur staff",
-        },
         previewKey: "doctorSpotlight",
+        embedKey: "sulphur-staff",
       },
       {
         id: "all_services",

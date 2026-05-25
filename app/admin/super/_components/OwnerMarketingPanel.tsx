@@ -279,7 +279,7 @@ export function OwnerMarketingPanel() {
           Use <strong className="font-semibold">Online booking</strong> to turn the public{" "}
           <code className="rounded bg-slate-100 px-1">/book</code> page on or off. Also: homepage banner,
           specials, videos, and doctor media. Page copy and phones are under{" "}
-          <strong className="font-semibold">Site content</strong>.
+          <strong className="font-semibold">Website editor</strong>.
         </p>
       </div>
       {msg ? <p className="text-sm text-slate-800">{msg}</p> : null}
@@ -396,11 +396,11 @@ export function OwnerMarketingPanel() {
               {massageTeamMembers.length === 0 ? (
                 <span className="mt-1 block text-xs text-amber-800">
                   No massage therapists found. Add bookable massage providers under Operations, or seed the website team
-                  in Site content → Massage team.
+                  in Website editor → Massage page (team section).
                 </span>
               ) : massageTherapistSource === "providers" ? (
                 <span className="mt-1 block text-xs text-slate-600">
-                  Using bookable massage providers for now. In Site content → Massage team, click &quot;Copy bookable
+                  Using bookable massage providers for now. In Website editor → Massage page, open the team section and click &quot;Copy bookable
                   massage providers into team&quot; to sync bios and the public Meet the team page.
                 </span>
               ) : null}
@@ -544,7 +544,7 @@ export function OwnerMarketingPanel() {
         <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold">Gift card &amp; HTML snippets</h2>
           <p className="text-sm text-slate-600">
-            Phone numbers and most page copy are edited under <strong className="font-semibold">Site content</strong>.
+            Phone numbers and most page copy are edited under <strong className="font-semibold">Website editor</strong>.
           </p>
           <label className="flex items-center gap-2 text-sm">
             <input

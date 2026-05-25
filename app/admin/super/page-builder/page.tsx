@@ -2,21 +2,22 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { onAuthStateChanged, type User } from "firebase/auth";
+import { onAuthStateChanged, type Auth, type User } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
-import { isPageLayoutId, type PageLayoutId } from "@/lib/page-layout";
 import { PageBuilder } from "@/components/admin/page-builder/PageBuilder";
 
 function PageBuilderInner() {
   const searchParams = useSearchParams();
   const pageParam = searchParams.get("page");
-  const initialPageId: PageLayoutId =
-    pageParam && isPageLayoutId(pageParam) ? pageParam : "massage";
+  const scopeParam = searchParams.get("scope");
+  const initialScope = scopeParam ?? pageParam ?? "massage";
 
   const [user, setUser] = useState<User | null>(null);
+  const [auth, setAuth] = useState<Auth | null>(null);
 
   useEffect(() => {
     const a = getFirebaseClientAuth();
+    setAuth(a);
     return onAuthStateChanged(a, setUser);
   }, []);
 
@@ -28,17 +29,19 @@ function PageBuilderInner() {
   if (!user) {
     return (
       <p className="p-8 text-sm text-slate-600">
-        Sign in with a manager or owner account to use the page builder.
+        Sign in with a manager or owner account to use the website editor.
       </p>
     );
   }
 
-  return <PageBuilder getIdToken={getIdToken} initialPageId={initialPageId} />;
+  return (
+    <PageBuilder getIdToken={getIdToken} auth={auth} initialScope={initialScope} />
+  );
 }
 
 export default function PageBuilderPage() {
   return (
-    <Suspense fallback={<p className="p-8 text-sm text-slate-600">Loading page builder…</p>}>
+    <Suspense fallback={<p className="p-8 text-sm text-slate-600">Loading website editor…</p>}>
       <PageBuilderInner />
     </Suspense>
   );

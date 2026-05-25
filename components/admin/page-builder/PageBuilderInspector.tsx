@@ -1,28 +1,163 @@
 "use client";
 
-import Link from "next/link";
-import { blockDef } from "@/lib/page-layout";
-import type { PageLayoutId } from "@/lib/page-layout";
+import type { Auth } from "firebase/auth";
+import { MassageTeamAdminSection } from "@/app/admin/super/_components/MassageTeamAdminSection";
+import { SiteStaffAdminSection } from "@/app/admin/super/_components/SiteStaffAdminSection";
+import { CmsFieldEditor } from "@/components/admin/cms/CmsFieldEditor";
+import type { SiteContentFieldRow } from "@/components/admin/cms/useSiteContentFields";
+import { HERO_BLOCK_ID, fieldMetaForIds, heroFieldIdsForLayoutPage } from "@/lib/page-builder-cms";
+import {
+  contentScopeDef,
+  sectionDef,
+  type ContentScopeId,
+} from "@/lib/page-builder-content-scopes";
+import { blockDef, type PageLayoutId } from "@/lib/page-layout";
 
 type Props = {
-  pageId: PageLayoutId;
+  mode: "layout" | "content";
+  pageId?: PageLayoutId;
+  contentScopeId?: ContentScopeId;
   selectedBlockId: string | null;
+  selectedSectionId: string | null;
   hiddenBlocks: string[];
+  fields: SiteContentFieldRow[];
+  cmsBusy: boolean;
+  cmsMessage: { kind: "ok" | "err"; text: string } | null;
+  auth: Auth | null;
   onToggleHidden: (blockId: string) => void;
   onRemove: (blockId: string) => void;
+  onSaveField: (id: string, value: string, file?: File) => Promise<void>;
+  onResetField: (id: string, label: string) => Promise<void>;
+  onNotify: (message: string | null) => void;
 };
 
+function fieldRow(fields: SiteContentFieldRow[], id: string): SiteContentFieldRow | undefined {
+  return fields.find((f) => f.id === id);
+}
+
+function FieldList({
+  fieldIds,
+  fields,
+  busy,
+  onSave,
+  onReset,
+}: {
+  fieldIds: string[];
+  fields: SiteContentFieldRow[];
+  busy: boolean;
+  onSave: Props["onSaveField"];
+  onReset: Props["onResetField"];
+}) {
+  const metas = fieldMetaForIds(fieldIds);
+  return (
+    <div className="space-y-2">
+      {metas.map((meta) => {
+        const row = fieldRow(fields, meta.id);
+        if (!row) return null;
+        return (
+          <CmsFieldEditor
+            key={meta.id}
+            field={row}
+            busy={busy}
+            onSave={onSave}
+            onReset={onReset}
+            compact
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 export function PageBuilderInspector({
+  mode,
   pageId,
+  contentScopeId,
   selectedBlockId,
+  selectedSectionId,
   hiddenBlocks,
+  fields,
+  cmsBusy,
+  cmsMessage,
+  auth,
   onToggleHidden,
   onRemove,
+  onSaveField,
+  onResetField,
+  onNotify,
 }: Props) {
+  if (mode === "content" && contentScopeId) {
+    if (!selectedSectionId) {
+      return (
+        <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+          Select a section on the canvas to edit its fields.
+        </div>
+      );
+    }
+    const section = sectionDef(contentScopeId, selectedSectionId);
+    if (!section) return null;
+    return (
+      <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <h3 className="text-sm font-bold text-slate-900">{section.label}</h3>
+        <p className="text-xs text-slate-500">{contentScopeDef(contentScopeId).label}</p>
+        {cmsMessage ? (
+          <p
+            className={`rounded-lg px-2 py-1.5 text-xs ${
+              cmsMessage.kind === "ok" ? "bg-green-100 text-green-900" : "bg-rose-100 text-rose-900"
+            }`}
+          >
+            {cmsMessage.text}
+          </p>
+        ) : null}
+        <FieldList
+          fieldIds={section.fieldIds}
+          fields={fields}
+          busy={cmsBusy}
+          onSave={onSaveField}
+          onReset={onResetField}
+        />
+      </div>
+    );
+  }
+
+  if (!pageId) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+        Select a section or hero on the canvas.
+      </div>
+    );
+  }
+
   if (!selectedBlockId) {
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
-        Select a section on the canvas to edit visibility or jump to Site content.
+        Select the hero or a section on the canvas to edit layout and content.
+      </div>
+    );
+  }
+
+  if (selectedBlockId === HERO_BLOCK_ID) {
+    const heroIds = heroFieldIdsForLayoutPage(pageId);
+    return (
+      <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <h3 className="text-sm font-bold text-slate-900">Hero</h3>
+        <p className="text-xs text-slate-500">Fixed at top of the live page</p>
+        {cmsMessage ? (
+          <p
+            className={`rounded-lg px-2 py-1.5 text-xs ${
+              cmsMessage.kind === "ok" ? "bg-green-100 text-green-900" : "bg-rose-100 text-rose-900"
+            }`}
+          >
+            {cmsMessage.text}
+          </p>
+        ) : null}
+        <FieldList
+          fieldIds={heroIds}
+          fields={fields}
+          busy={cmsBusy}
+          onSave={onSaveField}
+          onReset={onResetField}
+        />
       </div>
     );
   }
@@ -41,7 +176,7 @@ export function PageBuilderInspector({
         ) : null}
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 border-b border-slate-100 pb-3">
         <button
           type="button"
           onClick={() => onToggleHidden(selectedBlockId)}
@@ -58,29 +193,42 @@ export function PageBuilderInspector({
         </button>
       </div>
 
-      <div className="space-y-2 border-t border-slate-100 pt-3">
-        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Edit content</p>
-        {(block.cmsFieldIds ?? []).map((fieldId) => (
-          <Link
-            key={fieldId}
-            href={`/admin/super/site-content?field=${encodeURIComponent(fieldId)}`}
-            className="block rounded-lg bg-[#0f5f5c]/5 px-3 py-2 text-xs font-semibold text-[#0f5f5c] hover:bg-[#0f5f5c]/10"
-          >
-            Edit field: {fieldId.replace(/_/g, " ")}
-          </Link>
-        ))}
-        {block.adminLink ? (
-          <Link
-            href={block.adminLink.href}
-            className="block rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-200"
-          >
-            {block.adminLink.label}
-          </Link>
-        ) : null}
-        {!block.cmsFieldIds?.length && !block.adminLink ? (
-          <p className="text-xs text-slate-500">This section uses fixed layout copy in code.</p>
-        ) : null}
-      </div>
+      {cmsMessage ? (
+        <p
+          className={`rounded-lg px-2 py-1.5 text-xs ${
+            cmsMessage.kind === "ok" ? "bg-green-100 text-green-900" : "bg-rose-100 text-rose-900"
+          }`}
+        >
+          {cmsMessage.text}
+        </p>
+      ) : null}
+
+      {block.embedKey === "massage-team" ? (
+        <div className="max-h-[50vh] overflow-y-auto rounded-lg border border-slate-200 p-2">
+          <MassageTeamAdminSection auth={auth} onNotify={onNotify} />
+        </div>
+      ) : null}
+
+      {block.embedKey === "sulphur-staff" ? (
+        <div className="max-h-[50vh] overflow-y-auto rounded-lg border border-slate-200 p-2">
+          <SiteStaffAdminSection auth={auth} onNotify={onNotify} locationFocus="sulphur" />
+        </div>
+      ) : null}
+
+      {(block.cmsFieldIds?.length ?? 0) > 0 ? (
+        <div className="space-y-2">
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Content</p>
+          <FieldList
+            fieldIds={block.cmsFieldIds ?? []}
+            fields={fields}
+            busy={cmsBusy}
+            onSave={onSaveField}
+            onReset={onResetField}
+          />
+        </div>
+      ) : block.embedKey ? null : (
+        <p className="text-xs text-slate-500">This section uses fixed layout copy in code.</p>
+      )}
     </div>
   );
 }

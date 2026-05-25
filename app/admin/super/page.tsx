@@ -870,8 +870,8 @@ export default function SuperAdminPage() {
             </p>
             <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
               Public &ldquo;Meet the team&rdquo; bios and photos:{" "}
-              <Link href="/admin/super/site-content" className="font-semibold text-[#0f5f5c] underline">
-                Site content → Massage team
+              <Link href="/admin/super/page-builder?page=massage" className="font-semibold text-[#0f5f5c] underline">
+                Website editor → Massage page
               </Link>
               . After adding providers here, use &ldquo;Copy bookable massage providers into team&rdquo; there to sync
               the website roster.
