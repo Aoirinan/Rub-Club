@@ -1,6 +1,9 @@
 import type { ContentFieldMeta } from "@/lib/cms-registry";
 
-export const HEADER_BRANDING_FIELD_IDS = [
+export const HEADER_BRANDING_LAYOUT_FIELD = "header_branding_layout" as const;
+
+/** Legacy height fields — used for migration only. */
+export const HEADER_BRANDING_LEGACY_FIELD_IDS = [
   "rub_logo_height_side",
   "rub_logo_height_center",
   "chiro_logo_height_side",
@@ -10,117 +13,166 @@ export const HEADER_BRANDING_FIELD_IDS = [
   "ss_logo_icon_scale",
 ] as const;
 
-export type HeaderBrandingFieldId = (typeof HEADER_BRANDING_FIELD_IDS)[number];
+export type HeaderBrandKey = "rub" | "chiro" | "ss";
 
-/** Default px heights aligned with prior Tailwind sizes. */
-export const HEADER_BRANDING_DEFAULTS: Record<HeaderBrandingFieldId, string> = {
-  rub_logo_height_side: "36",
-  rub_logo_height_center: "64",
-  chiro_logo_height_side: "36",
-  chiro_logo_height_center: "64",
-  ss_logo_height_side: "36",
-  ss_logo_height_center: "64",
-  ss_logo_icon_scale: "88",
+export const HEADER_BRAND_KEYS: HeaderBrandKey[] = ["rub", "chiro", "ss"];
+
+export type HeaderBrandBox = {
+  /** 0–100, percent of frame width */
+  x: number;
+  /** 0–100, percent of frame height */
+  y: number;
+  w: number;
+  h: number;
+  iconScale?: number;
 };
 
-const PX_MIN = 20;
-const PX_MAX = 120;
-const SCALE_MIN = 60;
-const SCALE_MAX = 100;
+export type HeaderBrandingLayout = {
+  version: 1;
+  frameHeight: number;
+  brands: Record<HeaderBrandKey, HeaderBrandBox>;
+};
 
-function clampPx(raw: string | undefined, fallback: number): number {
-  const n = parseInt(String(raw ?? "").trim(), 10);
-  if (!Number.isFinite(n)) return fallback;
-  return Math.min(PX_MAX, Math.max(PX_MIN, n));
+export const HEADER_BRANDING_LAYOUT_DEFAULT: HeaderBrandingLayout = {
+  version: 1,
+  frameHeight: 132,
+  brands: {
+    chiro: { x: 1, y: 2, w: 30, h: 52 },
+    rub: { x: 33, y: 0, w: 34, h: 58 },
+    ss: { x: 67, y: 2, w: 31, h: 52, iconScale: 88 },
+  },
+};
+
+const BOX_W_MIN = 8;
+const BOX_W_MAX = 70;
+const BOX_H_MIN = 20;
+const BOX_H_MAX = 90;
+const FRAME_H_MIN = 96;
+const FRAME_H_MAX = 220;
+
+function clamp(n: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, n));
 }
 
-function clampScale(raw: string | undefined, fallback: number): number {
-  const n = parseInt(String(raw ?? "").trim(), 10);
-  if (!Number.isFinite(n)) return fallback;
-  return Math.min(SCALE_MAX, Math.max(SCALE_MIN, n));
+function clampBox(box: HeaderBrandBox): HeaderBrandBox {
+  return {
+    x: clamp(box.x, 0, 100 - BOX_W_MIN),
+    y: clamp(box.y, 0, 100 - BOX_H_MIN),
+    w: clamp(box.w, BOX_W_MIN, BOX_W_MAX),
+    h: clamp(box.h, BOX_H_MIN, BOX_H_MAX),
+    ...(box.iconScale !== undefined
+      ? { iconScale: clamp(box.iconScale, 60, 100) }
+      : {}),
+  };
 }
 
+export function normalizeHeaderBrandingLayout(raw: HeaderBrandingLayout): HeaderBrandingLayout {
+  const frameHeight = clamp(raw.frameHeight, FRAME_H_MIN, FRAME_H_MAX);
+  const brands = {} as Record<HeaderBrandKey, HeaderBrandBox>;
+  for (const key of HEADER_BRAND_KEYS) {
+    const b = raw.brands[key] ?? HEADER_BRANDING_LAYOUT_DEFAULT.brands[key];
+    brands[key] = clampBox(b);
+  }
+  return { version: 1, frameHeight, brands };
+}
+
+function layoutFromLegacyHeights(cms: Partial<Record<string, string>>): HeaderBrandingLayout {
+  const parseH = (id: string, fallback: number) => {
+    const n = parseInt(String(cms[id] ?? "").trim(), 10);
+    return Number.isFinite(n) ? clamp(n, 20, 120) : fallback;
+  };
+  const frameHeight = 132;
+  const hToPct = (px: number) => clamp((px / frameHeight) * 100 * 0.55, BOX_H_MIN, BOX_H_MAX);
+
+  const rubH = hToPct(parseH("rub_logo_height_center", 64));
+  const chiroH = hToPct(parseH("chiro_logo_height_side", 36));
+  const ssH = hToPct(parseH("ss_logo_height_side", 36));
+  const iconScale = clamp(parseH("ss_logo_icon_scale", 88), 60, 100);
+
+  return normalizeHeaderBrandingLayout({
+    version: 1,
+    frameHeight,
+    brands: {
+      chiro: { x: 1, y: 2, w: 30, h: chiroH },
+      rub: { x: 33, y: 0, w: 34, h: rubH },
+      ss: { x: 67, y: 2, w: 31, h: ssH, iconScale },
+    },
+  });
+}
+
+export function parseHeaderBrandingLayout(
+  cms: Partial<Record<string, string>>,
+): HeaderBrandingLayout {
+  const raw = cms[HEADER_BRANDING_LAYOUT_FIELD]?.trim();
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as HeaderBrandingLayout;
+      if (parsed?.version === 1 && parsed.brands) {
+        return normalizeHeaderBrandingLayout(parsed);
+      }
+    } catch {
+      /* fall through to migration */
+    }
+  }
+
+  const hasLegacy = HEADER_BRANDING_LEGACY_FIELD_IDS.some((id) => cms[id]?.trim());
+  if (hasLegacy) {
+    return layoutFromLegacyHeights(cms);
+  }
+
+  return HEADER_BRANDING_LAYOUT_DEFAULT;
+}
+
+export function serializeHeaderBrandingLayout(layout: HeaderBrandingLayout): string {
+  return JSON.stringify(normalizeHeaderBrandingLayout(layout));
+}
+
+export const HEADER_BRANDING_FIELD_IDS = [
+  HEADER_BRANDING_LAYOUT_FIELD,
+  ...HEADER_BRANDING_LEGACY_FIELD_IDS,
+] as const;
+
+/** @deprecated Use HeaderBrandingLayout */
 export type HeaderBrandingHeights = {
   rub: { side: number; center: number };
   chiro: { side: number; center: number };
   ss: { side: number; center: number; iconScalePercent: number };
 };
 
-export function parseHeaderBrandingHeights(
-  cms: Partial<Record<string, string>>,
-): HeaderBrandingHeights {
-  const d = HEADER_BRANDING_DEFAULTS;
-  return {
-    rub: {
-      side: clampPx(cms.rub_logo_height_side, parseInt(d.rub_logo_height_side, 10)),
-      center: clampPx(cms.rub_logo_height_center, parseInt(d.rub_logo_height_center, 10)),
-    },
-    chiro: {
-      side: clampPx(cms.chiro_logo_height_side, parseInt(d.chiro_logo_height_side, 10)),
-      center: clampPx(cms.chiro_logo_height_center, parseInt(d.chiro_logo_height_center, 10)),
-    },
-    ss: {
-      side: clampPx(cms.ss_logo_height_side, parseInt(d.ss_logo_height_side, 10)),
-      center: clampPx(cms.ss_logo_height_center, parseInt(d.ss_logo_height_center, 10)),
-      iconScalePercent: clampScale(cms.ss_logo_icon_scale, parseInt(d.ss_logo_icon_scale, 10)),
-    },
-  };
-}
-
 export function buildHeaderBrandingCmsRegistry(): ContentFieldMeta[] {
   return [
     {
-      id: "rub_logo_height_side",
+      id: HEADER_BRANDING_LAYOUT_FIELD,
       pageLabel: "Header branding",
-      sectionLabel: "Rub Club",
-      fieldLabel: "Left/right size (pixels)",
+      sectionLabel: "Layout",
+      fieldLabel: "Logo positions (JSON)",
       type: "text",
     },
-    {
-      id: "rub_logo_height_center",
-      pageLabel: "Header branding",
-      sectionLabel: "Rub Club",
-      fieldLabel: "Center size when highlighted (pixels)",
-      type: "text",
-    },
-    {
-      id: "chiro_logo_height_side",
-      pageLabel: "Header branding",
-      sectionLabel: "Chiropractic",
-      fieldLabel: "Left/right size (pixels)",
-      type: "text",
-    },
-    {
-      id: "chiro_logo_height_center",
-      pageLabel: "Header branding",
-      sectionLabel: "Chiropractic",
-      fieldLabel: "Center size when highlighted (pixels)",
-      type: "text",
-    },
-    {
-      id: "ss_logo_height_side",
-      pageLabel: "Header branding",
-      sectionLabel: "Sulphur Springs",
-      fieldLabel: "Left/right size (pixels)",
-      type: "text",
-    },
-    {
-      id: "ss_logo_height_center",
-      pageLabel: "Header branding",
-      sectionLabel: "Sulphur Springs",
-      fieldLabel: "Center size when highlighted (pixels)",
-      type: "text",
-    },
-    {
-      id: "ss_logo_icon_scale",
-      pageLabel: "Header branding",
-      sectionLabel: "Sulphur Springs",
-      fieldLabel: "Icon size vs text (percent)",
-      type: "text",
-    },
+    ...HEADER_BRANDING_LEGACY_FIELD_IDS.map((id) => ({
+      id,
+      pageLabel: "Header branding" as const,
+      sectionLabel: "Legacy",
+      fieldLabel: id,
+      type: "text" as const,
+    })),
   ];
 }
 
 export function buildHeaderBrandingCmsDefaults(): Record<string, string> {
-  return { ...HEADER_BRANDING_DEFAULTS };
+  return {
+    [HEADER_BRANDING_LAYOUT_FIELD]: serializeHeaderBrandingLayout(HEADER_BRANDING_LAYOUT_DEFAULT),
+    rub_logo_height_side: "36",
+    rub_logo_height_center: "64",
+    chiro_logo_height_side: "36",
+    chiro_logo_height_center: "64",
+    ss_logo_height_side: "36",
+    ss_logo_height_center: "64",
+    ss_logo_icon_scale: "88",
+  };
 }
+
+export const BRAND_LABELS: Record<HeaderBrandKey, string> = {
+  rub: "Rub Club (massage)",
+  chiro: "Chiropractic — Paris",
+  ss: "Sulphur Springs",
+};

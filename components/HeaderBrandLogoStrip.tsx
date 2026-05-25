@@ -4,16 +4,16 @@ import { usePathname } from "next/navigation";
 import { BrandLogoStrip } from "@/components/BrandLogoStrip";
 import { brandVariantFromPathname } from "@/lib/brand-header-variant";
 import type { LocationInfo } from "@/lib/constants";
-import type { HeaderBrandingHeights } from "@/lib/header-branding-cms";
+import type { HeaderBrandingLayout } from "@/lib/header-branding-cms";
 
 export function HeaderBrandLogoStrip({
   paris,
   sulphur,
-  headerHeights,
+  headerLayout,
 }: {
   paris: LocationInfo;
   sulphur: LocationInfo;
-  headerHeights?: HeaderBrandingHeights;
+  headerLayout?: HeaderBrandingLayout;
 }) {
   const pathname = usePathname() ?? "/";
   const variant = brandVariantFromPathname(pathname);
@@ -22,7 +22,7 @@ export function HeaderBrandLogoStrip({
       variant={variant}
       paris={paris}
       sulphur={sulphur}
-      headerHeights={headerHeights}
+      headerLayout={headerLayout}
     />
   );
 }

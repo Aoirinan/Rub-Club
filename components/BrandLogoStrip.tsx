@@ -1,16 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
+import { HeaderBrandBlock, headerBrandPhones } from "@/components/HeaderBrandBlock";
 import { SulphurSpringsLockup } from "@/components/SulphurSpringsLockup";
 import { IMAGES } from "@/lib/home-images";
 import { BRAND_LOGOS, type BrandLogoVariant } from "@/lib/brand-logos";
 import { telHref, type LocationInfo } from "@/lib/constants";
-import type { HeaderBrandingHeights } from "@/lib/header-branding-cms";
+import type { HeaderBrandingLayout } from "@/lib/header-branding-cms";
+import { HEADER_BRAND_KEYS, type HeaderBrandKey } from "@/lib/header-branding-cms";
 
-type BrandKey = "rub" | "chiro" | "ss";
+type BrandKey = HeaderBrandKey;
 
 type LogoEntry = {
   key: BrandKey;
-  /** Omitted for Sulphur Springs — uses `SulphurSpringsLockup` instead. */
   src?: string;
   alt: string;
   phone: string;
@@ -69,7 +70,6 @@ function primaryKeyForVariant(variant: BrandLogoVariant): BrandKey {
   }
 }
 
-/** Center = active page brand; sides = the other two (always three logos). */
 function orderedForVariant(variant: BrandLogoVariant, entries: LogoEntry[]): LogoEntry[] {
   const primaryKey = primaryKeyForVariant(variant);
   const byKey = Object.fromEntries(entries.map((e) => [e.key, e])) as Record<BrandKey, LogoEntry>;
@@ -84,48 +84,72 @@ function logoHeightClass(primary: boolean): string {
     : "h-7 w-auto max-w-[min(100%,200px)] opacity-90 transition-opacity hover:opacity-100 sm:h-9 md:h-10";
 }
 
-function logoHeightPx(
-  key: BrandKey,
-  primary: boolean,
-  heights?: HeaderBrandingHeights,
-): number | undefined {
-  if (!heights) return undefined;
-  const brand = heights[key];
-  return primary ? brand.center : brand.side;
-}
-
-export function BrandLogoStrip({
-  variant = "home",
+function FreeLayoutStrip({
+  layout,
   paris,
   sulphur,
-  headerHeights,
-  className = "",
+  className,
 }: {
-  variant?: BrandLogoVariant;
+  layout: HeaderBrandingLayout;
   paris: LocationInfo;
   sulphur: LocationInfo;
-  headerHeights?: HeaderBrandingHeights;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`relative w-full ${className ?? ""}`}
+      style={{ height: layout.frameHeight, minHeight: layout.frameHeight }}
+    >
+      {HEADER_BRAND_KEYS.map((key) => {
+        const box = layout.brands[key];
+        return (
+          <div
+            key={key}
+            className="absolute"
+            style={{
+              left: `${box.x}%`,
+              top: `${box.y}%`,
+              width: `${box.w}%`,
+              height: `${box.h}%`,
+            }}
+          >
+            <HeaderBrandBlock
+              brandKey={key}
+              box={box}
+              paris={paris}
+              sulphur={sulphur}
+              interactive={false}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function GridLayoutStrip({
+  variant,
+  paris,
+  sulphur,
+  className,
+}: {
+  variant: BrandLogoVariant;
+  paris: LocationInfo;
+  sulphur: LocationInfo;
   className?: string;
 }) {
   const entries = orderedForVariant(variant, buildBrandEntries(paris, sulphur));
   const primaryKey = primaryKeyForVariant(variant);
 
   return (
-    <div
-      className={`grid w-full grid-cols-3 items-end gap-2 sm:gap-4 md:gap-6 ${className}`}
-    >
+    <div className={`grid w-full grid-cols-3 items-end gap-2 sm:gap-4 md:gap-6 ${className ?? ""}`}>
       {entries.map((entry) => {
         const primary = entry.key === primaryKey;
-        const heightPx = logoHeightPx(entry.key, primary, headerHeights);
-        const sizeClass = heightPx ? "w-auto max-w-[min(100%,340px)]" : logoHeightClass(primary);
-        const sizeStyle = heightPx ? { height: `${heightPx}px` } : undefined;
         const img =
           entry.key === "ss" ? (
             <SulphurSpringsLockup
               primary={primary}
-              heightPx={heightPx}
-              iconScalePercent={headerHeights?.ss.iconScalePercent}
-              className={`mx-auto sm:mx-0 ${heightPx ? sizeClass : logoHeightClass(primary)}`}
+              className={`mx-auto sm:mx-0 ${logoHeightClass(primary)}`}
             />
           ) : (
             <Image
@@ -133,13 +157,13 @@ export function BrandLogoStrip({
               alt={entry.alt}
               width={entry.width}
               height={entry.height}
-              style={sizeStyle}
-              className={`mx-auto object-contain sm:mx-0 sm:object-left ${sizeClass} ${
+              className={`mx-auto object-contain sm:mx-0 sm:object-left ${logoHeightClass(primary)} ${
                 !primary ? "opacity-90 transition-opacity hover:opacity-100" : ""
               }`}
               priority={primary}
             />
           );
+        const info = headerBrandPhones(entry.key, paris, sulphur);
         return (
           <div
             key={entry.key}
@@ -148,30 +172,55 @@ export function BrandLogoStrip({
             }`}
           >
             <Link
-              href={entry.href}
+              href={info.href}
               className="block w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f5f5c]"
-              aria-label={`${entry.alt} — go to ${entry.phoneLabel}`}
+              aria-label={`${entry.alt} — go to ${info.phoneLabel}`}
             >
               {img}
             </Link>
             <a
-              href={telHref(entry.phone)}
+              href={telHref(info.phone)}
               className={`mt-1.5 text-center font-black text-[#0f5f5c] hover:underline sm:text-left ${
                 primary ? "text-sm sm:text-base" : "text-xs sm:text-sm"
               }`}
             >
-              {entry.phone}
+              {info.phone}
             </a>
             <span
               className={`text-center font-bold uppercase tracking-wide text-stone-500 sm:text-left ${
                 primary ? "text-[10px] sm:text-xs" : "text-[9px] sm:text-[10px]"
               }`}
             >
-              {entry.phoneLabel}
+              {info.phoneLabel}
             </span>
           </div>
         );
       })}
     </div>
+  );
+}
+
+export function BrandLogoStrip({
+  variant = "home",
+  paris,
+  sulphur,
+  headerLayout,
+  className = "",
+}: {
+  variant?: BrandLogoVariant;
+  paris: LocationInfo;
+  sulphur: LocationInfo;
+  headerLayout?: HeaderBrandingLayout;
+  /** @deprecated ignored when headerLayout is set */
+  headerHeights?: unknown;
+  className?: string;
+}) {
+  if (headerLayout) {
+    return (
+      <FreeLayoutStrip layout={headerLayout} paris={paris} sulphur={sulphur} className={className} />
+    );
+  }
+  return (
+    <GridLayoutStrip variant={variant} paris={paris} sulphur={sulphur} className={className} />
   );
 }

@@ -30,6 +30,10 @@ type Props = {
   onSaveField: (id: string, value: string, file?: File) => Promise<void>;
   onResetField: (id: string, label: string) => Promise<void>;
   onNotify: (message: string | null) => void;
+  headerSelectedBrand?: import("@/lib/header-branding-cms").HeaderBrandKey | null;
+  onHeaderResetLayout?: () => void;
+  onHeaderIconScale?: (value: number) => void;
+  headerIconScale?: number;
 };
 
 function fieldRow(fields: SiteContentFieldRow[], id: string): SiteContentFieldRow | undefined {
@@ -86,16 +90,22 @@ export function PageBuilderInspector({
   onSaveField,
   onResetField,
   onNotify,
+  headerSelectedBrand = null,
+  onHeaderResetLayout,
+  onHeaderIconScale,
+  headerIconScale,
 }: Props) {
   if (mode === "content" && contentScopeId === "header-branding") {
     return (
       <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <h3 className="text-sm font-bold text-slate-900">Header logos</h3>
         <HeaderBrandingInspector
-          fields={fields}
+          selectedBrand={headerSelectedBrand}
           busy={cmsBusy}
           message={cmsMessage}
-          onSave={onSaveField}
+          onReset={() => onHeaderResetLayout?.()}
+          onSaveIconScale={onHeaderIconScale}
+          iconScale={headerIconScale}
         />
       </div>
     );

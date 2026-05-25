@@ -39,12 +39,21 @@ import {
 import type { PageBuilderScopeId } from "@/lib/page-builder-content-scopes";
 import { FaqItemsPanel } from "@/components/admin/FaqItemsPanel";
 import { ContentScopeCanvas } from "./ContentScopeCanvas";
+import { HeaderBrandingCanvas } from "./HeaderBrandingCanvas";
+import { resetHeaderLayoutValue } from "./HeaderBrandingInspector";
 import { HeroPreviewCard } from "./HeroPreviewCard";
 import { PageBuilderInspector } from "./PageBuilderInspector";
 import { PaletteItem } from "./PaletteItem";
 import { SectionPreviewCard } from "./SectionPreviewCard";
 import { SectionPreviewBody } from "./previews/SectionPreviewBody";
 import type { PageBuilderPageMeta, PagePreviewData } from "./types";
+import {
+  HEADER_BRANDING_LAYOUT_FIELD,
+  parseHeaderBrandingLayout,
+  serializeHeaderBrandingLayout,
+  type HeaderBrandKey,
+  type HeaderBrandingLayout,
+} from "@/lib/header-branding-cms";
 
 type Props = {
   getIdToken: () => Promise<string | null>;
@@ -108,12 +117,14 @@ export function PageBuilder({ getIdToken, auth, initialScope }: Props) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [notifyMessage, setNotifyMessage] = useState<string | null>(null);
+  const [headerSelectedBrand, setHeaderSelectedBrand] = useState<HeaderBrandKey | null>(null);
 
   const isLayout = scopeKind(scope) === "layout";
   const isFaqScope = scope === "faq-items";
   const pageId = isLayout ? (scope as PageLayoutId) : undefined;
   const contentScopeId =
     !isLayout && !isFaqScope && isContentScopeId(scope) ? (scope as ContentScopeId) : undefined;
+  const isHeaderBrandingScope = contentScopeId === "header-branding";
 
   const syncPreviewFromFields = useCallback(
     (fieldRows: { id: string; value: string }[]) => {
@@ -147,6 +158,24 @@ export function PageBuilder({ getIdToken, auth, initialScope }: Props) {
       void loadPreviewForLayout();
     },
   });
+
+  const cmsFieldMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const f of cms.fields) map[f.id] = f.value;
+    return map;
+  }, [cms.fields]);
+
+  const headerLayout = useMemo(
+    () => parseHeaderBrandingLayout(cmsFieldMap),
+    [cmsFieldMap],
+  );
+
+  const saveHeaderLayout = useCallback(
+    async (layout: HeaderBrandingLayout) => {
+      await cms.saveField(HEADER_BRANDING_LAYOUT_FIELD, serializeHeaderBrandingLayout(layout));
+    },
+    [cms],
+  );
 
   useEffect(() => {
     syncPreviewFromFields(cms.fields);
@@ -223,8 +252,8 @@ export function PageBuilder({ getIdToken, auth, initialScope }: Props) {
   useEffect(() => {
     setSelectedBlockId(null);
     if (contentScopeId === "header-branding") {
-      const def = CONTENT_SCOPES.find((s) => s.id === "header-branding");
-      setSelectedSectionId(def?.sections[0]?.id ?? null);
+      setSelectedSectionId(null);
+      setHeaderSelectedBrand(null);
     } else {
       setSelectedSectionId(null);
     }
@@ -380,6 +409,21 @@ export function PageBuilder({ getIdToken, auth, initialScope }: Props) {
       onSaveField={cms.saveField}
       onResetField={cms.resetField}
       onNotify={setNotifyMessage}
+      headerSelectedBrand={headerSelectedBrand}
+      onHeaderResetLayout={() => {
+        void cms.saveField(HEADER_BRANDING_LAYOUT_FIELD, resetHeaderLayoutValue());
+      }}
+      onHeaderIconScale={(value) => {
+        const next = {
+          ...headerLayout,
+          brands: {
+            ...headerLayout.brands,
+            ss: { ...headerLayout.brands.ss, iconScale: value },
+          },
+        };
+        void saveHeaderLayout(next);
+      }}
+      headerIconScale={headerLayout.brands.ss.iconScale}
     />
   );
 
@@ -420,15 +464,26 @@ export function PageBuilder({ getIdToken, auth, initialScope }: Props) {
     </DroppableZone>
   ) : null;
 
-  const contentCanvas =
-    contentScopeId && !loading ? (
-      <ContentScopeCanvas
-        scopeId={contentScopeId}
-        preview={preview}
-        selectedSectionId={selectedSectionId}
-        onSelectSection={setSelectedSectionId}
+  const contentCanvas = isHeaderBrandingScope ? (
+    cms.loading ? (
+      <p className="text-sm text-slate-600">Loading header layout…</p>
+    ) : (
+      <HeaderBrandingCanvas
+        layout={headerLayout}
+        busy={cms.busy}
+        selectedBrand={headerSelectedBrand}
+        onSelectBrand={setHeaderSelectedBrand}
+        onSaveLayout={saveHeaderLayout}
       />
-    ) : null;
+    )
+  ) : contentScopeId && !loading ? (
+    <ContentScopeCanvas
+      scopeId={contentScopeId}
+      preview={preview}
+      selectedSectionId={selectedSectionId}
+      onSelectSection={setSelectedSectionId}
+    />
+  ) : null;
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-slate-100">
