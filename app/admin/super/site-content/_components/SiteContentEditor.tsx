@@ -4,8 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import type { ContentFieldType, ContentPageKey } from "@/lib/cms";
+import Link from "next/link";
 import { MassageTeamAdminSection } from "@/app/admin/super/_components/MassageTeamAdminSection";
-import { PageLayoutEditor } from "@/components/admin/PageLayoutEditor";
 
 type SiteContentNavKey = ContentPageKey | "FAQ Items" | "Massage team" | "Page layout";
 
@@ -160,10 +160,32 @@ export function SiteContentEditor() {
     category: string;
     active: boolean;
   } | null>(null);
+  const [highlightFieldId, setHighlightFieldId] = useState<string | null>(null);
 
   useEffect(() => {
     setAuth(getFirebaseClientAuth());
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || fields.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const section = params.get("section");
+    if (section === "Massage team") setSelectedPage("Massage team");
+    else if (section === "Sulphur staff") setSelectedPage("Sulphur staff");
+    const fieldId = params.get("field");
+    if (!fieldId) return;
+    const row = fields.find((f) => f.id === fieldId);
+    if (!row) return;
+    setSelectedPage(row.pageLabel);
+    setHighlightFieldId(fieldId);
+    setEditingId(fieldId);
+    setDraft(row.value);
+    window.setTimeout(() => {
+      document.getElementById(`cms-field-${fieldId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+    const t = window.setTimeout(() => setHighlightFieldId(null), 4000);
+    return () => window.clearTimeout(t);
+  }, [fields]);
 
   const getToken = useCallback(async () => {
     const user = auth?.currentUser;
@@ -203,9 +225,15 @@ export function SiteContentEditor() {
   const filteredFields = useMemo(() => {
     const q = search.trim().toLowerCase();
     return fields.filter((f) => {
-      if (selectedPage !== "FAQ Items" && selectedPage !== "Massage team" && f.pageLabel !== selectedPage)
+      if (
+        selectedPage !== "FAQ Items" &&
+        selectedPage !== "Massage team" &&
+        selectedPage !== "Page layout" &&
+        f.pageLabel !== selectedPage
+      )
         return false;
-      if (selectedPage === "FAQ Items" || selectedPage === "Massage team") return false;
+      if (selectedPage === "FAQ Items" || selectedPage === "Massage team" || selectedPage === "Page layout")
+        return false;
       if (!q) return true;
       return (
         f.pageLabel.toLowerCase().includes(q) ||
@@ -229,7 +257,10 @@ export function SiteContentEditor() {
   }, [fields, search]);
 
   const displayFields =
-    search.trim() && selectedPage !== "FAQ Items" && selectedPage !== "Massage team"
+    search.trim() &&
+    selectedPage !== "FAQ Items" &&
+    selectedPage !== "Massage team" &&
+    selectedPage !== "Page layout"
       ? globalSearchFields
       : filteredFields;
 
@@ -402,7 +433,34 @@ export function SiteContentEditor() {
 
         <div className="min-w-0 flex-1 space-y-3">
           {selectedPage === "Page layout" ? (
-            <PageLayoutEditor getIdToken={getToken} />
+            <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+              <h2 className="text-lg font-bold text-slate-900">Visual page builder</h2>
+              <p className="mt-2 max-w-xl text-sm text-slate-600">
+                Drag sections on a visual canvas, hide blocks, and add sections back from a palette — similar
+                to Wix. Hero and site header stay fixed on the live site.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link
+                  href="/admin/super/page-builder?page=massage"
+                  className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+                >
+                  Open page builder
+                </Link>
+                {(["massage", "chiropractic", "sulphur-springs"] as const).map((id) => (
+                  <Link
+                    key={id}
+                    href={`/admin/super/page-builder?page=${id}`}
+                    className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                  >
+                    {id === "massage"
+                      ? "Massage"
+                      : id === "chiropractic"
+                        ? "Chiropractic"
+                        : "Sulphur Springs"}
+                  </Link>
+                ))}
+              </div>
+            </div>
           ) : selectedPage === "Massage team" ? (
             <MassageTeamAdminSection
               auth={auth}
@@ -543,7 +601,13 @@ export function SiteContentEditor() {
             </>
           ) : (
             displayFields.map((field) => (
-              <div key={field.id} className="rounded-xl border border-slate-200 bg-white shadow-sm">
+              <div
+                key={field.id}
+                id={`cms-field-${field.id}`}
+                className={`rounded-xl border border-slate-200 bg-white shadow-sm ${
+                  highlightFieldId === field.id ? "ring-2 ring-amber-400 ring-offset-2" : ""
+                }`}
+              >
                 <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-4 py-3">
                   <span
                     className={`rounded px-2 py-0.5 text-xs font-bold ${BADGE_CLASS[field.pageLabel] ?? "bg-slate-100"}`}

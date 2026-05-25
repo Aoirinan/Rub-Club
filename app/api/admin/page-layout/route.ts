@@ -1,12 +1,14 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
   PAGE_LAYOUT_PAGES,
+  PAGE_LAYOUT_REVALIDATE_PATHS,
   isPageLayoutId,
-  normalizeBlockOrder,
   pageLayoutDef,
+  paletteBlockIds,
 } from "@/lib/page-layout";
-import { getPageBlockOrder, savePageBlockOrder } from "@/lib/page-layout-db";
+import { getPageLayout, savePageLayout } from "@/lib/page-layout-db";
 import { requireStaff } from "@/lib/staff-auth";
 
 export const runtime = "nodejs";
@@ -27,11 +29,13 @@ export async function GET(req: Request) {
       })),
     });
   }
-  const blockOrder = await getPageBlockOrder(pageRaw);
+  const layout = await getPageLayout(pageRaw);
   const def = pageLayoutDef(pageRaw);
   return NextResponse.json({
     page: def,
-    blockOrder,
+    blockOrder: layout.blockOrder,
+    hiddenBlocks: layout.hiddenBlocks,
+    paletteBlocks: paletteBlockIds(pageRaw, layout.blockOrder),
     blocks: def.blocks,
   });
 }
@@ -39,6 +43,7 @@ export async function GET(req: Request) {
 const patchSchema = z.object({
   page: z.enum(["massage", "sulphur-springs", "chiropractic"]),
   blockOrder: z.array(z.string()),
+  hiddenBlocks: z.array(z.string()).optional(),
 });
 
 export async function PATCH(req: Request) {
@@ -56,11 +61,19 @@ export async function PATCH(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
-  const normalized = normalizeBlockOrder(parsed.data.page, parsed.data.blockOrder);
-  const saved = await savePageBlockOrder(
+  const saved = await savePageLayout(
     parsed.data.page,
-    normalized,
+    {
+      blockOrder: parsed.data.blockOrder,
+      hiddenBlocks: parsed.data.hiddenBlocks ?? [],
+    },
     staff.email ?? staff.uid,
   );
-  return NextResponse.json({ ok: true, blockOrder: saved });
+  revalidatePath(PAGE_LAYOUT_REVALIDATE_PATHS[parsed.data.page]);
+  return NextResponse.json({
+    ok: true,
+    blockOrder: saved.blockOrder,
+    hiddenBlocks: saved.hiddenBlocks,
+    paletteBlocks: paletteBlockIds(parsed.data.page, saved.blockOrder),
+  });
 }
