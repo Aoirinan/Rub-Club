@@ -2,14 +2,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { BookingCta } from "@/components/BookingCta";
-import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { telHref, LOCATIONS } from "@/lib/constants";
-import { getContentMany, renderRichText } from "@/lib/cms";
+import { getContentMany } from "@/lib/cms";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
-import { OfficeHoursTable } from "@/components/OfficeHoursTable";
-import { SS_SERVICE_NAV, SS_INJURY_NAV } from "@/lib/sulphur-springs-content";
 import { resolveSiteStaffForBrand, splitFeaturedAndGrid } from "@/lib/site-staff";
 import { pageKeywords } from "@/lib/seo-keywords";
+import { getPageBlockOrder } from "@/lib/page-layout-db";
+import { SulphurPageBlock } from "./SulphurPageBlocks";
 
 const ss = LOCATIONS.sulphur_springs;
 
@@ -48,14 +47,13 @@ const SS_NAV: SSNavEntry[] = [
   { href: "/sulphur-springs", label: "Home" },
   {
     label: "About Us",
-    items: [
-      { href: "/sulphur-springs/staff", label: "Meet The Staff" },
-    ],
+    items: [{ href: "/sulphur-springs/staff", label: "Meet The Staff" }],
   },
   {
     label: "Services",
     items: [
-      ...SS_SERVICE_NAV,
+      { href: "/sulphur-springs/common-chiropractic-conditions", label: "Common Conditions" },
+      { href: "/sulphur-springs/adjustments-and-manipulation", label: "Adjustments" },
       { href: "/sulphur-springs/auto-injury", label: "Auto Injury" },
       { href: "/sulphur-springs/personal-injury", label: "Personal Injury" },
       { href: "/sulphur-springs/sports-injury", label: "Sports Injury" },
@@ -74,29 +72,32 @@ const SS_NAV: SSNavEntry[] = [
 ];
 
 export default async function SulphurSpringsPage() {
-  const [c, ssOfficeHours, staff] = await Promise.all([
+  const [c, ssOfficeHours, staff, blockOrder] = await Promise.all([
     getContentMany(["ss_hero_heading", "ss_intro_body", "ss_hours"]),
     getSulphurOfficeHours(),
     resolveSiteStaffForBrand("sulphur"),
+    getPageBlockOrder("sulphur-springs"),
   ]);
   const { featured } = splitFeaturedAndGrid(staff);
   const doctor = featured
     ? {
         name: featured.name,
         role: featured.role,
-        image: featured.image,
+        image: featured.image ?? SS_DOCTOR_FALLBACK.image,
         bio: featured.bio || SS_DOCTOR_FALLBACK.bio,
       }
     : SS_DOCTOR_FALLBACK;
-  const introParagraphs = (c.ss_intro_body ?? "").split(/\n\n+/).filter(Boolean);
+  const blockData = {
+    heroHeading: c.ss_hero_heading ?? "",
+    introParagraphs: (c.ss_intro_body ?? "").split(/\n\n+/).filter(Boolean),
+    ss,
+    ssOfficeHours,
+    doctor,
+  };
 
   return (
     <div className="bg-[#f4f2ea]">
-      {/* SS Navigation bar */}
-      <nav
-        aria-label="Sulphur Springs navigation"
-        className="relative z-30 bg-[#2980b9] shadow-md"
-      >
+      <nav aria-label="Sulphur Springs navigation" className="relative z-30 bg-[#2980b9] shadow-md">
         <div className="mx-auto flex max-w-6xl flex-wrap">
           {SS_NAV.map((item) =>
             item.href ? (
@@ -109,7 +110,7 @@ export default async function SulphurSpringsPage() {
               </Link>
             ) : (
               <details key={item.label} className="group relative">
-                <summary className="flex cursor-pointer items-center gap-1 whitespace-nowrap px-4 py-3 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 sm:text-sm [&::-webkit-details-marker]:hidden list-none">
+                <summary className="flex cursor-pointer list-none items-center gap-1 whitespace-nowrap px-4 py-3 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 sm:text-sm [&::-webkit-details-marker]:hidden">
                   {item.label}
                   <svg width="10" height="10" viewBox="0 0 10 10" className="ml-1 transition group-open:rotate-180" aria-hidden>
                     <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -117,11 +118,7 @@ export default async function SulphurSpringsPage() {
                 </summary>
                 <div className="absolute left-0 z-50 min-w-[220px] bg-[#2980b9] shadow-lg">
                   {item.items!.map((sub) => (
-                    <Link
-                      key={sub.href}
-                      href={sub.href}
-                      className="block px-4 py-2.5 text-xs font-bold text-white hover:bg-[#1a6da3]"
-                    >
+                    <Link key={sub.href} href={sub.href} className="block px-4 py-2.5 text-xs font-bold text-white hover:bg-[#1a6da3]">
                       {sub.label}
                     </Link>
                   ))}
@@ -132,7 +129,6 @@ export default async function SulphurSpringsPage() {
         </div>
       </nav>
 
-      {/* Hero banner */}
       <section className="relative min-h-[400px] overflow-hidden bg-[#1a3a4a]">
         <Image
           src="/images/staff-ss/hero-2.webp"
@@ -144,15 +140,9 @@ export default async function SulphurSpringsPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#0c2d3a]/85 via-[#0c2d3a]/50 to-transparent" />
         <div className="relative mx-auto flex min-h-[400px] max-w-6xl flex-col justify-center px-4 py-16 text-white">
-          <p className="text-sm font-bold uppercase tracking-[0.24em] text-[#5dade2]">
-            Your Spine Health Specialists
-          </p>
-          <h1 className="mt-3 max-w-xl text-4xl font-black leading-tight drop-shadow sm:text-5xl">
-            {c.ss_hero_heading}
-          </h1>
-          <p className="mt-4 max-w-lg text-lg text-white/90">
-            Your pain-free life, just around the corner.
-          </p>
+          <p className="text-sm font-bold uppercase tracking-[0.24em] text-[#5dade2]">Your Spine Health Specialists</p>
+          <h1 className="mt-3 max-w-xl text-4xl font-black leading-tight drop-shadow sm:text-5xl">{c.ss_hero_heading}</h1>
+          <p className="mt-4 max-w-lg text-lg text-white/90">Your pain-free life, just around the corner.</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <BookingCta label="Request Appointment" variant="ss" />
             <a
@@ -166,165 +156,9 @@ export default async function SulphurSpringsPage() {
       </section>
 
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
-        {/* Featured Services */}
-        <section aria-label="Featured services" className="grid gap-4 md:grid-cols-4">
-          {[
-            { label: "Pain Relief", href: "/sulphur-springs/common-chiropractic-conditions", desc: "Chiropractic care can help you manage your pain." },
-            { label: "Adjustments", href: "/sulphur-springs/adjustments-and-manipulation", desc: "Keep the body functioning at its highest level." },
-            { label: "Sports Injury", href: "/sulphur-springs/sports-injury", desc: "Reach an optimum level of achievement." },
-            { label: "Auto Injury", href: "/sulphur-springs/auto-injury", desc: "No underlying injuries after a car accident." },
-          ].map((tile) => (
-            <Link
-              key={tile.label}
-              href={tile.href}
-              className="group border-t-4 border-[#2980b9] bg-white p-5 shadow-md transition hover:shadow-lg"
-            >
-              <h2 className="text-base font-black text-[#173f3b] group-hover:text-[#2980b9]">
-                {tile.label}
-              </h2>
-              <p className="mt-2 text-xs leading-relaxed text-stone-600">{tile.desc}</p>
-              <span className="mt-3 inline-block text-xs font-black uppercase tracking-wide text-[#2980b9]">
-                Click Here
-              </span>
-            </Link>
-          ))}
-        </section>
-
-        {/* Intro content */}
-        <section className="grid gap-10 border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[2fr_1fr]">
-          <div className="space-y-4">
-            <h2 className="text-3xl font-black text-[#173f3b]">{c.ss_hero_heading}</h2>
-            {introParagraphs.map((p) => (
-              <p
-                key={p.slice(0, 40)}
-                className="leading-relaxed text-stone-700"
-                dangerouslySetInnerHTML={{ __html: renderRichText(p) }}
-              />
-            ))}
-            <p className="leading-relaxed text-stone-700">
-              Upon your initial examination, we will discuss with you our findings and what they mean. We will create a custom treatment plan to get you to where you want to be, whether that means less pain, better performance, or just better overall health.
-            </p>
-            <p className="leading-relaxed text-stone-700">
-              Through our expert care, our advanced office, and our caring staff, we will help you not only get back on your feet, but understand how spine health affects your overall quality of life.
-            </p>
-          </div>
-          {/* Sidebar: Location & Hours */}
-          <aside className="space-y-6 border-t border-stone-200 pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
-            <div>
-              <h3 className="text-sm font-black uppercase tracking-wide text-[#2980b9]">Our Location</h3>
-              <p className="mt-2 font-bold text-[#173f3b]">
-                {ss.addressLines.join(", ")}
-              </p>
-            </div>
-            <div>
-              <h3 className="text-sm font-black uppercase tracking-wide text-[#2980b9]">Office Hours</h3>
-              <OfficeHoursTable
-                rows={ssOfficeHours}
-                dayClassName="font-medium text-stone-800"
-                rowClassName="flex justify-between gap-3 border-b border-stone-100 py-1 text-sm text-stone-700"
-              />
-            </div>
-            <a
-              href={telHref(ss.phonePrimary)}
-              className="inline-block text-lg font-black text-[#2980b9] hover:underline"
-            >
-              (903) 919-5020
-            </a>
-          </aside>
-        </section>
-
-        {/* Doctor spotlight */}
-        <section className="grid gap-8 border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[minmax(0,1fr)_2fr]">
-          {doctor.image ? (
-            <div className="relative aspect-[3/4] w-full overflow-hidden bg-stone-200">
-              <Image
-                src={doctor.image}
-                alt={`Portrait of ${doctor.name}, ${doctor.role}`}
-                fill
-                className="object-cover object-top"
-                sizes="(max-width: 1024px) 100vw, 33vw"
-              />
-            </div>
-          ) : null}
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-2xl font-black text-[#173f3b]">{doctor.name}</h2>
-              <p className="text-sm font-bold text-stone-600">{doctor.role}</p>
-            </div>
-            <p className="leading-relaxed text-stone-700">
-              {doctor.bio.split("\n\n")[0]}
-            </p>
-            <Link
-              href="/sulphur-springs/staff"
-              className="focus-ring inline-flex bg-[#2980b9] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#1a6da3]"
-            >
-              Meet the full team
-            </Link>
-          </div>
-        </section>
-
-        {/* All Services */}
-        <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">Our Services</h2>
-          <p className="mt-2 text-stone-600">
-            We offer a variety of services to treat common conditions and injuries. Call (903) 919-5020 for more information.
-          </p>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {SS_SERVICE_NAV.map((s) => (
-              <Link
-                key={s.href}
-                href={s.href}
-                className="group flex items-center gap-3 rounded border border-stone-200 bg-stone-50 px-4 py-3 transition hover:border-[#2980b9]/30 hover:bg-[#2980b9]/5"
-              >
-                <span className="text-sm font-bold text-[#173f3b] group-hover:text-[#2980b9]">{s.label}</span>
-                <span className="ml-auto text-stone-400 group-hover:text-[#2980b9]" aria-hidden>&rarr;</span>
-              </Link>
-            ))}
-          </div>
-
-          <h3 className="mt-10 text-lg font-black text-[#173f3b]">Injuries</h3>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {SS_INJURY_NAV.map((i) => (
-              <Link
-                key={i.href}
-                href={i.href}
-                className="group flex items-center gap-3 rounded border border-stone-200 bg-stone-50 px-4 py-3 transition hover:border-[#2980b9]/30 hover:bg-[#2980b9]/5"
-              >
-                <span className="text-sm font-bold text-[#173f3b] group-hover:text-[#2980b9]">{i.label}</span>
-                <span className="ml-auto text-stone-400 group-hover:text-[#2980b9]" aria-hidden>&rarr;</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* Quick links */}
-        <section className="grid gap-6 sm:grid-cols-2">
-          <Link
-            href="/sulphur-springs/patient-resources"
-            className="group border-t-4 border-[#2980b9] bg-white p-6 shadow-md transition-shadow hover:shadow-lg"
-          >
-            <h2 className="text-xl font-black text-[#173f3b] group-hover:underline">Patient Resources</h2>
-            <p className="mt-2 text-sm leading-relaxed text-stone-600">
-              Helpful links and information about chiropractic care.
-            </p>
-          </Link>
-          <Link
-            href="/sulphur-springs/q-and-a"
-            className="group border-t-4 border-[#2980b9] bg-white p-6 shadow-md transition-shadow hover:shadow-lg"
-          >
-            <h2 className="text-xl font-black text-[#173f3b] group-hover:underline">Questions &amp; Answers</h2>
-            <p className="mt-2 text-sm leading-relaxed text-stone-600">
-              Common questions about chiropractic treatment answered.
-            </p>
-          </Link>
-        </section>
-
-        <ScheduleCtaCard
-          title="Ready for relief?"
-          body="Book an appointment online or give us a call — we're here to help you feel better and move better."
-          bookLabel="Request appointment"
-          secondary={{ label: "Call (903) 919-5020", href: telHref(ss.phonePrimary) }}
-        />
+        {blockOrder.map((id) => (
+          <SulphurPageBlock key={id} id={id} data={blockData} />
+        ))}
       </div>
     </div>
   );

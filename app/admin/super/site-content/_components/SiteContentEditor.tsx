@@ -5,8 +5,9 @@ import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import type { ContentFieldType, ContentPageKey } from "@/lib/cms";
 import { MassageTeamAdminSection } from "@/app/admin/super/_components/MassageTeamAdminSection";
+import { PageLayoutEditor } from "@/components/admin/PageLayoutEditor";
 
-type SiteContentNavKey = ContentPageKey | "FAQ Items" | "Massage team";
+type SiteContentNavKey = ContentPageKey | "FAQ Items" | "Massage team" | "Page layout";
 
 type FieldRow = {
   id: string;
@@ -42,6 +43,7 @@ const PAGE_NAV: { key: SiteContentNavKey; label: string }[] = [
   { key: "Chiropractic", label: "Chiropractic" },
   { key: "Wellness care plans", label: "Wellness plans" },
   { key: "Massage", label: "Massage" },
+  { key: "Page layout", label: "Page layout" },
   { key: "Massage team", label: "Massage team" },
   { key: "Paris / main office", label: "Paris office" },
   { key: "Paris staff", label: "Paris staff" },
@@ -369,7 +371,7 @@ export function SiteContentEditor() {
         </p>
       ) : null}
 
-      {selectedPage !== "Massage team" ? (
+      {selectedPage !== "Massage team" && selectedPage !== "Page layout" ? (
         <input
           type="search"
           placeholder="Search fields across all pages…"
@@ -399,7 +401,9 @@ export function SiteContentEditor() {
         </nav>
 
         <div className="min-w-0 flex-1 space-y-3">
-          {selectedPage === "Massage team" ? (
+          {selectedPage === "Page layout" ? (
+            <PageLayoutEditor getIdToken={getToken} />
+          ) : selectedPage === "Massage team" ? (
             <MassageTeamAdminSection
               auth={auth}
               onNotify={(message) => {

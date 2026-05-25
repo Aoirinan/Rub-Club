@@ -1,16 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
-import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { JsonLd } from "@/components/JsonLd";
-import { MassageTeamGrid } from "@/components/marketing/MassageTeamGrid";
-import { BookingCta } from "@/components/BookingCta";
-import { IMAGES } from "@/lib/home-images";
-import { getContentMany, renderRichText } from "@/lib/cms";
-import { MASSAGE } from "@/lib/home-verbatim";
+import { getContentMany } from "@/lib/cms";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
-import { LOCATIONS, telHref } from "@/lib/constants";
+import { LOCATIONS } from "@/lib/constants";
 import { serviceBreadcrumbs } from "@/lib/service-breadcrumbs";
 import {
   getPublicBookingConfig,
@@ -20,6 +13,8 @@ import {
 import { massageJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
 import { pageKeywords } from "@/lib/seo-keywords";
+import { getPageBlockOrder } from "@/lib/page-layout-db";
+import { MassagePageBlock } from "./MassagePageBlocks";
 
 export const revalidate = 60;
 
@@ -40,29 +35,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-const SERVICES = [
-  {
-    name: "Deep Tissue Massage",
-    body: "Slow, targeted pressure to release chronic tension in the neck, shoulders, lower back, and hips.",
-  },
-  {
-    name: "Prenatal Massage",
-    body: "Side-lying, pregnancy-safe positioning with techniques to ease swelling, hip pressure, and tension headaches.",
-  },
-  {
-    name: "Sports Massage",
-    body: "Pre- and post-event work focused on recovery, range of motion, and getting you back to training without rushing tissue.",
-  },
-  {
-    name: "Trigger Point & Lymphatic",
-    body: "Focused release of stubborn knots, plus gentle lymphatic drainage when appropriate for post-op or chronic swelling.",
-  },
-  {
-    name: "Therapeutic Massage",
-    body: "Coordinated with your chiropractic plan — designed to support recovery between adjustments.",
-  },
-];
-
 export default async function MassageServicePage() {
   const c = await getContentMany([
     "massage_hero_heading",
@@ -71,10 +43,15 @@ export default async function MassageServicePage() {
     "massage_services_list",
     "massage_cta_heading",
   ]);
-  const massageTeam = await getMassageTeamForMarketing();
+  const [massageTeam, blockOrder] = await Promise.all([
+    getMassageTeamForMarketing(),
+    getPageBlockOrder("massage"),
+  ]);
   const paris = LOCATIONS.paris;
   const introParagraphs = (c.massage_intro_body ?? "").split(/\n\n+/).filter(Boolean);
   const serviceLines = (c.massage_services_list ?? "").split(/\n\n+/).filter(Boolean);
+  const blockData = { introParagraphs, serviceLines, massageTeam, paris };
+
   return (
     <>
       <JsonLd
@@ -90,116 +67,16 @@ export default async function MassageServicePage() {
           }),
         ]}
       />
-      <Breadcrumbs
-        items={serviceBreadcrumbs({ name: "Massage", url: "/services/massage" })}
-      />
-
+      <Breadcrumbs items={serviceBreadcrumbs({ name: "Massage", url: "/services/massage" })} />
       <PageHero
         eyebrow="The Rub Club · Paris, TX"
         title={c.massage_hero_heading}
         lede={c.massage_hero_subheading}
       />
-
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
-        <section className="grid gap-10 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-5">
-            <h2 className="text-3xl font-black text-[#173f3b]">{MASSAGE.stressTitle}</h2>
-            {introParagraphs.map((p) => (
-              <p
-                key={p.slice(0, 40)}
-                className="leading-relaxed text-stone-700"
-                dangerouslySetInnerHTML={{ __html: renderRichText(p) }}
-              />
-            ))}
-          </div>
-          <div className="relative aspect-[4/3] overflow-hidden shadow-md lg:min-h-[360px]">
-            <Image
-              src={IMAGES.massagePatient}
-              alt="A licensed massage therapist working on a client's shoulders at The Rub Club"
-              fill
-              className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
-          </div>
-        </section>
-
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">Services we offer</h2>
-          {serviceLines.length > 0 ? (
-            <div className="mt-6 space-y-4 text-sm leading-relaxed text-stone-700">
-              {serviceLines.map((line) => (
-                <p
-                  key={line.slice(0, 48)}
-                  dangerouslySetInnerHTML={{ __html: renderRichText(line) }}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {SERVICES.map((s) => (
-                <article key={s.name} className="border border-stone-200 bg-stone-50 p-5 shadow-sm">
-                  <h3 className="text-lg font-black text-[#173f3b]">{s.name}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-stone-700">{s.body}</p>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">When to get a massage</h2>
-          <p className="mt-4 max-w-3xl leading-relaxed text-stone-700">{MASSAGE.whenBody}</p>
-        </section>
-
-        <MassageTeamGrid
-          members={massageTeam}
-          title="Meet the team"
-          subtitle="Licensed massage therapists at The Rub Club"
-          variant="service"
-          footnote={
-            <>
-              For insurance coordination, personal injury case management, and other Paris office
-              roles, see{" "}
-              <Link href="/locations/paris/staff" className="font-bold text-[#0f5f5c] underline">
-                Meet our Paris office team
-              </Link>
-              .
-            </>
-          }
-        />
-
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">Visit us in Paris</h2>
-          <p className="mt-3 leading-relaxed text-stone-700">
-            {paris.streetAddress} · Paris, TX
-          </p>
-          <p className="mt-2 text-stone-700">
-            Massage desk:{" "}
-            <a className="font-bold text-[#0f5f5c] underline" href={telHref(paris.phoneSecondary ?? paris.phonePrimary)}>
-              {paris.phoneSecondary ?? paris.phonePrimary}
-            </a>
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <BookingCta
-              label="Book massage online"
-              query="service=massage&location=paris"
-              variant="teal"
-            />
-            <Link
-              href="/patient-forms"
-              className="focus-ring border-2 border-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-[#0f5f5c]/5"
-            >
-              New-client form
-            </Link>
-          </div>
-        </section>
-
-        <ScheduleCtaCard
-          title="Have a question first?"
-          body="The massage desk can verify available times and answer questions about specific conditions."
-          query="service=massage"
-          secondary={{ label: "Call 903-739-9959", href: telHref("903-739-9959") }}
-        />
+        {blockOrder.map((id) => (
+          <MassagePageBlock key={id} id={id} data={blockData} />
+        ))}
       </div>
     </>
   );
