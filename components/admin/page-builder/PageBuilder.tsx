@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   DndContext,
   DragOverlay,
@@ -292,13 +291,10 @@ export function PageBuilder({ getIdToken, initialPageId = "massage" }: Props) {
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-slate-100">
       <header className="sticky top-0 z-20 flex flex-wrap items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <Link
-          href="/admin/super/site-content"
-          className="text-sm font-semibold text-slate-600 hover:text-slate-900"
-        >
-          ← Site content
-        </Link>
         <h1 className="text-lg font-bold text-slate-900">Page builder</h1>
+        <p className="hidden text-sm text-slate-500 sm:block">
+          Use the tabs above to switch between manager tools
+        </p>
         {dirty ? (
           <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-900">
             Unsaved changes

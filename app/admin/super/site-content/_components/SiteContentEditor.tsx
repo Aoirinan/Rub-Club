@@ -7,7 +7,7 @@ import type { ContentFieldType, ContentPageKey } from "@/lib/cms";
 import Link from "next/link";
 import { MassageTeamAdminSection } from "@/app/admin/super/_components/MassageTeamAdminSection";
 
-type SiteContentNavKey = ContentPageKey | "FAQ Items" | "Massage team" | "Page layout";
+type SiteContentNavKey = ContentPageKey | "FAQ Items" | "Massage team";
 
 type FieldRow = {
   id: string;
@@ -43,7 +43,6 @@ const PAGE_NAV: { key: SiteContentNavKey; label: string }[] = [
   { key: "Chiropractic", label: "Chiropractic" },
   { key: "Wellness care plans", label: "Wellness plans" },
   { key: "Massage", label: "Massage" },
-  { key: "Page layout", label: "Page layout" },
   { key: "Massage team", label: "Massage team" },
   { key: "Paris / main office", label: "Paris office" },
   { key: "Paris staff", label: "Paris staff" },
@@ -228,12 +227,10 @@ export function SiteContentEditor() {
       if (
         selectedPage !== "FAQ Items" &&
         selectedPage !== "Massage team" &&
-        selectedPage !== "Page layout" &&
         f.pageLabel !== selectedPage
       )
         return false;
-      if (selectedPage === "FAQ Items" || selectedPage === "Massage team" || selectedPage === "Page layout")
-        return false;
+      if (selectedPage === "FAQ Items" || selectedPage === "Massage team") return false;
       if (!q) return true;
       return (
         f.pageLabel.toLowerCase().includes(q) ||
@@ -257,10 +254,7 @@ export function SiteContentEditor() {
   }, [fields, search]);
 
   const displayFields =
-    search.trim() &&
-    selectedPage !== "FAQ Items" &&
-    selectedPage !== "Massage team" &&
-    selectedPage !== "Page layout"
+    search.trim() && selectedPage !== "FAQ Items" && selectedPage !== "Massage team"
       ? globalSearchFields
       : filteredFields;
 
@@ -390,6 +384,19 @@ export function SiteContentEditor() {
           tabs below — changes appear on the live site within about 60 seconds. Adding or removing a team member still
           requires a developer.
         </p>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#0f5f5c]/25 bg-[#0f5f5c]/5 px-4 py-3">
+          <p className="text-sm text-slate-700">
+            <span className="font-bold text-[#173f3b]">Page layout?</span> Reorder or hide whole sections on Massage,
+            Chiropractic, and Sulphur pages in the{" "}
+            <span className="font-semibold">Page builder</span> tab above (not here).
+          </p>
+          <Link
+            href="/admin/super/page-builder"
+            className="shrink-0 rounded-lg bg-[#0f5f5c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0c4e4b]"
+          >
+            Open page builder
+          </Link>
+        </div>
       </div>
 
       {toast ? (
@@ -402,7 +409,7 @@ export function SiteContentEditor() {
         </p>
       ) : null}
 
-      {selectedPage !== "Massage team" && selectedPage !== "Page layout" ? (
+      {selectedPage !== "Massage team" ? (
         <input
           type="search"
           placeholder="Search fields across all pages…"
@@ -432,36 +439,7 @@ export function SiteContentEditor() {
         </nav>
 
         <div className="min-w-0 flex-1 space-y-3">
-          {selectedPage === "Page layout" ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900">Visual page builder</h2>
-              <p className="mt-2 max-w-xl text-sm text-slate-600">
-                Drag sections on a visual canvas, hide blocks, and add sections back from a palette — similar
-                to Wix. Hero and site header stay fixed on the live site.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link
-                  href="/admin/super/page-builder?page=massage"
-                  className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-                >
-                  Open page builder
-                </Link>
-                {(["massage", "chiropractic", "sulphur-springs"] as const).map((id) => (
-                  <Link
-                    key={id}
-                    href={`/admin/super/page-builder?page=${id}`}
-                    className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-                  >
-                    {id === "massage"
-                      ? "Massage"
-                      : id === "chiropractic"
-                        ? "Chiropractic"
-                        : "Sulphur Springs"}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ) : selectedPage === "Massage team" ? (
+          {selectedPage === "Massage team" ? (
             <MassageTeamAdminSection
               auth={auth}
               onNotify={(message) => {

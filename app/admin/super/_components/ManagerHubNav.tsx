@@ -23,6 +23,13 @@ const TABS = [
     capability: "siteContent" as const,
   },
   {
+    href: "/admin/super/page-builder",
+    label: "Page builder",
+    description: "Drag sections, hide blocks, page layout",
+    match: (path: string) => path.startsWith("/admin/super/page-builder"),
+    capability: "siteContent" as const,
+  },
+  {
     href: "/admin/super/site-staff",
     label: "Office staff",
     description: "Paris & Sulphur staff pages",
