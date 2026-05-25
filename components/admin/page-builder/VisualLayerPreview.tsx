@@ -2,7 +2,7 @@
 
 import { HeaderBrandBlock } from "@/components/HeaderBrandBlock";
 import { LOCATIONS } from "@/lib/constants";
-import { renderRichText } from "@/lib/cms";
+import { renderRichText } from "@/lib/cms-registry";
 import type { HeaderBrandKey } from "@/lib/header-branding-cms";
 import { HERO_BLOCK_ID } from "@/lib/page-builder-cms";
 import { blockDef, isPageLayoutId, type PageLayoutId } from "@/lib/page-layout";
