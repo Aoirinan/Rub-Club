@@ -9,16 +9,14 @@ import { getFirebaseClientAuth } from "@/lib/firebase-client";
 const TABS = [
   {
     href: "/admin/super",
-    label: "Operations",
-    description: "Staff, providers",
+    label: "Scheduling & team",
     match: (path: string) =>
       path === "/admin/super" || path.startsWith("/admin/super/slot-inspector"),
     capability: "operations" as const,
   },
   {
     href: "/admin/super/page-builder",
-    label: "Website editor",
-    description: "Page layout, copy, photos, team",
+    label: "Website",
     match: (path: string) =>
       path.startsWith("/admin/super/page-builder") ||
       path.startsWith("/admin/super/site-content"),
@@ -26,15 +24,13 @@ const TABS = [
   },
   {
     href: "/admin/super/site-staff",
-    label: "Office staff",
-    description: "Paris & Sulphur staff pages",
+    label: "Staff pages",
     match: (path: string) => path.startsWith("/admin/super/site-staff"),
     capability: "siteContent" as const,
   },
   {
     href: "/admin/super/marketing?tab=booking",
-    label: "Banners & promos",
-    description: "Online booking on/off, banner, videos",
+    label: "Promos & booking",
     match: (path: string) => path.startsWith("/admin/super/marketing"),
     capability: "marketing" as const,
   },
@@ -90,13 +86,6 @@ export function ManagerHubNav() {
               }`}
             >
               <span className="block text-sm font-bold">{tab.label}</span>
-              <span
-                className={`mt-0.5 block text-xs font-normal ${
-                  active ? "text-white/85" : "text-slate-500"
-                }`}
-              >
-                {tab.description}
-              </span>
             </Link>
           );
         })}

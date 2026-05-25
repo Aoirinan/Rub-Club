@@ -222,13 +222,18 @@ export function PageBuilder({ getIdToken, auth, initialScope }: Props) {
 
   useEffect(() => {
     setSelectedBlockId(null);
-    setSelectedSectionId(null);
+    if (contentScopeId === "header-branding") {
+      const def = CONTENT_SCOPES.find((s) => s.id === "header-branding");
+      setSelectedSectionId(def?.sections[0]?.id ?? null);
+    } else {
+      setSelectedSectionId(null);
+    }
     if (isLayout && pageId) {
       void loadLayout();
     } else {
       setLoading(false);
     }
-  }, [scope, isLayout, pageId, loadLayout]);
+  }, [scope, isLayout, pageId, loadLayout, contentScopeId]);
 
   useEffect(() => {
     if (!dirty) return;

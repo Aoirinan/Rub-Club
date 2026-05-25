@@ -4,6 +4,7 @@ import { SulphurSpringsLockup } from "@/components/SulphurSpringsLockup";
 import { IMAGES } from "@/lib/home-images";
 import { BRAND_LOGOS, type BrandLogoVariant } from "@/lib/brand-logos";
 import { telHref, type LocationInfo } from "@/lib/constants";
+import type { HeaderBrandingHeights } from "@/lib/header-branding-cms";
 
 type BrandKey = "rub" | "chiro" | "ss";
 
@@ -83,15 +84,27 @@ function logoHeightClass(primary: boolean): string {
     : "h-7 w-auto max-w-[min(100%,200px)] opacity-90 transition-opacity hover:opacity-100 sm:h-9 md:h-10";
 }
 
+function logoHeightPx(
+  key: BrandKey,
+  primary: boolean,
+  heights?: HeaderBrandingHeights,
+): number | undefined {
+  if (!heights) return undefined;
+  const brand = heights[key];
+  return primary ? brand.center : brand.side;
+}
+
 export function BrandLogoStrip({
   variant = "home",
   paris,
   sulphur,
+  headerHeights,
   className = "",
 }: {
   variant?: BrandLogoVariant;
   paris: LocationInfo;
   sulphur: LocationInfo;
+  headerHeights?: HeaderBrandingHeights;
   className?: string;
 }) {
   const entries = orderedForVariant(variant, buildBrandEntries(paris, sulphur));
@@ -103,11 +116,16 @@ export function BrandLogoStrip({
     >
       {entries.map((entry) => {
         const primary = entry.key === primaryKey;
+        const heightPx = logoHeightPx(entry.key, primary, headerHeights);
+        const sizeClass = heightPx ? "w-auto max-w-[min(100%,340px)]" : logoHeightClass(primary);
+        const sizeStyle = heightPx ? { height: `${heightPx}px` } : undefined;
         const img =
           entry.key === "ss" ? (
             <SulphurSpringsLockup
               primary={primary}
-              className={`mx-auto sm:mx-0 ${logoHeightClass(primary)}`}
+              heightPx={heightPx}
+              iconScalePercent={headerHeights?.ss.iconScalePercent}
+              className={`mx-auto sm:mx-0 ${heightPx ? sizeClass : logoHeightClass(primary)}`}
             />
           ) : (
             <Image
@@ -115,7 +133,10 @@ export function BrandLogoStrip({
               alt={entry.alt}
               width={entry.width}
               height={entry.height}
-              className={`mx-auto object-contain sm:mx-0 sm:object-left ${logoHeightClass(primary)}`}
+              style={sizeStyle}
+              className={`mx-auto object-contain sm:mx-0 sm:object-left ${sizeClass} ${
+                !primary ? "opacity-90 transition-opacity hover:opacity-100" : ""
+              }`}
               priority={primary}
             />
           );

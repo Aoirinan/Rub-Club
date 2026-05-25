@@ -95,7 +95,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
     if (!user) return;
     if (
       !window.confirm(
-        "Copy the built-in team (names, bios, and current portrait links) into Firestore? After this, the public site reads only from Firestore until you clear the list again.",
+        "Import the default massage team from the website? After this, the home page and massage page use this list.",
       )
     ) {
       return;
@@ -115,13 +115,13 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
       if (!res.ok) {
         setSectionAlert({
           kind: "error",
-          text: typeof data.error === "string" ? data.error : "Could not seed team.",
+          text: typeof data.error === "string" ? data.error : "Could not import team.",
         });
         return;
       }
       setSectionAlert({
         kind: "success",
-        text: "Team copied into Firestore. The home page and /services/massage now use this list.",
+        text: "Team imported. The home page and massage page now use this list.",
       });
       await load();
     } finally {
@@ -179,7 +179,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
     if (!user) return;
     if (
       !window.confirm(
-        "Delete every massage team row in Firestore and any uploaded portraits in storage? The public pages will go back to the built-in list from code until you seed or add people again.",
+        "Remove everyone from your custom team list? The site will show the default team until you add or import people again.",
       )
     ) {
       return;
@@ -201,7 +201,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
       }
       setSectionAlert({
         kind: "success",
-        text: "Custom team removed. The site is using the built-in list again until you add or seed.",
+        text: "Custom team removed. The site is using the default list again until you add or import.",
       });
       setEditing(null);
       await load();
@@ -385,13 +385,9 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
       <div>
-        <h2 className="text-lg font-semibold text-slate-900">Website — massage team (Meet the team)</h2>
+        <h2 className="text-lg font-semibold text-slate-900">Massage team (Meet the team)</h2>
         <p className="mt-2 text-sm text-slate-600">
-          The home page, <code className="rounded bg-slate-100 px-1">/services/massage</code>, and testimonial video
-          tags use this list when Firestore has at least one row. Otherwise they use the built-in list from code or your
-          bookable providers. Upload portraits here (JPEG, PNG, or WebP, up to 5 MB). For uploaded files, add a Firebase
-          Storage rule allowing public read on <code className="rounded bg-slate-100 px-1">public_site/**</code> so
-          visitors can load images.
+          Photos and bios on the home page and massage page. Upload JPEG, PNG, or WebP (up to 5 MB).
         </p>
         {sectionAlert ? (
           <div
@@ -409,13 +405,12 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           <p className="mt-2 text-xs text-slate-500">Loading team…</p>
         ) : siteUsesCustomList ? (
           <p className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-950">
-            Public site is using the Firestore list ({members.length}{" "}
+            Your team list is live ({members.length}{" "}
             {members.length === 1 ? "person" : "people"}).
           </p>
         ) : (
           <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
-            Public site is still using the built-in team from code. Use &quot;Copy bookable massage providers into
-            team&quot; below to import your scheduling list, or seed the built-in roster.
+            Using the default team — sync from scheduling or import the built-in roster below.
           </p>
         )}
       </div>
@@ -435,7 +430,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           onClick={() => void seedDefaults()}
           className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {seeding ? "Copying…" : "Copy built-in team into Firestore"}
+          {seeding ? "Importing…" : "Import default team from website"}
         </button>
         <button
           type="button"
@@ -611,7 +606,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           </li>
         ))}
         {!loading && members.length === 0 ? (
-          <li className="text-slate-600">No Firestore rows yet.</li>
+          <li className="text-slate-600">No team members yet.</li>
         ) : null}
       </ul>
     </section>

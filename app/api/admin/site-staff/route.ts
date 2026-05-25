@@ -175,7 +175,7 @@ export async function POST(req: Request) {
     } catch (e) {
       if (e instanceof Error && e.message === "SITE_STAFF_ALREADY_SEEDED") {
         return NextResponse.json(
-          { error: "Firestore already has site staff rows. Delete them first if you want to re-seed." },
+          { error: "Staff list already exists. Remove existing people first if you want to import again." },
           { status: 409 },
         );
       }

@@ -19,6 +19,7 @@ export type ContentScopeId =
   | "contact"
   | "footer"
   | "navigation"
+  | "header-branding"
   | "doctors-global";
 
 export type PageBuilderScopeId = PageLayoutId | ContentScopeId | "faq-items";
@@ -39,6 +40,7 @@ export function isContentScopeId(v: string): v is ContentScopeId {
     v === "contact" ||
     v === "footer" ||
     v === "navigation" ||
+    v === "header-branding" ||
     v === "doctors-global"
   );
 }
@@ -66,6 +68,7 @@ const CONTENT_SCOPE_PAGES: Record<ContentScopeId, ContentPageKey[]> = {
   contact: ["Contact"],
   footer: ["Footer"],
   navigation: ["Navigation"],
+  "header-branding": ["Header branding"],
   "doctors-global": ["Doctors"],
 };
 
@@ -120,8 +123,13 @@ export const CONTENT_SCOPES: ContentScopeDef[] = (
                 ? "Services hub"
                 : id === "patient-forms"
                   ? "Patient forms"
-                  : id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, " "),
-  description: `Edit ${pageLabels.join(", ")} copy`,
+                  : id === "header-branding"
+                    ? "Header logos"
+                    : id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, " "),
+  description:
+    id === "header-branding"
+      ? "Adjust header logo sizes per brand"
+      : `Edit ${pageLabels.join(", ")} copy`,
   sections: buildSectionsForPageLabels(pageLabels),
 }));
 

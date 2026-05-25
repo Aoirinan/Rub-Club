@@ -22,7 +22,7 @@ import {
   websiteJsonLd,
 } from "@/lib/structured-data";
 import { getSiteOwnerConfig, bannerIsActivePublic } from "@/lib/site-owner-config";
-import { getLayoutCmsContent } from "@/lib/cms-display";
+import { getHeaderBrandingHeights, getLayoutCmsContent } from "@/lib/cms-display";
 import {
   effectiveGiftCardSticky,
   mergedDisplayLocations,
@@ -91,10 +91,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let salesBanner: SalesBannerPayload | null = null;
-  const [cms, bookingConfig, parisHours] = await Promise.all([
+  const [cms, bookingConfig, parisHours, headerHeights] = await Promise.all([
     getLayoutCmsContent(),
     getPublicBookingConfig(),
     getParisOfficeHours(),
+    getHeaderBrandingHeights(),
   ]);
   const onlineBookingEnabled = isPublicBookingEnabled(bookingConfig);
   let displayLocs = mergedDisplayLocations(undefined, cms);
@@ -139,6 +140,7 @@ export default async function RootLayout({
                   paris={displayLocs.paris}
                   sulphur={displayLocs.sulphur_springs}
                   giftCardHref={giftCardSticky.href}
+                  headerHeights={headerHeights}
                 />
                 {salesBanner ? <HomepageSalesBanner payload={salesBanner} /> : null}
               </>

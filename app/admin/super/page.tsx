@@ -19,6 +19,8 @@ import {
 } from "@/components/admin/ProviderProfileEditor";
 import { NotificationSettingsEditor } from "@/components/admin/NotificationSettingsEditor";
 import { SchedulerServicesEditor } from "@/components/admin/SchedulerServicesEditor";
+import { OpsCollapsibleSection } from "@/app/admin/super/_components/OpsCollapsibleSection";
+import { OpsEmailStatusBanner } from "@/app/admin/super/_components/OpsEmailStatusBanner";
 
 type Me = {
   authenticated: boolean;
@@ -112,16 +114,8 @@ function detectProviderIssues(rows: ProviderRow[]): ProviderIssue[] {
 }
 
 function inviteEmailIssueHint(issue?: InviteStaffResponse["inviteEmailIssue"]): string {
-  if (issue === "missing_env") {
-    return " No email was sent: add SENDGRID_API_KEY and SENDGRID_FROM_EMAIL to this app’s Production env in Vercel (they are per-project, not shared with your other software).";
-  }
-  if (issue === "sendgrid_error") {
-    return " No email was sent: SendGrid rejected this request (see the SendGrid line below if present). Common causes: API key not granted “Mail Send”, Preview deployment without env vars, or “from” not verified for this key.";
-  }
-  if (issue === "reset_link_failed") {
-    return " Password reset link could not be created in Firebase; email was not attempted. Add this site’s hostname under Firebase Console → Authentication → Settings → Authorized domains, and set NEXT_PUBLIC_APP_URL to your live URL (no trailing slash) in Vercel Production env.";
-  }
-  return "";
+  if (!issue) return "";
+  return " Email was not sent — ask your web person to fix outgoing email (see Email delivery section below).";
 }
 
 export default function SuperAdminPage() {
@@ -274,19 +268,7 @@ export default function SuperAdminPage() {
     const joined = parts.join(" ");
     const messageBody =
       joined.includes("Linked to provider") || !linkNote ? joined : `${joined}${linkNote}`;
-    const firebaseDetail =
-      data.inviteEmailIssue === "reset_link_failed" &&
-      typeof data.inviteEmailDetail === "string" &&
-      data.inviteEmailDetail.length > 0
-        ? ` Firebase: ${data.inviteEmailDetail}`
-        : "";
-    const sendgridDetail =
-      data.inviteEmailIssue === "sendgrid_error" &&
-      typeof data.inviteEmailDetail === "string" &&
-      data.inviteEmailDetail.length > 0
-        ? ` SendGrid: ${data.inviteEmailDetail}`
-        : "";
-    setMessage(`${messageBody}${firebaseDetail}${sendgridDetail}`);
+    setMessage(messageBody);
     setEmail("");
     await loadStaff(token);
   }
@@ -299,7 +281,7 @@ export default function SuperAdminPage() {
       staff.find((s) => s.uid === targetUid)?.email ?? targetUid.slice(0, 8) + "…";
     if (
       !window.confirm(
-        `Remove ${label} completely? This deletes their staff record and their Firebase sign-in account. You can invite them again later (a new account will be created if needed).`,
+        `Remove ${label}? They will no longer be able to sign in. You can invite them again later.`,
       )
     ) {
       return;
@@ -567,11 +549,8 @@ export default function SuperAdminPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
-            {isOperations ? "Operations" : needsBootstrap ? "Staff setup" : "Access"}
+            {isOperations ? "Scheduling & team" : needsBootstrap ? "Staff setup" : "Access"}
           </h1>
-          <p className="mt-1 text-xs text-slate-400">
-            Build {process.env.NEXT_PUBLIC_APP_VERSION ?? "unknown"}
-          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           {isOperations ? (
@@ -592,23 +571,22 @@ export default function SuperAdminPage() {
           <p className="font-medium">{staffRoleLabel(me?.role)} access</p>
           <p className="mt-2">
             You can use <Link href="/admin" className="font-semibold underline">Bookings</Link> but not
-            this management page. Ask a <strong>manager</strong> to promote you if you need Operations
-            access.
+            this management page. Ask a <strong>manager</strong> to promote you if you need scheduling
+            and team settings.
           </p>
         </section>
       ) : null}
 
       {needsBootstrap ? (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
-          <h2 className="text-lg font-semibold text-slate-900">Become superadmin (first on this project)</h2>
+          <h2 className="text-lg font-semibold text-slate-900">First-time owner setup</h2>
           <p className="text-sm text-slate-600">
-            Put <code className="rounded bg-slate-100 px-1">ADMIN_BOOTSTRAP_SECRET</code> in your server
-            environment (e.g. Vercel → Environment Variables → Production), redeploy, paste the same secret here,
-            and run once. Then you can grant staff roles below.
+            Enter the one-time setup code from your web person, then run setup. After that you can add
+            team logins below.
           </p>
           <input
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            placeholder="Bootstrap secret"
+            placeholder="Setup code"
             value={bootstrapSecret}
             onChange={(e) => setBootstrapSecret(e.target.value)}
           />
@@ -617,93 +595,36 @@ export default function SuperAdminPage() {
             onClick={runBootstrap}
             className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800"
           >
-            Run bootstrap
+            Run setup
           </button>
         </section>
       ) : null}
 
       {isOperations ? (
         <>
-          {emailStatus?.fromEnvInvalidFormat ? (
-            <section className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-950">
-              <p className="font-medium">SendGrid “from” value is not a valid email</p>
-              <p className="mt-2">
-                Vercel has something in <code className="rounded bg-white/80 px-1">sendgridfromemail</code> /{" "}
-                <code className="rounded bg-white/80 px-1">SENDGRID_FROM_EMAIL</code>, but after cleaning it is still not
-                a plain address like <code className="rounded bg-white/80 px-1">russell_forsyth_1992@outlook.com</code>.
-                Remove wrapping quotes, extra spaces, or newlines. If the value starts with{" "}
-                <code className="rounded bg-white/80 px-1">SG.</code>, you swapped the API key into the wrong variable —
-                put the key only in <code className="rounded bg-white/80 px-1">SENDGRID_API_KEY</code> or{" "}
-                <code className="rounded bg-white/80 px-1">send_grid</code>.
-              </p>
-            </section>
-          ) : null}
+          <OpsEmailStatusBanner emailStatus={emailStatus} />
 
-          {emailStatus && !emailStatus.sendgridConfigured && !emailStatus.fromEnvInvalidFormat ? (
-            <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">
-              <p className="font-medium">SendGrid is not available on this deployment</p>
-              <p className="mt-2 text-amber-900/90">
-                The production server does not see both environment variables. Missing:{" "}
-                <strong>
-                  {[!emailStatus.hasApiKey ? "SENDGRID_API_KEY" : null, !emailStatus.hasFromEmail ? "SENDGRID_FROM_EMAIL" : null]
-                    .filter(Boolean)
-                    .join(" and ")}
-                </strong>
-                .
-              </p>
-              <p className="mt-2">
-                In{" "}
-                <a
-                  href="https://vercel.com/dashboard"
-                  className="font-semibold underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Vercel
-                </a>
-                , open <strong>this project</strong> (the one that serves this URL) → Settings → Environment
-                Variables. For each variable, set <strong>Environment = Production</strong> (not only Preview), save,
-                then trigger a new deployment so serverless functions pick up the values.
-              </p>
-            </section>
-          ) : emailStatus?.sendgridConfigured ? (
-            <div className="space-y-3">
-              <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
-                Outbound email (SendGrid) is configured on this deployment — invite emails can be sent.
-              </p>
-              {emailStatus.officeNotificationConfigured ? (
-                <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
-                  <code className="rounded bg-white/80 px-1">OFFICE_NOTIFICATION_EMAIL</code> is set — optional email
-                  copies for bookings and the contact form (recommended:{" "}
-                  <code className="rounded bg-white/80 px-1">dr.seanwelborn@gmail.com</code>). Front desk uses{" "}
-                  <strong>Admin → Contact inbox</strong> for contact messages.
-                </p>
-              ) : (
-                <p className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950">
-                  <code className="rounded bg-white/80 px-1">OFFICE_NOTIFICATION_EMAIL</code> is not set — contact
-                  messages still appear in <strong>Admin → Contact inbox</strong>. Set it to{" "}
-                  <code className="rounded bg-white/80 px-1">dr.seanwelborn@gmail.com</code> in Vercel Production if
-                  you also want email copies for bookings and contact.
-                </p>
-              )}
-            </div>
-          ) : null}
-
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Add or invite staff</h2>
+          <OpsCollapsibleSection
+            title="Team logins"
+            summary="Invite staff by email and choose what they can access."
+            defaultOpen
+          >
             <p className="text-sm text-slate-600">
-              Enter their work email. If they do not have a sign-in yet, the app creates the account and either
-              emails them a password-reset link (when SendGrid is configured) or shows you a one-time temporary
-              password to share securely. Creates or updates <code className="rounded bg-slate-100 px-1">{`staff/<uid>`}</code>{" "}
-              in Firestore.
+              Enter their work email. New users get a sign-in link by email, or a one-time password you can share
+              securely.
             </p>
-            <ul className="list-disc pl-5 text-sm text-slate-600">
-              {STAFF_ROLE_OPTIONS.map((opt) => (
-                <li key={opt.value}>
-                  <strong>{opt.label}</strong> — {opt.description}
-                </li>
-              ))}
-            </ul>
+            <details className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+              <summary className="cursor-pointer font-semibold text-slate-900">
+                What can each role do?
+              </summary>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {STAFF_ROLE_OPTIONS.map((opt) => (
+                  <li key={opt.value}>
+                    <strong>{opt.label}</strong> — {opt.description}
+                  </li>
+                ))}
+              </ul>
+            </details>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="space-y-1 text-sm sm:col-span-2">
                 <span className="font-medium text-slate-800">Email</span>
@@ -755,21 +676,61 @@ export default function SuperAdminPage() {
             >
               Add or invite
             </button>
-          </section>
+
+            <div className="border-t border-slate-100 pt-4">
+              <h3 className="text-sm font-semibold text-slate-900">People with access</h3>
+              <ul className="mt-2 space-y-2 text-sm text-slate-700">
+                {staff.map((s) => {
+                  const isSelf = auth?.currentUser?.uid === s.uid;
+                  return (
+                    <li
+                      key={s.uid}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="font-semibold text-slate-900">{s.email ?? "No email"}</div>
+                        <div className="text-xs text-slate-600">{staffRoleLabel(s.role)}</div>
+                        {s.role === "massage_therapist" && s.linkedProviderId ? (
+                          <div className="text-xs text-slate-500">
+                            Calendar: {providerLabelById(s.linkedProviderId) ?? s.linkedProviderId}
+                          </div>
+                        ) : null}
+                        {isSelf ? (
+                          <div className="text-[11px] text-slate-500">
+                            You cannot remove yourself here.
+                          </div>
+                        ) : null}
+                      </div>
+                      {!isSelf ? (
+                        <button
+                          type="button"
+                          disabled={deletingUid === s.uid}
+                          onClick={() => deleteStaffRow(s.uid)}
+                          className="shrink-0 rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {deletingUid === s.uid ? "Removing…" : "Remove access"}
+                        </button>
+                      ) : null}
+                    </li>
+                  );
+                })}
+                {staff.length === 0 ? (
+                  <li className="text-slate-600">No team logins yet.</li>
+                ) : null}
+              </ul>
+            </div>
+          </OpsCollapsibleSection>
 
           {providerIssues.length > 0 ? (
-            <section className="rounded-2xl border border-amber-300 bg-amber-50 p-6 shadow-sm space-y-4">
+            <section className="rounded-2xl border border-amber-300 bg-amber-50 p-5 shadow-sm space-y-4">
               <div>
-                <h2 className="text-lg font-semibold text-amber-950">
-                  Provider health — {providerIssues.length}{" "}
-                  {providerIssues.length === 1 ? "issue" : "issues"} found
+                <h2 className="text-base font-semibold text-amber-950">
+                  Booking calendar — {providerIssues.length}{" "}
+                  {providerIssues.length === 1 ? "duplicate" : "duplicates"} found
                 </h2>
                 <p className="mt-1 text-sm text-amber-900/90">
-                  These look like accidental duplicates. The customer&apos;s &ldquo;First
-                  available&rdquo; mode treats each row as a separate person, so duplicates
-                  double-count one staff member&apos;s availability and can make slots appear
-                  open when the real person is actually booked. If two real staff members
-                  share a name, you can safely ignore the warning.
+                  The same name appears more than once for the same location and service. Hide or
+                  delete the extra row so patients do not see double availability.
                 </p>
               </div>
               <ul className="space-y-3">
@@ -836,45 +797,45 @@ export default function SuperAdminPage() {
               </ul>
             </section>
           ) : bookableProviders.length > 0 ? (
-            <section className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-950">
-              <p className="font-semibold">Provider health: no duplicates detected.</p>
-              <p className="mt-1 text-emerald-900/90">
-                No active providers share the same display name within the same location and
-                service. If a customer slot looks open and shouldn&apos;t be, remember that
-                &ldquo;First available&rdquo; mode shows the slot if <em>any</em> qualified
-                provider is free.
-              </p>
-            </section>
+            <p className="text-sm text-emerald-800">
+              No duplicate names on the booking calendar.
+            </p>
           ) : null}
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Notifications (text & email)</h2>
+          <OpsCollapsibleSection
+            title="Appointment texts & emails"
+            summary="Message templates patients and staff receive."
+            defaultOpen={false}
+          >
             <NotificationSettingsEditor
               getIdToken={async () => auth?.currentUser?.getIdToken() ?? null}
             />
-          </section>
+          </OpsCollapsibleSection>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Scheduler service types</h2>
+          <OpsCollapsibleSection
+            title="Services on the booking form"
+            summary="Names, prices, and durations patients pick when booking."
+            defaultOpen={false}
+          >
             <SchedulerServicesEditor
               getIdToken={async () => auth?.currentUser?.getIdToken() ?? null}
             />
-          </section>
+          </OpsCollapsibleSection>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Bookable providers (public scheduling)</h2>
+          <OpsCollapsibleSection
+            title="Who patients can book"
+            summary="Therapists and doctors shown on the public booking calendar."
+            defaultOpen
+          >
             <p className="text-sm text-slate-600">
-              Each row is a person clients can book. Two providers can share the same time at one location because
-              slots are tracked per provider. Optional custom hours override the default 9:00 AM–5:00 PM Chicago window for
-              that person only.
+              Each person has their own calendar. Optional hours override the default 9:00 AM–5:00 PM window.
             </p>
-            <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-              Public &ldquo;Meet the team&rdquo; bios and photos:{" "}
+            <p className="text-sm text-slate-600">
+              Website bios and photos:{" "}
               <Link href="/admin/super/page-builder?page=massage" className="font-semibold text-[#0f5f5c] underline">
-                Website editor → Massage page
+                Website → Massage page
               </Link>
-              . After adding providers here, use &ldquo;Copy bookable massage providers into team&rdquo; there to sync
-              the website roster.
+              .
             </p>
 
             <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-4 space-y-3">
@@ -1082,75 +1043,35 @@ export default function SuperAdminPage() {
                 </li>
               ))}
               {bookableProviders.length === 0 ? (
-                <li className="text-slate-600">No provider documents yet. Add your team above.</li>
+                <li className="text-slate-600">No one on the calendar yet — add a provider above.</li>
               ) : null}
             </ul>
-          </section>
+          </OpsCollapsibleSection>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
-            <h2 className="text-lg font-semibold text-slate-900">Bootstrap again (optional)</h2>
-            <p className="text-sm text-slate-600">
-              Only needed if you rotate the secret and must recover access. Prefer granting roles above.
-            </p>
-            <input
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              placeholder="Bootstrap secret"
-              value={bootstrapSecret}
-              onChange={(e) => setBootstrapSecret(e.target.value)}
-            />
-            <button
-              type="button"
-              onClick={runBootstrap}
-              className="rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
+          {me?.role === "superadmin" ? (
+            <OpsCollapsibleSection
+              title="First-time setup (advanced)"
+              summary="Only if your web person gave you a new setup code."
+              defaultOpen={false}
             >
-              Run bootstrap
-            </button>
-          </section>
-
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
-            <h2 className="text-lg font-semibold text-slate-900">Current staff documents</h2>
-            <ul className="space-y-2 text-sm text-slate-700">
-              {staff.map((s) => {
-                const isSelf = auth?.currentUser?.uid === s.uid;
-                return (
-                  <li
-                    key={s.uid}
-                    className="flex flex-wrap items-start justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 font-mono text-xs"
-                  >
-                    <div className="min-w-0 flex-1 space-y-1">
-                      <div className="font-semibold text-slate-900">{s.email ?? s.uid}</div>
-                      <div>uid: {s.uid}</div>
-                      <div>role: {staffRoleLabel(s.role)}</div>
-                      {s.role === "massage_therapist" ? (
-                        <div>
-                          linked provider:{" "}
-                          {s.linkedProviderId
-                            ? (providerLabelById(s.linkedProviderId) ?? s.linkedProviderId)
-                            : "(not set — re-invite and pick a provider)"}
-                        </div>
-                      ) : null}
-                      {isSelf ? (
-                        <div className="font-sans text-[11px] text-slate-500">
-                          You cannot remove yourself here; another manager must revoke your access.
-                        </div>
-                      ) : null}
-                    </div>
-                    {!isSelf ? (
-                      <button
-                        type="button"
-                        disabled={deletingUid === s.uid}
-                        onClick={() => deleteStaffRow(s.uid)}
-                        className="shrink-0 rounded-full border border-red-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-red-700 hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {deletingUid === s.uid ? "Removing…" : "Remove access"}
-                      </button>
-                    ) : null}
-                  </li>
-                );
-              })}
-              {staff.length === 0 ? <li className="text-slate-600">No rows returned.</li> : null}
-            </ul>
-          </section>
+              <p className="text-sm text-slate-600">
+                Use only when recovering owner access. Prefer inviting team members above.
+              </p>
+              <input
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                placeholder="Setup code"
+                value={bootstrapSecret}
+                onChange={(e) => setBootstrapSecret(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={runBootstrap}
+                className="rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
+              >
+                Run setup
+              </button>
+            </OpsCollapsibleSection>
+          ) : null}
         </>
       ) : null}
     </div>

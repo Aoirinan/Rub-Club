@@ -4,14 +4,20 @@ import { BRAND_LOGOS } from "@/lib/brand-logos";
 /** Icon + type lockup — avoids the old screenshot PNG (off-center, muddy background). */
 export function SulphurSpringsLockup({
   primary = false,
+  heightPx,
+  iconScalePercent = 88,
   className = "",
 }: {
   primary?: boolean;
+  heightPx?: number;
+  iconScalePercent?: number;
   className?: string;
 }) {
+  const iconPct = Math.min(100, Math.max(60, iconScalePercent));
   return (
     <span
       className={`inline-flex max-w-full items-center gap-1.5 sm:gap-2 ${className}`}
+      style={heightPx ? { height: `${heightPx}px` } : undefined}
     >
       <Image
         src={BRAND_LOGOS.sulphurSpringsIcon}
@@ -19,7 +25,8 @@ export function SulphurSpringsLockup({
         width={120}
         height={120}
         aria-hidden
-        className="aspect-square h-[88%] w-auto shrink-0 object-contain"
+        className="aspect-square w-auto shrink-0 object-contain"
+        style={{ height: `${iconPct}%`, maxHeight: "100%" }}
       />
       <span className="flex min-w-0 flex-col justify-center text-left leading-tight text-[#243447]">
         <span

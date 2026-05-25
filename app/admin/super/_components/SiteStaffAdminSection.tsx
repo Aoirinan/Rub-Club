@@ -155,7 +155,7 @@ export function SiteStaffAdminSection({ auth, onNotify }: Props) {
     if (!user) return;
     if (
       !window.confirm(
-        "Copy the current Paris and Sulphur Springs staff pages into Firestore? After this, those pages read from this list until you clear it.",
+        "Import Paris and Sulphur staff from the current website? You can edit the list here afterward.",
       )
     ) {
       return;
@@ -175,13 +175,13 @@ export function SiteStaffAdminSection({ auth, onNotify }: Props) {
       if (!res.ok) {
         setSectionAlert({
           kind: "error",
-          text: typeof data.error === "string" ? data.error : "Could not seed staff.",
+          text: typeof data.error === "string" ? data.error : "Could not import staff.",
         });
         return;
       }
       setSectionAlert({
         kind: "success",
-        text: "Staff copied into Firestore. Paris and Sulphur Springs staff pages now use this list.",
+        text: "Staff imported. Paris and Sulphur Springs staff pages now use this list.",
       });
       await load();
     } finally {
@@ -381,11 +381,11 @@ export function SiteStaffAdminSection({ auth, onNotify }: Props) {
           <p className="mt-2 text-xs text-slate-500">Loading…</p>
         ) : siteUsesCustomList ? (
           <p className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-950">
-            Public pages use Firestore ({members.length} {members.length === 1 ? "person" : "people"}).
+            Your staff pages are live ({members.length} {members.length === 1 ? "person" : "people"}).
           </p>
         ) : (
           <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
-            Public pages still use the built-in roster from code. Seed once, then add or edit people here.
+            Using the default list — import or add someone to customize.
           </p>
         )}
       </div>
@@ -397,7 +397,7 @@ export function SiteStaffAdminSection({ auth, onNotify }: Props) {
           onClick={() => void seedDefaults()}
           className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {seeding ? "Copying…" : "Copy current site roster into Firestore"}
+          {seeding ? "Importing…" : "Import people already on the website"}
         </button>
       </div>
 

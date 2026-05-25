@@ -1,4 +1,5 @@
 import { FACEBOOK_URL, WELLNESS_CARE_PLANS_PATH, telHref, type LocationInfo } from "@/lib/constants";
+import type { HeaderBrandingHeights } from "@/lib/header-branding-cms";
 import { HeaderBrandLogoStrip } from "@/components/HeaderBrandLogoStrip";
 import { MobileNav } from "@/components/MobileNav";
 import { DesktopNav, type NavItem } from "@/components/DesktopNav";
@@ -40,10 +41,12 @@ export function SiteHeader({
   paris,
   sulphur,
   giftCardHref,
+  headerHeights,
 }: {
   paris: LocationInfo;
   sulphur: LocationInfo;
   giftCardHref: string;
+  headerHeights?: HeaderBrandingHeights;
 }) {
   const navItems = buildNavItems(giftCardHref);
   const rub = paris.phoneSecondary?.trim();
@@ -83,7 +86,11 @@ export function SiteHeader({
       <div className="bg-white px-4 py-3 sm:py-4">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <HeaderBrandLogoStrip paris={paris} sulphur={sulphur} />
+            <HeaderBrandLogoStrip
+              paris={paris}
+              sulphur={sulphur}
+              headerHeights={headerHeights}
+            />
           </div>
 
           <div className="hidden items-center justify-end gap-2 text-xs lg:flex">

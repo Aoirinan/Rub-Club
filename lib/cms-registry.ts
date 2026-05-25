@@ -20,6 +20,10 @@ import {
 import { buildSSCmsDefaults, buildSSCmsRegistry } from "@/lib/ss-cms-registry";
 import { buildSSStaffCmsDefaults, buildSSStaffCmsRegistry } from "@/lib/ss-staff-cms-registry";
 import {
+  buildHeaderBrandingCmsDefaults,
+  buildHeaderBrandingCmsRegistry,
+} from "@/lib/header-branding-cms";
+import {
   STATIC_PAGES_CMS_REGISTRY,
   buildStaticPagesCmsDefaults,
 } from "@/lib/static-pages-cms";
@@ -50,6 +54,7 @@ export type ContentPageKey =
   | "Contact"
   | "Footer"
   | "Navigation"
+  | "Header branding"
   | "Doctors"
   | "Wellness care plans";
 
@@ -233,6 +238,7 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   ...buildSSCmsRegistry(),
   ...buildParisStaffCmsRegistry(),
   ...buildSSStaffCmsRegistry(),
+  ...buildHeaderBrandingCmsRegistry(),
   ...STATIC_PAGES_CMS_REGISTRY,
 ];
 
@@ -318,6 +324,7 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
   ...buildSSCmsDefaults(),
   ...buildParisStaffCmsDefaults(),
   ...buildSSStaffCmsDefaults(),
+  ...buildHeaderBrandingCmsDefaults(),
   ...buildStaticPagesCmsDefaults(),
 };
 

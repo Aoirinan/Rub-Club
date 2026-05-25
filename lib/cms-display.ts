@@ -1,5 +1,10 @@
 import { getContentMany } from "@/lib/cms";
 import { reviewUrlForLocation, type LocationId, type LocationInfo } from "@/lib/constants";
+import {
+  HEADER_BRANDING_FIELD_IDS,
+  parseHeaderBrandingHeights,
+  type HeaderBrandingHeights,
+} from "@/lib/header-branding-cms";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
 
@@ -21,6 +26,13 @@ export async function getLayoutCmsContent(): Promise<LayoutCmsContent> {
   const values = await getContentMany([...LAYOUT_CMS_IDS]);
   return values as LayoutCmsContent;
 }
+
+export async function getHeaderBrandingHeights(): Promise<HeaderBrandingHeights> {
+  const values = await getContentMany([...HEADER_BRANDING_FIELD_IDS]);
+  return parseHeaderBrandingHeights(values);
+}
+
+export type { HeaderBrandingHeights };
 
 /** Paris + Sulphur locations with CMS → owner settings → constants merge. */
 export async function getDisplayLocations(): Promise<Record<LocationId, LocationInfo>> {

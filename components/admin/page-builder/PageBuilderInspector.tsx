@@ -4,6 +4,7 @@ import type { Auth } from "firebase/auth";
 import { MassageTeamAdminSection } from "@/app/admin/super/_components/MassageTeamAdminSection";
 import { SiteStaffAdminSection } from "@/app/admin/super/_components/SiteStaffAdminSection";
 import { CmsFieldEditor } from "@/components/admin/cms/CmsFieldEditor";
+import { HeaderBrandingInspector } from "@/components/admin/page-builder/HeaderBrandingInspector";
 import type { SiteContentFieldRow } from "@/components/admin/cms/useSiteContentFields";
 import { HERO_BLOCK_ID, fieldMetaForIds, heroFieldIdsForLayoutPage } from "@/lib/page-builder-cms";
 import {
@@ -86,6 +87,20 @@ export function PageBuilderInspector({
   onResetField,
   onNotify,
 }: Props) {
+  if (mode === "content" && contentScopeId === "header-branding") {
+    return (
+      <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <h3 className="text-sm font-bold text-slate-900">Header logos</h3>
+        <HeaderBrandingInspector
+          fields={fields}
+          busy={cmsBusy}
+          message={cmsMessage}
+          onSave={onSaveField}
+        />
+      </div>
+    );
+  }
+
   if (mode === "content" && contentScopeId) {
     if (!selectedSectionId) {
       return (

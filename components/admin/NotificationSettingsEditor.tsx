@@ -187,18 +187,23 @@ export function NotificationSettingsEditor({ getIdToken }: Props) {
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-1">
-        {NOTIFICATION_MERGE_FIELDS.map((f) => (
-          <button
-            key={f}
-            type="button"
-            onClick={() => insertField(f)}
-            className="rounded bg-white px-2 py-0.5 text-[10px] font-mono ring-1 ring-slate-200 hover:bg-slate-50"
-          >
-            [{f}]
-          </button>
-        ))}
-      </div>
+      <details className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+        <summary className="cursor-pointer font-semibold text-slate-800">
+          Insert placeholders (name, time, etc.)
+        </summary>
+        <div className="mt-2 flex flex-wrap gap-1">
+          {NOTIFICATION_MERGE_FIELDS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => insertField(f)}
+              className="rounded bg-white px-2 py-0.5 text-[10px] font-mono ring-1 ring-slate-200 hover:bg-slate-50"
+            >
+              [{f}]
+            </button>
+          ))}
+        </div>
+      </details>
 
       {channel === "sms" ? (
         <label className="block text-sm">

@@ -542,9 +542,24 @@ export function OwnerMarketingPanel() {
             onSaveReviews={() => void saveEditableCopy()}
           />
         <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold">Gift card &amp; HTML snippets</h2>
+          <h2 className="text-lg font-bold">Gift card bar</h2>
           <p className="text-sm text-slate-600">
-            Phone numbers and most page copy are edited under <strong className="font-semibold">Website editor</strong>.
+            Edit everyday copy in{" "}
+            <a href="/admin/super/page-builder?scope=home" className="font-semibold text-[#0f5f5c] underline">
+              Website → Home
+            </a>
+            ,{" "}
+            <a href="/admin/super/page-builder?scope=footer" className="font-semibold text-[#0f5f5c] underline">
+              Footer
+            </a>
+            , and{" "}
+            <a
+              href="/admin/super/page-builder?scope=navigation"
+              className="font-semibold text-[#0f5f5c] underline"
+            >
+              Navigation
+            </a>{" "}
+            (gift card link, phones, tagline).
           </p>
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -578,45 +593,75 @@ export function OwnerMarketingPanel() {
               }
             />
           </label>
-          <label className="block text-sm">
-            <span className="font-semibold">Square gift card order URL</span>
-            <input
-              className="mt-1 w-full rounded border border-slate-300 px-2 py-1 font-mono text-sm"
-              value={config.editableCopy.giftCardOrderUrl}
-              onChange={(e) =>
-                setConfig({
-                  ...config,
-                  editableCopy: { ...config.editableCopy, giftCardOrderUrl: e.target.value },
-                })
-              }
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="font-semibold">Homepage awards strip (HTML)</span>
-            <textarea
-              className="mt-1 min-h-[72px] w-full rounded border border-slate-300 px-2 py-2 font-mono text-xs"
-              value={config.editableCopy.awardsStripHtml}
-              onChange={(e) =>
-                setConfig({
-                  ...config,
-                  editableCopy: { ...config.editableCopy, awardsStripHtml: e.target.value },
-                })
-              }
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="font-semibold">Footer intro column (HTML)</span>
-            <textarea
-              className="mt-1 min-h-[100px] w-full rounded border border-slate-300 px-2 py-2 font-mono text-xs"
-              value={config.editableCopy.footerBlurbHtml}
-              onChange={(e) =>
-                setConfig({
-                  ...config,
-                  editableCopy: { ...config.editableCopy, footerBlurbHtml: e.target.value },
-                })
-              }
-            />
-          </label>
+          <details className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
+            <summary className="cursor-pointer font-semibold text-slate-900">
+              Advanced HTML overrides (optional)
+            </summary>
+            <p className="mt-2 text-slate-600">
+              Only use if you need raw HTML instead of the Website editor. When set, these override Home awards
+              and Footer intro.
+            </p>
+            <label className="mt-3 block text-sm">
+              <span className="font-semibold">Square gift card order URL</span>
+              <p className="text-xs text-slate-500">
+                Prefer{" "}
+                <a href="/admin/super/page-builder?scope=navigation" className="underline">
+                  Website → Navigation
+                </a>
+                .
+              </p>
+              <input
+                className="mt-1 w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                value={config.editableCopy.giftCardOrderUrl}
+                onChange={(e) =>
+                  setConfig({
+                    ...config,
+                    editableCopy: { ...config.editableCopy, giftCardOrderUrl: e.target.value },
+                  })
+                }
+              />
+            </label>
+            <label className="mt-3 block text-sm">
+              <span className="font-semibold">Homepage awards strip (HTML)</span>
+              <p className="text-xs text-slate-500">
+                Prefer{" "}
+                <a href="/admin/super/page-builder?scope=home" className="underline">
+                  Website → Home
+                </a>{" "}
+                awards text.
+              </p>
+              <textarea
+                className="mt-1 min-h-[72px] w-full rounded border border-slate-300 px-2 py-2 font-mono text-xs"
+                value={config.editableCopy.awardsStripHtml}
+                onChange={(e) =>
+                  setConfig({
+                    ...config,
+                    editableCopy: { ...config.editableCopy, awardsStripHtml: e.target.value },
+                  })
+                }
+              />
+            </label>
+            <label className="mt-3 block text-sm">
+              <span className="font-semibold">Footer intro column (HTML)</span>
+              <p className="text-xs text-slate-500">
+                Prefer{" "}
+                <a href="/admin/super/page-builder?scope=footer" className="underline">
+                  Website → Footer
+                </a>
+                .
+              </p>
+              <textarea
+                className="mt-1 min-h-[100px] w-full rounded border border-slate-300 px-2 py-2 font-mono text-xs"
+                value={config.editableCopy.footerBlurbHtml}
+                onChange={(e) =>
+                  setConfig({
+                    ...config,
+                    editableCopy: { ...config.editableCopy, footerBlurbHtml: e.target.value },
+                  })
+                }
+              />
+            </label>
+          </details>
           <button
             type="button"
             onClick={() => void saveEditableCopy()}
