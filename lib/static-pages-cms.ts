@@ -1,4 +1,4 @@
-import type { ContentFieldMeta } from "@/lib/cms";
+import type { ContentFieldMeta } from "@/lib/cms-registry";
 import { TESTIMONIALS } from "@/lib/testimonials";
 
 export const STATIC_PAGES_CMS_REGISTRY: ContentFieldMeta[] = [

@@ -3,10 +3,7 @@ import { MASSAGE } from "@/lib/home-verbatim";
 
 export type OfficeHoursRow = { day: string; hours: string };
 
-const PARIS_HOURS_CMS_DEFAULT = MASSAGE.hours.map((r) => `${r.day}|${r.hours}`).join("\n");
-
-/** Default multiline value for seeding / docs. */
-export const PARIS_HOURS_DEFAULT_TEXT = PARIS_HOURS_CMS_DEFAULT;
+export { PARIS_HOURS_DEFAULT_TEXT } from "@/lib/cms-registry";
 
 function parseLine(line: string): OfficeHoursRow | null {
   const trimmed = line.trim();

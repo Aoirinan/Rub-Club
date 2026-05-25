@@ -1,4 +1,4 @@
-import type { ContentFieldMeta } from "@/lib/cms";
+import type { ContentFieldMeta } from "@/lib/cms-registry";
 import { SS_INJURIES, SS_PATIENT_RESOURCES, SS_SERVICES } from "@/lib/sulphur-springs-content";
 
 export function ssPageBodyId(slug: string): string {

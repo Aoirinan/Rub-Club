@@ -4,7 +4,8 @@ export const BRAND_LOGOS = {
   rubClub: "/logos/rub-club.png",
   /** Prefer .webp until a new PNG is added; update path when replacing Sean's lockup. */
   chiropractic: "/logos/chiropractic-associates.webp",
-  sulphurSprings: "/logos/sulphur-springs-associates.png",
+  /** Spine-in-circle mark; paired with type in `SulphurSpringsLockup`. */
+  sulphurSpringsIcon: "/logos/sulphur-springs-icon.webp",
 } as const;
 
 export type BrandLogoVariant = "home" | "massage" | "chiropractic" | "sulphur-springs";

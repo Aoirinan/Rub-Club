@@ -1,5 +1,5 @@
-import type { ContentFieldMeta, ContentPageKey } from "@/lib/cms";
-import { CONTENT_REGISTRY } from "@/lib/cms";
+import type { ContentFieldMeta, ContentPageKey } from "@/lib/cms-registry";
+import { CONTENT_REGISTRY } from "@/lib/cms-registry";
 import type { PageLayoutId } from "@/lib/page-layout";
 import { isPageLayoutId } from "@/lib/page-layout";
 

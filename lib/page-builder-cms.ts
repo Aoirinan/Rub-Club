@@ -1,6 +1,5 @@
-import type { ContentFieldMeta, ContentPageKey } from "@/lib/cms";
-import { CONTENT_REGISTRY, getContentFieldMeta } from "@/lib/cms";
-import { DOCTOR_CMS_KEYS } from "@/lib/cms-doctors";
+import type { ContentFieldMeta, ContentPageKey } from "@/lib/cms-registry";
+import { getContentFieldMeta } from "@/lib/cms-registry";
 import type { PageLayoutId } from "@/lib/page-layout";
 import { isPageLayoutId } from "@/lib/page-layout";
 
@@ -34,11 +33,6 @@ export function layoutPageLabels(pageId: PageLayoutId): ContentPageKey[] {
   return [...cfg.pageLabels, ...(cfg.extraPageLabels ?? [])];
 }
 
-export function registryFieldsForLayoutPage(pageId: PageLayoutId): ContentFieldMeta[] {
-  const labels = new Set(layoutPageLabels(pageId));
-  return CONTENT_REGISTRY.filter((f) => labels.has(f.pageLabel));
-}
-
 export function heroFieldIdsForLayoutPage(pageId: PageLayoutId): string[] {
   return LAYOUT_PAGE_CMS[pageId].heroFieldIds;
 }
@@ -55,8 +49,24 @@ export function fieldMetaForIds(ids: string[]): ContentFieldMeta[] {
     .filter((f): f is ContentFieldMeta => Boolean(f));
 }
 
-/** Doctor block uses full doctor CMS keys. */
-export const DOCTORS_BLOCK_FIELD_IDS: string[] = [...DOCTOR_CMS_KEYS];
+/** Doctor block uses full doctor CMS keys (keep in sync with cms-doctors). */
+export const DOCTORS_BLOCK_FIELD_IDS: string[] = [
+  "doctor_greg_name",
+  "doctor_greg_role",
+  "doctor_greg_bio",
+  "doctor_greg_photo",
+  "doctor_greg_video",
+  "doctor_sean_name",
+  "doctor_sean_role",
+  "doctor_sean_bio",
+  "doctor_sean_photo",
+  "doctor_sean_video",
+  "doctor_brandy_name",
+  "doctor_brandy_role",
+  "doctor_brandy_bio",
+  "doctor_brandy_photo",
+  "doctor_brandy_video",
+];
 
 export type BuilderScopeKind = "layout" | "content";
 

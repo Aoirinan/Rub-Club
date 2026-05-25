@@ -1,4 +1,4 @@
-import type { ContentPageKey } from "@/lib/cms";
+import type { ContentPageKey } from "@/lib/cms-registry";
 
 export type PageLayoutId = "massage" | "sulphur-springs" | "chiropractic";
 

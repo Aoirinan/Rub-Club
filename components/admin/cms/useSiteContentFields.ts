@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type { ContentFieldMeta, ContentFieldType } from "@/lib/cms";
+import type { ContentFieldMeta, ContentFieldType } from "@/lib/cms-registry";
 
 export type SiteContentFieldRow = ContentFieldMeta & {
   value: string;

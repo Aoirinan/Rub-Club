@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { SulphurSpringsLockup } from "@/components/SulphurSpringsLockup";
 import { IMAGES } from "@/lib/home-images";
 import { BRAND_LOGOS, type BrandLogoVariant } from "@/lib/brand-logos";
 import { telHref, type LocationInfo } from "@/lib/constants";
@@ -8,7 +9,8 @@ type BrandKey = "rub" | "chiro" | "ss";
 
 type LogoEntry = {
   key: BrandKey;
-  src: string;
+  /** Omitted for Sulphur Springs — uses `SulphurSpringsLockup` instead. */
+  src?: string;
   alt: string;
   phone: string;
   phoneLabel: string;
@@ -42,7 +44,6 @@ function buildBrandEntries(paris: LocationInfo, sulphur: LocationInfo): LogoEntr
     },
     {
       key: "ss",
-      src: BRAND_LOGOS.sulphurSprings,
       alt: "Chiropractic Associates of Sulphur Springs",
       phone: sulphur.phonePrimary,
       phoneLabel: "Sulphur Springs",
@@ -102,16 +103,22 @@ export function BrandLogoStrip({
     >
       {entries.map((entry) => {
         const primary = entry.key === primaryKey;
-        const img = (
-          <Image
-            src={entry.src}
-            alt={entry.alt}
-            width={entry.width}
-            height={entry.height}
-            className={`mx-auto object-contain sm:mx-0 sm:object-left ${logoHeightClass(primary)}`}
-            priority={primary}
-          />
-        );
+        const img =
+          entry.key === "ss" ? (
+            <SulphurSpringsLockup
+              primary={primary}
+              className={`mx-auto sm:mx-0 ${logoHeightClass(primary)}`}
+            />
+          ) : (
+            <Image
+              src={entry.src!}
+              alt={entry.alt}
+              width={entry.width}
+              height={entry.height}
+              className={`mx-auto object-contain sm:mx-0 sm:object-left ${logoHeightClass(primary)}`}
+              priority={primary}
+            />
+          );
         return (
           <div
             key={entry.key}
