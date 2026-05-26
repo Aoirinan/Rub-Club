@@ -41,12 +41,20 @@ export function businessTagFromSchedulerBusiness(
   return "chiro";
 }
 
-export function schedulerDefaultsFromBusiness(business: "rub_club" | "paris_chiro" | "sulphur_springs"): {
+export type SchedulerBookingMode = "bodywork" | "chiropractic";
+
+export function schedulerDefaultsFromBusiness(
+  business: "rub_club" | "paris_chiro" | "sulphur_springs",
+  opts?: { schedulerMode?: SchedulerBookingMode },
+): {
   locationId: LocationId;
   serviceLine: ServiceLine;
 } {
   if (business === "sulphur_springs") {
-    return { locationId: "sulphur_springs", serviceLine: "chiropractic" };
+    return {
+      locationId: "sulphur_springs",
+      serviceLine: opts?.schedulerMode === "bodywork" ? "massage" : "chiropractic",
+    };
   }
   if (business === "paris_chiro") {
     return { locationId: "paris", serviceLine: "chiropractic" };

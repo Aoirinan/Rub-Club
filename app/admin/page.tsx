@@ -368,6 +368,16 @@ function AdminDashboard() {
     [providers, filters.providerId, serviceScope, filters.business],
   );
 
+  /** Full list for New Appointment — drawer applies its own business filter. */
+  const bookingDrawerProviders = useMemo(
+    () =>
+      providers
+        .filter((p) => p.active)
+        .filter((p) => providerMatchesServiceScope(p, serviceScope))
+        .sort((a, b) => a.sortOrder - b.sortOrder || a.displayName.localeCompare(b.displayName)),
+    [providers, serviceScope],
+  );
+
   const pendingRows = useMemo(
     () =>
       viewBookings
@@ -698,9 +708,12 @@ function AdminDashboard() {
           await refreshBookings();
         }}
         getIdToken={getIdToken}
-        providers={scopedProviders}
+        providers={bookingDrawerProviders}
         defaultDate={filters.date}
-        defaultServiceLine={isChiroWindow ? "chiropractic" : "massage"}
+        defaultBusiness={
+          filters.business === "all" ? undefined : filters.business
+        }
+        schedulerMode={schedulerMode}
       />
 
       <BlockTimeDrawer

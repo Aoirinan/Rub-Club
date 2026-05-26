@@ -8,6 +8,7 @@ import {
   businessTagFromSchedulerBusiness,
   schedulerDefaultsFromBusiness,
   type PatientBusinessTag,
+  type SchedulerBookingMode,
 } from "@/lib/patient-business";
 import {
   providerMatchesSchedulerBusiness,
@@ -15,6 +16,27 @@ import {
   type SchedulerBusinessId,
 } from "@/lib/scheduler-business";
 import type { ProviderRow } from "./types";
+
+function resolveDefaultBusiness(
+  defaultBusiness: SchedulerBusinessId | undefined,
+  schedulerMode: SchedulerBookingMode,
+): Exclude<SchedulerBusinessId, "all"> {
+  if (defaultBusiness && defaultBusiness !== "all") {
+    return defaultBusiness;
+  }
+  return schedulerMode === "chiropractic" ? "paris_chiro" : "rub_club";
+}
+
+const LOCATION_LABELS: Record<"paris" | "sulphur_springs", string> = {
+  paris: "Paris",
+  sulphur_springs: "Sulphur Springs",
+};
+
+const SERVICE_LINE_LABELS: Record<"massage" | "chiropractic" | "stretch", string> = {
+  massage: "massage",
+  chiropractic: "chiropractic",
+  stretch: "stretch",
+};
 
 type Props = {
   open: boolean;
@@ -24,7 +46,9 @@ type Props = {
   providers: ProviderRow[];
   /** Pre-fill date from the scheduler's current view (yyyy-MM-dd Chicago). */
   defaultDate?: string;
-  defaultServiceLine?: "massage" | "chiropractic" | "stretch";
+  /** Pre-fill business from the scheduler filter when not "all". */
+  defaultBusiness?: Exclude<SchedulerBusinessId, "all">;
+  schedulerMode?: SchedulerBookingMode;
 };
 
 export function NewBookingDrawer({
@@ -34,12 +58,21 @@ export function NewBookingDrawer({
   getIdToken,
   providers,
   defaultDate,
-  defaultServiceLine = "massage",
+  defaultBusiness,
+  schedulerMode = "bodywork",
 }: Props) {
-  const [business, setBusiness] = useState<Exclude<SchedulerBusinessId, "all">>("rub_club");
-  const [locationId, setLocationId] = useState<"paris" | "sulphur_springs">("paris");
+  const [business, setBusiness] = useState<Exclude<SchedulerBusinessId, "all">>(() =>
+    resolveDefaultBusiness(defaultBusiness, schedulerMode),
+  );
+  const initialDefaults = schedulerDefaultsFromBusiness(
+    resolveDefaultBusiness(defaultBusiness, schedulerMode),
+    { schedulerMode },
+  );
+  const [locationId, setLocationId] = useState<"paris" | "sulphur_springs">(
+    initialDefaults.locationId,
+  );
   const [serviceLine, setServiceLine] = useState<"massage" | "chiropractic" | "stretch">(
-    defaultServiceLine,
+    initialDefaults.serviceLine,
   );
   const [patientBusinessTag, setPatientBusinessTag] = useState<PatientBusinessTag>("rub_club");
   const [patientSearch, setPatientSearch] = useState("");
@@ -69,14 +102,18 @@ export function NewBookingDrawer({
   const [successDetail, setSuccessDetail] = useState<string | null>(null);
 
   useEffect(() => {
-    if (open) {
-      setError(null);
-      setSuccess(false);
-      setSuccessDetail(null);
-      setDate(defaultDate ?? DateTime.now().setZone(TIME_ZONE).toFormat("yyyy-LL-dd"));
-      setServiceLine(defaultServiceLine);
-    }
-  }, [open, defaultDate, defaultServiceLine]);
+    if (!open) return;
+    setError(null);
+    setSuccess(false);
+    setSuccessDetail(null);
+    setDate(defaultDate ?? DateTime.now().setZone(TIME_ZONE).toFormat("yyyy-LL-dd"));
+    const biz = resolveDefaultBusiness(defaultBusiness, schedulerMode);
+    setBusiness(biz);
+    const d = schedulerDefaultsFromBusiness(biz, { schedulerMode });
+    setLocationId(d.locationId);
+    setServiceLine(d.serviceLine);
+    setPatientBusinessTag(businessTagFromSchedulerBusiness(biz));
+  }, [open, defaultDate, defaultBusiness, schedulerMode]);
 
   useEffect(() => {
     if (!open) return;
@@ -101,11 +138,12 @@ export function NewBookingDrawer({
   }, [open, getIdToken]);
 
   useEffect(() => {
-    const d = schedulerDefaultsFromBusiness(business);
+    if (!open) return;
+    const d = schedulerDefaultsFromBusiness(business, { schedulerMode });
     setLocationId(d.locationId);
     setServiceLine(d.serviceLine);
     setPatientBusinessTag(businessTagFromSchedulerBusiness(business));
-  }, [business]);
+  }, [business, schedulerMode, open]);
 
   useEffect(() => {
     if (!open || patientSearch.trim().length < 2) {
@@ -147,6 +185,12 @@ export function NewBookingDrawer({
         .sort((a, b) => a.sortOrder - b.sortOrder || a.displayName.localeCompare(b.displayName)),
     [providers, locationId, serviceLine, business],
   );
+
+  const emptyProviderMessage = useMemo(() => {
+    const loc = LOCATION_LABELS[locationId];
+    const svc = SERVICE_LINE_LABELS[serviceLine];
+    return `No providers match ${SCHEDULER_BUSINESS_LABELS[business]} (${loc}, ${svc}). Check Superadmin → Who patients can book, or change Business above.`;
+  }, [business, locationId, serviceLine]);
 
   useEffect(() => {
     if (filteredProviders.length > 0 && !filteredProviders.find((p) => p.id === providerId)) {
@@ -388,7 +432,7 @@ export function NewBookingDrawer({
                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
                 >
                   {filteredProviders.length === 0 ? (
-                    <option value="">No providers for this combination</option>
+                    <option value="">{emptyProviderMessage}</option>
                   ) : (
                     filteredProviders.map((p) => (
                       <option key={p.id} value={p.id}>
