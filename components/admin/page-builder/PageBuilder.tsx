@@ -294,7 +294,7 @@ export function PageBuilder({ getIdToken, initialScope }: Props) {
   ) : null;
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-slate-100">
+    <div className="relative isolate z-0 flex min-h-[calc(100vh-4rem)] flex-col bg-slate-100">
       <header className="sticky top-0 z-20 flex flex-wrap items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
         <h1 className="text-lg font-bold text-slate-900">Website editor</h1>
         <div className="flex flex-1 flex-wrap items-center justify-end gap-3">

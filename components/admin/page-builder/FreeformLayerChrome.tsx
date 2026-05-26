@@ -25,14 +25,14 @@ export function FreeformLayerChrome({ selected, onResizeStart, toolbar }: Props)
   return (
     <>
       <div
-        className="pointer-events-none absolute inset-0 z-20 rounded-sm ring-2 ring-[#0f5f5c] ring-offset-1"
+        className="pointer-events-none absolute inset-0 z-10 rounded-sm ring-2 ring-[#0f5f5c] ring-offset-1"
         aria-hidden
       />
       {HANDLES.map(({ anchor, className, cursor }) => (
         <span
           key={anchor}
           role="presentation"
-          className={`absolute z-30 h-3 w-3 rounded-full border-2 border-[#0f5f5c] bg-white shadow ${className}`}
+          className={`absolute z-20 h-3 w-3 rounded-full border-2 border-[#0f5f5c] bg-white shadow ${className}`}
           style={{ cursor }}
           onPointerDown={(e) => {
             e.preventDefault();
@@ -42,7 +42,7 @@ export function FreeformLayerChrome({ selected, onResizeStart, toolbar }: Props)
         />
       ))}
       {toolbar ? (
-        <div className="absolute -top-12 left-0 z-40 flex min-w-max flex-wrap items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs shadow-md">
+        <div className="absolute -top-12 left-0 z-20 flex min-w-max flex-wrap items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs shadow-md">
           {toolbar}
         </div>
       ) : null}

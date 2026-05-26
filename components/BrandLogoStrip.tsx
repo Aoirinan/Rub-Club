@@ -102,7 +102,7 @@ function FreeLayoutStrip({
 }) {
   return (
     <div
-      className={`relative w-full ${className ?? ""}`}
+      className={`relative w-full overflow-hidden ${className ?? ""}`}
       style={{ height: layout.frameHeight, minHeight: layout.frameHeight }}
     >
       {HEADER_BRAND_KEYS.map((key) => {
