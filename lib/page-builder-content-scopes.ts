@@ -9,6 +9,7 @@ export type ContentScopeId =
   | "wellness"
   | "paris-office"
   | "paris-staff"
+  | "ss-staff"
   | "ss-subpages"
   | "insurance"
   | "services-hub"
@@ -30,6 +31,7 @@ export function isContentScopeId(v: string): v is ContentScopeId {
     v === "wellness" ||
     v === "paris-office" ||
     v === "paris-staff" ||
+    v === "ss-staff" ||
     v === "ss-subpages" ||
     v === "insurance" ||
     v === "services-hub" ||
@@ -58,6 +60,7 @@ const CONTENT_SCOPE_PAGES: Record<ContentScopeId, ContentPageKey[]> = {
   wellness: ["Wellness care plans"],
   "paris-office": ["Paris / main office"],
   "paris-staff": ["Paris staff"],
+  "ss-staff": ["Sulphur staff"],
   "ss-subpages": ["SS subpages"],
   insurance: ["Insurance"],
   "services-hub": ["Services hub"],
@@ -119,7 +122,9 @@ export const CONTENT_SCOPES: ContentScopeDef[] = (
             ? "Paris office"
             : id === "paris-staff"
               ? "Paris staff"
-              : id === "services-hub"
+              : id === "ss-staff"
+                ? "Sulphur staff"
+                : id === "services-hub"
                 ? "Services hub"
                 : id === "patient-forms"
                   ? "Patient forms"

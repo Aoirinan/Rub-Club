@@ -7,7 +7,7 @@ import type { SiteStaffBrand, SiteStaffMemberStored } from "@/lib/site-staff";
 type Props = {
   auth: Auth | null;
   onNotify: (message: string | null) => void;
-  /** When set (Site content → Paris/Sulphur staff), list and add form target one location. */
+  /** When set (Website editor → Paris/Sulphur staff), list and add form target one location. */
   locationFocus?: "paris" | "sulphur";
 };
 
@@ -29,10 +29,10 @@ function brandLabel(brand: SiteStaffBrand): string {
   return "Both locations";
 }
 
-export function SiteStaffAdminSection({ auth, onNotify }: Props) {
+export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) {
   const [members, setMembers] = useState<SiteStaffMemberStored[]>([]);
   const [siteUsesCustomList, setSiteUsesCustomList] = useState(false);
-  const [brandFilter, setBrandFilter] = useState<BrandFilter>("all");
+  const [brandFilter, setBrandFilter] = useState<BrandFilter>(locationFocus ?? "all");
   const [sectionAlert, setSectionAlert] = useState<{ kind: "error" | "success"; text: string } | null>(
     null,
   );
@@ -45,7 +45,7 @@ export function SiteStaffAdminSection({ auth, onNotify }: Props) {
   const [newName, setNewName] = useState("");
   const [newTitle, setNewTitle] = useState("");
   const [newBio, setNewBio] = useState("");
-  const [newBrand, setNewBrand] = useState<SiteStaffBrand>("paris");
+  const [newBrand, setNewBrand] = useState<SiteStaffBrand>(locationFocus ?? "paris");
   const [newSpecialties, setNewSpecialties] = useState("");
   const [newFeatured, setNewFeatured] = useState(false);
   const [newPhoto, setNewPhoto] = useState<File | null>(null);
@@ -102,6 +102,12 @@ export function SiteStaffAdminSection({ auth, onNotify }: Props) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!locationFocus) return;
+    setBrandFilter(locationFocus);
+    setNewBrand(locationFocus);
+  }, [locationFocus]);
 
   const filteredMembers = useMemo(() => {
     if (brandFilter === "all") return members;
@@ -355,15 +361,37 @@ export function SiteStaffAdminSection({ auth, onNotify }: Props) {
     setEditPhoto(null);
   }
 
+  const staffPath =
+    locationFocus === "sulphur"
+      ? "/sulphur-springs/staff"
+      : locationFocus === "paris"
+        ? "/locations/paris/staff"
+        : null;
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
       <div>
-        <h2 className="text-lg font-semibold text-slate-900">Office staff — Paris &amp; Sulphur Springs</h2>
+        <h2 className="text-lg font-semibold text-slate-900">
+          {locationFocus === "paris"
+            ? "Office staff — Paris"
+            : locationFocus === "sulphur"
+              ? "Office staff — Sulphur Springs"
+              : "Office staff — Paris & Sulphur Springs"}
+        </h2>
         <p className="mt-2 text-sm text-slate-600">
-          Manage who appears on{" "}
-          <code className="rounded bg-slate-100 px-1">/locations/paris/staff</code> and{" "}
-          <code className="rounded bg-slate-100 px-1">/sulphur-springs/staff</code>. Massage therapists
-          are managed separately under Site content → Massage team.
+          {staffPath ? (
+            <>
+              Manage who appears on{" "}
+              <code className="rounded bg-slate-100 px-1">{staffPath}</code>.
+            </>
+          ) : (
+            <>
+              Manage who appears on{" "}
+              <code className="rounded bg-slate-100 px-1">/locations/paris/staff</code> and{" "}
+              <code className="rounded bg-slate-100 px-1">/sulphur-springs/staff</code>.
+            </>
+          )}{" "}
+          Massage therapists are managed separately in Website editor → Massage page.
         </p>
         {sectionAlert ? (
           <div
@@ -381,7 +409,9 @@ export function SiteStaffAdminSection({ auth, onNotify }: Props) {
           <p className="mt-2 text-xs text-slate-500">Loading…</p>
         ) : siteUsesCustomList ? (
           <p className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-950">
-            Your staff pages are live ({members.length} {members.length === 1 ? "person" : "people"}).
+            Your staff {locationFocus ? "page is" : "pages are"} live (
+            {filteredMembers.length} {filteredMembers.length === 1 ? "person" : "people"}
+            {locationFocus ? "" : ` of ${members.length} total`}).
           </p>
         ) : (
           <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
@@ -401,22 +431,24 @@ export function SiteStaffAdminSection({ auth, onNotify }: Props) {
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {(["all", "paris", "sulphur", "both"] as const).map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setBrandFilter(key)}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-              brandFilter === key
-                ? "bg-[#0f5f5c] text-white"
-                : "border border-slate-300 bg-white text-slate-800"
-            }`}
-          >
-            {key === "all" ? "All" : brandLabel(key)}
-          </button>
-        ))}
-      </div>
+      {!locationFocus ? (
+        <div className="flex flex-wrap gap-2">
+          {(["all", "paris", "sulphur", "both"] as const).map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setBrandFilter(key)}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                brandFilter === key
+                  ? "bg-[#0f5f5c] text-white"
+                  : "border border-slate-300 bg-white text-slate-800"
+              }`}
+            >
+              {key === "all" ? "All" : brandLabel(key)}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-4 space-y-3">
         <p className="text-sm font-medium text-slate-800">Add staff member</p>

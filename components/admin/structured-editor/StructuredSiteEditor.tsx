@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { onAuthStateChanged, type Auth } from "firebase/auth";
+import { getFirebaseClientAuth } from "@/lib/firebase-client";
+import { SiteStaffAdminSection } from "@/app/admin/super/_components/SiteStaffAdminSection";
 import { useSiteContentFields } from "@/components/admin/cms/useSiteContentFields";
 import {
   CONTENT_SCOPES,
@@ -42,7 +45,16 @@ function scopeLivePath(scope: PageBuilderScopeId): string | null {
   if (scope === "services-hub") return "/services";
   if (scope === "paris-office") return "/locations/paris";
   if (scope === "paris-staff") return "/locations/paris/staff";
+  if (scope === "ss-staff") return "/sulphur-springs/staff";
   if (scope === "ss-subpages") return "/sulphur-springs";
+  return null;
+}
+
+function officeStaffLocationFocus(
+  scope: PageBuilderScopeId,
+): "paris" | "sulphur" | null {
+  if (scope === "paris-staff") return "paris";
+  if (scope === "ss-staff") return "sulphur";
   return null;
 }
 
@@ -57,6 +69,15 @@ function scopeLabel(scope: PageBuilderScopeId, pages: { id: string; label: strin
 export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
   const [scope, setScope] = useState<PageBuilderScopeId>(() => parseInitialScope(initialScope));
   const [previewKey, setPreviewKey] = useState(0);
+  const [auth, setAuth] = useState<Auth | null>(null);
+
+  useEffect(() => {
+    const a = getFirebaseClientAuth();
+    setAuth(a);
+    if (!a) return;
+    const unsub = onAuthStateChanged(a, () => {});
+    return () => unsub();
+  }, []);
 
   const cms = useSiteContentFields({
     getIdToken,
@@ -81,9 +102,29 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
     setPreviewKey((k) => k + 1);
   }, []);
 
+  const staffFocus = officeStaffLocationFocus(scope);
+
   let main: React.ReactNode = null;
   if (scope === "faq-items") {
     main = <FaqItemsPanel getIdToken={getIdToken} />;
+  } else if (staffFocus) {
+    main = (
+      <div className="space-y-6">
+        <ScopeFieldForm
+          scope={scope}
+          fields={cms.fields}
+          busy={cms.busy}
+          message={cms.message}
+          onSave={cms.saveField}
+          onReset={cms.resetField}
+        />
+        <SiteStaffAdminSection
+          auth={auth}
+          locationFocus={staffFocus}
+          onNotify={() => setPreviewKey((k) => k + 1)}
+        />
+      </div>
+    );
   } else {
     main = (
       <ScopeFieldForm
@@ -150,7 +191,9 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
       </header>
 
       <div className="flex flex-1 flex-col gap-0 lg:flex-row">
-        <main className="min-w-0 flex-1 p-4 lg:max-w-2xl lg:p-6">
+        <main
+          className={`min-w-0 flex-1 p-4 lg:p-6 ${staffFocus ? "lg:max-w-3xl" : "lg:max-w-2xl"}`}
+        >
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">
               Editing: {scopeLabel(scope, pages)}

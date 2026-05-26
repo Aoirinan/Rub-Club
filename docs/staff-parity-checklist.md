@@ -40,8 +40,8 @@ Paris chiropractors (Greg Thompson, Sean Welborn, Brandy Collins): `/about` and 
 
 ## CMS smoke test (superadmin)
 
-1. Admin → **Office staff** (`/admin/super/site-staff`) → run **Copy current site roster into Firestore** once if the list is empty.
+1. Admin → **Website** → **Paris staff** or **Sulphur staff** → run **Import people already on the website** once if the roster is empty.
 2. Confirm Paris and Sulphur staff appear on `/locations/paris/staff` and `/sulphur-springs/staff` (revalidate ~60s).
 3. Add a test staff member, then hide with **Active** unchecked — confirm they disappear from the public page.
-4. Admin → Site content → **Paris staff** / **Sulphur staff** → edit **page hero** and CTA only (team members are no longer edited here).
-5. Admin → Site content → **Massage team** → massage therapists on home and `/services/massage` (separate from office staff).
+4. Same scopes → edit **page hero** and CTA copy above the roster section.
+5. Admin → **Website** → **Massage** page → massage therapists on home and `/services/massage` (separate from office staff).

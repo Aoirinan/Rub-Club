@@ -19,13 +19,8 @@ const TABS = [
     label: "Website",
     match: (path: string) =>
       path.startsWith("/admin/super/page-builder") ||
-      path.startsWith("/admin/super/site-content"),
-    capability: "siteContent" as const,
-  },
-  {
-    href: "/admin/super/site-staff",
-    label: "Staff pages",
-    match: (path: string) => path.startsWith("/admin/super/site-staff"),
+      path.startsWith("/admin/super/site-content") ||
+      path.startsWith("/admin/super/site-staff"),
     capability: "siteContent" as const,
   },
   {

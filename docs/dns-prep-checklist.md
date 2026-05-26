@@ -8,12 +8,12 @@ You can do almost everything below **while the site still runs on `rub-club.verc
 |------|--------|
 | Keep **online booking off** | Admin → Banners & promos → Online booking → uncheck **Online booking enabled** |
 | Paste **Google review URLs** | Same tab → Save review URLs |
-| Edit **site copy / photos** | Admin → Site content (managers+) |
-| Edit **massage team** (Meet the team) | Admin → Site content → **Massage team** |
-| Edit **Paris / Sulphur staff** (names, titles, photos, bios) | Site content → **Paris staff** / **Sulphur staff** |
-| Edit **doctor names, titles, bios, photos** | Site content → **Doctors** |
-| Edit **Paris office hours** | Admin → Site content → **Paris / main office** → Office hours |
-| Edit **Sulphur hours** | Admin → Site content → **Sulphur Springs** → Hours |
+| Edit **site copy / photos** | Admin → **Website** (managers+) |
+| Edit **massage team** (Meet the team) | Admin → **Website** → **Massage** page |
+| Edit **Paris / Sulphur staff** (copy + roster) | Admin → **Website** → **Paris staff** / **Sulphur staff** |
+| Edit **doctor names, titles, bios, photos** | Admin → **Website** → **Doctors (global)** |
+| Edit **Paris office hours** | Admin → **Website** → **Paris office** → Office hours |
+| Edit **Sulphur hours** | Admin → **Website** → **Sulphur Springs** page or **Sulphur subpages** |
 | Show/hide **dark header phone bar** (above logos) | Admin → Website editor → **Footer** → Header → “Show dark phone bar above logos” |
 | Banners & specials | Admin → Banners & promos |
 | Gift card link | Admin → Other extras (or env `nav_giftcard_url` in CMS) |

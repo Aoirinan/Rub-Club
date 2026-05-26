@@ -1,6 +1,6 @@
 /**
  * Default staff portraits from chiropracticparistexas.com/staff (Baystone CDN).
- * Superadmins can replace via Site content → Paris staff → Photo fields.
+ * Superadmins can replace via Website editor → Paris staff (office staff roster).
  */
 
 export const PARIS_STAFF_IMAGES = {

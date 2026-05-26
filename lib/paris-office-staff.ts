@@ -1,5 +1,5 @@
 /**
- * Paris staff page copy defaults (team members are in Firestore — Admin → Office staff).
+ * Paris staff page copy defaults (team members are in Firestore — Website editor → Paris staff).
  */
 
 export const PARIS_STAFF_PAGE_DEFAULTS = {

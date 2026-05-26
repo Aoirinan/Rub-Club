@@ -30,25 +30,21 @@ Other scripts:
 - `npm run lint` — ESLint on the app + components
 - `npm run verify:massage-team` — checks Firestore `massage_team_members` rows: anonymous `HEAD` on each `photoUrl`, and that `photoStoragePath` objects exist under `public_site/massage_team/**` when present. Uses the same env as Next (`.env.local`). Exit code 1 if any portrait is not publicly reachable.
 
-**Massage team (superadmin):** edit under Admin → Site content → **Massage team** (home and `/services/massage` “Meet the team” section). Portrait uploads land in Storage at `public_site/massage_team/<FirestoreDocId>.<ext>` with `photoUrl` stored on the document. Deploy rules so visitors can read them: `firebase deploy --only storage` (see `storage.rules` → `public_site/**` read).
+**Massage team (superadmin):** edit under Admin → **Website** → Massage page (home and `/services/massage` “Meet the team” section). Portrait uploads land in Storage at `public_site/massage_team/<FirestoreDocId>.<ext>` with `photoUrl` stored on the document. Deploy rules so visitors can read them: `firebase deploy --only storage` (see `storage.rules` → `public_site/**` read).
 
-**Paris office staff:** Admin → Site content → **Paris staff** — edit page copy and each person’s **name**, **job title**, **photo**, and **bio**.
+**Paris office staff:** Admin → **Website** → **Paris staff** — page hero/CTA copy plus office staff roster (name, job title, photo, bio) for `/locations/paris/staff`.
 
-**Sulphur Springs staff:** Admin → Site content → **Sulphur staff** — same fields for `/sulphur-springs/staff`.
+**Sulphur Springs staff:** Admin → **Website** → **Sulphur staff** — same for `/sulphur-springs/staff`.
 
-**Paris chiropractors:** Admin → Site content → **Doctors** — name, title, bio, photo, intro video per doctor.
+**Paris chiropractors:** Admin → **Website** → **Doctors (global)** — name, title, bio, photo, intro video per doctor.
 
-**Massage team:** Admin → Site content → **Massage team** — full roster (add/edit/remove therapists with photos).
-
-**Other pages:** Home, Chiropractic, Massage, Paris hours, Sulphur hub, SS treatment/injury subpages, Insurance, Services, Reviews, Patient forms, About, FAQ, Contact, Footer, and Navigation are all under Site content tabs. **Footer → Header** includes a checkbox to show or hide the dark phone bar above the logos (and Footer → Paris / Sulphur Springs for those phone numbers).
+**Other pages:** Home, Chiropractic, Massage, Paris office, Sulphur hub, SS subpages, Insurance, Services, Reviews, Patient forms, About, FAQ, Contact, Footer, and Navigation are in the Website editor dropdown. **Header logos** scope adjusts logo sizes; Footer scopes include Paris / Sulphur phone numbers and the checkbox to show or hide the dark phone bar above the logos.
 
 **Contact form:** Every submission on `/contact` is stored in Firestore. **Front desk** (and all staff) read messages under **Admin → Contact inbox** — no email required for daily work. Optional email copies go to `OFFICE_NOTIFICATION_EMAIL` (production: `dr.seanwelborn@gmail.com`). Visitors get an auto-reply when SendGrid is configured.
 
-**Who can edit the website?** **Managers** (and superadmins) can use **Site content** and **Massage team** for everything above. **Superadmins** also get **Banners & promos** (booking toggle, specials, videos). Front desk can use the scheduler and **Contact inbox**. Promote trusted clinic leads to **Manager** in Operations → Staff so they do not need to call you for copy changes.
+**Who can edit the website?** **Managers** (and superadmins) can use **Website** for copy, office staff rosters, doctors, and FAQ items. **Superadmins** also get **Promos & booking** (booking toggle, specials, videos). Front desk can use the scheduler and **Contact inbox**. Promote trusted clinic leads to **Manager** in Scheduling & team so they do not need to call you for copy changes.
 
-**Visual website editor:** Operations → **Website** (or `/admin/super/page-builder`) opens a Wix-style canvas for every page/scope: drag layers to move, use corner handles to resize, **Add text** / **Add image** for extra content, and edit CMS fields in the inspector when a layer is selected. Layouts save to Firestore `site_visual_layouts`. Service pages and header logos apply on the live site once saved; other scopes keep CMS-driven copy until a visual layout is published for that scope.
-
-**Adding/removing people:** Editing names on an existing slot is self-serve. Adding a brand-new team member to Paris, Sulphur, or doctors still needs a developer deploy (roster slots are defined in code).
+**Website editor:** Admin → **Website** (or `/admin/super/page-builder`) — pick a page or section from the dropdown, edit fields, and save. Changes appear on the live site within ~60 seconds. Paris and Sulphur staff scopes include both page copy and the office staff roster in one place.
 
 ---
 
