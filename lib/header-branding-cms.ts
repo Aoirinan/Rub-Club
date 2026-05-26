@@ -27,10 +27,21 @@ export type HeaderBrandBox = {
   iconScale?: number;
 };
 
+export type HeaderBrandLayerBox = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  iconScale?: number;
+};
+
 export type HeaderBrandingLayout = {
   version: 1;
   frameHeight: number;
   brands: Record<HeaderBrandKey, HeaderBrandBox>;
+  /** Optional split controls for Wix-style editing. */
+  logoBoxes?: Record<HeaderBrandKey, HeaderBrandLayerBox>;
+  textBoxes?: Record<HeaderBrandKey, HeaderBrandLayerBox>;
 };
 
 export const HEADER_BRANDING_LAYOUT_DEFAULT: HeaderBrandingLayout = {
@@ -47,7 +58,8 @@ const BOX_W_MIN = 8;
 const BOX_W_MAX = 70;
 const BOX_H_MIN = 20;
 const BOX_H_MAX = 90;
-const FRAME_H_MIN = 96;
+const LAYER_H_MIN = 6;
+const FRAME_H_MIN = 56;
 const FRAME_H_MAX = 220;
 
 function clamp(n: number, min: number, max: number): number {
@@ -66,14 +78,102 @@ function clampBox(box: HeaderBrandBox): HeaderBrandBox {
   };
 }
 
+function clampLayerBox(
+  box: HeaderBrandLayerBox,
+  hMin = LAYER_H_MIN,
+  hMax = BOX_H_MAX,
+): HeaderBrandLayerBox {
+  const w = clamp(box.w, BOX_W_MIN, BOX_W_MAX);
+  const h = clamp(box.h, hMin, hMax);
+  return {
+    x: clamp(box.x, 0, 100 - w),
+    y: clamp(box.y, 0, 100 - h),
+    w,
+    h,
+    ...(box.iconScale !== undefined
+      ? { iconScale: clamp(box.iconScale, 60, 100) }
+      : {}),
+  };
+}
+
+function splitBoxesFromBrand(box: HeaderBrandBox): {
+  logo: HeaderBrandLayerBox;
+  text: HeaderBrandLayerBox;
+} {
+  const logoH = clamp(box.h * 0.72, 12, BOX_H_MAX);
+  const textH = clamp(box.h * 0.24, LAYER_H_MIN, 30);
+  const textY = clamp(box.y + logoH + 1, 0, 100 - textH);
+  return {
+    logo: clampLayerBox({
+      x: box.x,
+      y: box.y,
+      w: box.w,
+      h: logoH,
+      ...(box.iconScale !== undefined ? { iconScale: box.iconScale } : {}),
+    }, 10),
+    text: clampLayerBox({
+      x: box.x,
+      y: textY,
+      w: box.w,
+      h: textH,
+    }),
+  };
+}
+
+export function headerBrandLayerBoxes(
+  layout: HeaderBrandingLayout,
+  key: HeaderBrandKey,
+): { logo: HeaderBrandLayerBox; text: HeaderBrandLayerBox } {
+  const base = layout.brands[key] ?? HEADER_BRANDING_LAYOUT_DEFAULT.brands[key];
+  const split = splitBoxesFromBrand(base);
+  const logoRaw = layout.logoBoxes?.[key];
+  const textRaw = layout.textBoxes?.[key];
+  return {
+    logo: clampLayerBox(
+      logoRaw ?? { ...split.logo, ...(base.iconScale !== undefined ? { iconScale: base.iconScale } : {}) },
+      10,
+    ),
+    text: clampLayerBox(textRaw ?? split.text),
+  };
+}
+
+export function mergeBrandFromLayerBoxes(
+  logo: HeaderBrandLayerBox,
+  text: HeaderBrandLayerBox,
+  fallback?: HeaderBrandBox,
+): HeaderBrandBox {
+  const left = Math.min(logo.x, text.x);
+  const top = Math.min(logo.y, text.y);
+  const right = Math.max(logo.x + logo.w, text.x + text.w);
+  const bottom = Math.max(logo.y + logo.h, text.y + text.h);
+  return clampBox({
+    x: left,
+    y: top,
+    w: right - left,
+    h: bottom - top,
+    iconScale: logo.iconScale ?? fallback?.iconScale,
+  });
+}
+
 export function normalizeHeaderBrandingLayout(raw: HeaderBrandingLayout): HeaderBrandingLayout {
   const frameHeight = clamp(raw.frameHeight, FRAME_H_MIN, FRAME_H_MAX);
   const brands = {} as Record<HeaderBrandKey, HeaderBrandBox>;
+  const logoBoxes = {} as Record<HeaderBrandKey, HeaderBrandLayerBox>;
+  const textBoxes = {} as Record<HeaderBrandKey, HeaderBrandLayerBox>;
   for (const key of HEADER_BRAND_KEYS) {
     const b = raw.brands[key] ?? HEADER_BRANDING_LAYOUT_DEFAULT.brands[key];
     brands[key] = clampBox(b);
+    const split = splitBoxesFromBrand(brands[key]);
+    logoBoxes[key] = clampLayerBox(
+      raw.logoBoxes?.[key] ?? {
+        ...split.logo,
+        ...(brands[key].iconScale !== undefined ? { iconScale: brands[key].iconScale } : {}),
+      },
+      10,
+    );
+    textBoxes[key] = clampLayerBox(raw.textBoxes?.[key] ?? split.text);
   }
-  return { version: 1, frameHeight, brands };
+  return { version: 1, frameHeight, brands, logoBoxes, textBoxes };
 }
 
 function layoutFromLegacyHeights(cms: Partial<Record<string, string>>): HeaderBrandingLayout {

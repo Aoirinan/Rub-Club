@@ -1,6 +1,6 @@
 "use client";
 
-import { HeaderBrandBlock } from "@/components/HeaderBrandBlock";
+import { HeaderBrandLogoVisual, headerBrandPhones } from "@/components/HeaderBrandBlock";
 import { LOCATIONS } from "@/lib/constants";
 import { renderRichText } from "@/lib/cms-registry";
 import type { HeaderBrandKey } from "@/lib/header-branding-cms";
@@ -20,21 +20,23 @@ type Props = {
 export function VisualLayerPreview({ layer, scopeId, preview, cms }: Props) {
   if (layer.brandKey && (layer.brandKey === "rub" || layer.brandKey === "chiro" || layer.brandKey === "ss")) {
     const key = layer.brandKey as HeaderBrandKey;
+    const phoneInfo = headerBrandPhones(key, LOCATIONS.paris, LOCATIONS.sulphur_springs);
+    if (layer.embedKey === "header-text" || layer.id.startsWith("brand_text_")) {
+      return (
+        <div className="flex h-full w-full flex-col justify-center overflow-hidden">
+          <p className="truncate text-center text-xs font-black text-[#0f5f5c] sm:text-left sm:text-sm">
+            {phoneInfo.phone}
+          </p>
+          <p className="truncate text-center text-[9px] font-bold uppercase tracking-wide text-stone-500 sm:text-left sm:text-[10px]">
+            {phoneInfo.phoneLabel}
+          </p>
+        </div>
+      );
+    }
     return (
-      <HeaderBrandBlock
-        brandKey={key}
-        box={{
-          x: 0,
-          y: 0,
-          w: 100,
-          h: 100,
-          iconScale: layer.iconScale,
-        }}
-        paris={LOCATIONS.paris}
-        sulphur={LOCATIONS.sulphur_springs}
-        interactive={false}
-        disableLinks
-      />
+      <div className="flex h-full w-full items-end justify-center sm:justify-start">
+        <HeaderBrandLogoVisual brandKey={key} iconScale={layer.iconScale} />
+      </div>
     );
   }
 

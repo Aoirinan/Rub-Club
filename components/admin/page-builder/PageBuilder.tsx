@@ -228,16 +228,31 @@ export function PageBuilder({ getIdToken, initialScope }: Props) {
                 const next = {
                   ...prev,
                   layers: prev.layers.map((l) =>
-                    l.brandKey === key ? { ...l, iconScale: value } : l,
+                    l.brandKey === key && (l.embedKey === "header-logo" || l.id === "brand_logo_ss")
+                      ? { ...l, iconScale: value }
+                      : l,
                   ),
                 };
-                void saveHeaderLayoutToCms(headerVisualToBrandingLayout(next));
+                void persistVisualDraft(next);
                 return next;
               });
             }
           : undefined
       }
       headerIconScale={headerLayout.brands.ss.iconScale}
+      onHeaderFrameHeight={
+        scope === "header-branding"
+          ? (value) => {
+              setVisualDraft((prev) => {
+                if (!prev) return prev;
+                const next = { ...prev, frameHeight: value };
+                void persistVisualDraft(next);
+                return next;
+              });
+            }
+          : undefined
+      }
+      headerFrameHeight={headerLayout.frameHeight}
     />
   ) : null;
 

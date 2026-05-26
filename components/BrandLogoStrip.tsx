@@ -1,12 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
-import { HeaderBrandBlock, headerBrandPhones } from "@/components/HeaderBrandBlock";
+import { Fragment } from "react";
+import { HeaderBrandLogoVisual, headerBrandPhones } from "@/components/HeaderBrandBlock";
 import { SulphurSpringsLockup } from "@/components/SulphurSpringsLockup";
 import { IMAGES } from "@/lib/home-images";
 import { BRAND_LOGOS, type BrandLogoVariant } from "@/lib/brand-logos";
 import { telHref, type LocationInfo } from "@/lib/constants";
 import type { HeaderBrandingLayout } from "@/lib/header-branding-cms";
-import { HEADER_BRAND_KEYS, type HeaderBrandKey } from "@/lib/header-branding-cms";
+import {
+  HEADER_BRAND_KEYS,
+  headerBrandLayerBoxes,
+  type HeaderBrandKey,
+} from "@/lib/header-branding-cms";
 
 type BrandKey = HeaderBrandKey;
 
@@ -101,26 +106,41 @@ function FreeLayoutStrip({
       style={{ height: layout.frameHeight, minHeight: layout.frameHeight }}
     >
       {HEADER_BRAND_KEYS.map((key) => {
-        const box = layout.brands[key];
+        const { logo, text } = headerBrandLayerBoxes(layout, key);
+        const phone = headerBrandPhones(key, paris, sulphur);
         return (
-          <div
-            key={key}
-            className="absolute"
-            style={{
-              left: `${box.x}%`,
-              top: `${box.y}%`,
-              width: `${box.w}%`,
-              height: `${box.h}%`,
-            }}
-          >
-            <HeaderBrandBlock
-              brandKey={key}
-              box={box}
-              paris={paris}
-              sulphur={sulphur}
-              interactive={false}
-            />
-          </div>
+          <Fragment key={key}>
+            <div
+              className="absolute flex items-end justify-center sm:justify-start"
+              style={{
+                left: `${logo.x}%`,
+                top: `${logo.y}%`,
+                width: `${logo.w}%`,
+                height: `${logo.h}%`,
+              }}
+            >
+              <HeaderBrandLogoVisual brandKey={key} iconScale={logo.iconScale} />
+            </div>
+            <div
+              className="absolute overflow-hidden"
+              style={{
+                left: `${text.x}%`,
+                top: `${text.y}%`,
+                width: `${text.w}%`,
+                height: `${text.h}%`,
+              }}
+            >
+              <a
+                href={telHref(phone.phone)}
+                className="block truncate text-center text-xs font-black text-[#0f5f5c] hover:underline sm:text-left sm:text-sm"
+              >
+                {phone.phone}
+              </a>
+              <span className="block truncate text-center text-[9px] font-bold uppercase tracking-wide text-stone-500 sm:text-left sm:text-[10px]">
+                {phone.phoneLabel}
+              </span>
+            </div>
+          </Fragment>
         );
       })}
     </div>

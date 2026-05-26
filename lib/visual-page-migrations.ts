@@ -7,6 +7,8 @@ import {
 import {
   HEADER_BRAND_KEYS,
   HEADER_BRANDING_LAYOUT_DEFAULT,
+  headerBrandLayerBoxes,
+  mergeBrandFromLayerBoxes,
   type HeaderBrandingLayout,
 } from "@/lib/header-branding-cms";
 import {
@@ -170,15 +172,32 @@ export function buildHeaderBrandingVisualLayout(
   headerLayout?: HeaderBrandingLayout,
 ): VisualPageLayout {
   const layout = headerLayout ?? HEADER_BRANDING_LAYOUT_DEFAULT;
-  const layers: VisualLayer[] = HEADER_BRAND_KEYS.map((key, i) => ({
-    id: `brand_${key}`,
-    type: "embed" as const,
-    label: key,
-    brandKey: key,
-    box: { ...layout.brands[key] },
-    zIndex: i,
-    iconScale: layout.brands[key].iconScale,
-  }));
+  const layers: VisualLayer[] = [];
+  let z = 0;
+  for (const key of HEADER_BRAND_KEYS) {
+    const boxes = headerBrandLayerBoxes(layout, key);
+    layers.push({
+      id: `brand_logo_${key}`,
+      type: "embed" as const,
+      label: `${key} logo`,
+      embedKey: "header-logo",
+      brandKey: key,
+      box: { ...boxes.logo },
+      zIndex: z++,
+      iconScale: boxes.logo.iconScale ?? layout.brands[key].iconScale,
+      sectionId: "header_branding",
+    });
+    layers.push({
+      id: `brand_text_${key}`,
+      type: "embed" as const,
+      label: `${key} text`,
+      embedKey: "header-text",
+      brandKey: key,
+      box: { ...boxes.text },
+      zIndex: z++,
+      sectionId: "header_branding",
+    });
+  }
   return normalizeVisualPageLayout({
     version: 1,
     frameHeight: layout.frameHeight,
@@ -197,22 +216,55 @@ export function buildHeaderBrandingVisualLayout(
 
 export function headerVisualToBrandingLayout(visual: VisualPageLayout): HeaderBrandingLayout {
   const brands = {} as HeaderBrandingLayout["brands"];
+  const logoBoxes = {} as NonNullable<HeaderBrandingLayout["logoBoxes"]>;
+  const textBoxes = {} as NonNullable<HeaderBrandingLayout["textBoxes"]>;
   for (const key of HEADER_BRAND_KEYS) {
-    const layer = visual.layers.find((l) => l.brandKey === key);
-    brands[key] = layer
+    const logoLayer = visual.layers.find(
+      (l) => l.brandKey === key && (l.embedKey === "header-logo" || l.id === `brand_logo_${key}`),
+    );
+    const textLayer = visual.layers.find(
+      (l) => l.brandKey === key && (l.embedKey === "header-text" || l.id === `brand_text_${key}`),
+    );
+    const fallback = HEADER_BRANDING_LAYOUT_DEFAULT.brands[key];
+    const legacyLayer = visual.layers.find((l) => l.brandKey === key && !l.embedKey);
+
+    const logo = logoLayer
       ? {
-          x: layer.box.x,
-          y: layer.box.y,
-          w: layer.box.w,
-          h: layer.box.h,
-          ...(layer.iconScale !== undefined ? { iconScale: layer.iconScale } : {}),
+          x: logoLayer.box.x,
+          y: logoLayer.box.y,
+          w: logoLayer.box.w,
+          h: logoLayer.box.h,
+          ...(logoLayer.iconScale !== undefined ? { iconScale: logoLayer.iconScale } : {}),
         }
-      : HEADER_BRANDING_LAYOUT_DEFAULT.brands[key];
+      : legacyLayer
+        ? {
+            x: legacyLayer.box.x,
+            y: legacyLayer.box.y,
+            w: legacyLayer.box.w,
+            h: legacyLayer.box.h,
+            ...(legacyLayer.iconScale !== undefined ? { iconScale: legacyLayer.iconScale } : {}),
+          }
+        : headerBrandLayerBoxes({ ...HEADER_BRANDING_LAYOUT_DEFAULT, brands }, key).logo;
+
+    const text = textLayer
+      ? {
+          x: textLayer.box.x,
+          y: textLayer.box.y,
+          w: textLayer.box.w,
+          h: textLayer.box.h,
+        }
+      : headerBrandLayerBoxes({ ...HEADER_BRANDING_LAYOUT_DEFAULT, brands }, key).text;
+
+    logoBoxes[key] = logo;
+    textBoxes[key] = text;
+    brands[key] = mergeBrandFromLayerBoxes(logo, text, fallback);
   }
   return {
     version: 1,
     frameHeight: visual.frameHeight,
     brands,
+    logoBoxes,
+    textBoxes,
   };
 }
 

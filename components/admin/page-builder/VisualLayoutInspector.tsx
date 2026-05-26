@@ -19,6 +19,8 @@ type Props = {
   onUpdateLayerSrc: (layerId: string, src: string) => void;
   onHeaderIconScale?: (value: number) => void;
   headerIconScale?: number;
+  onHeaderFrameHeight?: (value: number) => void;
+  headerFrameHeight?: number;
 };
 
 function fieldRow(fields: SiteContentFieldRow[], id: string): SiteContentFieldRow | undefined {
@@ -37,11 +39,31 @@ export function VisualLayoutInspector({
   onUpdateLayerSrc,
   onHeaderIconScale,
   headerIconScale,
+  onHeaderFrameHeight,
+  headerFrameHeight,
 }: Props) {
+  const isHeaderScope = scopeId === "header-branding";
+
+  const frameHeightControl =
+    isHeaderScope && onHeaderFrameHeight !== undefined ? (
+      <label className="block text-xs font-semibold text-slate-600">
+        Header height ({headerFrameHeight ?? 132}px)
+        <input
+          type="range"
+          min={56}
+          max={220}
+          value={headerFrameHeight ?? 132}
+          className="mt-1 w-full"
+          onChange={(e) => onHeaderFrameHeight(Number(e.target.value))}
+        />
+      </label>
+    ) : null;
+
   if (!selectedLayer) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
-        Click a layer on the canvas to edit it, or use Add text / Add image above the canvas.
+      <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+        {frameHeightControl}
+        <p>Click a layer on the canvas to edit it, or use Add text / Add image above the canvas.</p>
       </div>
     );
   }
@@ -52,6 +74,7 @@ export function VisualLayoutInspector({
     return (
       <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <h3 className="text-sm font-bold text-slate-900">Sulphur Springs logo</h3>
+        {frameHeightControl}
         <label className="block text-xs font-semibold text-slate-600">
           Icon vs text ({headerIconScale ?? 88}%)
           <input
@@ -71,6 +94,7 @@ export function VisualLayoutInspector({
     return (
       <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <h3 className="text-sm font-bold text-slate-900">{layerLabel(selectedLayer, cmsMap)}</h3>
+        {frameHeightControl}
         <label className="block text-xs font-semibold text-slate-600">
           Text
           <textarea
@@ -88,6 +112,7 @@ export function VisualLayoutInspector({
     return (
       <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <h3 className="text-sm font-bold text-slate-900">Image layer</h3>
+        {frameHeightControl}
         {selectedLayer.src ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={selectedLayer.src} alt="" className="max-h-24 rounded border object-contain" />
@@ -169,6 +194,7 @@ export function VisualLayoutInspector({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+      {frameHeightControl}
       <p className="font-bold text-slate-900">{layerLabel(selectedLayer, cmsMap)}</p>
       <p className="mt-2">Drag to move, use handles to resize. Use the floating toolbar to duplicate or delete.</p>
       {cmsMessage ? (
