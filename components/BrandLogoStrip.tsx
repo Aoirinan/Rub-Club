@@ -6,11 +6,16 @@ import { SulphurSpringsLockup } from "@/components/SulphurSpringsLockup";
 import { IMAGES } from "@/lib/home-images";
 import { BRAND_LOGOS, type BrandLogoVariant } from "@/lib/brand-logos";
 import { telHref, type LocationInfo } from "@/lib/constants";
-import type { HeaderBrandingLayout } from "@/lib/header-branding-cms";
 import {
   HEADER_BRAND_KEYS,
+  HEADER_PRESET_HEIGHT_PX,
+  LOGO_HEIGHT_PX,
   headerBrandLayerBoxes,
   type HeaderBrandKey,
+  type HeaderBrandingLayout,
+  type HeaderBrandingLayoutV1,
+  type HeaderBrandingLayoutV2,
+  type HeaderBrandSettings,
 } from "@/lib/header-branding-cms";
 
 type BrandKey = HeaderBrandKey;
@@ -89,13 +94,125 @@ function logoHeightClass(primary: boolean): string {
     : "h-7 w-auto max-w-[min(100%,200px)] opacity-90 transition-opacity hover:opacity-100 sm:h-9 md:h-10";
 }
 
+function StructuredHeaderStrip({
+  layout,
+  paris,
+  sulphur,
+  className,
+}: {
+  layout: HeaderBrandingLayoutV2;
+  paris: LocationInfo;
+  sulphur: LocationInfo;
+  className?: string;
+}) {
+  const frameHeight = HEADER_PRESET_HEIGHT_PX[layout.preset];
+  return (
+    <div
+      className={`grid w-full items-end gap-3 sm:gap-4 md:gap-6 ${className ?? ""}`}
+      style={{
+        gridTemplateColumns: `repeat(${HEADER_BRAND_KEYS.length}, minmax(0, 1fr))`,
+        minHeight: frameHeight,
+      }}
+    >
+      {HEADER_BRAND_KEYS.map((key) => {
+        const settings = layout.brands[key];
+        const phone = headerBrandPhones(key, paris, sulphur);
+        const logoH = LOGO_HEIGHT_PX[key][settings.logoSize];
+        return (
+          <StructuredBrandColumn
+            key={key}
+            brandKey={key}
+            settings={settings}
+            phone={phone.phone}
+            phoneLabel={phone.phoneLabel}
+            href={phone.href}
+            logoHeightPx={logoH}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function StructuredBrandColumn({
+  brandKey,
+  settings,
+  phone,
+  phoneLabel,
+  href,
+  logoHeightPx,
+}: {
+  brandKey: HeaderBrandKey;
+  settings: HeaderBrandSettings;
+  phone: string;
+  phoneLabel: string;
+  href: string;
+  logoHeightPx: number;
+}) {
+  const alignClass = settings.align === "center" ? "items-center text-center" : "items-start text-left";
+  const justifyClass = settings.align === "center" ? "justify-center" : "justify-start";
+
+  const logoImg =
+    brandKey === "ss" ? (
+      <SulphurSpringsLockup
+        primary
+        iconScalePercent={settings.iconScale ?? 88}
+        className="max-h-full w-auto max-w-full"
+      />
+    ) : brandKey === "rub" ? (
+      <Image
+        src={IMAGES.rubClubLogo}
+        alt="The Rub Club"
+        width={320}
+        height={65}
+        className="max-h-full w-auto max-w-full object-contain"
+        priority
+      />
+    ) : (
+      <Image
+        src={BRAND_LOGOS.chiropractic}
+        alt="Chiropractic Associates"
+        width={280}
+        height={72}
+        className="max-h-full w-auto max-w-full object-contain"
+        priority
+      />
+    );
+
+  return (
+    <div className={`flex min-w-0 flex-col gap-1 ${alignClass}`}>
+      <Link
+        href={href}
+        className={`flex items-end ${justifyClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f5f5c]`}
+        aria-label={`Go to ${phoneLabel}`}
+        style={{ height: logoHeightPx }}
+      >
+        {logoImg}
+      </Link>
+      {settings.showPhone ? (
+        <div className="min-w-0">
+          <a
+            href={telHref(phone)}
+            className="block truncate text-xs font-black text-[#0f5f5c] hover:underline sm:text-sm"
+          >
+            {phone}
+          </a>
+          <span className="block truncate text-[9px] font-bold uppercase tracking-wide text-stone-500 sm:text-[10px]">
+            {phoneLabel}
+          </span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function FreeLayoutStrip({
   layout,
   paris,
   sulphur,
   className,
 }: {
-  layout: HeaderBrandingLayout;
+  layout: HeaderBrandingLayoutV1;
   paris: LocationInfo;
   sulphur: LocationInfo;
   className?: string;
@@ -236,8 +353,23 @@ export function BrandLogoStrip({
   className?: string;
 }) {
   if (headerLayout) {
+    if (headerLayout.version === 2) {
+      return (
+        <StructuredHeaderStrip
+          layout={headerLayout}
+          paris={paris}
+          sulphur={sulphur}
+          className={className}
+        />
+      );
+    }
     return (
-      <FreeLayoutStrip layout={headerLayout} paris={paris} sulphur={sulphur} className={className} />
+      <FreeLayoutStrip
+        layout={headerLayout}
+        paris={paris}
+        sulphur={sulphur}
+        className={className}
+      />
     );
   }
   return (

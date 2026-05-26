@@ -2,22 +2,20 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { onAuthStateChanged, type Auth, type User } from "firebase/auth";
+import { onAuthStateChanged, type User } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
-import { PageBuilder } from "@/components/admin/page-builder/PageBuilder";
+import { StructuredSiteEditor } from "@/components/admin/structured-editor/StructuredSiteEditor";
 
 function PageBuilderInner() {
   const searchParams = useSearchParams();
   const pageParam = searchParams.get("page");
   const scopeParam = searchParams.get("scope");
-  const initialScope = scopeParam ?? pageParam ?? "massage";
+  const initialScope = scopeParam ?? pageParam ?? "header-branding";
 
   const [user, setUser] = useState<User | null>(null);
-  const [auth, setAuth] = useState<Auth | null>(null);
 
   useEffect(() => {
     const a = getFirebaseClientAuth();
-    setAuth(a);
     return onAuthStateChanged(a, setUser);
   }, []);
 
@@ -34,9 +32,7 @@ function PageBuilderInner() {
     );
   }
 
-  return (
-    <PageBuilder getIdToken={getIdToken} auth={auth} initialScope={initialScope} />
-  );
+  return <StructuredSiteEditor getIdToken={getIdToken} initialScope={initialScope} />;
 }
 
 export default function PageBuilderPage() {
