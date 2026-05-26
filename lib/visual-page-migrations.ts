@@ -19,6 +19,7 @@ import {
 import {
   fieldTypeToLayerType,
   normalizeVisualPageLayout,
+  type VisualSection,
   type VisualLayer,
   type VisualPageLayout,
   type VisualScopeId,
@@ -30,11 +31,27 @@ function stackedLayers(
   frameHeight: number,
 ): VisualPageLayout {
   let y = 2;
+  const sections: VisualSection[] = [];
   const layers: VisualLayer[] = items.map((item, i) => {
+    if (item.type === "embed" && item.id.startsWith("block_")) {
+      const sectionId = item.id.replace(/^block_/, "");
+      sections.push({
+        id: sectionId,
+        label: item.label ?? sectionId,
+        y,
+        h: item.box.h,
+        order: sections.length,
+      });
+    }
     const layer: VisualLayer = {
       ...item,
       box: { ...item.box, y },
       zIndex: i,
+      sectionId:
+        item.sectionId ??
+        (item.type === "embed" && item.id.startsWith("block_")
+          ? item.id.replace(/^block_/, "")
+          : undefined),
     };
     y += item.box.h + 1.5;
     return layer;
@@ -43,6 +60,7 @@ function stackedLayers(
   return normalizeVisualPageLayout({
     version: 1,
     frameHeight: Math.min(frameHeight, minH),
+    sections,
     layers,
   });
 }
@@ -105,6 +123,7 @@ export function buildServicePageVisualLayout(pageId: PageLayoutId): VisualPageLa
       for (const fl of fieldLayers) {
         items.push({
           ...fl,
+          sectionId: blockId,
           box: { ...fl.box, x: 52, w: 44 },
         });
       }
@@ -139,7 +158,7 @@ export function buildContentScopeVisualLayout(scopeId: ContentScopeId): VisualPa
     y += 7;
     const { layers, endY } = cmsFieldLayers(section.fieldIds, y, 92);
     for (const fl of layers) {
-      items.push(fl);
+      items.push({ ...fl, sectionId: section.id });
     }
     y = endY + 3;
   }
@@ -163,6 +182,15 @@ export function buildHeaderBrandingVisualLayout(
   return normalizeVisualPageLayout({
     version: 1,
     frameHeight: layout.frameHeight,
+    sections: [
+      {
+        id: "header_branding",
+        label: "Header branding",
+        y: 0,
+        h: 100,
+        order: 0,
+      },
+    ],
     layers,
   });
 }

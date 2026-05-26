@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { clampBox, type VisualLayer, type VisualLayerBox } from "@/lib/visual-page-layout";
+import { clampBox, type VisualLayer, type VisualLayerBox, type VisualSection } from "@/lib/visual-page-layout";
 import { FreeformLayerChrome, type ResizeAnchor } from "./FreeformLayerChrome";
 
 export type DragMode =
@@ -44,6 +44,7 @@ function applyResize(
 type Props = {
   frameHeight: number;
   layers: VisualLayer[];
+  sections?: VisualSection[];
   busy?: boolean;
   selectedLayerId: string | null;
   onSelectLayer: (id: string | null) => void;
@@ -51,12 +52,14 @@ type Props = {
   onPersist: (layers: VisualLayer[]) => void | Promise<void>;
   renderLayer: (layer: VisualLayer, selected: boolean) => React.ReactNode;
   renderToolbar?: (layer: VisualLayer) => React.ReactNode;
+  renderSections?: (sections: VisualSection[]) => React.ReactNode;
   hint?: string;
 };
 
 export function FreeformCanvas({
   frameHeight,
   layers,
+  sections = [],
   busy,
   selectedLayerId,
   onSelectLayer,
@@ -64,10 +67,13 @@ export function FreeformCanvas({
   onPersist,
   renderLayer,
   renderToolbar,
+  renderSections,
   hint,
 }: Props) {
   const frameRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragMode | null>(null);
+  const movedRef = useRef(false);
+  const blockClickRef = useRef(false);
   const layersRef = useRef(layers);
   layersRef.current = layers;
 
@@ -97,6 +103,7 @@ export function FreeformCanvas({
       const { px, py } = pctFromPointer(e.clientX, e.clientY);
       const dx = px - drag.startX;
       const dy = py - drag.startY;
+      if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) movedRef.current = true;
 
       if (drag.kind === "move") {
         updateLayerBox(drag.layerId, {
@@ -111,7 +118,14 @@ export function FreeformCanvas({
 
     const onUp = () => {
       if (!dragRef.current) return;
+      if (movedRef.current) {
+        blockClickRef.current = true;
+        setTimeout(() => {
+          blockClickRef.current = false;
+        }, 0);
+      }
       dragRef.current = null;
+      movedRef.current = false;
       void onPersist(layersRef.current);
     };
 
@@ -127,6 +141,7 @@ export function FreeformCanvas({
     if (busy) return;
     e.preventDefault();
     e.stopPropagation();
+    movedRef.current = false;
     onSelectLayer(layerId);
     const { px, py } = pctFromPointer(e.clientX, e.clientY);
     dragRef.current = { kind: "move", layerId, startX: px, startY: py, orig: { ...orig } };
@@ -142,6 +157,7 @@ export function FreeformCanvas({
     if (busy) return;
     e.preventDefault();
     e.stopPropagation();
+    movedRef.current = false;
     onSelectLayer(layerId);
     const { px, py } = pctFromPointer(e.clientX, e.clientY);
     dragRef.current = { kind: "resize", layerId, anchor, startX: px, startY: py, orig: { ...orig } };
@@ -164,6 +180,20 @@ export function FreeformCanvas({
           ref={frameRef}
           className="relative w-full overflow-hidden bg-slate-50/50"
           style={{ height: frameHeight }}
+          onClickCapture={(e) => {
+            const target = e.target as HTMLElement | null;
+            if (!target) return;
+            if (blockClickRef.current) {
+              e.preventDefault();
+              e.stopPropagation();
+              return;
+            }
+            const link = target.closest("a");
+            if (link) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }}
         >
           {visible.map((layer) => {
             const selected = selectedLayerId === layer.id;
@@ -184,20 +214,36 @@ export function FreeformCanvas({
                   className={`relative h-full w-full overflow-hidden ${busy ? "" : "cursor-move"}`}
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (blockClickRef.current) {
+                      e.preventDefault();
+                      return;
+                    }
                     onSelectLayer(layer.id);
                   }}
-                  onPointerDown={(e) => startMove(layer.id, layer.box, e)}
+                  onPointerDown={(e) => {
+                    if (layer.locked) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onSelectLayer(layer.id);
+                      return;
+                    }
+                    startMove(layer.id, layer.box, e);
+                  }}
                 >
                   {renderLayer(layer, selected)}
                   <FreeformLayerChrome
                     selected={selected}
-                    onResizeStart={(anchor, e) => startResize(layer.id, layer.box, anchor, e)}
+                    onResizeStart={(anchor, e) => {
+                      if (layer.locked) return;
+                      startResize(layer.id, layer.box, anchor, e);
+                    }}
                     toolbar={selected && renderToolbar ? renderToolbar(layer) : undefined}
                   />
                 </div>
               </div>
             );
           })}
+          {renderSections ? renderSections(sections) : null}
         </div>
       </div>
       {busy ? <p className="mt-2 text-xs text-slate-500">Saving…</p> : null}

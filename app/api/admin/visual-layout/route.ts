@@ -32,6 +32,8 @@ const layerSchema = z.object({
     h: z.number(),
   }),
   zIndex: z.number(),
+  sectionId: z.string().optional(),
+  locked: z.boolean().optional(),
   hidden: z.boolean().optional(),
   cmsFieldId: z.string().optional(),
   embedKey: z.string().optional(),
@@ -43,9 +45,18 @@ const layerSchema = z.object({
   iconScale: z.number().optional(),
 });
 
+const sectionSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  y: z.number(),
+  h: z.number(),
+  order: z.number(),
+});
+
 const layoutSchema = z.object({
   version: z.literal(1),
   frameHeight: z.number(),
+  sections: z.array(sectionSchema).optional(),
   layers: z.array(layerSchema),
 });
 

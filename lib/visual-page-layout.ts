@@ -18,6 +18,8 @@ export type VisualLayer = {
   label?: string;
   box: VisualLayerBox;
   zIndex: number;
+  sectionId?: string;
+  locked?: boolean;
   hidden?: boolean;
   cmsFieldId?: string;
   embedKey?: string;
@@ -30,9 +32,18 @@ export type VisualLayer = {
   iconScale?: number;
 };
 
+export type VisualSection = {
+  id: string;
+  label: string;
+  y: number;
+  h: number;
+  order: number;
+};
+
 export type VisualPageLayout = {
   version: 1;
   frameHeight: number;
+  sections?: VisualSection[];
   layers: VisualLayer[];
 };
 
@@ -66,6 +77,16 @@ export function clampBox(box: VisualLayerBox): VisualLayerBox {
 
 export function normalizeVisualPageLayout(raw: VisualPageLayout): VisualPageLayout {
   const frameHeight = clamp(raw.frameHeight, FRAME_H_MIN, FRAME_H_MAX);
+  const sections = (raw.sections ?? [])
+    .filter((s) => s?.id && typeof s.id === "string")
+    .map((s, i) => ({
+      id: s.id,
+      label: s.label || s.id,
+      y: clamp(typeof s.y === "number" ? s.y : 0, 0, 97),
+      h: clamp(typeof s.h === "number" ? s.h : 12, 3, 97),
+      order: typeof s.order === "number" ? s.order : i,
+    }))
+    .sort((a, b) => a.order - b.order);
   const layers = (raw.layers ?? [])
     .filter((l) => l?.id && typeof l.id === "string")
     .map((l, i) => {
@@ -76,6 +97,8 @@ export function normalizeVisualPageLayout(raw: VisualPageLayout): VisualPageLayo
         label: l.label,
         box,
         zIndex: typeof l.zIndex === "number" ? l.zIndex : i,
+        sectionId: l.sectionId,
+        locked: Boolean(l.locked),
         hidden: Boolean(l.hidden),
         cmsFieldId: l.cmsFieldId,
         embedKey: l.embedKey,
@@ -88,7 +111,7 @@ export function normalizeVisualPageLayout(raw: VisualPageLayout): VisualPageLayo
       } satisfies VisualLayer;
     })
     .sort((a, b) => a.zIndex - b.zIndex);
-  return { version: 1, frameHeight, layers };
+  return { version: 1, frameHeight, sections, layers };
 }
 
 export function parseVisualPageLayout(

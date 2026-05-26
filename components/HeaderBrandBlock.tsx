@@ -79,6 +79,7 @@ export function HeaderBrandBlock({
   onSelect,
   onPointerDownBox,
   onPointerDownResize,
+  disableLinks = false,
 }: {
   brandKey: HeaderBrandKey;
   box: HeaderBrandBox;
@@ -89,6 +90,7 @@ export function HeaderBrandBlock({
   onSelect?: () => void;
   onPointerDownBox?: (e: React.PointerEvent) => void;
   onPointerDownResize?: (e: React.PointerEvent) => void;
+  disableLinks?: boolean;
 }) {
   const info = headerBrandPhones(brandKey, paris, sulphur);
 
@@ -108,6 +110,15 @@ export function HeaderBrandBlock({
           <p className="text-center text-[9px] font-bold uppercase tracking-wide text-stone-500 sm:text-left sm:text-[10px]">
             {info.phoneLabel}
           </p>
+        </>
+      ) : disableLinks ? (
+        <>
+          <p className="block text-center text-xs font-black text-[#0f5f5c] sm:text-left sm:text-sm">
+            {info.phone}
+          </p>
+          <span className="block text-center text-[9px] font-bold uppercase tracking-wide text-stone-500 sm:text-left sm:text-[10px]">
+            {info.phoneLabel}
+          </span>
         </>
       ) : (
         <>
@@ -139,7 +150,7 @@ export function HeaderBrandBlock({
       }}
       onPointerDown={onPointerDownBox}
     >
-      {interactive ? logoArea : <Link href={info.href}>{logoArea}</Link>}
+      {interactive || disableLinks ? logoArea : <Link href={info.href}>{logoArea}</Link>}
       {phoneArea}
       {interactive && selected ? (
         <span

@@ -33,6 +33,7 @@ export function VisualLayerPreview({ layer, scopeId, preview, cms }: Props) {
         paris={LOCATIONS.paris}
         sulphur={LOCATIONS.sulphur_springs}
         interactive={false}
+        disableLinks
       />
     );
   }
