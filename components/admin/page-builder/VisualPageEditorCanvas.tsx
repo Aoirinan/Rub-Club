@@ -57,6 +57,8 @@ export function VisualPageEditorCanvas({
   );
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState(false);
 
   const dirty = !layoutsEqualVisual(draft, saved);
   const byId = useCallback(
@@ -104,14 +106,14 @@ export function VisualPageEditorCanvas({
   }, [load]);
 
   const persistLayout = useCallback(
-    async (next: VisualPageLayout) => {
+    async (next: VisualPageLayout): Promise<boolean> => {
       const normalizedNext = normalizeVisualPageLayout(next);
       setDraft(normalizedNext);
       try {
         setBusy(true);
         const token = await getIdToken();
         if (!token) {
-          return;
+          return false;
         }
         const res = await fetch("/api/admin/visual-layout", {
           method: "PATCH",
@@ -129,9 +131,12 @@ export function VisualPageEditorCanvas({
           if (scopeId === "header-branding") {
             onSyncHeaderLayout?.(headerVisualToBrandingLayout(normalized));
           }
+          return true;
         }
+        return false;
       } catch (error) {
         console.error("Failed to persist visual layout", error);
+        return false;
       } finally {
         setBusy(false);
       }
@@ -148,7 +153,9 @@ export function VisualPageEditorCanvas({
   );
 
   const saveAll = useCallback(async () => {
-    await persistLayout(draft);
+    const ok = await persistLayout(draft);
+    setSaveError(!ok);
+    setSaveFeedback(ok ? "Saved" : "Save failed");
   }, [draft, persistLayout]);
 
   useEffect(() => {
@@ -432,7 +439,7 @@ export function VisualPageEditorCanvas({
         </label>
         <button
           type="button"
-          disabled={busy || !dirty}
+          disabled={busy}
           className="rounded-lg bg-[#0f5f5c] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#0c4f4c] disabled:cursor-not-allowed disabled:opacity-50"
           onClick={() => void saveAll()}
         >
@@ -446,8 +453,11 @@ export function VisualPageEditorCanvas({
         >
           Reset to default layout
         </button>
-        {dirty ? (
-          <span className="text-xs font-bold text-amber-800">Unsaved moves — auto-saves on release</span>
+        {dirty ? <span className="text-xs font-bold text-amber-800">Unsaved changes</span> : null}
+        {!dirty && saveFeedback ? (
+          <span className={`text-xs font-bold ${saveError ? "text-rose-700" : "text-emerald-700"}`}>
+            {saveFeedback}
+          </span>
         ) : null}
       </div>
       <div className="rounded-xl border border-slate-200 bg-white p-3">
