@@ -10,13 +10,12 @@ import type { VisualPageLayout, VisualScopeId } from "@/lib/visual-page-layout";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
 
-export const HEADER_SHOW_TOP_PHONE_BAR_FIELD = "header_show_top_phone_bar" as const;
+import {
+  HEADER_SHOW_TOP_PHONE_BAR_FIELD,
+  parseHeaderShowTopPhoneBar,
+} from "@/lib/header-top-phone-bar";
 
-/** CMS stores "true"/"false"; enabled unless explicitly false or "no". */
-export function parseHeaderShowTopPhoneBar(value: string | undefined): boolean {
-  const v = value?.trim().toLowerCase();
-  return v !== "false" && v !== "no";
-}
+export { HEADER_SHOW_TOP_PHONE_BAR_FIELD, parseHeaderShowTopPhoneBar };
 
 const LAYOUT_CMS_IDS = [
   HEADER_SHOW_TOP_PHONE_BAR_FIELD,

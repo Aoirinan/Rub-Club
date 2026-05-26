@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { HEADER_SHOW_TOP_PHONE_BAR_FIELD } from "@/lib/cms-display";
+import { HEADER_SHOW_TOP_PHONE_BAR_FIELD } from "@/lib/header-top-phone-bar";
 import type { SiteContentFieldRow } from "./useSiteContentFields";
 import { RichTextArea } from "./RichTextArea";
 
