@@ -116,7 +116,7 @@ export function BrandLogoStrip({
 
   return (
     <div
-      className={`grid w-full grid-cols-3 items-end gap-2 sm:gap-4 md:gap-6 ${className}`}
+      className={`grid w-full grid-cols-3 items-end gap-1.5 sm:gap-3 md:gap-4 ${className}`}
     >
       {entries.map((entry, columnIndex) => {
         const primary = entry.key === primaryKey;
@@ -147,8 +147,8 @@ export function BrandLogoStrip({
         return (
           <div
             key={entry.key}
-            className={`flex min-w-0 flex-col gap-1 ${columnAlignClass(columnIndex)} ${
-              primary ? "z-[1] md:px-1" : "md:px-0.5"
+            className={`flex min-w-0 flex-col gap-0.5 ${columnAlignClass(columnIndex)} ${
+              primary ? "z-[1] md:px-0.5" : "md:px-0"
             }`}
           >
             <Link
