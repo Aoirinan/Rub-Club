@@ -10,7 +10,16 @@ import type { VisualPageLayout, VisualScopeId } from "@/lib/visual-page-layout";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
 
+export const HEADER_SHOW_TOP_PHONE_BAR_FIELD = "header_show_top_phone_bar" as const;
+
+/** CMS stores "true"/"false"; enabled unless explicitly false or "no". */
+export function parseHeaderShowTopPhoneBar(value: string | undefined): boolean {
+  const v = value?.trim().toLowerCase();
+  return v !== "false" && v !== "no";
+}
+
 const LAYOUT_CMS_IDS = [
+  HEADER_SHOW_TOP_PHONE_BAR_FIELD,
   "footer_tagline",
   "footer_paris_address",
   "footer_paris_phone",

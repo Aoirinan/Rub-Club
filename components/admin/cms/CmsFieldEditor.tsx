@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { HEADER_SHOW_TOP_PHONE_BAR_FIELD } from "@/lib/cms-display";
 import type { SiteContentFieldRow } from "./useSiteContentFields";
 import { RichTextArea } from "./RichTextArea";
 
@@ -21,9 +22,19 @@ export function CmsFieldEditor({ field, busy, onSave, onReset, compact }: Props)
     setDraft(field.value);
   }, [field.id, field.value]);
 
-  const valuePreview =
-    field.value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) ||
-    "(empty)";
+  const isTopPhoneBarToggle = field.id === HEADER_SHOW_TOP_PHONE_BAR_FIELD;
+
+  function isTopPhoneBarEnabled(value: string): boolean {
+    const v = value.trim().toLowerCase();
+    return v !== "false" && v !== "no";
+  }
+
+  const valuePreview = isTopPhoneBarToggle
+    ? isTopPhoneBarEnabled(field.value)
+      ? "On"
+      : "Off"
+    : field.value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) ||
+      "(empty)";
 
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50/80">
@@ -43,7 +54,18 @@ export function CmsFieldEditor({ field, busy, onSave, onReset, compact }: Props)
       </button>
       {expanded ? (
         <div className="space-y-2 border-t border-slate-200 px-3 py-3">
-          {field.type === "text" || field.type === "phone" ? (
+          {isTopPhoneBarToggle ? (
+            <label className="flex items-center gap-2 text-sm text-slate-800">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-slate-300 text-[#0f5f5c] focus:ring-[#0f5f5c]"
+                checked={isTopPhoneBarEnabled(draft)}
+                onChange={(e) => setDraft(e.target.checked ? "true" : "false")}
+              />
+              <span>Show the dark phone bar above the logos on every page</span>
+            </label>
+          ) : null}
+          {!isTopPhoneBarToggle && (field.type === "text" || field.type === "phone") ? (
             <input
               type={field.type === "phone" ? "tel" : "text"}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"

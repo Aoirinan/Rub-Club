@@ -167,6 +167,13 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "contact_heading", pageLabel: "Contact", sectionLabel: "Hero", fieldLabel: "Heading", type: "text" },
   { id: "contact_subtext", pageLabel: "Contact", sectionLabel: "Hero", fieldLabel: "Subtext", type: "text" },
 
+  {
+    id: "header_show_top_phone_bar",
+    pageLabel: "Footer",
+    sectionLabel: "Header",
+    fieldLabel: "Show dark phone bar above logos",
+    type: "text",
+  },
   { id: "footer_tagline", pageLabel: "Footer", sectionLabel: "Footer", fieldLabel: "Tagline", type: "text" },
   { id: "footer_paris_address", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Address", type: "text" },
   { id: "footer_paris_phone", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Phone", type: "phone" },
@@ -307,6 +314,8 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
   contact_heading: "Contact us",
   contact_subtext:
     "Call the office that's most convenient, or send us a message and we will follow up during office hours.",
+
+  header_show_top_phone_bar: "true",
 
   footer_tagline:
     "Family-owned wellness in Northeast Texas. Two practices, one address in Paris â€” plus chiropractic care in Sulphur Springs.",

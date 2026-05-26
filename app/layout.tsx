@@ -22,7 +22,7 @@ import {
   websiteJsonLd,
 } from "@/lib/structured-data";
 import { getSiteOwnerConfig, bannerIsActivePublic } from "@/lib/site-owner-config";
-import { getHeaderBrandingLayout, getLayoutCmsContent } from "@/lib/cms-display";
+import { getLayoutCmsContent, parseHeaderShowTopPhoneBar } from "@/lib/cms-display";
 import {
   effectiveGiftCardSticky,
   mergedDisplayLocations,
@@ -91,11 +91,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let salesBanner: SalesBannerPayload | null = null;
-  const [cms, bookingConfig, parisHours, headerLayout] = await Promise.all([
+  const [cms, bookingConfig, parisHours] = await Promise.all([
     getLayoutCmsContent(),
     getPublicBookingConfig(),
     getParisOfficeHours(),
-    getHeaderBrandingLayout(),
   ]);
   const onlineBookingEnabled = isPublicBookingEnabled(bookingConfig);
   let displayLocs = mergedDisplayLocations(undefined, cms);
@@ -118,6 +117,7 @@ export default async function RootLayout({
   }
 
   const schemaLocations = [displayLocs.paris, displayLocs.sulphur_springs];
+  const showTopPhoneBar = parseHeaderShowTopPhoneBar(cms.header_show_top_phone_bar);
 
   return (
     <html lang="en">
@@ -140,7 +140,7 @@ export default async function RootLayout({
                   paris={displayLocs.paris}
                   sulphur={displayLocs.sulphur_springs}
                   giftCardHref={giftCardSticky.href}
-                  headerLayout={headerLayout}
+                  showTopPhoneBar={showTopPhoneBar}
                 />
                 {salesBanner ? <HomepageSalesBanner payload={salesBanner} /> : null}
               </>

@@ -10,7 +10,6 @@ import {
 import { isPageLayoutId, PAGE_LAYOUT_PAGES } from "@/lib/page-layout";
 import type { PageBuilderScopeId } from "@/lib/page-builder-content-scopes";
 import { FaqItemsPanel } from "@/components/admin/FaqItemsPanel";
-import { HeaderBrandingForm } from "./HeaderBrandingForm";
 import { ScopeFieldForm } from "./ScopeFieldForm";
 
 type Props = {
@@ -19,10 +18,11 @@ type Props = {
 };
 
 function parseInitialScope(raw?: string): PageBuilderScopeId {
+  if (raw === "header-branding") return "home";
   if (raw && isPageLayoutId(raw)) return raw;
   if (raw && isFaqItemsScope(raw)) return raw;
   if (raw && isContentScopeId(raw)) return raw;
-  return "header-branding";
+  return "home";
 }
 
 function scopeLivePath(scope: PageBuilderScopeId): string | null {
@@ -30,7 +30,6 @@ function scopeLivePath(scope: PageBuilderScopeId): string | null {
     return PAGE_LAYOUT_PAGES.find((p) => p.id === scope)?.path ?? null;
   }
   if (scope === "home") return "/";
-  if (scope === "header-branding") return "/";
   if (scope === "footer") return "/";
   if (scope === "navigation") return "/";
   if (scope === "about") return "/about";
@@ -78,10 +77,6 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
     void loadCms();
   }, [loadCms]);
 
-  const handleSavedRefresh = useCallback(() => {
-    setPreviewKey((k) => k + 1);
-  }, []);
-
   const refreshPreview = useCallback(() => {
     setPreviewKey((k) => k + 1);
   }, []);
@@ -89,17 +84,6 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
   let main: React.ReactNode = null;
   if (scope === "faq-items") {
     main = <FaqItemsPanel getIdToken={getIdToken} />;
-  } else if (scope === "header-branding") {
-    main = (
-      <HeaderBrandingForm
-        getIdToken={getIdToken}
-        cmsFields={cms.fields}
-        cmsBusy={cms.busy}
-        onSaveField={cms.saveField}
-        onResetField={cms.resetField}
-        onSaved={handleSavedRefresh}
-      />
-    );
   } else {
     main = (
       <ScopeFieldForm
@@ -128,9 +112,6 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
               value={scope}
               onChange={(e) => setScope(parseInitialScope(e.target.value))}
             >
-              <optgroup label="Header">
-                <option value="header-branding">Header logos &amp; phones</option>
-              </optgroup>
               <optgroup label="Service pages">
                 {pages.map((p) => (
                   <option key={p.id} value={p.id}>

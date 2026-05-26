@@ -10,7 +10,7 @@ function PageBuilderInner() {
   const searchParams = useSearchParams();
   const pageParam = searchParams.get("page");
   const scopeParam = searchParams.get("scope");
-  const initialScope = scopeParam ?? pageParam ?? "header-branding";
+  const initialScope = scopeParam ?? pageParam ?? "home";
 
   const [user, setUser] = useState<User | null>(null);
 

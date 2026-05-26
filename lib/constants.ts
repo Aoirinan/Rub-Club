@@ -4,6 +4,9 @@ export const TIME_ZONE = "America/Chicago";
 export const FACEBOOK_URL =
   "https://www.facebook.com/chiropracticparistexas/";
 
+/** The Rub Club on Instagram. */
+export const INSTAGRAM_URL = "https://www.instagram.com/therubclub/";
+
 /** On-site wellness membership pricing (Chiro-Fitness / Acu-Fit). */
 export const WELLNESS_CARE_PLANS_PATH =
   "/services/chiropractic/wellness-care-plans" as const;

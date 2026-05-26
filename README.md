@@ -40,7 +40,7 @@ Other scripts:
 
 **Massage team:** Admin → Site content → **Massage team** — full roster (add/edit/remove therapists with photos).
 
-**Other pages:** Home, Chiropractic, Massage, Paris hours, Sulphur hub, SS treatment/injury subpages, Insurance, Services, Reviews, Patient forms, About, FAQ, Contact, Footer, and Navigation are all under Site content tabs.
+**Other pages:** Home, Chiropractic, Massage, Paris hours, Sulphur hub, SS treatment/injury subpages, Insurance, Services, Reviews, Patient forms, About, FAQ, Contact, Footer, and Navigation are all under Site content tabs. **Footer → Header** includes a checkbox to show or hide the dark phone bar above the logos (and Footer → Paris / Sulphur Springs for those phone numbers).
 
 **Contact form:** Every submission on `/contact` is stored in Firestore. **Front desk** (and all staff) read messages under **Admin → Contact inbox** — no email required for daily work. Optional email copies go to `OFFICE_NOTIFICATION_EMAIL` (production: `dr.seanwelborn@gmail.com`). Visitors get an auto-reply when SendGrid is configured.
 

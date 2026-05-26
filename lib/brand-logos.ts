@@ -2,8 +2,8 @@
 
 export const BRAND_LOGOS = {
   rubClub: "/logos/rub-club.png",
-  /** Prefer .webp until a new PNG is added; update path when replacing Sean's lockup. */
-  chiropractic: "/logos/chiropractic-associates.webp",
+  /** Paris, TX lockup (user-supplied art). */
+  chiropractic: "/logos/chiropractic-paris-tx.png",
   /** Spine-in-circle mark; paired with type in `SulphurSpringsLockup`. */
   sulphurSpringsIcon: "/logos/sulphur-springs-icon.webp",
 } as const;

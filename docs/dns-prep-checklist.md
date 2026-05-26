@@ -14,6 +14,7 @@ You can do almost everything below **while the site still runs on `rub-club.verc
 | Edit **doctor names, titles, bios, photos** | Site content → **Doctors** |
 | Edit **Paris office hours** | Admin → Site content → **Paris / main office** → Office hours |
 | Edit **Sulphur hours** | Admin → Site content → **Sulphur Springs** → Hours |
+| Show/hide **dark header phone bar** (above logos) | Admin → Website editor → **Footer** → Header → “Show dark phone bar above logos” |
 | Banners & specials | Admin → Banners & promos |
 | Gift card link | Admin → Other extras (or env `nav_giftcard_url` in CMS) |
 | Test all public pages on Vercel URL | Home, services, Sulphur hub, locations, reviews, contact |

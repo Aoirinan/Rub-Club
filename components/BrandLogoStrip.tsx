@@ -1,45 +1,36 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Fragment } from "react";
-import { HeaderBrandLogoVisual, headerBrandPhones } from "@/components/HeaderBrandBlock";
 import { SulphurSpringsLockup } from "@/components/SulphurSpringsLockup";
+import { headerBrandPhones } from "@/components/HeaderBrandBlock";
 import { IMAGES } from "@/lib/home-images";
 import { BRAND_LOGOS, type BrandLogoVariant } from "@/lib/brand-logos";
 import { telHref, type LocationInfo } from "@/lib/constants";
-import {
-  HEADER_BRAND_KEYS,
-  HEADER_PRESET_HEIGHT_PX,
-  LOGO_HEIGHT_PX,
-  headerBrandLayerBoxes,
-  type HeaderBrandKey,
-  type HeaderBrandingLayout,
-  type HeaderBrandingLayoutV1,
-  type HeaderBrandingLayoutV2,
-  type HeaderBrandSettings,
-} from "@/lib/header-branding-cms";
 
-type BrandKey = HeaderBrandKey;
+type BrandKey = "rub" | "chiro" | "ss";
 
 type LogoEntry = {
   key: BrandKey;
   src?: string;
   alt: string;
-  phone: string;
-  phoneLabel: string;
   href: string;
   width: number;
   height: number;
 };
 
-function buildBrandEntries(paris: LocationInfo, sulphur: LocationInfo): LogoEntry[] {
-  const rubPhone = paris.phoneSecondary?.trim() || paris.phonePrimary;
+/** Side logos — base height; primary is 30% taller (see `primaryLogoHeightClass`). */
+const SIDE_LOGO_HEIGHT =
+  "h-8 w-auto max-w-[min(100%,200px)] sm:h-9 md:h-10 lg:max-w-[220px]";
+
+/** Primary (active page) logo — 30% larger than side logos at each breakpoint. */
+const PRIMARY_LOGO_HEIGHT =
+  "h-[2.6rem] w-auto max-w-[min(100%,320px)] sm:h-[2.925rem] md:h-[3.25rem] lg:h-[3.9rem] lg:max-w-[380px]";
+
+function buildBrandEntries(): LogoEntry[] {
   return [
     {
       key: "rub",
       src: IMAGES.rubClubLogo,
-      alt: "The Rub Club",
-      phone: rubPhone,
-      phoneLabel: "Massage",
+      alt: "The Rub Club Massage",
       href: "/services/massage",
       width: 320,
       height: 65,
@@ -47,18 +38,14 @@ function buildBrandEntries(paris: LocationInfo, sulphur: LocationInfo): LogoEntr
     {
       key: "chiro",
       src: BRAND_LOGOS.chiropractic,
-      alt: "Chiropractic Associates",
-      phone: paris.phonePrimary,
-      phoneLabel: "Chiropractic — Paris",
+      alt: "Chiropractic Associates — Paris, TX",
       href: "/services/chiropractic",
-      width: 280,
-      height: 72,
+      width: 320,
+      height: 90,
     },
     {
       key: "ss",
       alt: "Chiropractic Associates of Sulphur Springs",
-      phone: sulphur.phonePrimary,
-      phoneLabel: "Sulphur Springs",
       href: "/sulphur-springs",
       width: 360,
       height: 80,
@@ -80,213 +67,71 @@ function primaryKeyForVariant(variant: BrandLogoVariant): BrandKey {
   }
 }
 
+/** Center column = active brand; left and right are the other two. */
 function orderedForVariant(variant: BrandLogoVariant, entries: LogoEntry[]): LogoEntry[] {
   const primaryKey = primaryKeyForVariant(variant);
   const byKey = Object.fromEntries(entries.map((e) => [e.key, e])) as Record<BrandKey, LogoEntry>;
   const primary = byKey[primaryKey];
-  const sides = (["rub", "chiro", "ss"] as const).filter((k) => k !== primaryKey).map((k) => byKey[k]);
+  const sides = (["rub", "chiro", "ss"] as const)
+    .filter((k) => k !== primaryKey)
+    .map((k) => byKey[k]);
   return [sides[0]!, primary, sides[1]!];
 }
 
-function logoHeightClass(primary: boolean): string {
-  return primary
-    ? "h-12 w-auto max-w-[min(100%,340px)] sm:h-14 md:h-16 lg:h-[4.5rem]"
-    : "h-7 w-auto max-w-[min(100%,200px)] opacity-90 transition-opacity hover:opacity-100 sm:h-9 md:h-10";
+function columnAlignClass(columnIndex: number): string {
+  if (columnIndex === 0) return "items-center sm:items-end sm:text-right";
+  if (columnIndex === 2) return "items-center sm:items-start sm:text-left";
+  return "items-center text-center";
 }
 
-function StructuredHeaderStrip({
-  layout,
+function logoAlignClass(columnIndex: number, primary: boolean): string {
+  const base = primary ? PRIMARY_LOGO_HEIGHT : SIDE_LOGO_HEIGHT;
+  const mx =
+    columnIndex === 0
+      ? "mx-auto sm:ml-auto sm:mr-0"
+      : columnIndex === 2
+        ? "mx-auto sm:ml-0 sm:mr-auto"
+        : "mx-auto";
+  const opacity = primary ? "" : "opacity-90 transition-opacity hover:opacity-100";
+  return `${base} ${mx} object-contain ${opacity}`;
+}
+
+/**
+ * Hard-coded three-brand header: active page’s logo is centered and 30% larger;
+ * phone number and label sit under each logo.
+ */
+export function BrandLogoStrip({
+  variant = "home",
   paris,
   sulphur,
-  className,
+  className = "",
 }: {
-  layout: HeaderBrandingLayoutV2;
+  variant?: BrandLogoVariant;
   paris: LocationInfo;
   sulphur: LocationInfo;
   className?: string;
 }) {
-  const frameHeight = HEADER_PRESET_HEIGHT_PX[layout.preset];
-  return (
-    <div
-      className={`grid w-full items-end gap-3 sm:gap-4 md:gap-6 ${className ?? ""}`}
-      style={{
-        gridTemplateColumns: `repeat(${HEADER_BRAND_KEYS.length}, minmax(0, 1fr))`,
-        minHeight: frameHeight,
-      }}
-    >
-      {HEADER_BRAND_KEYS.map((key) => {
-        const settings = layout.brands[key];
-        const phone = headerBrandPhones(key, paris, sulphur);
-        const logoH = LOGO_HEIGHT_PX[key][settings.logoSize];
-        return (
-          <StructuredBrandColumn
-            key={key}
-            brandKey={key}
-            settings={settings}
-            phone={phone.phone}
-            phoneLabel={phone.phoneLabel}
-            href={phone.href}
-            logoHeightPx={logoH}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-function StructuredBrandColumn({
-  brandKey,
-  settings,
-  phone,
-  phoneLabel,
-  href,
-  logoHeightPx,
-}: {
-  brandKey: HeaderBrandKey;
-  settings: HeaderBrandSettings;
-  phone: string;
-  phoneLabel: string;
-  href: string;
-  logoHeightPx: number;
-}) {
-  const alignClass = settings.align === "center" ? "items-center text-center" : "items-start text-left";
-  const justifyClass = settings.align === "center" ? "justify-center" : "justify-start";
-
-  const logoImg =
-    brandKey === "ss" ? (
-      <SulphurSpringsLockup
-        primary
-        iconScalePercent={settings.iconScale ?? 88}
-        className="max-h-full w-auto max-w-full"
-      />
-    ) : brandKey === "rub" ? (
-      <Image
-        src={IMAGES.rubClubLogo}
-        alt="The Rub Club"
-        width={320}
-        height={65}
-        className="max-h-full w-auto max-w-full object-contain"
-        priority
-      />
-    ) : (
-      <Image
-        src={BRAND_LOGOS.chiropractic}
-        alt="Chiropractic Associates"
-        width={280}
-        height={72}
-        className="max-h-full w-auto max-w-full object-contain"
-        priority
-      />
-    );
-
-  return (
-    <div className={`flex min-w-0 flex-col gap-1 ${alignClass}`}>
-      <Link
-        href={href}
-        className={`flex items-end ${justifyClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f5f5c]`}
-        aria-label={`Go to ${phoneLabel}`}
-        style={{ height: logoHeightPx }}
-      >
-        {logoImg}
-      </Link>
-      {settings.showPhone ? (
-        <div className="min-w-0">
-          <a
-            href={telHref(phone)}
-            className="block truncate text-xs font-black text-[#0f5f5c] hover:underline sm:text-sm"
-          >
-            {phone}
-          </a>
-          <span className="block truncate text-[9px] font-bold uppercase tracking-wide text-stone-500 sm:text-[10px]">
-            {phoneLabel}
-          </span>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function FreeLayoutStrip({
-  layout,
-  paris,
-  sulphur,
-  className,
-}: {
-  layout: HeaderBrandingLayoutV1;
-  paris: LocationInfo;
-  sulphur: LocationInfo;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`relative w-full overflow-hidden ${className ?? ""}`}
-      style={{ height: layout.frameHeight, minHeight: layout.frameHeight }}
-    >
-      {HEADER_BRAND_KEYS.map((key) => {
-        const { logo, text } = headerBrandLayerBoxes(layout, key);
-        const phone = headerBrandPhones(key, paris, sulphur);
-        return (
-          <Fragment key={key}>
-            <div
-              className="absolute flex items-end justify-center sm:justify-start"
-              style={{
-                left: `${logo.x}%`,
-                top: `${logo.y}%`,
-                width: `${logo.w}%`,
-                height: `${logo.h}%`,
-              }}
-            >
-              <HeaderBrandLogoVisual brandKey={key} iconScale={logo.iconScale} />
-            </div>
-            <div
-              className="absolute overflow-hidden"
-              style={{
-                left: `${text.x}%`,
-                top: `${text.y}%`,
-                width: `${text.w}%`,
-                height: `${text.h}%`,
-              }}
-            >
-              <a
-                href={telHref(phone.phone)}
-                className="block truncate text-center text-xs font-black text-[#0f5f5c] hover:underline sm:text-left sm:text-sm"
-              >
-                {phone.phone}
-              </a>
-              <span className="block truncate text-center text-[9px] font-bold uppercase tracking-wide text-stone-500 sm:text-left sm:text-[10px]">
-                {phone.phoneLabel}
-              </span>
-            </div>
-          </Fragment>
-        );
-      })}
-    </div>
-  );
-}
-
-function GridLayoutStrip({
-  variant,
-  paris,
-  sulphur,
-  className,
-}: {
-  variant: BrandLogoVariant;
-  paris: LocationInfo;
-  sulphur: LocationInfo;
-  className?: string;
-}) {
-  const entries = orderedForVariant(variant, buildBrandEntries(paris, sulphur));
+  const entries = orderedForVariant(variant, buildBrandEntries());
   const primaryKey = primaryKeyForVariant(variant);
 
   return (
-    <div className={`grid w-full grid-cols-3 items-end gap-2 sm:gap-4 md:gap-6 ${className ?? ""}`}>
-      {entries.map((entry) => {
+    <div
+      className={`grid w-full grid-cols-3 items-end gap-2 sm:gap-4 md:gap-6 ${className}`}
+    >
+      {entries.map((entry, columnIndex) => {
         const primary = entry.key === primaryKey;
-        const img =
+        const info = headerBrandPhones(entry.key, paris, sulphur);
+
+        const ssHeightPx = primary ? 52 : 40;
+
+        const logo =
           entry.key === "ss" ? (
             <SulphurSpringsLockup
               primary={primary}
-              className={`mx-auto sm:mx-0 ${logoHeightClass(primary)}`}
+              heightPx={ssHeightPx}
+              className={`max-w-full ${columnIndex === 1 ? "mx-auto" : columnIndex === 0 ? "mx-auto sm:ml-auto sm:mr-0" : "mx-auto sm:ml-0 sm:mr-auto"} ${
+                !primary ? "opacity-90 transition-opacity hover:opacity-100" : ""
+              }`}
             />
           ) : (
             <Image
@@ -294,18 +139,16 @@ function GridLayoutStrip({
               alt={entry.alt}
               width={entry.width}
               height={entry.height}
-              className={`mx-auto object-contain sm:mx-0 sm:object-left ${logoHeightClass(primary)} ${
-                !primary ? "opacity-90 transition-opacity hover:opacity-100" : ""
-              }`}
+              className={logoAlignClass(columnIndex, primary)}
               priority={primary}
             />
           );
-        const info = headerBrandPhones(entry.key, paris, sulphur);
+
         return (
           <div
             key={entry.key}
-            className={`flex min-w-0 flex-col items-center sm:items-start ${
-              primary ? "md:px-2" : "md:px-1"
+            className={`flex min-w-0 flex-col gap-1 ${columnAlignClass(columnIndex)} ${
+              primary ? "z-[1] md:px-1" : "md:px-0.5"
             }`}
           >
             <Link
@@ -313,18 +156,18 @@ function GridLayoutStrip({
               className="block w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f5f5c]"
               aria-label={`${entry.alt} — go to ${info.phoneLabel}`}
             >
-              {img}
+              {logo}
             </Link>
             <a
               href={telHref(info.phone)}
-              className={`mt-1.5 text-center font-black text-[#0f5f5c] hover:underline sm:text-left ${
+              className={`whitespace-nowrap font-black text-[#0f5f5c] hover:underline ${
                 primary ? "text-sm sm:text-base" : "text-xs sm:text-sm"
               }`}
             >
               {info.phone}
             </a>
             <span
-              className={`text-center font-bold uppercase tracking-wide text-stone-500 sm:text-left ${
+              className={`max-w-full truncate font-bold uppercase tracking-wide text-stone-500 ${
                 primary ? "text-[10px] sm:text-xs" : "text-[9px] sm:text-[10px]"
               }`}
             >
@@ -334,45 +177,5 @@ function GridLayoutStrip({
         );
       })}
     </div>
-  );
-}
-
-export function BrandLogoStrip({
-  variant = "home",
-  paris,
-  sulphur,
-  headerLayout,
-  className = "",
-}: {
-  variant?: BrandLogoVariant;
-  paris: LocationInfo;
-  sulphur: LocationInfo;
-  headerLayout?: HeaderBrandingLayout;
-  /** @deprecated ignored when headerLayout is set */
-  headerHeights?: unknown;
-  className?: string;
-}) {
-  if (headerLayout) {
-    if (headerLayout.version === 2) {
-      return (
-        <StructuredHeaderStrip
-          layout={headerLayout}
-          paris={paris}
-          sulphur={sulphur}
-          className={className}
-        />
-      );
-    }
-    return (
-      <FreeLayoutStrip
-        layout={headerLayout}
-        paris={paris}
-        sulphur={sulphur}
-        className={className}
-      />
-    );
-  }
-  return (
-    <GridLayoutStrip variant={variant} paris={paris} sulphur={sulphur} className={className} />
   );
 }
