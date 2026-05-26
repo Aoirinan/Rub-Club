@@ -40,24 +40,6 @@ export function BookAvailabilityPreview({
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
 
-  useEffect(() => {
-    // #region agent log
-    void fetch("http://127.0.0.1:7806/ingest/e1abd076-f2b4-40ff-8948-4d669dd82a76", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "759cf6" },
-      body: JSON.stringify({
-        sessionId: "759cf6",
-        runId: "run1",
-        hypothesisId: "H2",
-        location: "components/BookAvailabilityPreview.tsx:44",
-        message: "book-availability-preview-mounted",
-        data: {},
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-  }, []);
-
   const loc = locations[locationId];
   const minDate = todayIso();
   const maxDate = addDaysIso(60);
@@ -67,21 +49,6 @@ export function BookAvailabilityPreview({
     setSlotsError(null);
     setSlots(null);
     setSelectedSlot(null);
-    // #region agent log
-    void fetch("http://127.0.0.1:7806/ingest/e1abd076-f2b4-40ff-8948-4d669dd82a76", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "759cf6" },
-      body: JSON.stringify({
-        sessionId: "759cf6",
-        runId: "run1",
-        hypothesisId: "H3",
-        location: "components/BookAvailabilityPreview.tsx:66",
-        message: "preview-load-slots-start",
-        data: { locationId, serviceLine, durationMin, date },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     try {
       const qs = new URLSearchParams({
         locationId,
@@ -94,40 +61,10 @@ export function BookAvailabilityPreview({
       const res = await fetch(`/api/slots?${qs.toString()}`, { cache: "no-store" });
       const data = (await res.json()) as { slots?: Slot[]; error?: string };
       if (!res.ok) {
-        // #region agent log
-        void fetch("http://127.0.0.1:7806/ingest/e1abd076-f2b4-40ff-8948-4d669dd82a76", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "759cf6" },
-          body: JSON.stringify({
-            sessionId: "759cf6",
-            runId: "run1",
-            hypothesisId: "H3",
-            location: "components/BookAvailabilityPreview.tsx:87",
-            message: "preview-load-slots-failed-response",
-            data: { status: res.status, error: data.error ?? null },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
         setSlotsError(data.error ?? "Could not load open times.");
         setSlots([]);
         return;
       }
-      // #region agent log
-      void fetch("http://127.0.0.1:7806/ingest/e1abd076-f2b4-40ff-8948-4d669dd82a76", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "759cf6" },
-        body: JSON.stringify({
-          sessionId: "759cf6",
-          runId: "run1",
-          hypothesisId: "H3",
-          location: "components/BookAvailabilityPreview.tsx:102",
-          message: "preview-load-slots-success",
-          data: { slotCount: (data.slots ?? []).length },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
       setSlots(data.slots ?? []);
     } catch {
       setSlotsError("Could not load open times. Please call the office.");

@@ -78,24 +78,6 @@ export function BookingWizard({
   initial?: BookingWizardInitial;
   onlinePaymentsEnabled?: boolean;
 } = {}) {
-  useEffect(() => {
-    // #region agent log
-    void fetch("http://127.0.0.1:7806/ingest/e1abd076-f2b4-40ff-8948-4d669dd82a76", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "759cf6" },
-      body: JSON.stringify({
-        sessionId: "759cf6",
-        runId: "run1",
-        hypothesisId: "H2",
-        location: "components/BookingWizard.tsx:83",
-        message: "booking-wizard-mounted",
-        data: {},
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-  }, []);
-
   const locById = initial?.locations ?? LOCATIONS;
   const [locationId, setLocationId] = useState<LocationId>(
     readInitialLocation(initial?.location ?? null),
