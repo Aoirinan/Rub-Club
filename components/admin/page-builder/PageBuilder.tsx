@@ -65,6 +65,9 @@ export function PageBuilder({ getIdToken, initialScope }: Props) {
   });
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
   const [visualDraft, setVisualDraft] = useState<VisualPageLayout | null>(null);
+  const [mutateVisualLayout, setMutateVisualLayout] = useState<(
+    (mutator: (layout: VisualPageLayout) => VisualPageLayout) => void
+  ) | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   const isFaqScope = scope === "faq-items";
@@ -152,6 +155,7 @@ export function PageBuilder({ getIdToken, initialScope }: Props) {
   useEffect(() => {
     setSelectedLayerId(null);
     setVisualDraft(null);
+    setMutateVisualLayout(null);
     setMessage(null);
   }, [scope]);
 
@@ -164,23 +168,27 @@ export function PageBuilder({ getIdToken, initialScope }: Props) {
     async (layoutOverride?: VisualPageLayout) => {
       const toSave = layoutOverride ?? visualDraft;
       if (!toSave || !visualScope) return;
-      const token = await getIdToken();
-      if (!token) return;
-      const res = await fetch("/api/admin/visual-layout", {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({ scope: visualScope, layout: toSave }),
-      });
-      if (res.ok) {
-        const data = (await res.json()) as { layout?: VisualPageLayout };
-        const normalized = data.layout ?? toSave;
-        setVisualDraft(normalized);
-        if (scope === "header-branding") {
-          await saveHeaderLayoutToCms(headerVisualToBrandingLayout(normalized));
+      try {
+        const token = await getIdToken();
+        if (!token) return;
+        const res = await fetch("/api/admin/visual-layout", {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ scope: visualScope, layout: toSave }),
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { layout?: VisualPageLayout };
+          const normalized = data.layout ?? toSave;
+          setVisualDraft(normalized);
+          if (scope === "header-branding") {
+            await saveHeaderLayoutToCms(headerVisualToBrandingLayout(normalized));
+          }
         }
+      } catch {
+        setMessage("Save failed (network). Please refresh and try again.");
       }
     },
     [visualDraft, visualScope, getIdToken, scope, saveHeaderLayoutToCms],
@@ -198,6 +206,13 @@ export function PageBuilder({ getIdToken, initialScope }: Props) {
       onSaveField={cms.saveField}
       onResetField={cms.resetField}
       onUpdateLayerContent={(layerId, content) => {
+        if (mutateVisualLayout) {
+          mutateVisualLayout((prev) => ({
+            ...prev,
+            layers: prev.layers.map((l) => (l.id === layerId ? { ...l, content } : l)),
+          }));
+          return;
+        }
         setVisualDraft((prev) => {
           if (!prev) return prev;
           const next = {
@@ -209,6 +224,13 @@ export function PageBuilder({ getIdToken, initialScope }: Props) {
         });
       }}
       onUpdateLayerSrc={(layerId, src) => {
+        if (mutateVisualLayout) {
+          mutateVisualLayout((prev) => ({
+            ...prev,
+            layers: prev.layers.map((l) => (l.id === layerId ? { ...l, src } : l)),
+          }));
+          return;
+        }
         setVisualDraft((prev) => {
           if (!prev) return prev;
           const next = {
@@ -222,6 +244,17 @@ export function PageBuilder({ getIdToken, initialScope }: Props) {
       onHeaderIconScale={
         scope === "header-branding"
           ? (value) => {
+              if (mutateVisualLayout) {
+                mutateVisualLayout((prev) => ({
+                  ...prev,
+                  layers: prev.layers.map((l) =>
+                    l.brandKey === "ss" && (l.embedKey === "header-logo" || l.id === "brand_logo_ss")
+                      ? { ...l, iconScale: value }
+                      : l,
+                  ),
+                }));
+                return;
+              }
               const key = "ss";
               setVisualDraft((prev) => {
                 if (!prev) return prev;
@@ -243,6 +276,10 @@ export function PageBuilder({ getIdToken, initialScope }: Props) {
       onHeaderFrameHeight={
         scope === "header-branding"
           ? (value) => {
+              if (mutateVisualLayout) {
+                mutateVisualLayout((prev) => ({ ...prev, frameHeight: value }));
+                return;
+              }
               setVisualDraft((prev) => {
                 if (!prev) return prev;
                 const next = { ...prev, frameHeight: value };
@@ -318,6 +355,7 @@ export function PageBuilder({ getIdToken, initialScope }: Props) {
               selectedLayerId={selectedLayerId}
               onSelectLayer={setSelectedLayerId}
               onLayoutChange={setVisualDraft}
+              registerMutateLayout={(fn) => setMutateVisualLayout(() => fn)}
               onSyncHeaderLayout={(layout) => {
                 if (scope === "header-branding") {
                   void saveHeaderLayoutToCms(layout);

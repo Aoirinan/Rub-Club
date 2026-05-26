@@ -31,6 +31,9 @@ type Props = {
   onDirtyChange?: (dirty: boolean) => void;
   onSyncHeaderLayout?: (layout: import("@/lib/header-branding-cms").HeaderBrandingLayout) => void;
   registerSave?: (fn: () => Promise<void>) => void;
+  registerMutateLayout?: (
+    fn: (mutator: (layout: VisualPageLayout) => VisualPageLayout) => void,
+  ) => void;
 };
 
 export function VisualPageEditorCanvas({
@@ -44,6 +47,7 @@ export function VisualPageEditorCanvas({
   onDirtyChange,
   onSyncHeaderLayout,
   registerSave,
+  registerMutateLayout,
 }: Props) {
   const [saved, setSaved] = useState<VisualPageLayout>(() =>
     buildDefaultVisualLayoutForScope(scopeId),
@@ -103,30 +107,34 @@ export function VisualPageEditorCanvas({
     async (next: VisualPageLayout) => {
       const normalizedNext = normalizeVisualPageLayout(next);
       setDraft(normalizedNext);
-      setBusy(true);
-      const token = await getIdToken();
-      if (!token) {
-        setBusy(false);
-        return;
-      }
-      const res = await fetch("/api/admin/visual-layout", {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({ scope: scopeId, layout: normalizedNext }),
-      });
-      if (res.ok) {
-        const data = (await res.json()) as { layout?: VisualPageLayout };
-        const normalized = normalizeVisualPageLayout(data.layout ?? normalizedNext);
-        setSaved(normalized);
-        setDraft(normalized);
-        if (scopeId === "header-branding") {
-          onSyncHeaderLayout?.(headerVisualToBrandingLayout(normalized));
+      try {
+        setBusy(true);
+        const token = await getIdToken();
+        if (!token) {
+          return;
         }
+        const res = await fetch("/api/admin/visual-layout", {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ scope: scopeId, layout: normalizedNext }),
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { layout?: VisualPageLayout };
+          const normalized = normalizeVisualPageLayout(data.layout ?? normalizedNext);
+          setSaved(normalized);
+          setDraft(normalized);
+          if (scopeId === "header-branding") {
+            onSyncHeaderLayout?.(headerVisualToBrandingLayout(normalized));
+          }
+        }
+      } catch (error) {
+        console.error("Failed to persist visual layout", error);
+      } finally {
+        setBusy(false);
       }
-      setBusy(false);
     },
     [getIdToken, scopeId, onSyncHeaderLayout],
   );
@@ -146,6 +154,21 @@ export function VisualPageEditorCanvas({
   useEffect(() => {
     registerSave?.(saveAll);
   }, [registerSave, saveAll]);
+
+  const mutateLayout = useCallback(
+    (mutator: (layout: VisualPageLayout) => VisualPageLayout) => {
+      setDraft((prev) => {
+        const next = normalizeVisualPageLayout(mutator(prev));
+        void persistLayout(next);
+        return next;
+      });
+    },
+    [persistLayout],
+  );
+
+  useEffect(() => {
+    registerMutateLayout?.(mutateLayout);
+  }, [registerMutateLayout, mutateLayout]);
 
   const setLayers = useCallback((layers: VisualLayer[]) => {
     setDraft((prev) => normalizeVisualPageLayout({ ...prev, layers }));
