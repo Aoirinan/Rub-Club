@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { BookingCta } from "@/components/BookingCta";
 import {
-  GIFT_CARD_DESKTOP_EXPANDED,
+  GIFT_CARD_NAV_EXPANDED,
   useMassageGiftCardNavExpandedContext,
 } from "@/lib/massage-gift-card-nav-context";
 
@@ -197,13 +197,22 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
                     />
                   </svg>
                 </button>
+              ) : item.external && item.label === "Gift cards" ? (
+                <div className="flex items-center justify-center overflow-visible">
+                  <a
+                    className={`focus-ring block px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm ${
+                      giftCardExpanded ? GIFT_CARD_NAV_EXPANDED : ""
+                    }`}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {item.label}
+                  </a>
+                </div>
               ) : item.external ? (
                 <a
-                  className={`focus-ring block px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm ${
-                    item.label === "Gift cards" && giftCardExpanded
-                      ? GIFT_CARD_DESKTOP_EXPANDED
-                      : ""
-                  }`}
+                  className="focus-ring block px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm"
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
