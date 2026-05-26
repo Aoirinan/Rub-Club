@@ -432,6 +432,14 @@ export function VisualPageEditorCanvas({
         </label>
         <button
           type="button"
+          disabled={busy || !dirty}
+          className="rounded-lg bg-[#0f5f5c] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#0c4f4c] disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={() => void saveAll()}
+        >
+          {busy ? "Saving..." : "Save"}
+        </button>
+        <button
+          type="button"
           disabled={busy}
           className="text-sm font-semibold text-slate-600 underline disabled:opacity-50"
           onClick={() => void resetLayout()}
@@ -489,40 +497,40 @@ export function VisualPageEditorCanvas({
       )}
       renderToolbar={(layer) => (
         <>
-          <span className="max-w-[140px] truncate text-[10px] font-bold text-slate-700">
+          <span className="max-w-[170px] truncate text-xs font-bold text-slate-700">
             {layerLabel(layer, cms)}
           </span>
           <button
             type="button"
-            className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-[#0f5f5c] hover:bg-slate-100"
+            className="rounded px-2 py-1 text-xs font-semibold text-[#0f5f5c] hover:bg-slate-100"
             onClick={() => bringForward(layer.id)}
           >
             Front
           </button>
           <button
             type="button"
-            className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100"
+            className="rounded px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100"
             onClick={() => sendBackward(layer.id)}
           >
             Back
           </button>
           <button
             type="button"
-            className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100"
+            className="rounded px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100"
             onClick={() => renameLayer(layer.id)}
           >
             Rename
           </button>
           <button
             type="button"
-            className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100"
+            className="rounded px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100"
             onClick={() => duplicateLayer(layer)}
           >
             Duplicate
           </button>
           <button
             type="button"
-            className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-rose-700 hover:bg-rose-50"
+            className="rounded px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-50"
             onClick={() => deleteLayer(layer.id)}
           >
             Delete

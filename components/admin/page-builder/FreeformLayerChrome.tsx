@@ -42,7 +42,7 @@ export function FreeformLayerChrome({ selected, onResizeStart, toolbar }: Props)
         />
       ))}
       {toolbar ? (
-        <div className="absolute -top-10 left-0 z-40 flex flex-wrap items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 shadow-md">
+        <div className="absolute -top-12 left-0 z-40 flex min-w-max flex-wrap items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs shadow-md">
           {toolbar}
         </div>
       ) : null}

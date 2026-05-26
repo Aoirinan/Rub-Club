@@ -211,7 +211,9 @@ export function FreeformCanvas({
                 onClick={(e) => e.stopPropagation()}
               >
                 <div
-                  className={`relative h-full w-full overflow-hidden ${busy ? "" : "cursor-move"}`}
+                  className={`relative h-full w-full ${selected ? "overflow-visible" : "overflow-hidden"} ${
+                    busy ? "" : "cursor-move"
+                  }`}
                   onClick={(e) => {
                     e.stopPropagation();
                     if (blockClickRef.current) {
