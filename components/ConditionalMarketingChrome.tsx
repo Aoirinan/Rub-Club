@@ -7,6 +7,7 @@ import {
   useGiftCardStickyVisible,
   type GiftCardStickyBannerProps,
 } from "@/components/GiftCardStickyBanner";
+import { MassageGiftCardNavProvider } from "@/lib/massage-gift-card-nav-context";
 
 /** Hide public site header/footer on admin popup routes (second-monitor scheduler). */
 export function ConditionalMarketingChrome({
@@ -30,11 +31,11 @@ export function ConditionalMarketingChrome({
     return <div className="min-h-screen bg-slate-50">{children}</div>;
   }
   return (
-    <>
+    <MassageGiftCardNavProvider>
       {header}
       <div className={giftVisible ? "pb-[4.25rem]" : undefined}>{children}</div>
       {footer}
       {hideGiftBanner ? null : <GiftCardStickyBanner {...giftProps} />}
-    </>
+    </MassageGiftCardNavProvider>
   );
 }

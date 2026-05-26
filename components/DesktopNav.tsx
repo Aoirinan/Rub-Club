@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { BookingCta } from "@/components/BookingCta";
 import {
-  GIFT_CARD_NAV_EXPAND_CLASSES,
-  useMassageGiftCardNavExpanded,
-} from "@/lib/use-massage-gift-card-nav-expanded";
+  GIFT_CARD_DESKTOP_EXPANDED,
+  useMassageGiftCardNavExpandedContext,
+} from "@/lib/massage-gift-card-nav-context";
 
 export type NavChild = { href: string; label: string; group?: string };
 
@@ -124,7 +124,7 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const navRef = useRef<HTMLElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const giftCardExpanded = useMassageGiftCardNavExpanded();
+  const giftCardExpanded = useMassageGiftCardNavExpandedContext();
 
   useEffect(() => {
     if (openIdx === null) return;
@@ -201,7 +201,7 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
                 <a
                   className={`focus-ring block px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm ${
                     item.label === "Gift cards" && giftCardExpanded
-                      ? GIFT_CARD_NAV_EXPAND_CLASSES
+                      ? GIFT_CARD_DESKTOP_EXPANDED
                       : ""
                   }`}
                   href={item.href}

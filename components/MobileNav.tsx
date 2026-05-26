@@ -7,9 +7,9 @@ import { track } from "@/lib/analytics";
 import type { NavItem } from "@/components/DesktopNav";
 import { BookingCta } from "@/components/BookingCta";
 import {
-  GIFT_CARD_NAV_EXPAND_CLASSES,
-  useMassageGiftCardNavExpanded,
-} from "@/lib/use-massage-gift-card-nav-expanded";
+  GIFT_CARD_MOBILE_EXPANDED,
+  useMassageGiftCardNavExpandedContext,
+} from "@/lib/massage-gift-card-nav-context";
 
 export function MobileNav({
   items,
@@ -24,7 +24,7 @@ export function MobileNav({
 }) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const giftCardExpanded = useMassageGiftCardNavExpanded();
+  const giftCardExpanded = useMassageGiftCardNavExpandedContext();
 
   useEffect(() => {
     if (!open) return;
@@ -182,7 +182,7 @@ export function MobileNav({
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`focus-ring mx-4 mb-2 block border border-[#0f5f5c]/30 bg-white px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-stone-50 ${
-                  giftCardExpanded ? GIFT_CARD_NAV_EXPAND_CLASSES : ""
+                  giftCardExpanded ? GIFT_CARD_MOBILE_EXPANDED : ""
                 }`}
                 onClick={close}
               >
