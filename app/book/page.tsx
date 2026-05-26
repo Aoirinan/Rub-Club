@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BookingWizard } from "@/components/BookingWizard";
-import { BookAvailabilityPreview } from "@/components/BookAvailabilityPreview";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
 import { pageKeywords } from "@/lib/seo-keywords";
@@ -40,8 +39,9 @@ export default async function BookPage({
   const params = await searchParams;
   const displayLocs = await getDisplayLocations();
   const bookingConfig = await getPublicBookingConfig();
+  const bookingEnabled = isPublicBookingEnabled(bookingConfig);
 
-  if (!isPublicBookingEnabled(bookingConfig)) {
+  if (!bookingEnabled) {
     return (
       <div className="min-h-screen bg-[#f4f2ea] pb-20">
         <div className="mx-auto max-w-2xl px-4 py-12 sm:py-16">
@@ -58,8 +58,25 @@ export default async function BookPage({
           {bookingConfig.disabledMessage ? (
             <p className="mt-3 text-sm text-stone-600">{bookingConfig.disabledMessage}</p>
           ) : null}
-          <div className="mt-8">
-            <BookAvailabilityPreview locations={displayLocs} />
+          <div className="mt-8 rounded-2xl border border-[#0f5f5c]/25 bg-[#f0faf8] p-5 sm:p-6">
+            <p className="text-lg font-black text-[#173f3b]">Online booking is currently off</p>
+            <p className="mt-2 text-sm leading-relaxed text-stone-700">
+              Please call and we will schedule your visit directly.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <a
+                href={`tel:${displayLocs.paris.phonePrimary.replace(/\D/g, "")}`}
+                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#0f5f5c] px-5 py-3 text-sm font-black text-white hover:bg-[#0c4a48]"
+              >
+                Call Paris {displayLocs.paris.phonePrimary}
+              </a>
+              <a
+                href={`tel:${displayLocs.sulphur_springs.phonePrimary.replace(/\D/g, "")}`}
+                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#0f5f5c] px-5 py-3 text-sm font-black text-white hover:bg-[#0c4a48]"
+              >
+                Call Sulphur Springs {displayLocs.sulphur_springs.phonePrimary}
+              </a>
+            </div>
           </div>
         </div>
       </div>
