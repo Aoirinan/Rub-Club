@@ -199,10 +199,10 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
                 </button>
               ) : item.external && item.label === "Gift cards" ? (
                 <a
-                  className={`focus-ring block px-4 py-2 text-xs font-black uppercase tracking-wide transition-colors duration-300 xl:px-5 xl:text-sm ${
+                  className={`focus-ring block shrink-0 font-black uppercase tracking-wide transition-all duration-300 ease-out motion-reduce:transition-none ${
                     giftCardExpanded
                       ? GIFT_CARD_DESKTOP_EXPANDED
-                      : "text-white hover:bg-white/15"
+                      : "px-4 py-2 text-xs text-white hover:bg-white/15 xl:px-5 xl:text-sm"
                   }`}
                   href={item.href}
                   target="_blank"

@@ -181,7 +181,7 @@ export function MobileNav({
                 href={giftCardHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`focus-ring mx-4 mb-2 block border border-[#0f5f5c]/30 bg-white px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-stone-50 ${
+                className={`focus-ring mx-4 mb-2 block border border-[#0f5f5c]/30 bg-white px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#0f5f5c] transition-all duration-300 ease-out hover:bg-stone-50 motion-reduce:transition-none ${
                   giftCardExpanded ? GIFT_CARD_MOBILE_EXPANDED : ""
                 }`}
                 onClick={close}
