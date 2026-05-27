@@ -18,9 +18,10 @@ export function useMassageGiftCardNavExpandedContext(): boolean {
   return useContext(MassageGiftCardNavContext);
 }
 
-/** Gold highlight + scale — transform only so Book Now and nav bar height stay unchanged. */
+/** Floated above the nav bar — no overlap with FAQ / Patient forms. */
 export const GIFT_CARD_DESKTOP_EXPANDED =
-  "relative z-20 origin-center scale-150 rounded bg-[#f2d25d] !text-[#173f3b] shadow-md ring-2 ring-white/50 transition-[transform,background-color,color,box-shadow] duration-300 ease-out hover:!bg-[#e6c13d] motion-reduce:scale-100";
+  "absolute bottom-full left-1/2 z-30 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#f2d25d] px-5 py-2.5 text-sm font-black text-[#173f3b] shadow-lg ring-2 ring-white/60 transition-[transform,opacity,box-shadow] duration-300 ease-out hover:bg-[#e6c13d] motion-reduce:transition-none";
 
+/** In-drawer: gold + one step larger text, no scale (avoids overlapping menu items). */
 export const GIFT_CARD_MOBILE_EXPANDED =
-  "relative z-20 origin-center scale-150 !border-[#f2d25d] !bg-[#f2d25d] !text-[#173f3b] shadow-md transition-[transform,background-color,color] duration-300 ease-out motion-reduce:scale-100";
+  "!border-[#f2d25d] !bg-[#f2d25d] !px-5 !py-3.5 !text-base !text-[#173f3b] shadow-md transition-all duration-300 ease-out motion-reduce:transition-none";

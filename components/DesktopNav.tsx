@@ -158,9 +158,9 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
     <nav
       ref={navRef}
       aria-label="Primary"
-      className="hidden bg-[#2980b9] shadow-md lg:block"
+      className="hidden overflow-visible bg-[#2980b9] shadow-md lg:block"
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-center">
+      <div className="mx-auto flex max-w-6xl items-center justify-center overflow-visible">
         {items.map((item, idx) => {
           const hasChildren = !!item.children?.length;
           const isOpen = openIdx === idx;
@@ -198,10 +198,20 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
                   </svg>
                 </button>
               ) : item.external && item.label === "Gift cards" ? (
-                <div className="flex items-center justify-center overflow-visible">
+                <div className="relative flex shrink-0 items-center justify-center">
+                  {giftCardExpanded ? (
+                    <span
+                      className="pointer-events-none invisible block px-4 py-2 text-xs font-bold uppercase tracking-wide xl:px-5 xl:text-sm"
+                      aria-hidden
+                    >
+                      {item.label}
+                    </span>
+                  ) : null}
                   <a
-                    className={`focus-ring block px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm ${
-                      giftCardExpanded ? GIFT_CARD_DESKTOP_EXPANDED : ""
+                    className={`focus-ring font-bold uppercase tracking-wide transition-all duration-300 ease-out motion-reduce:transition-none ${
+                      giftCardExpanded
+                        ? GIFT_CARD_DESKTOP_EXPANDED
+                        : "block px-4 py-2 text-xs text-white hover:bg-white/15 xl:px-5 xl:text-sm"
                     }`}
                     href={item.href}
                     target="_blank"
