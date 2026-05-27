@@ -18,6 +18,9 @@ export function useMassageGiftCardNavExpandedContext(): boolean {
   return useContext(MassageGiftCardNavContext);
 }
 
-/** Scale only — does not change layout box size (Book Now and other nav items stay put). */
-export const GIFT_CARD_NAV_EXPANDED =
-  "relative z-20 origin-center scale-150 transition-transform duration-300 ease-out motion-reduce:scale-100";
+/** Gold highlight + scale — transform only so Book Now and nav bar height stay unchanged. */
+export const GIFT_CARD_DESKTOP_EXPANDED =
+  "relative z-20 origin-center scale-150 rounded bg-[#f2d25d] !text-[#173f3b] shadow-md ring-2 ring-white/50 transition-[transform,background-color,color,box-shadow] duration-300 ease-out hover:!bg-[#e6c13d] motion-reduce:scale-100";
+
+export const GIFT_CARD_MOBILE_EXPANDED =
+  "relative z-20 origin-center scale-150 !border-[#f2d25d] !bg-[#f2d25d] !text-[#173f3b] shadow-md transition-[transform,background-color,color] duration-300 ease-out motion-reduce:scale-100";
