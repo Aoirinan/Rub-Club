@@ -237,7 +237,10 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
             </div>
           );
         })}
-        <BookingCta label="Book Now" variant="nav" />
+        <BookingCta
+          label="Book Now"
+          className="focus-ring ml-2 flex items-center self-stretch bg-[#f2d25d] px-5 text-xs font-black uppercase tracking-wide text-[#0c2d3a] shadow-sm transition-all duration-300 hover:bg-[#e6c13d] xl:text-sm"
+        />
       </div>
     </nav>
   );
