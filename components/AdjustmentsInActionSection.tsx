@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { AdjustmentMediaVideo } from "@/components/AdjustmentMediaVideo";
-import { loadDoctorMediaFromJson } from "@/lib/doctor-media-json";
 import { getSiteOwnerConfig, type DoctorMediaItem } from "@/lib/site-owner-config";
 
 const DOCTOR_KEY_FULL_NAME: Record<DoctorMediaItem["doctorKey"], string> = {
@@ -11,40 +10,12 @@ const DOCTOR_KEY_FULL_NAME: Record<DoctorMediaItem["doctorKey"], string> = {
 
 export async function AdjustmentsInActionSection() {
   let items: DoctorMediaItem[] = [];
-  let jsonItemCount = 0;
-  let firestoreError: string | null = null;
-  try {
-    jsonItemCount = (await loadDoctorMediaFromJson()).length;
-  } catch {
-    jsonItemCount = -1;
-  }
   try {
     const c = await getSiteOwnerConfig();
     items = [...c.doctorMedia].sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id));
-  } catch (e) {
-    firestoreError = e instanceof Error ? e.message : "load_failed";
+  } catch {
     items = [];
   }
-  // #region agent log
-  fetch("http://127.0.0.1:7806/ingest/e1abd076-f2b4-40ff-8948-4d669dd82a76", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "29e827" },
-    body: JSON.stringify({
-      sessionId: "29e827",
-      runId: "post-fix",
-      hypothesisId: "A",
-      location: "AdjustmentsInActionSection.tsx:load",
-      message: "doctor media sources",
-      data: {
-        jsonItemCount,
-        firestoreItemCount: items.length,
-        firestoreError,
-        displayCount: items.length,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
 
   if (items.length === 0) {
     return (
