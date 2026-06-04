@@ -51,6 +51,38 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Legacy secondary domains → primary domain sections (catch-all, permanent 308).
+      //
+      // IMPORTANT (deploy-time): These host-based rules only fire if each domain is
+      // added to THIS Vercel project (Settings → Domains) as a normal domain, so the
+      // Host header reaches the app. Do NOT use the Domains "Redirect to" dropdown for
+      // these — it only does root-to-root domain redirects and cannot target a section
+      // path like /services/massage. Adding the domains here + redeploying is what maps
+      // each host to the correct section below.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "massageparistexas.com" }],
+        destination: "https://www.chiropracticparistexas.com/services/massage",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.massageparistexas.com" }],
+        destination: "https://www.chiropracticparistexas.com/services/massage",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "chiropracticsulphursprings.com" }],
+        destination: "https://www.chiropracticparistexas.com/sulphur-springs",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.chiropracticsulphursprings.com" }],
+        destination: "https://www.chiropracticparistexas.com/sulphur-springs",
+        permanent: true,
+      },
       { source: "/massage", destination: "/services/massage", permanent: true },
       { source: "/chiropractic", destination: "/services/chiropractic", permanent: true },
       { source: "/meet-the-doctors", destination: "/about", permanent: true },

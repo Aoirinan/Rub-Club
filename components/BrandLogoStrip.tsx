@@ -40,8 +40,8 @@ function buildBrandEntries(): LogoEntry[] {
       src: BRAND_LOGOS.chiropractic,
       alt: "Chiropractic Associates — Paris, TX",
       href: "/services/chiropractic",
-      width: 320,
-      height: 90,
+      width: 851,
+      height: 618,
     },
     {
       key: "ss",

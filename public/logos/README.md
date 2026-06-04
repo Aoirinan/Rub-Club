@@ -4,8 +4,8 @@ Place **final artwork from the clinic** here. Do not commit logos or lockups fro
 
 | File | Purpose |
 |------|---------|
-| `chiropractic-associates.webp` (or `.png`) | Chiropractic Associates lockup — **replace** the current placeholder with Sean’s approved file. |
-| `rub-club.png` (or `.webp`) | The Rub Club lockup — add when provided; then wire `lib/brand-logos.ts` / `BrandLogoStrip` to use this path instead of any legacy CDN URL. |
+| `chiropractic-associates.png` | Chiropractic Associates Paris, TX lockup — wired in `lib/brand-logos.ts` / header. |
+| `rub-club.png` (or `.webp`) | The Rub Club lockup — add when provided; then wire `BrandLogoStrip` to `BRAND_LOGOS.rubClub` instead of the legacy CDN URL in `lib/home-images.ts`. |
 | `sulphur-springs-icon.webp` | Sulphur Springs spine-in-circle mark; header lockup pairs this with type in `SulphurSpringsLockup`. |
 
 After adding files, update paths in `lib/brand-logos.ts` if filenames change.

@@ -27,9 +27,9 @@ These hostnames are attached to production (`vercel inspect`):
 
 | Hostname | Role |
 |----------|------|
-| `wellnessparistx.com`, `www.wellnessparistx.com` | Primary canonical brand |
-| `massageparistexas.com`, `www.massageparistexas.com` | Legacy; homepage → `/services/massage` ([`lib/domain-routing.ts`](../lib/domain-routing.ts)) |
-| `chiropracticsulphursprings.com`, `www.chiropracticsulphursprings.com` | Legacy; homepage → `/sulphur-springs` |
+| `chiropracticparistexas.com`, `www.chiropracticparistexas.com` | Primary canonical brand |
+| `massageparistexas.com`, `www.massageparistexas.com` | Legacy; all paths permanently redirect → `www.chiropracticparistexas.com/services/massage` (host-based rule in [`next.config.ts`](../next.config.ts) redirects; domains added to the project as normal aliases) |
+| `chiropracticsulphursprings.com`, `www.chiropracticsulphursprings.com` | Legacy; all paths permanently redirect → `www.chiropracticparistexas.com/sulphur-springs` |
 | `rub-club.vercel.app`, `project-bav0l.vercel.app` | Vercel default / preview-style hostnames |
 
 **Not on Vercel aliases (as of baseline check):** `chiropracticparistexas.com` — SOW expects registrar or Vercel redirect to primary ([`two-phase-client-sow.md`](two-phase-client-sow.md)); add redirect when that domain is renewed.
@@ -63,7 +63,7 @@ Amortize annual registrar fees as **monthly overhead** (whoever owns the registr
 
 | Domain | Purpose | On Vercel production? | Typical renewal (USD/yr) | ~Monthly |
 |--------|---------|------------------------|---------------------------|----------|
-| `wellnessparistx.com` | Primary brand + `NEXT_PUBLIC_APP_URL` | Yes (apex + www) | $12–20 | $1–2 |
+| `chiropracticparistexas.com` | Primary brand + `NEXT_PUBLIC_APP_URL` | Yes (apex + www) | $12–20 | $1–2 |
 | `massageparistexas.com` | Legacy entry → massage section | Yes (apex + www) | $12–20 | $1–2 |
 | `chiropracticsulphursprings.com` | Legacy entry → Sulphur hub | Yes (apex + www) | $12–20 | $1–2 |
 | `chiropracticparistexas.com` | Legacy Paris chiro brand | Redirect only (not in current Vercel alias list) | $12–20 | $1–2 |

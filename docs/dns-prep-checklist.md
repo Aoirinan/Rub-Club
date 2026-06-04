@@ -27,20 +27,20 @@ You can do almost everything below **while the site still runs on `rub-club.verc
 ### Add domain in Vercel (what the modal means)
 
 1. Go to **Project → Settings → Domains → Add**.
-2. Type **`wellnessparistx.com`** (no `https://`).
-3. Leave **“Redirect wellnessparistx.com to www…”** checked if you want `www` as the main address (recommended).
+2. Type **`chiropracticparistexas.com`** (no `https://`).
+3. Leave **“Redirect chiropracticparistexas.com to www…”** checked if you want `www` as the main address (recommended).
 4. Select **Connect to an environment** → **Production** (not Preview).
 5. Click **Save**.
-6. Repeat for **`www.wellnessparistx.com`** if you only added the apex first — or add both in one flow if Vercel offers it.
+6. Repeat for **`www.chiropracticparistexas.com`** if you only added the apex first — or add both in one flow if Vercel offers it.
 7. After Save, Vercel shows **DNS records** (CNAME/A). Copy those into your registrar — the domain will show “Invalid configuration” until DNS propagates; that is normal.
 
 Do **not** choose “Redirect to Another Domain” unless you are forwarding to a completely different website.
 
 1. Add **production domain** in Vercel → Domains (can stay on “Invalid configuration” until DNS points).
-2. Set **`NEXT_PUBLIC_APP_URL`** to your **final** primary domain (e.g. `https://wellnessparistx.com`) — do this **right before** or **when** DNS goes live, then redeploy once.
+2. Set **`NEXT_PUBLIC_APP_URL`** to your **final** primary domain (e.g. `https://www.chiropracticparistexas.com`) — do this **right before** or **when** DNS goes live, then redeploy once.
 3. Firebase Auth → **Authorized domains** (Authentication → Settings):
    - **Vercel:** `rub-club.vercel.app`, `project-bav0l.vercel.app` (if you use that hostname)
-   - **Primary:** `wellnessparistx.com`, `www.wellnessparistx.com`
+   - **Primary:** `chiropracticparistexas.com`, `www.chiropracticparistexas.com`
    - **Legacy (admin login on old brands):** `massageparistexas.com`, `www.massageparistexas.com`, `chiropracticsulphursprings.com`, `www.chiropracticsulphursprings.com`
    - Defaults (`localhost`, `*.firebaseapp.com`, `*.web.app`) stay as-is
 4. Optional: add `NEXT_PUBLIC_GA_ID` / `NEXT_PUBLIC_GTM_ID` for analytics on the marketing site.
@@ -48,10 +48,9 @@ Do **not** choose “Redirect to Another Domain” unless you are forwarding to 
 ## DNS cutover day (when ready)
 
 1. Point **A/CNAME** for primary domain to Vercel (per Vercel’s DNS instructions).
-2. Point **legacy** domains to the **same** Vercel project. **Homepage only** on each legacy host redirects via app middleware:
-   - `massageparistexas.com` / `www` → `/services/massage`
-   - `chiropracticsulphursprings.com` / `www` → `/sulphur-springs`
-   - Other paths on those hosts work like the main site (no catch-all rewrite).
+2. Add **legacy** domains to the **same** Vercel project (Project → Settings → Domains) as **normal domains** — **not** the "Redirect to" dropdown (that only does root-to-root and can't target a section). Once their traffic reaches this deployment, `next.config.ts` `redirects()` permanently redirects **all paths** cross-domain:
+   - `massageparistexas.com` / `www` → `https://www.chiropracticparistexas.com/services/massage`
+   - `chiropracticsulphursprings.com` / `www` → `https://www.chiropracticparistexas.com/sulphur-springs`
 3. Wait for SSL “Ready” on all domains in Vercel.
 4. Set `NEXT_PUBLIC_APP_URL` to primary domain → **production redeploy**.
 5. Smoke test: home, contact, reviews, one service page, admin login on the new hostname.

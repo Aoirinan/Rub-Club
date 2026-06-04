@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { getContentMany } from "@/lib/cms";
@@ -23,18 +24,14 @@ export const revalidate = 60;
 export async function generateMetadata(): Promise<Metadata> {
   const booking = await getPublicBookingConfig();
   const phrase = scheduleMetaPhrase(isPublicBookingEnabled(booking));
-  return {
+  return buildPageMetadata({
     title: "Massage Therapy in Paris, TX — The Rub Club",
     description: `Licensed massage therapists offering deep tissue, prenatal, sports, and trigger-point therapy in Paris, TX. Same-week openings; call 903-739-9959 or ${phrase.toLowerCase()}.`,
+    path: "/services/massage",
     keywords: pageKeywords(["Paris TX massage", "The Rub Club"]),
-    alternates: { canonical: "/services/massage" },
-    openGraph: {
-      title: "Massage Therapy in Paris, TX — The Rub Club",
-      description:
-        "Deep tissue, prenatal, sports, and trigger-point massage at The Rub Club in Paris, TX.",
-      url: "/services/massage",
-    },
-  };
+    ogDescription:
+      "Deep tissue, prenatal, sports, and trigger-point massage at The Rub Club in Paris, TX.",
+  });
 }
 
 export default async function MassageServicePage() {

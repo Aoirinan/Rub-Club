@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { BookingWizard } from "@/components/BookingWizard";
 import { JsonLd } from "@/components/JsonLd";
@@ -10,19 +10,15 @@ import {
   isPublicBookingEnabled,
 } from "@/lib/public-booking-settings";
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Book an Appointment",
   description:
     "Book massage therapy or chiropractic care online in Paris or Sulphur Springs, TX. See real-time openings and request a time in under a minute.",
+  path: "/book",
   keywords: pageKeywords(),
-  alternates: { canonical: "/book" },
-  openGraph: {
-    title: "Book an Appointment",
-    description:
-      "Online scheduling for Chiropractic Associates and The Rub Club in Paris and Sulphur Springs, TX.",
-    url: "/book",
-  },
-};
+  ogDescription:
+    "Online scheduling for Chiropractic Associates and The Rub Club in Paris and Sulphur Springs, TX.",
+});
 
 type SearchParams = {
   location?: string;

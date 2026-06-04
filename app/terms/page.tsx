@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { LegalRelatedLinks } from "@/components/LegalRelatedLinks";
@@ -11,11 +11,11 @@ import {
 } from "@/lib/legal";
 import { siteLegalName } from "@/lib/site-content";
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Terms of Use",
   description: `Terms of use for the ${siteLegalName} website, including booking, content, and limitations.`,
-  alternates: { canonical: TERMS_PATH },
-};
+  path: TERMS_PATH,
+});
 
 export default function TermsPage() {
   return (

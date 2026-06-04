@@ -93,13 +93,13 @@ export const LOCATIONS: Record<LocationId, LocationInfo> = {
     postalCode: "75460",
     phonePrimary: "903-785-5551",
     phoneSecondary: "903-739-9959",
-    geo: { latitude: 33.6757, longitude: -95.5141 },
+    geo: { latitude: 33.6887, longitude: -95.5277 },
     mapsUrl:
       "https://www.google.com/maps/search/?api=1&query=3305+NE+Loop+286+Suite+A+Paris+TX+75460",
     openingHours: [
       {
         days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-        opens: "09:00",
+        opens: "08:30",
         closes: "17:00",
       },
     ],

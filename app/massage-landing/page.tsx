@@ -1,14 +1,14 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { PageHero } from "@/components/PageChrome";
 import { BookingCta } from "@/components/BookingCta";
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Massage Therapy — Paris, TX",
   description:
     "Therapeutic massage in Paris, Texas at The Rub Club — same trusted team, online booking, and convenient Northeast Texas location.",
-  alternates: { canonical: "/massage-landing" },
-};
+  path: "/massage-landing",
+});
 
 export default function MassageLandingPage() {
   return (

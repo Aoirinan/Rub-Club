@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import { notFound } from "next/navigation";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
@@ -19,16 +20,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const page = await getSSPageContent(slug);
   if (!page) return { title: "Sulphur Springs" };
 
-  return {
+  return buildPageMetadata({
     title: `${page.title} — Sulphur Springs Chiropractic`,
     description: page.metaDescription,
-    alternates: { canonical: `/sulphur-springs/${page.slug}` },
-    openGraph: {
-      title: `${page.title} — Sulphur Springs, TX`,
-      description: page.metaDescription,
-      url: `/sulphur-springs/${page.slug}`,
-    },
-  };
+    path: `/sulphur-springs/${page.slug}`,
+    ogTitle: `${page.title} — Sulphur Springs, TX`,
+  });
 }
 
 export default async function SulphurSpringsSubpage({ params }: Props) {

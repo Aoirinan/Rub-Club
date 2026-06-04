@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { MarkdownBulletList } from "@/components/SsMarkdownBody";
@@ -8,18 +8,15 @@ import { getInsurancePageContent } from "@/lib/static-pages-content";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Insurance & Billing",
   description:
     "What to expect with insurance for chiropractic visits, plus self-pay information for massage therapy at The Rub Club. Call our Paris office to verify benefits.",
-  alternates: { canonical: "/insurance" },
-  openGraph: {
-    title: "Insurance & Billing — Chiropractic Associates",
-    description:
-      "Insurance accepted for chiropractic care; massage therapy is self-pay. Call to verify benefits before your visit.",
-    url: "/insurance",
-  },
-};
+  path: "/insurance",
+  ogTitle: "Insurance & Billing — Chiropractic Associates",
+  ogDescription:
+    "Insurance accepted for chiropractic care; massage therapy is self-pay. Call to verify benefits before your visit.",
+});
 
 export default async function InsurancePage() {
   const c = await getInsurancePageContent();

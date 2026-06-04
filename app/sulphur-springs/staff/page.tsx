@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import Image from "next/image";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
@@ -15,18 +15,14 @@ const ss = LOCATIONS.sulphur_springs;
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Meet the Staff — Sulphur Springs Chiropractic",
   description:
     "Meet Dr. Conner Collins and the care team at Chiropractic Associates of Sulphur Springs. Chiropractor, massage therapists, rehab therapy, and front-desk staff serving Hopkins County, TX.",
-  alternates: { canonical: "/sulphur-springs/staff" },
-  openGraph: {
-    title: "Meet the Staff — Sulphur Springs Chiropractic",
-    description:
-      "Dr. Conner Collins leads a dedicated team of massage therapists, rehab specialists, and support staff in Sulphur Springs, TX.",
-    url: "/sulphur-springs/staff",
-  },
-};
+  path: "/sulphur-springs/staff",
+  ogDescription:
+    "Dr. Conner Collins leads a dedicated team of massage therapists, rehab specialists, and support staff in Sulphur Springs, TX.",
+});
 
 function StaffPhoto({ member, className }: { member: SiteStaffDisplayMember; className?: string }) {
   if (member.image) {

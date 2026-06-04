@@ -1,22 +1,17 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { getSSPatientResourcesIntro } from "@/lib/ss-cms-content";
 import { SS_PATIENT_RESOURCES } from "@/lib/sulphur-springs-content";
 import { telHref } from "@/lib/constants";
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Patient Resources — Sulphur Springs Chiropractic",
   description:
     "Chiropractic patient resources, helpful links, and educational topics from Chiropractic Associates of Sulphur Springs.",
-  alternates: { canonical: "/sulphur-springs/patient-resources" },
-  openGraph: {
-    title: "Patient Resources — Sulphur Springs, TX",
-    description:
-      "Chiropractic patient resources, helpful links, and educational topics from Chiropractic Associates of Sulphur Springs.",
-    url: "/sulphur-springs/patient-resources",
-  },
-};
+  path: "/sulphur-springs/patient-resources",
+  ogTitle: "Patient Resources — Sulphur Springs, TX",
+});
 
 export const revalidate = 60;
 

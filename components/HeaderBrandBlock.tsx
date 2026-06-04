@@ -57,12 +57,14 @@ export function HeaderBrandLogoVisual({
   }
   const src = brandKey === "rub" ? IMAGES.rubClubLogo : BRAND_LOGOS.chiropractic;
   const alt = brandKey === "rub" ? "The Rub Club" : "Chiropractic Associates";
+  const width = brandKey === "rub" ? 320 : 851;
+  const height = brandKey === "rub" ? 72 : 618;
   return (
     <Image
       src={src}
       alt={alt}
-      width={320}
-      height={72}
+      width={width}
+      height={height}
       className={`max-h-full w-auto max-w-full object-contain object-left ${className}`}
       priority
     />

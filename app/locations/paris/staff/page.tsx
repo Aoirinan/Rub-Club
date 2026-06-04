@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import Image from "next/image";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
@@ -12,18 +12,15 @@ const paris = LOCATIONS.paris;
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Meet the Staff — Paris, TX Office",
   description:
     "Meet the Chiropractic Associates Paris office team — insurance, personal injury case management, front desk, therapy tech, rehab coaching, and marketing.",
-  alternates: { canonical: "/locations/paris/staff" },
-  openGraph: {
-    title: "Meet the Staff — Paris, TX",
-    description:
-      "Insurance coordinators, case managers, front desk, and support staff at our Paris main office.",
-    url: "/locations/paris/staff",
-  },
-};
+  path: "/locations/paris/staff",
+  ogTitle: "Meet the Staff — Paris, TX",
+  ogDescription:
+    "Insurance coordinators, case managers, front desk, and support staff at our Paris main office.",
+});
 
 function StaffPhoto({ member, className }: { member: SiteStaffDisplayMember; className?: string }) {
   if (member.image) {

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
@@ -10,18 +10,16 @@ import {
   buildWellnessCarePlansContent,
 } from "@/lib/wellness-care-plans-content";
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Wellness Care Plans — Chiropractic Associates, Paris, TX",
+  brandInTitle: true,
   description:
     "Chiro-Fitness and Acu-Fit monthly wellness memberships: adjustments, massage combos, therapy, acupuncture, and rehab sessions at our Paris, TX office.",
-  alternates: { canonical: WELLNESS_CARE_PLANS_PATH },
-  openGraph: {
-    title: "Wellness care plans — Chiropractic Associates",
-    description:
-      "Monthly wellness membership options for chiropractic, massage, therapy, and acupuncture in Paris, TX.",
-    url: WELLNESS_CARE_PLANS_PATH,
-  },
-};
+  path: WELLNESS_CARE_PLANS_PATH,
+  ogTitle: "Wellness care plans — Chiropractic Associates",
+  ogDescription:
+    "Monthly wellness membership options for chiropractic, massage, therapy, and acupuncture in Paris, TX.",
+});
 
 export const revalidate = 60;
 

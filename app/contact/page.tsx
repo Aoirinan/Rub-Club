@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
@@ -16,18 +16,15 @@ import {
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Contact us — Paris & Sulphur Springs offices",
   description:
     "Phone numbers, addresses, and hours for The Rub Club and Chiropractic Associates in Paris and Sulphur Springs, TX. Send a message or call us directly.",
-  alternates: { canonical: "/contact" },
-  openGraph: {
-    title: "Contact Chiropractic Associates",
-    description:
-      "Phone, hours, and contact form for our Paris and Sulphur Springs, TX offices.",
-    url: "/contact",
-  },
-};
+  path: "/contact",
+  ogTitle: "Contact Chiropractic Associates",
+  ogDescription:
+    "Phone, hours, and contact form for our Paris and Sulphur Springs, TX offices.",
+});
 
 export default async function ContactPage() {
   const [c, bookingConfig, parisHours] = await Promise.all([

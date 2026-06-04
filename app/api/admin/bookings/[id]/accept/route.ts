@@ -94,7 +94,7 @@ export async function POST(req: Request, ctx: Params) {
     if (emailCtx) {
       const manageUrl = siteUrl(`/book/manage?token=${encodeURIComponent(portalPlain)}`);
       const ics = buildIcs({
-        uid: `${emailCtx.bookingId}@wellnessparistx`,
+        uid: `${emailCtx.bookingId}@chiropracticparistexas.com`,
         startUtc: emailCtx.start.toUTC(),
         durationMinutes: emailCtx.durationMin,
         summary: `${emailCtx.serviceLine === "massage" ? "Massage" : "Chiropractic"} appointment`,

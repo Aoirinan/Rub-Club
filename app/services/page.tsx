@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { WELLNESS_CARE_PLANS_PATH } from "@/lib/constants";
@@ -12,12 +12,12 @@ import { getServicesHubContent } from "@/lib/static-pages-content";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Services — Chiropractic & Massage in Paris & Sulphur Springs, TX",
   description:
     "Chiropractic care, wellness memberships, and therapeutic massage at Chiropractic Associates and The Rub Club in Paris and Sulphur Springs, TX.",
-  alternates: { canonical: SERVICES_HUB_PATH },
-};
+  path: SERVICES_HUB_PATH,
+});
 
 export default async function ServicesHubPage() {
   const [c, booking] = await Promise.all([getServicesHubContent(), getPublicBookingConfig()]);

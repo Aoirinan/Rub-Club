@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { LOCATIONS } from "@/lib/constants";
@@ -7,11 +7,11 @@ import { PRIVACY_PRACTICES_PATH } from "@/lib/legal";
 import { getNppDownloadLink } from "@/lib/privacy";
 import { siteLegalName } from "@/lib/site-content";
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Privacy Practices",
   description: `Notice of Privacy Practices and how ${siteLegalName} uses and protects patient information.`,
-  alternates: { canonical: "/privacy" },
-};
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   const nppDownload = getNppDownloadLink();

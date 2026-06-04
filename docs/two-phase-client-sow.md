@@ -52,7 +52,7 @@ Retainer effective date: ________________________________
 
 This SOW covers a phased rollout of the clinic website in three steps.
 
-Phase 1 — One website (marketing). Replace the three legacy public sites (massage, Paris chiropractic, Sulphur chiropractic) with one primary site at wellnessparistx.com. Clinic staff can edit hours, staff, services, FAQs, banners, and review links in the admin panel without paying separate vendors for separate sites. No PHI. Online booking stays off.
+Phase 1 — One website (marketing). Replace the three legacy public sites (massage, Paris chiropractic, Sulphur chiropractic) with one primary site at chiropracticparistexas.com. Clinic staff can edit hours, staff, services, FAQs, banners, and review links in the admin panel without paying separate vendors for separate sites. No PHI. Online booking stays off.
 
 Phase 2A — HIPAA readiness. Signed Business Associate Agreement between Client and Provider, vendor BAAs (Google Cloud, Vercel, email, SMS as applicable), clinic policies, workforce HIPAA training, written security risk assessment, breach response plan. No PHI development begins in production until 2A items marked (required for PHI) are checked and the BAA is executed.
 
@@ -100,7 +100,7 @@ Goal: Replace the three legacy websites with one primary site that clinic staff 
 
 Phase 1 — DNS and production
 
-☐ Primary domain wellnessparistx.com (and www) live on Vercel production
+☐ Primary domain chiropracticparistexas.com (and www) live on Vercel production
 ☐ Legacy domains massageparistexas.com and chiropracticsulphursprings.com point to the same Vercel project; legacy homepages redirect to the correct section of the new site
 ☐ Registrar or Vercel redirect for chiropracticparistexas.com → primary domain
 ☐ NEXT_PUBLIC_APP_URL set to the canonical domain; site redeployed
@@ -238,7 +238,7 @@ Print name: ________________________________
 massageparistexas.com — homepage redirects to the massage section of the new site
 chiropracticsulphursprings.com — homepage redirects to the Sulphur Springs section
 chiropracticparistexas.com — registrar or Vercel redirect to the primary domain
-wellnessparistx.com — primary brand (canonical)
+chiropracticparistexas.com — primary brand (canonical)
 
 Deep links on legacy hosts are not mapped path-by-path. Bookmarks to old inner pages may require manual redirects if traffic warrants.
 

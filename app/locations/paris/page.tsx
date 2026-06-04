@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
@@ -8,18 +8,16 @@ import { getReviewUrlForLocation } from "@/lib/cms-display";
 import { getParisOfficeHours } from "@/lib/office-hours";
 import { chiropractorJsonLd, massageJsonLd } from "@/lib/structured-data";
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Paris, TX office — Chiropractic Associates & The Rub Club",
+  brandInTitle: true,
   description:
     "Visit our Paris main office at 3305 NE Loop 286, Suite A. Chiropractic Associates and The Rub Club massage share the same address. Free parking, weekday hours.",
-  alternates: { canonical: "/locations/paris" },
-  openGraph: {
-    title: "Paris, TX — Chiropractic & Massage Therapy",
-    description:
-      "Main office at 3305 NE Loop 286, Suite A, Paris, TX 75460. Chiropractic Associates and The Rub Club.",
-    url: "/locations/paris",
-  },
-};
+  path: "/locations/paris",
+  ogTitle: "Paris, TX — Chiropractic & Massage Therapy",
+  ogDescription:
+    "Main office at 3305 NE Loop 286, Suite A, Paris, TX 75460. Chiropractic Associates and The Rub Club.",
+});
 
 export default async function ParisLocationPage() {
   const [reviewUrl, officeHours] = await Promise.all([

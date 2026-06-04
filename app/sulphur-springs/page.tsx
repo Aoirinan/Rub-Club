@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import Image from "next/image";
 import Link from "next/link";
 import { BookingCta } from "@/components/BookingCta";
@@ -10,6 +10,8 @@ import { pageKeywords } from "@/lib/seo-keywords";
 import { getScopeVisualLayout } from "@/lib/cms-display";
 import { getPageBlockOrder } from "@/lib/page-layout-db";
 import { ServicePageVisualSection } from "@/components/ServicePageVisualSection";
+import { JsonLd } from "@/components/JsonLd";
+import { chiropractorJsonLd } from "@/lib/structured-data";
 import { SulphurPageBlock } from "./SulphurPageBlocks";
 
 const ss = LOCATIONS.sulphur_springs;
@@ -23,19 +25,16 @@ const SS_DOCTOR_FALLBACK = {
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Sulphur Springs, TX Chiropractor — Chiropractic Associates",
+  brandInTitle: true,
   description:
     "Chiropractic Associates of Sulphur Springs offers chiropractic adjustments, spinal decompression, massage therapy, and rehabilitation at 207 Jefferson St. E. Call 903-919-5020.",
+  path: "/sulphur-springs",
   keywords: pageKeywords(["Sulphur Springs chiropractor", "Sulphur Springs massage"]),
-  alternates: { canonical: "/sulphur-springs" },
-  openGraph: {
-    title: "Sulphur Springs, TX Chiropractor — Chiropractic Associates",
-    description:
-      "Chiropractic care, spinal decompression, and massage therapy in Sulphur Springs, TX. Call 903-919-5020.",
-    url: "/sulphur-springs",
-  },
-};
+  ogDescription:
+    "Chiropractic care, spinal decompression, and massage therapy in Sulphur Springs, TX. Call 903-919-5020.",
+});
 
 type SSNavLink = { href: string; label: string; items?: undefined };
 type SSNavDropdown = {
@@ -100,6 +99,7 @@ export default async function SulphurSpringsPage() {
 
   return (
     <div className="bg-[#f4f2ea]">
+      <JsonLd data={chiropractorJsonLd(ss)} />
       <nav aria-label="Sulphur Springs navigation" className="relative z-30 bg-[#2980b9] shadow-md">
         <div className="mx-auto flex max-w-6xl flex-wrap">
           {SS_NAV.map((item) =>

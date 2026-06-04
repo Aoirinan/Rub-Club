@@ -7,13 +7,12 @@ const ENTRIES: { path: string; changeFrequency: ChangeFrequency; priority: numbe
   { path: "/", changeFrequency: "weekly", priority: 1 },
   { path: "/book", changeFrequency: "weekly", priority: 0.95 },
   { path: "/services", changeFrequency: "monthly", priority: 0.88 },
-  { path: "/chiropractic", changeFrequency: "monthly", priority: 0.9 },
-  { path: "/massage", changeFrequency: "monthly", priority: 0.9 },
+  // NOTE: /chiropractic, /massage, /meet-the-doctors, /locations are 301 redirects
+  // (see next.config.ts) and are intentionally excluded — sitemaps should list only
+  // canonical 200 URLs. Their targets (/services/*, /about, /contact) are below.
   { path: "/services/chiropractic", changeFrequency: "monthly", priority: 0.85 },
   { path: "/services/chiropractic/wellness-care-plans", changeFrequency: "monthly", priority: 0.8 },
   { path: "/services/massage", changeFrequency: "monthly", priority: 0.85 },
-  { path: "/meet-the-doctors", changeFrequency: "monthly", priority: 0.85 },
-  { path: "/locations", changeFrequency: "monthly", priority: 0.85 },
   { path: "/locations/paris", changeFrequency: "monthly", priority: 0.82 },
   { path: "/locations/paris/staff", changeFrequency: "monthly", priority: 0.7 },
   { path: "/locations/sulphur-springs", changeFrequency: "monthly", priority: 0.82 },

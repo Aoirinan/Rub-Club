@@ -6,7 +6,7 @@ const WINDOW_MS = 60 * 60 * 1000;
 const MAX_PER_WINDOW = 20;
 
 function hashIp(ip: string): string {
-  const salt = process.env.RATE_LIMIT_SALT ?? "wellness-paris-tx";
+  const salt = process.env.RATE_LIMIT_SALT ?? "chiropractic-paris-tx";
   return createHash("sha256")
     .update(`${salt}:${ip}`)
     .digest("hex")

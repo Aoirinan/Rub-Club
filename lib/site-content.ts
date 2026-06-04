@@ -32,7 +32,7 @@ export const siteOgImage = "/og/og-default.svg";
 export function getSiteOrigin(): string {
   const origin = getPublicAppOrigin();
   if (origin === "http://localhost:3000") {
-    return "https://wellnessparistx.com";
+    return "https://www.chiropracticparistexas.com";
   }
   return origin;
 }

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { TestimonialVideosSection } from "@/components/TestimonialVideosSection";
 import { LOCATION_LIST } from "@/lib/constants";
@@ -7,17 +7,14 @@ import { getReviewsPageContent } from "@/lib/static-pages-content";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Patient Reviews",
   description:
     "Hear what Paris and Sulphur Springs patients say about Chiropractic Associates and The Rub Club, then leave your own review on Google.",
-  alternates: { canonical: "/reviews" },
-  openGraph: {
-    title: "Patient Reviews — Chiropractic Associates",
-    description: "Read patient stories and leave us a Google review.",
-    url: "/reviews",
-  },
-};
+  path: "/reviews",
+  ogTitle: "Patient Reviews — Chiropractic Associates",
+  ogDescription: "Read patient stories and leave us a Google review.",
+});
 
 export default async function ReviewsPage() {
   const [content, reviewLinks] = await Promise.all([

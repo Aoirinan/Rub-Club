@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { getContentMany, parseConditionsList } from "@/lib/cms";
@@ -38,17 +39,15 @@ const CHIRO_CMS_IDS = [
 export async function generateMetadata(): Promise<Metadata> {
   const booking = await getPublicBookingConfig();
   const phrase = scheduleMetaPhrase(isPublicBookingEnabled(booking));
-  return {
+  return buildPageMetadata({
     title: "Chiropractor in Paris & Sulphur Springs, TX — Chiropractic Associates",
+    brandInTitle: true,
     description: `Chiropractic adjustments, spinal decompression, rehab, and acupuncture in Paris and Sulphur Springs, TX. ${phrase} — family-owned since 1998.`,
+    path: "/services/chiropractic",
     keywords: pageKeywords(["Paris TX chiropractor", "Sulphur Springs chiropractor"]),
-    alternates: { canonical: "/services/chiropractic" },
-    openGraph: {
-      title: "Chiropractor in Paris & Sulphur Springs, TX",
-      description: `Adjustments, decompression, rehab, and acupuncture at Chiropractic Associates. ${phrase} either office.`,
-      url: "/services/chiropractic",
-    },
-  };
+    ogTitle: "Chiropractor in Paris & Sulphur Springs, TX",
+    ogDescription: `Adjustments, decompression, rehab, and acupuncture at Chiropractic Associates. ${phrase} either office.`,
+  });
 }
 
 export const revalidate = 60;

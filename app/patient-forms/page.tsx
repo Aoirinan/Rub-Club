@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { MarkdownBulletList } from "@/components/SsMarkdownBody";
@@ -8,18 +8,15 @@ import { getPatientFormsContent } from "@/lib/static-pages-content";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Patient Forms",
   description:
     "Download chiropractic new patient and personal injury intake paperwork, massage new-client forms, or complete our online intake before your visit in Paris or Sulphur Springs, TX.",
-  alternates: { canonical: "/patient-forms" },
-  openGraph: {
-    title: "Patient Forms — Chiropractic Associates",
-    description:
-      "Chiropractic and massage intake forms for Paris and Sulphur Springs — online or printable PDF.",
-    url: "/patient-forms",
-  },
-};
+  path: "/patient-forms",
+  ogTitle: "Patient Forms — Chiropractic Associates",
+  ogDescription:
+    "Chiropractic and massage intake forms for Paris and Sulphur Springs — online or printable PDF.",
+});
 
 export default async function PatientFormsPage() {
   const c = await getPatientFormsContent();

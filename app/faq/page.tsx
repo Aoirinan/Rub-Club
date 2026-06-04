@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { FaqList } from "@/components/FaqList";
@@ -10,18 +10,15 @@ import { LOCATIONS, telHref } from "@/lib/constants";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Frequently Asked Questions",
   description:
     "Answers about insurance, cancellation, what to bring, pricing, and what to expect at your first chiropractic or massage appointment in Paris, TX.",
-  alternates: { canonical: "/faq" },
-  openGraph: {
-    title: "FAQ — Chiropractic Associates",
-    description:
-      "Insurance, scheduling, and first-visit answers for our Paris and Sulphur Springs offices.",
-    url: "/faq",
-  },
-};
+  path: "/faq",
+  ogTitle: "FAQ — Chiropractic Associates",
+  ogDescription:
+    "Insurance, scheduling, and first-visit answers for our Paris and Sulphur Springs offices.",
+});
 
 export default async function FaqPage() {
   const c = await getContentMany(["faq_heading", "faq_intro"]);

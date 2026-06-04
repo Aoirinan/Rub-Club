@@ -60,12 +60,15 @@ export function chiropractorJsonLd(location: LocationInfo): JsonLd {
     "@context": "https://schema.org",
     "@type": ["Chiropractor", "MedicalBusiness", "LocalBusiness"],
     "@id": `${url}#chiropractic`,
-    name: `Chiropractic Associates — ${location.shortName}`,
+    name:
+      location.id === "sulphur_springs"
+        ? "Chiropractic Associates of Sulphur Springs"
+        : "Chiropractic Associates",
     legalName: "Chiropractic Associates",
     description:
       "Family-owned chiropractic clinic offering adjustments, spinal decompression, rehab, and acupuncture in Northeast Texas.",
     url,
-    telephone: `+1-${location.phonePrimary}`,
+    telephone: `+1${location.phonePrimary.replace(/\D/g, "")}`,
     image: siteUrl("/og/og-default.svg"),
     priceRange: "$$",
     address: postalAddress(location),
@@ -91,7 +94,7 @@ export function massageJsonLd(parisOverride?: LocationInfo): JsonLd {
     description:
       "Licensed massage therapists offering deep tissue, prenatal, and sports massage in Paris, TX.",
     url,
-    telephone: loc.phoneSecondary ? `+1-${loc.phoneSecondary}` : `+1-${loc.phonePrimary}`,
+    telephone: `+1${(loc.phoneSecondary ?? loc.phonePrimary).replace(/\D/g, "")}`,
     image: siteUrl("/og/og-default.svg"),
     priceRange: "$$",
     address: postalAddress(loc),
@@ -118,7 +121,7 @@ export function organizationJsonLd(locations: readonly LocationInfo[] = LOCATION
     contactPoint: locations.map((loc) => ({
       "@type": "ContactPoint",
       contactType: "Reservations",
-      telephone: `+1-${loc.phonePrimary}`,
+      telephone: `+1${loc.phonePrimary.replace(/\D/g, "")}`,
       areaServed: loc.shortName,
       availableLanguage: ["English", "Spanish"],
     })),

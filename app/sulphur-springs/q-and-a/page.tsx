@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { FaqList } from "@/components/FaqList";
@@ -7,18 +7,13 @@ import { getSulphurSpringsFaqs } from "@/lib/site-faqs";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Q & A — Sulphur Springs Chiropractic",
   description:
     "Frequently asked questions about chiropractic care at Chiropractic Associates of Sulphur Springs.",
-  alternates: { canonical: "/sulphur-springs/q-and-a" },
-  openGraph: {
-    title: "Q & A — Sulphur Springs, TX",
-    description:
-      "Frequently asked questions about chiropractic care at Chiropractic Associates of Sulphur Springs.",
-    url: "/sulphur-springs/q-and-a",
-  },
-};
+  path: "/sulphur-springs/q-and-a",
+  ogTitle: "Q & A — Sulphur Springs, TX",
+});
 
 export default async function QAndAPage() {
   const faqs = await getSulphurSpringsFaqs();

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { LocationDetail } from "@/components/LocationDetail";
@@ -7,18 +7,16 @@ import { getReviewUrlForLocation } from "@/lib/cms-display";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
 import { chiropractorJsonLd } from "@/lib/structured-data";
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "Sulphur Springs, TX chiropractor — Chiropractic Associates",
+  brandInTitle: true,
   description:
     "Visit our Sulphur Springs chiropractic office at 207 Jefferson St. E. Adjustments, decompression, and rehab care from Dr. Conner Collins and the Chiropractic Associates team.",
-  alternates: { canonical: "/locations/sulphur-springs" },
-  openGraph: {
-    title: "Sulphur Springs, TX — Chiropractic Associates",
-    description:
-      "207 Jefferson St. E, Sulphur Springs, TX. Chiropractic adjustments, decompression, and rehab.",
-    url: "/locations/sulphur-springs",
-  },
-};
+  path: "/locations/sulphur-springs",
+  ogTitle: "Sulphur Springs, TX — Chiropractic Associates",
+  ogDescription:
+    "207 Jefferson St. E, Sulphur Springs, TX. Chiropractic adjustments, decompression, and rehab.",
+});
 
 export default async function SulphurSpringsLocationPage() {
   const [reviewUrl, officeHours] = await Promise.all([

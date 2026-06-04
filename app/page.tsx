@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import Image from "next/image";
 import Link from "next/link";
 import { telHref } from "@/lib/constants";
@@ -37,18 +37,13 @@ import { homeBookingFooterCopy } from "@/lib/public-booking";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
-  title: { absolute: siteTitle },
+export const metadata = buildPageMetadata({
+  title: siteTitle,
+  brandInTitle: true,
   description: siteDescription,
+  path: "/",
   keywords: pageKeywords(),
-  alternates: { canonical: "/" },
-  openGraph: {
-    title: siteTitle,
-    description: siteDescription,
-    url: "/",
-    type: "website",
-  },
-};
+});
 
 export default async function Home() {
   const [cmsLayout, parisHours] = await Promise.all([getLayoutCmsContent(), getParisOfficeHours()]);

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import Image from "next/image";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
@@ -13,18 +13,15 @@ import { organizationJsonLd } from "@/lib/structured-data";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: "About Us — Family-owned wellness in Northeast Texas",
   description:
     "Since 1998, Chiropractic Associates and The Rub Club have delivered family-owned chiropractic care and licensed massage therapy in Paris and Sulphur Springs, TX.",
-  alternates: { canonical: "/about" },
-  openGraph: {
-    title: "About — Chiropractic Associates",
-    description:
-      "Family-owned wellness in Paris and Sulphur Springs, TX. Best Chiropractic Center and Best Massage in The Paris News reader polls.",
-    url: "/about",
-  },
-};
+  path: "/about",
+  ogTitle: "About — Chiropractic Associates",
+  ogDescription:
+    "Family-owned wellness in Paris and Sulphur Springs, TX. Best Chiropractic Center and Best Massage in The Paris News reader polls.",
+});
 
 export default async function AboutPage() {
   const c = await getContentMany(["about_heading", "about_body", ...DOCTOR_CMS_KEYS]);

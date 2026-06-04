@@ -8,7 +8,7 @@ Use this when deploying to Vercel (or similar). Copy `env.example` to Vercel **P
 |----------|-----------------|
 | `FIREBASE_SERVICE_ACCOUNT_KEY` | Full JSON from Firebase → Project settings → Service accounts → Generate new private key |
 | `NEXT_PUBLIC_FIREBASE_*` | Web app config from Firebase console (API key, auth domain, project ID, storage bucket) |
-| `NEXT_PUBLIC_APP_URL` | Your live URL with `https://` and no trailing slash (e.g. `https://wellnessparistx.com` or the Vercel URL until DNS is ready) |
+| `NEXT_PUBLIC_APP_URL` | Your live URL with `https://` and no trailing slash (e.g. `https://www.chiropracticparistexas.com` or the Vercel URL until DNS is ready) |
 | `SENDGRID_API_KEY` | From SendGrid → API Keys |
 | `SENDGRID_FROM_EMAIL` | A **verified** sender in SendGrid (clinic email, not a personal test address in production) |
 | `OFFICE_NOTIFICATION_EMAIL` | Optional email copies for bookings + contact form. Use **`dr.seanwelborn@gmail.com`**. Front desk should use **Admin → Contact inbox**, not email. |
