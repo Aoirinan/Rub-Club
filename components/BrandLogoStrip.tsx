@@ -17,13 +17,22 @@ type LogoEntry = {
   height: number;
 };
 
-/** Side logos — base height; primary is 30% taller (see `primaryLogoHeightClass`). */
+/** Wide lockups (Rub Club) — side height; primary is ~30% taller. */
 const SIDE_LOGO_HEIGHT =
   "h-8 w-auto max-w-[min(100%,200px)] sm:h-9 md:h-10 lg:max-w-[220px]";
 
-/** Primary (active page) logo — 30% larger than side logos at each breakpoint. */
 const PRIMARY_LOGO_HEIGHT =
   "h-[2.6rem] w-auto max-w-[min(100%,320px)] sm:h-[2.925rem] md:h-[3.25rem] lg:h-[3.9rem] lg:max-w-[380px]";
+
+/**
+ * Paris chiro lockup is nearly square — needs taller bounds than wide Rub/SS marks
+ * so primary vs side sizing matches the old wide logo’s visual weight.
+ */
+const CHIRO_SIDE_LOGO_HEIGHT =
+  "h-[4.5rem] w-auto max-w-[min(100%,200px)] sm:h-20 md:h-[5.25rem] lg:max-w-[240px]";
+
+const CHIRO_PRIMARY_LOGO_HEIGHT =
+  "h-28 w-auto max-w-[min(100%,280px)] sm:h-32 sm:max-w-[320px] md:h-36 md:max-w-[360px] lg:h-40 lg:max-w-[420px] xl:h-44 xl:max-w-[460px]";
 
 function buildBrandEntries(): LogoEntry[] {
   return [
@@ -84,8 +93,15 @@ function columnAlignClass(columnIndex: number): string {
   return "items-center text-center";
 }
 
-function logoAlignClass(columnIndex: number, primary: boolean): string {
-  const base = primary ? PRIMARY_LOGO_HEIGHT : SIDE_LOGO_HEIGHT;
+function logoHeightClass(brandKey: BrandKey, primary: boolean): string {
+  if (brandKey === "chiro") {
+    return primary ? CHIRO_PRIMARY_LOGO_HEIGHT : CHIRO_SIDE_LOGO_HEIGHT;
+  }
+  return primary ? PRIMARY_LOGO_HEIGHT : SIDE_LOGO_HEIGHT;
+}
+
+function logoAlignClass(columnIndex: number, brandKey: BrandKey, primary: boolean): string {
+  const base = logoHeightClass(brandKey, primary);
   const mx =
     columnIndex === 0
       ? "mx-auto sm:ml-auto sm:mr-0"
@@ -93,7 +109,7 @@ function logoAlignClass(columnIndex: number, primary: boolean): string {
         ? "mx-auto sm:ml-0 sm:mr-auto"
         : "mx-auto";
   const opacity = primary ? "" : "opacity-90 transition-opacity hover:opacity-100";
-  return `${base} ${mx} object-contain ${opacity}`;
+  return `${base} ${mx} object-contain transition-[height,max-width,opacity] duration-200 ${opacity}`;
 }
 
 /**
@@ -139,7 +155,7 @@ export function BrandLogoStrip({
               alt={entry.alt}
               width={entry.width}
               height={entry.height}
-              className={logoAlignClass(columnIndex, primary)}
+              className={logoAlignClass(columnIndex, entry.key, primary)}
               priority={primary}
             />
           );

@@ -89,7 +89,7 @@ export function SiteHeader({
       ) : null}
 
       {/* Logo row — wide lockups with tap-to-call under each brand */}
-      <div className="bg-white px-4 py-1.5 sm:py-2">
+      <div className="bg-white px-4 py-2 sm:py-2.5">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 sm:gap-3">
           <div className="min-w-0 flex-1">
             <HeaderBrandLogoStrip paris={paris} sulphur={sulphur} />
