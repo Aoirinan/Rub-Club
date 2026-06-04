@@ -6,8 +6,10 @@ import {
   type LocationInfo,
 } from "@/lib/constants";
 import { HeaderBrandLogoStrip } from "@/components/HeaderBrandLogoStrip";
+import { SiteHeaderLogoRow } from "@/components/SiteHeaderLogoRow";
 import { MobileNav } from "@/components/MobileNav";
 import { DesktopNav, type NavItem } from "@/components/DesktopNav";
+import type { HeaderBrandContent } from "@/lib/brand-logos";
 
 function buildNavItems(giftCardHref: string): NavItem[] {
   return [
@@ -47,11 +49,13 @@ export function SiteHeader({
   sulphur,
   giftCardHref,
   showTopPhoneBar = true,
+  headerBranding,
 }: {
   paris: LocationInfo;
   sulphur: LocationInfo;
   giftCardHref: string;
   showTopPhoneBar?: boolean;
+  headerBranding?: HeaderBrandContent;
 }) {
   const navItems = buildNavItems(giftCardHref);
   const rub = paris.phoneSecondary?.trim();
@@ -88,16 +92,10 @@ export function SiteHeader({
         </div>
       ) : null}
 
-      {/* Logo row — wide lockups with tap-to-call under each brand */}
-      <div className="bg-white px-4 py-2 sm:py-2.5">
-        <div className="mx-auto flex max-w-7xl items-start justify-between gap-2 sm:gap-3">
-          <div className="relative min-w-0 flex-1">
-            <div className="min-w-0 max-lg:pr-[5.25rem]">
-              <HeaderBrandLogoStrip paris={paris} sulphur={sulphur} />
-            </div>
-            <div className="absolute right-0 top-0 z-10 lg:hidden">
-              <MobileNav items={navItems} giftCardHref={giftCardHref} paris={paris} sulphur={sulphur} />
-            </div>
+      {/* Logo row — center logo shrinks on scroll so the sticky header stays shorter */}
+      <SiteHeaderLogoRow>
+          <div className="min-w-0 flex-1">
+            <HeaderBrandLogoStrip paris={paris} sulphur={sulphur} branding={headerBranding} />
           </div>
 
           <div className="hidden shrink-0 flex-col items-end gap-2 text-sm sm:text-base lg:flex">
@@ -139,8 +137,9 @@ export function SiteHeader({
               </a>
             </div>
           </div>
-        </div>
-      </div>
+
+          <MobileNav items={navItems} giftCardHref={giftCardHref} paris={paris} sulphur={sulphur} />
+      </SiteHeaderLogoRow>
 
       {/* Blue navigation bar */}
       <DesktopNav items={navItems} />

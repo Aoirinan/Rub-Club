@@ -1,4 +1,12 @@
 import { getContentMany } from "@/lib/cms";
+import { DEFAULTS } from "@/lib/cms-registry";
+import {
+  HEADER_BRAND_LABEL_FIELDS,
+  HEADER_BRAND_LOGO_FIELDS,
+  resolveChiroHeaderLogo,
+  type HeaderBrandContent,
+  type HeaderBrandKey,
+} from "@/lib/brand-logos";
 import { reviewUrlForLocation, type LocationId, type LocationInfo } from "@/lib/constants";
 import {
   HEADER_BRANDING_FIELD_IDS,
@@ -19,6 +27,12 @@ export { HEADER_SHOW_TOP_PHONE_BAR_FIELD, parseHeaderShowTopPhoneBar };
 
 const LAYOUT_CMS_IDS = [
   HEADER_SHOW_TOP_PHONE_BAR_FIELD,
+  "header_rub_label",
+  "header_chiro_label",
+  "header_ss_label",
+  "header_rub_logo",
+  "header_chiro_logo",
+  "header_ss_logo",
   "footer_tagline",
   "footer_paris_address",
   "footer_paris_phone",
@@ -40,6 +54,27 @@ export async function getLayoutCmsContent(): Promise<LayoutCmsContent> {
 export async function getHeaderBrandingLayout(): Promise<HeaderBrandingLayout> {
   const values = await getContentMany([...HEADER_BRANDING_FIELD_IDS]);
   return parseHeaderBrandingLayout(values);
+}
+
+const HEADER_BRAND_KEYS: HeaderBrandKey[] = ["rub", "chiro", "ss"];
+
+/** Build the editable header branding (labels + logos) from CMS values, falling back to defaults. */
+export function headerBrandContentFromCms(
+  cms: Partial<Record<string, string>>,
+): HeaderBrandContent {
+  const labels = {} as Record<HeaderBrandKey, string>;
+  const logos = {} as Record<HeaderBrandKey, string>;
+  for (const key of HEADER_BRAND_KEYS) {
+    const labelId = HEADER_BRAND_LABEL_FIELDS[key];
+    const logoId = HEADER_BRAND_LOGO_FIELDS[key];
+    const labelValue = cms[labelId]?.trim();
+    labels[key] = labelValue && labelValue.length > 0 ? labelValue : (DEFAULTS[labelId] ?? "");
+    const logoValue = cms[logoId]?.trim();
+    // Logos may legitimately default to empty (Sulphur Springs uses its lockup).
+    const rawLogo = logoValue && logoValue.length > 0 ? logoValue : (DEFAULTS[logoId] ?? "");
+    logos[key] = key === "chiro" ? resolveChiroHeaderLogo(rawLogo) : rawLogo;
+  }
+  return { labels, logos };
 }
 
 export async function getScopeVisualLayout(

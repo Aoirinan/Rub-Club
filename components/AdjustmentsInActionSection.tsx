@@ -1,9 +1,50 @@
 import Image from "next/image";
 import { AdjustmentMediaVideo } from "@/components/AdjustmentMediaVideo";
-import { DOCTOR_MEDIA_FULL_NAME, loadDoctorMediaFromJson } from "@/lib/doctor-media-json";
+import { loadDoctorMediaFromJson } from "@/lib/doctor-media-json";
+import { getSiteOwnerConfig, type DoctorMediaItem } from "@/lib/site-owner-config";
+
+const DOCTOR_KEY_FULL_NAME: Record<DoctorMediaItem["doctorKey"], string> = {
+  greg: "Greg Thompson",
+  sean: "Sean Welborn",
+  brandy: "Brandy Collins",
+};
 
 export async function AdjustmentsInActionSection() {
-  const items = await loadDoctorMediaFromJson();
+  let items: DoctorMediaItem[] = [];
+  let jsonItemCount = 0;
+  let firestoreError: string | null = null;
+  try {
+    jsonItemCount = (await loadDoctorMediaFromJson()).length;
+  } catch {
+    jsonItemCount = -1;
+  }
+  try {
+    const c = await getSiteOwnerConfig();
+    items = [...c.doctorMedia].sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id));
+  } catch (e) {
+    firestoreError = e instanceof Error ? e.message : "load_failed";
+    items = [];
+  }
+  // #region agent log
+  fetch("http://127.0.0.1:7806/ingest/e1abd076-f2b4-40ff-8948-4d669dd82a76", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "29e827" },
+    body: JSON.stringify({
+      sessionId: "29e827",
+      runId: "post-fix",
+      hypothesisId: "A",
+      location: "AdjustmentsInActionSection.tsx:load",
+      message: "doctor media sources",
+      data: {
+        jsonItemCount,
+        firestoreItemCount: items.length,
+        firestoreError,
+        displayCount: items.length,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
 
   if (items.length === 0) {
     return (
@@ -37,15 +78,15 @@ export async function AdjustmentsInActionSection() {
       </p>
       <div className="mt-8 columns-1 gap-4 sm:columns-2">
         {items.map((m) => {
-          const doctorFull = DOCTOR_MEDIA_FULL_NAME[m.doctor];
+          const doctorFull = DOCTOR_KEY_FULL_NAME[m.doctorKey];
           const alt = `Adjustment by Dr. ${doctorFull}`;
-          const src = `/media/doctors/${m.filename}`;
+          const src = m.url;
           return (
             <figure
               key={m.id}
               className="mb-4 break-inside-avoid overflow-hidden rounded-xl border border-stone-200 bg-stone-50 shadow"
             >
-              {m.type === "video" ? (
+              {m.mediaType === "video" ? (
                 <AdjustmentMediaVideo src={src} />
               ) : (
                 <div className="relative w-full bg-stone-200">
@@ -56,6 +97,7 @@ export async function AdjustmentsInActionSection() {
                     height={900}
                     className="h-auto w-full object-cover"
                     sizes="(max-width: 640px) 100vw, 50vw"
+                    unoptimized={src.startsWith("http")}
                   />
                 </div>
               )}

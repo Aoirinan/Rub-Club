@@ -1,10 +1,12 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import {
+  DOMAIN_CTX_COOKIE,
+  type DomainContextValue,
+} from "@/lib/domain-context";
 import { isSuperadminRequest } from "@/lib/superadmin-auth";
 
-const DOMAIN_CTX_COOKIE = "rub_domain_ctx";
-
-export type DomainContextValue = "massage" | "chiro" | "default";
+export type { DomainContextValue };
 
 function resolveDomainContext(host: string, utm: string | null): DomainContextValue {
   const h = host.toLowerCase();

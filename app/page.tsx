@@ -136,7 +136,7 @@ export default async function Home() {
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
           <h2 className="text-2xl font-black text-[#173f3b]">{HOME_INTRO.title}</h2>
-          <p
+          <div
             className="mt-4 max-w-3xl leading-relaxed text-stone-700"
             dangerouslySetInnerHTML={{ __html: renderRichText(c.home_about_blurb) }}
           />

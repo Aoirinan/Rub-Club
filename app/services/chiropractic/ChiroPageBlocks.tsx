@@ -39,7 +39,7 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
           <div className="space-y-4">
             <h2 className="text-3xl font-black text-[#173f3b]">{CHIRO.chooseTitle}</h2>
             {data.introParagraphs.map((p, idx) => (
-              <p
+              <div
                 key={`intro-${idx}`}
                 className="leading-relaxed text-stone-700"
                 dangerouslySetInnerHTML={{ __html: renderRichText(p) }}

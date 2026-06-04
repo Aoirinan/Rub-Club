@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -22,7 +23,11 @@ import {
   websiteJsonLd,
 } from "@/lib/structured-data";
 import { getSiteOwnerConfig, bannerIsActivePublic } from "@/lib/site-owner-config";
-import { getLayoutCmsContent, parseHeaderShowTopPhoneBar } from "@/lib/cms-display";
+import {
+  getLayoutCmsContent,
+  headerBrandContentFromCms,
+  parseHeaderShowTopPhoneBar,
+} from "@/lib/cms-display";
 import {
   effectiveGiftCardSticky,
   mergedDisplayLocations,
@@ -33,7 +38,11 @@ import {
   getPublicBookingConfig,
   isPublicBookingEnabled,
 } from "@/lib/public-booking-settings";
-import { getParisOfficeHours } from "@/lib/office-hours";
+import {
+  DOMAIN_CTX_COOKIE,
+  parseDomainContextValue,
+} from "@/lib/domain-context";
+import { getParisOfficeHours, getSulphurOfficeHours } from "@/lib/office-hours";
 
 export const revalidate = 60;
 
@@ -91,10 +100,16 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let salesBanner: SalesBannerPayload | null = null;
-  const [cms, bookingConfig, parisHours] = await Promise.all([
+  const cookieStore = await cookies();
+  const initialDomainCtx = parseDomainContextValue(
+    cookieStore.get(DOMAIN_CTX_COOKIE)?.value,
+  );
+
+  const [cms, bookingConfig, parisHours, sulphurHours] = await Promise.all([
     getLayoutCmsContent(),
     getPublicBookingConfig(),
     getParisOfficeHours(),
+    getSulphurOfficeHours(),
   ]);
   const onlineBookingEnabled = isPublicBookingEnabled(bookingConfig);
   let displayLocs = mergedDisplayLocations(undefined, cms);
@@ -118,6 +133,7 @@ export default async function RootLayout({
 
   const schemaLocations = [displayLocs.paris, displayLocs.sulphur_springs];
   const showTopPhoneBar = parseHeaderShowTopPhoneBar(cms.header_show_top_phone_bar);
+  const headerBranding = headerBrandContentFromCms(cms);
 
   return (
     <html lang="en">
@@ -141,6 +157,7 @@ export default async function RootLayout({
                   sulphur={displayLocs.sulphur_springs}
                   giftCardHref={giftCardSticky.href}
                   showTopPhoneBar={showTopPhoneBar}
+                  headerBranding={headerBranding}
                 />
                 {salesBanner ? <HomepageSalesBanner payload={salesBanner} /> : null}
               </>
@@ -154,6 +171,8 @@ export default async function RootLayout({
                   footerTagline={cms.footer_tagline}
                   footerCopyright={cms.footer_copyright}
                   parisHours={parisHours}
+                  sulphurHours={sulphurHours}
+                  initialDomainCtx={initialDomainCtx}
                 />
                 <DomainSpecialsPopup />
               </>

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SulphurSpringsLockup } from "@/components/SulphurSpringsLockup";
 import { IMAGES } from "@/lib/home-images";
-import { BRAND_LOGOS } from "@/lib/brand-logos";
+import { CHIRO_LOGO_DIMENSIONS, resolveChiroHeaderLogo } from "@/lib/brand-logos";
 import { telHref, type LocationInfo } from "@/lib/constants";
 import type { HeaderBrandBox, HeaderBrandKey } from "@/lib/header-branding-cms";
 
@@ -32,7 +32,7 @@ export function headerBrandPhones(
   }
   return {
     phone: sulphur.phonePrimary,
-    phoneLabel: "Sulphur Springs",
+    phoneLabel: "Chiro / Massage",
     href: "/sulphur-springs",
   };
 }
@@ -55,10 +55,10 @@ export function HeaderBrandLogoVisual({
       />
     );
   }
-  const src = brandKey === "rub" ? IMAGES.rubClubLogo : BRAND_LOGOS.chiropractic;
+  const src = brandKey === "rub" ? IMAGES.rubClubLogo : resolveChiroHeaderLogo();
   const alt = brandKey === "rub" ? "The Rub Club" : "Chiropractic Associates";
-  const width = brandKey === "rub" ? 320 : 851;
-  const height = brandKey === "rub" ? 72 : 618;
+  const width = brandKey === "rub" ? 320 : CHIRO_LOGO_DIMENSIONS.width;
+  const height = brandKey === "rub" ? 72 : CHIRO_LOGO_DIMENSIONS.height;
   return (
     <Image
       src={src}

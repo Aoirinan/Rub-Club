@@ -1,18 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { readDomainContextCookie } from "@/lib/domain-context";
 import { linkifyHtmlUrls } from "@/lib/linkify-html";
 import type { SpecialsConfig } from "@/lib/site-owner-config";
 
 const SESSION_KEY = "rub_specials_popup_seen";
-
-function readDomainCookie(): "massage" | "chiro" | "default" {
-  if (typeof document === "undefined") return "default";
-  const m = document.cookie.match(/(?:^|;\s*)rub_domain_ctx=([^;]+)/);
-  const v = m?.[1] ? decodeURIComponent(m[1]) : "";
-  if (v === "massage" || v === "chiro" || v === "default") return v;
-  return "default";
-}
 
 export function DomainSpecialsPopup() {
   const [open, setOpen] = useState(false);
@@ -21,7 +14,7 @@ export function DomainSpecialsPopup() {
   const [modalTitle, setModalTitle] = useState("Specials");
   const [closeLabel, setCloseLabel] = useState("Close");
 
-  const ctx = useMemo(() => readDomainCookie(), []);
+  const ctx = useMemo(() => readDomainContextCookie(), []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

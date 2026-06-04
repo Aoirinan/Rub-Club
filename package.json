@@ -1,6 +1,6 @@
 {
   "name": "chiropractic-paris-tx",
-  "version": "0.29.0",
+  "version": "0.30.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -19,6 +19,7 @@
     "generate:baa-pdf": "npx tsx scripts/generate-baa-pdf.ts",
     "generate:sow-pdf": "npx tsx scripts/generate-sow-pdf.ts",
     "build:chiro-packet": "node scripts/build-chiro-packet.mjs",
+    "build:chiro-logo": "node scripts/build-wide-chiro-logo.mjs",
     "vercel:login": "npx vercel@50 login",
     "vercel:link": "npx vercel@50 link",
     "deploy:vercel": "npx vercel@50 deploy --prod --yes"
@@ -51,6 +52,7 @@
     "eslint-config-next": "^15.5.18",
     "pdfkit": "^0.18.0",
     "postcss": "^8",
+    "sharp": "^0.33.5",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.19.4",
     "typescript": "^5",

@@ -6,6 +6,7 @@ import {
   telHref,
   type LocationInfo,
 } from "@/lib/constants";
+import type { DomainContextValue } from "@/lib/domain-context";
 import type { OfficeHoursRow } from "@/lib/office-hours";
 import {
   PRIVACY_PRACTICES_PATH,
@@ -13,7 +14,7 @@ import {
   WEBSITE_PRIVACY_PATH,
 } from "@/lib/legal";
 import { siteShortName } from "@/lib/site-content";
-import { BookingCta } from "@/components/BookingCta";
+import { FooterHoursPanel } from "@/components/FooterHoursPanel";
 
 export function SiteFooter({
   locations = LOCATION_LIST,
@@ -22,6 +23,8 @@ export function SiteFooter({
   footerTagline,
   footerCopyright,
   parisHours,
+  sulphurHours,
+  initialDomainCtx,
 }: {
   locations?: readonly LocationInfo[];
   giftCardHref?: string;
@@ -29,6 +32,8 @@ export function SiteFooter({
   footerTagline?: string | null;
   footerCopyright?: string | null;
   parisHours: readonly OfficeHoursRow[];
+  sulphurHours: readonly OfficeHoursRow[];
+  initialDomainCtx: DomainContextValue;
 }) {
   const label = process.env.NEXT_PUBLIC_APP_VERSION ?? "dev";
   const year = new Date().getFullYear();
@@ -177,18 +182,11 @@ export function SiteFooter({
             </li>
           </ul>
         </nav>
-        <div className="text-sm">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f2d25d]">Hours</p>
-          <dl className="mt-3 space-y-1">
-            {parisHours.map((row) => (
-              <div key={row.day} className="flex justify-between gap-3 border-b border-white/10 py-1">
-                <dt className="font-bold text-white">{row.day}</dt>
-                <dd className="text-white/80">{row.hours}</dd>
-              </div>
-            ))}
-          </dl>
-          <BookingCta label="Book online" variant="compact" className="focus-ring mt-4 inline-flex bg-[#f2d25d] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]" />
-        </div>
+        <FooterHoursPanel
+          parisHours={parisHours}
+          sulphurHours={sulphurHours}
+          initialDomainCtx={initialDomainCtx}
+        />
       </div>
       <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-white/60">
         <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
