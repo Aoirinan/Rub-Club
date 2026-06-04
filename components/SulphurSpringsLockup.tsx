@@ -4,11 +4,14 @@ import { BRAND_LOGOS } from "@/lib/brand-logos";
 /** Icon + type lockup — avoids the old screenshot PNG (off-center, muddy background). */
 export function SulphurSpringsLockup({
   primary = false,
+  compact = false,
   heightPx,
   iconScalePercent = 88,
   className = "",
 }: {
   primary?: boolean;
+  /** Icon only — for side columns on narrow screens. */
+  compact?: boolean;
   heightPx?: number;
   iconScalePercent?: number;
   className?: string;
@@ -28,7 +31,14 @@ export function SulphurSpringsLockup({
         className="aspect-square w-auto shrink-0 object-contain"
         style={{ height: `${iconPct}%`, maxHeight: "100%" }}
       />
-      <span className="flex min-w-0 flex-col justify-center text-left leading-tight text-[#243447]">
+      {compact ? (
+        <span className="sr-only sm:hidden">Chiropractic Associates of Sulphur Springs</span>
+      ) : null}
+      <span
+        className={`min-w-0 flex-col justify-center text-left leading-tight text-[#243447] ${
+          compact ? "hidden sm:flex" : "flex"
+        }`}
+      >
         <span
           className={`whitespace-nowrap font-semibold tracking-tight ${
             primary

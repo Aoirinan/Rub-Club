@@ -90,9 +90,14 @@ export function SiteHeader({
 
       {/* Logo row — wide lockups with tap-to-call under each brand */}
       <div className="bg-white px-4 py-2 sm:py-2.5">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 sm:gap-3">
-          <div className="min-w-0 flex-1">
-            <HeaderBrandLogoStrip paris={paris} sulphur={sulphur} />
+        <div className="mx-auto flex max-w-7xl items-start justify-between gap-2 sm:gap-3">
+          <div className="relative min-w-0 flex-1">
+            <div className="min-w-0 max-lg:pr-[5.25rem]">
+              <HeaderBrandLogoStrip paris={paris} sulphur={sulphur} />
+            </div>
+            <div className="absolute right-0 top-0 z-10 lg:hidden">
+              <MobileNav items={navItems} giftCardHref={giftCardHref} paris={paris} sulphur={sulphur} />
+            </div>
           </div>
 
           <div className="hidden shrink-0 flex-col items-end gap-2 text-sm sm:text-base lg:flex">
@@ -134,8 +139,6 @@ export function SiteHeader({
               </a>
             </div>
           </div>
-
-          <MobileNav items={navItems} giftCardHref={giftCardHref} paris={paris} sulphur={sulphur} />
         </div>
       </div>
 

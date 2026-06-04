@@ -29,10 +29,10 @@ const PRIMARY_LOGO_HEIGHT =
  * so primary vs side sizing matches the old wide logo’s visual weight.
  */
 const CHIRO_SIDE_LOGO_HEIGHT =
-  "h-[4.5rem] w-auto max-w-[min(100%,200px)] sm:h-20 md:h-[5.25rem] lg:max-w-[240px]";
+  "h-12 w-auto max-w-[min(100%,92px)] sm:h-[4.5rem] sm:max-w-[min(100%,200px)] md:h-20 lg:max-w-[240px]";
 
 const CHIRO_PRIMARY_LOGO_HEIGHT =
-  "h-28 w-auto max-w-[min(100%,280px)] sm:h-32 sm:max-w-[320px] md:h-36 md:max-w-[360px] lg:h-40 lg:max-w-[420px] xl:h-44 xl:max-w-[460px]";
+  "h-[4.25rem] w-auto max-w-[min(100%,118px)] sm:h-28 sm:max-w-[280px] md:h-32 md:max-w-[320px] lg:h-40 lg:max-w-[420px] xl:h-44 xl:max-w-[460px]";
 
 function buildBrandEntries(): LogoEntry[] {
   return [
@@ -88,9 +88,9 @@ function orderedForVariant(variant: BrandLogoVariant, entries: LogoEntry[]): Log
 }
 
 function columnAlignClass(columnIndex: number): string {
-  if (columnIndex === 0) return "items-center sm:items-end sm:text-right";
-  if (columnIndex === 2) return "items-center sm:items-start sm:text-left";
-  return "items-center text-center";
+  if (columnIndex === 0) return "items-center justify-self-end sm:text-right";
+  if (columnIndex === 2) return "items-center justify-self-start sm:text-left";
+  return "items-center justify-self-center text-center";
 }
 
 function logoHeightClass(brandKey: BrandKey, primary: boolean): string {
@@ -100,16 +100,10 @@ function logoHeightClass(brandKey: BrandKey, primary: boolean): string {
   return primary ? PRIMARY_LOGO_HEIGHT : SIDE_LOGO_HEIGHT;
 }
 
-function logoAlignClass(columnIndex: number, brandKey: BrandKey, primary: boolean): string {
+function logoAlignClass(brandKey: BrandKey, primary: boolean): string {
   const base = logoHeightClass(brandKey, primary);
-  const mx =
-    columnIndex === 0
-      ? "mx-auto sm:ml-auto sm:mr-0"
-      : columnIndex === 2
-        ? "mx-auto sm:ml-0 sm:mr-auto"
-        : "mx-auto";
   const opacity = primary ? "" : "opacity-90 transition-opacity hover:opacity-100";
-  return `${base} ${mx} object-contain transition-[height,max-width,opacity] duration-200 ${opacity}`;
+  return `${base} object-contain transition-[height,max-width,opacity] duration-200 ${opacity}`;
 }
 
 /**
@@ -132,22 +126,22 @@ export function BrandLogoStrip({
 
   return (
     <div
-      className={`grid w-full grid-cols-3 items-end gap-1.5 sm:gap-3 md:gap-4 ${className}`}
+      className={`grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-1 max-[380px]:gap-0.5 sm:gap-2 md:gap-3 lg:mx-auto lg:gap-4 ${className}`}
     >
       {entries.map((entry, columnIndex) => {
         const primary = entry.key === primaryKey;
         const info = headerBrandPhones(entry.key, paris, sulphur);
 
-        const ssHeightPx = primary ? 52 : 40;
+        const ssHeightPx = primary ? 48 : 36;
+        const ssCompact = !primary;
 
         const logo =
           entry.key === "ss" ? (
             <SulphurSpringsLockup
               primary={primary}
+              compact={ssCompact}
               heightPx={ssHeightPx}
-              className={`max-w-full ${columnIndex === 1 ? "mx-auto" : columnIndex === 0 ? "mx-auto sm:ml-auto sm:mr-0" : "mx-auto sm:ml-0 sm:mr-auto"} ${
-                !primary ? "opacity-90 transition-opacity hover:opacity-100" : ""
-              }`}
+              className={`max-w-full ${!primary ? "opacity-90 transition-opacity hover:opacity-100" : ""}`}
             />
           ) : (
             <Image
@@ -155,7 +149,7 @@ export function BrandLogoStrip({
               alt={entry.alt}
               width={entry.width}
               height={entry.height}
-              className={logoAlignClass(columnIndex, entry.key, primary)}
+              className={logoAlignClass(entry.key, primary)}
               priority={primary}
             />
           );
@@ -176,15 +170,15 @@ export function BrandLogoStrip({
             </Link>
             <a
               href={telHref(info.phone)}
-              className={`whitespace-nowrap font-black text-[#0f5f5c] hover:underline ${
-                primary ? "text-sm sm:text-base" : "text-xs sm:text-sm"
+              className={`max-w-full truncate font-black text-[#0f5f5c] hover:underline ${
+                primary ? "text-[11px] sm:text-sm md:text-base" : "text-[9px] sm:text-xs md:text-sm"
               }`}
             >
               {info.phone}
             </a>
             <span
               className={`max-w-full truncate font-bold uppercase tracking-wide text-stone-500 ${
-                primary ? "text-[10px] sm:text-xs" : "text-[9px] sm:text-[10px]"
+                primary ? "text-[9px] sm:text-[10px] md:text-xs" : "text-[8px] sm:text-[10px]"
               }`}
             >
               {info.phoneLabel}
