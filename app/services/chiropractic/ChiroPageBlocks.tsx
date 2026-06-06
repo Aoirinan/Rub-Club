@@ -31,6 +31,7 @@ export type ChiroPageData = {
   ctaSubtext: string;
   ctaParisLabel: string;
   ctaFormsLink: string;
+  stretchLink: string;
   scheduleCtaTitle: string;
   scheduleCtaBody: string;
   scheduleCtaSecondary: string;
@@ -196,11 +197,16 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
               <span className="text-sm font-bold">{data.paris.phonePrimary}</span>
             </a>
           </div>
-          <p className="mt-6 text-center text-sm text-stone-600">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center text-sm text-stone-600">
             <Link href="/patient-forms" className="font-semibold text-[#0f5f5c] underline hover:text-[#0f817b]">
               {data.ctaFormsLink || "Patient forms"}
             </Link>
-          </p>
+            <BookingCta
+              label={data.stretchLink || "Stretch & Flex Rehab"}
+              query="service=stretch"
+              className="font-semibold text-[#0f5f5c] underline hover:text-[#0f817b]"
+            />
+          </div>
         </section>
       );
     case "schedule_cta":

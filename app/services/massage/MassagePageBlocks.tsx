@@ -11,10 +11,14 @@ import { telHref, type LocationInfo } from "@/lib/constants";
 
 const SERVICES = [
   { name: "Deep Tissue Massage", body: "Slow, targeted pressure to release chronic tension in the neck, shoulders, lower back, and hips." },
+  { name: "Swedish Massage", body: "Long, flowing strokes that relax muscles, boost circulation, and melt away everyday stress." },
+  { name: "Therapeutic Massage", body: "Coordinated with your chiropractic plan — designed to support recovery between adjustments." },
   { name: "Prenatal Massage", body: "Side-lying, pregnancy-safe positioning with techniques to ease swelling, hip pressure, and tension headaches." },
   { name: "Sports Massage", body: "Pre- and post-event work focused on recovery, range of motion, and getting you back to training without rushing tissue." },
+  { name: "Hot Stone Massage", body: "Heated stones paired with hands-on work to warm tight muscles and release deep tension." },
+  { name: "Relaxation Massage", body: "Gentle, calming, full-body massage focused purely on unwinding and stress relief." },
+  { name: "Gentle Massage Therapy", body: "Light-pressure massage for sensitive clients, older adults, or anyone easing into bodywork." },
   { name: "Trigger Point & Lymphatic", body: "Focused release of stubborn knots, plus gentle lymphatic drainage when appropriate for post-op or chronic swelling." },
-  { name: "Therapeutic Massage", body: "Coordinated with your chiropractic plan — designed to support recovery between adjustments." },
 ];
 
 export type MassagePageData = {
@@ -73,6 +77,13 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
               ))}
             </div>
           )}
+          <p className="mt-6 text-sm leading-relaxed text-stone-700">
+            Need more than soft-tissue work?{" "}
+            <Link href="/services/chiropractic" className="font-bold text-[#0f5f5c] underline">
+              Explore our chiropractic care
+            </Link>{" "}
+            — our massage and chiropractic teams coordinate care under one roof.
+          </p>
         </section>
       );
     case "when_to":

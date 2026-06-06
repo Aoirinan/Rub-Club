@@ -1,4 +1,4 @@
-﻿import { GIFT_CARD_ORDER_URL, LOCATIONS } from "@/lib/constants";
+import { GIFT_CARD_ORDER_URL, LOCATIONS } from "@/lib/constants";
 import { IMAGES } from "@/lib/home-images";
 import { BRAND_LOGOS } from "@/lib/brand-logos";
 import {
@@ -83,15 +83,23 @@ const CHIRO_TESTIMONIAL_DEFAULTS = [
   },
 ] as const;
 
-const MASSAGE_SERVICES_DEFAULT = `Deep Tissue Massage â€” Slow, targeted pressure to release chronic tension in the neck, shoulders, lower back, and hips.
+const MASSAGE_SERVICES_DEFAULT = `Deep Tissue Massage — Slow, targeted pressure to release chronic tension in the neck, shoulders, lower back, and hips.
 
-Prenatal Massage â€” Side-lying, pregnancy-safe positioning with techniques to ease swelling, hip pressure, and tension headaches.
+Swedish Massage — Long, flowing strokes that relax muscles, boost circulation, and melt away everyday stress.
 
-Sports Massage â€” Pre- and post-event work focused on recovery, range of motion, and getting you back to training without rushing tissue.
+Therapeutic Massage — Coordinated with your chiropractic plan to support recovery between adjustments.
 
-Trigger Point & Lymphatic â€” Focused release of stubborn knots, plus gentle lymphatic drainage when appropriate.
+Prenatal Massage — Side-lying, pregnancy-safe positioning with techniques to ease swelling, hip pressure, and tension headaches.
 
-Therapeutic Massage â€” Coordinated with your chiropractic plan â€” designed to support recovery between adjustments.`;
+Sports Massage — Pre- and post-event work focused on recovery, range of motion, and getting you back to training without rushing tissue.
+
+Hot Stone Massage — Heated stones paired with hands-on work to warm tight muscles and release deep tension.
+
+Relaxation Massage — Gentle, calming, full-body massage focused purely on unwinding and stress relief.
+
+Gentle Massage Therapy — Light-pressure massage for sensitive clients, older adults, or anyone easing into bodywork.
+
+Trigger Point & Lymphatic — Focused release of stubborn knots, plus gentle lymphatic drainage when appropriate.`;
 
 const SS_HOURS_DEFAULT = `Monday â€“ Friday: 9:00 AM â€“ 5:00 PM
 Saturday â€“ Sunday: Closed`;
@@ -305,8 +313,8 @@ export const DEFAULTS: Record<string, string> = {
   chiro_cta_subtext: CHIRO.callCta,
   chiro_cta_paris_label: "Call Paris Office",
   chiro_cta_ss_label: "Call Sulphur Springs",
-  chiro_cta_massage_link: "Massage appointments → Book online",
-  chiro_cta_stretch_link: "Stretch & Flex Rehab → Book online",
+  chiro_cta_massage_link: "Massage appointments",
+  chiro_cta_stretch_link: "Stretch & Flex Rehab",
   chiro_cta_forms_link: "Patient forms",
   chiro_schedule_cta_title: "Questions before you book?",
   chiro_schedule_cta_body:
