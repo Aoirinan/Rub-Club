@@ -1,9 +1,11 @@
 import { readFileSync } from "fs";
 import { join } from "path";
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { listMassageTherapistsForOwnerMarketing } from "@/lib/massage-therapist-options";
 import { buildOwnerVideoQuotaSnapshot } from "@/lib/owner-upload-quota";
 import { getFirestore } from "@/lib/firebase-admin";
+import { mergeHeaderColors, validateHeaderColorConfig } from "@/lib/header-colors";
 import { getSiteOwnerConfig, setSiteOwnerConfigPatch, type SiteOwnerSingleton } from "@/lib/site-owner-config";
 import { authorizeOwnerMarketing, unauthorizedOwnerMarketing } from "@/lib/owner-marketing-auth";
 
@@ -50,6 +52,17 @@ export async function PATCH(req: Request) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  if (patch.headerColors !== undefined) {
+    const merged = mergeHeaderColors(patch.headerColors);
+    const validation = validateHeaderColorConfig(merged);
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+    patch = { ...patch, headerColors: merged };
+  }
   const next = await setSiteOwnerConfigPatch(patch);
+  if (patch.headerColors !== undefined) {
+    revalidatePath("/", "layout");
+  }
   return NextResponse.json({ config: next });
 }

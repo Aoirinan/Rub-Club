@@ -12,26 +12,26 @@ import { CHIRO_TREATMENT_OFFERINGS } from "@/lib/chiro-treatments";
 import { CHIRO } from "@/lib/home-verbatim";
 import { WELLNESS_CARE_PLANS_PATH, telHref, type LocationInfo } from "@/lib/constants";
 import type { PublicBookingConfig } from "@/lib/site-owner-config";
-import { scheduleCtaHref, scheduleCtaLabel } from "@/lib/public-booking-settings";
 
 export type ChiroPageData = {
   introParagraphs: string[];
   conditions: string[];
   doctors: DoctorCmsEntry[];
   paris: LocationInfo;
-  ss: LocationInfo;
   wellnessHeading: string;
   wellnessBody: string;
   ctaHeading: string;
   ctaSubtext: string;
+  ctaParisLabel: string;
+  ctaFormsLink: string;
+  scheduleCtaTitle: string;
+  scheduleCtaBody: string;
+  scheduleCtaSecondary: string;
   testimonials: { quote: string; label: string }[];
   booking: PublicBookingConfig;
 };
 
 export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }) {
-  const massageHref = scheduleCtaHref(data.booking, "service=massage");
-  const stretchHref = scheduleCtaHref(data.booking, "service=stretch");
-
   switch (id) {
     case "intro":
       return (
@@ -87,11 +87,7 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
           <h2 className="text-2xl font-black text-[#173f3b]">Our Paris chiropractors</h2>
           <p className="mt-2 max-w-2xl text-sm text-stone-600">
-            Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins practice at our Paris office.{" "}
-            <Link href="/sulphur-springs/staff" className="font-bold text-[#0f5f5c] underline">
-              Dr. Conner Collins
-            </Link>{" "}
-            leads care at our Sulphur Springs location.
+            Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins practice at our Paris office.
           </p>
           <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {data.doctors.map((member) => (
@@ -103,6 +99,7 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
                 imageSrc={member.imageSrc}
                 videoUrl={member.videoUrl}
                 videoFile={member.videoFile}
+                actionVideos={member.actionVideos}
               />
             ))}
           </div>
@@ -110,7 +107,7 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
       );
     case "locations":
       return (
-        <section className="grid gap-6 sm:grid-cols-2">
+        <section>
           <div className="bg-white p-6 shadow ring-1 ring-[#0f5f5c]/15">
             <h3 className="text-base font-black uppercase tracking-wide text-[#173f3b]">{CHIRO.mainOfficeTitle}</h3>
             <p className="mt-3 leading-relaxed text-stone-700">
@@ -122,19 +119,6 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
             </p>
             <Link href={`/locations/${data.paris.slug}`} className="focus-ring mt-4 inline-block text-sm font-bold text-[#0f5f5c] underline">
               Paris details &amp; hours
-            </Link>
-          </div>
-          <div className="bg-white p-6 shadow ring-1 ring-[#0f5f5c]/15">
-            <h3 className="text-base font-black uppercase tracking-wide text-[#173f3b]">{CHIRO.secondLocationTitle}</h3>
-            <p className="mt-3 leading-relaxed text-stone-700">
-              {data.ss.streetAddress} — {data.ss.addressLocality}, {data.ss.addressRegion}. Phone:{" "}
-              <a className="font-bold text-[#0f5f5c] underline" href={telHref(data.ss.phonePrimary)}>
-                {data.ss.phonePrimary}
-              </a>
-              .
-            </p>
-            <Link href={`/locations/${data.ss.slug}`} className="focus-ring mt-4 inline-block text-sm font-bold text-[#0f5f5c] underline">
-              Sulphur Springs details &amp; hours
             </Link>
           </div>
         </section>
@@ -189,7 +173,7 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
           <div className="mt-6 flex min-h-[56px] flex-col flex-wrap gap-3 sm:flex-row">
             <BookingCta
               label="Book chiropractic online"
-              query="service=chiropractic"
+              query="service=chiropractic&location=paris"
               variant="teal"
               className="focus-ring flex min-h-[56px] flex-1 items-center justify-center rounded-lg bg-[#0f5f5c] px-4 py-3 text-center text-base font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
             />
@@ -197,28 +181,13 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
               href={telHref(data.paris.phonePrimary)}
               className="focus-ring flex min-h-[56px] flex-1 flex-col items-center justify-center gap-0.5 rounded-lg border-2 border-[#0f5f5c] px-4 py-3 text-center text-base font-black text-[#0f5f5c] hover:bg-[#0f5f5c]/5"
             >
-              <span>Call Paris Office</span>
+              <span>{data.ctaParisLabel || "Call Paris Office"}</span>
               <span className="text-sm font-bold">{data.paris.phonePrimary}</span>
             </a>
-            <a
-              href={telHref(data.ss.phonePrimary)}
-              className="focus-ring flex min-h-[56px] flex-1 flex-col items-center justify-center gap-0.5 rounded-lg border-2 border-[#0f5f5c] px-4 py-3 text-center text-base font-black text-[#0f5f5c] hover:bg-[#0f5f5c]/5"
-            >
-              <span>Call Sulphur Springs</span>
-              <span className="text-sm font-bold">{data.ss.phonePrimary}</span>
-            </a>
           </div>
-          <p className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-center text-sm text-stone-600">
-            <Link href={massageHref} className="font-semibold text-[#0f5f5c] underline hover:text-[#0f817b]">
-              Massage appointments → {scheduleCtaLabel(data.booking, "Book online")}
-            </Link>
-            <span aria-hidden>·</span>
-            <Link href={stretchHref} className="font-semibold text-[#0f5f5c] underline hover:text-[#0f817b]">
-              Stretch &amp; Flex Rehab → {scheduleCtaLabel(data.booking, "Book online")}
-            </Link>
-            <span aria-hidden>·</span>
+          <p className="mt-6 text-center text-sm text-stone-600">
             <Link href="/patient-forms" className="font-semibold text-[#0f5f5c] underline hover:text-[#0f817b]">
-              Patient forms
+              {data.ctaFormsLink || "Patient forms"}
             </Link>
           </p>
         </section>
@@ -226,10 +195,16 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
     case "schedule_cta":
       return (
         <ScheduleCtaCard
-          title="Questions before you book?"
-          body="Our front desk can verify insurance for chiropractic visits and help you choose Paris or Sulphur Springs."
-          query="service=chiropractic"
-          secondary={{ label: `Call Paris ${data.paris.phonePrimary}`, href: telHref(data.paris.phonePrimary) }}
+          title={data.scheduleCtaTitle || "Questions before you book?"}
+          body={
+            data.scheduleCtaBody ||
+            "Our front desk can verify insurance for chiropractic visits at our Paris office."
+          }
+          query="service=chiropractic&location=paris"
+          secondary={{
+            label: data.scheduleCtaSecondary || `Call Paris ${data.paris.phonePrimary}`,
+            href: telHref(data.paris.phonePrimary),
+          }}
         />
       );
     default:

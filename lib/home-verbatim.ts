@@ -38,6 +38,8 @@ export const CHIRO = {
     "We want every visit to feel calm, respectful, and a step above what you expected. Dr. Thompson, Dr. Welborn, and the Chiropractic Associates team are here to deliver that level of attention.",
   bookCta:
     "Do not let pain or stiffness decide your schedule. Book chiropractic online for Paris or Sulphur Springs, or call 903-785-5551 (Paris) or 903-919-5020 (Sulphur Springs) and we will help you find a time that works.",
+  callCta:
+    "Do not let pain or stiffness decide your schedule. Call 903-785-5551 (Paris) or 903-919-5020 (Sulphur Springs) and we will help you find a time that works.",
   stretchP1:
     "We’ve added a new service that will help clients who need more focus on stretching and flexibility!",
   stretchP2: "Ask us about Stretch & Flex Rehab when you call or at your next visit—we will explain how it fits your goals.",

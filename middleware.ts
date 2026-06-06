@@ -1,6 +1,10 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import {
+  BUSINESS_CTX_COOKIE,
+  businessContextCookieValue,
+} from "@/lib/site-business-context";
+import {
   DOMAIN_CTX_COOKIE,
   type DomainContextValue,
 } from "@/lib/domain-context";
@@ -65,6 +69,14 @@ export async function middleware(request: NextRequest) {
   const prev = request.cookies.get(DOMAIN_CTX_COOKIE)?.value;
   if (!prev || utm) {
     res.cookies.set(DOMAIN_CTX_COOKIE, ctx, cookieOpts());
+  }
+
+  const { pathname } = request.nextUrl;
+  const businessCtx = businessContextCookieValue(pathname);
+  if (businessCtx) {
+    res.cookies.set(BUSINESS_CTX_COOKIE, businessCtx, cookieOpts());
+  } else {
+    res.cookies.delete(BUSINESS_CTX_COOKIE);
   }
 
   return res;

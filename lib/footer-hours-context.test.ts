@@ -37,7 +37,14 @@ describe("footerHoursFocus", () => {
     expect(footerHoursFocus("/services/massage", "chiro")).toBe("paris");
   });
 
-  it("uses domain cookie on neutral paths", () => {
+  it("uses business context cookie on neutral paths", () => {
+    expect(footerHoursFocus("/contact", "default", "paris_chiro")).toBe("paris");
+    expect(footerHoursFocus("/patient-forms", "default", "sulphur_springs")).toBe(
+      "sulphur_springs",
+    );
+  });
+
+  it("uses domain cookie on neutral paths when no business context", () => {
     expect(footerHoursFocus("/", "massage")).toBe("paris");
     expect(footerHoursFocus("/contact", "chiro")).toBe("sulphur_springs");
     expect(footerHoursFocus("/faq", "default")).toBe("both");

@@ -4,6 +4,7 @@ import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { getContentMany, parseConditionsList } from "@/lib/cms";
 import { DOCTOR_CMS_KEYS, getDoctorsForMarketing } from "@/lib/cms-doctors";
+import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { LOCATIONS } from "@/lib/constants";
 import {
   getPublicBookingConfig,
@@ -26,6 +27,11 @@ const CHIRO_CMS_IDS = [
   "chiro_conditions_list",
   "chiro_cta_heading",
   "chiro_cta_subtext",
+  "chiro_cta_paris_label",
+  "chiro_cta_forms_link",
+  "chiro_schedule_cta_title",
+  "chiro_schedule_cta_body",
+  "chiro_schedule_cta_secondary",
   "chiro_testimonial_1_text",
   "chiro_testimonial_1_attr",
   "chiro_testimonial_2_text",
@@ -40,13 +46,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const booking = await getPublicBookingConfig();
   const phrase = scheduleMetaPhrase(isPublicBookingEnabled(booking));
   return buildPageMetadata({
-    title: "Chiropractor in Paris & Sulphur Springs, TX — Chiropractic Associates",
+    title: "Chiropractor in Paris, TX — Chiropractic Associates",
     brandInTitle: true,
-    description: `Chiropractic adjustments, spinal decompression, rehab, and acupuncture in Paris and Sulphur Springs, TX. ${phrase} — family-owned since 1998.`,
+    description: `Chiropractic adjustments, spinal decompression, rehab, and acupuncture in Paris, TX. ${phrase} — family-owned since 1998.`,
     path: "/services/chiropractic",
-    keywords: pageKeywords(["Paris TX chiropractor", "Sulphur Springs chiropractor"]),
-    ogTitle: "Chiropractor in Paris & Sulphur Springs, TX",
-    ogDescription: `Adjustments, decompression, rehab, and acupuncture at Chiropractic Associates. ${phrase} either office.`,
+    keywords: pageKeywords(["Paris TX chiropractor", "chiropractic Paris Texas"]),
+    ogTitle: "Chiropractor in Paris, TX",
+    ogDescription: `Adjustments, decompression, rehab, and acupuncture at Chiropractic Associates in Paris. ${phrase}.`,
   });
 }
 
@@ -56,22 +62,33 @@ export default async function ChiropracticServicePage() {
   const booking = await getPublicBookingConfig();
   const c = await getContentMany([...CHIRO_CMS_IDS, ...DOCTOR_CMS_KEYS]);
   const [doctors, blockOrder, visual] = await Promise.all([
-    getDoctorsForMarketing(c),
+    (async () => {
+      let doctorMedia: Awaited<ReturnType<typeof getSiteOwnerConfig>>["doctorMedia"] = [];
+      try {
+        doctorMedia = (await getSiteOwnerConfig()).doctorMedia;
+      } catch {
+        doctorMedia = [];
+      }
+      return getDoctorsForMarketing(c, doctorMedia);
+    })(),
     getPageBlockOrder("chiropractic"),
     getScopeVisualLayout("chiropractic"),
   ]);
   const paris = LOCATIONS.paris;
-  const ss = LOCATIONS.sulphur_springs;
   const blockData = {
     introParagraphs: (c.chiro_intro_body ?? "").split(/\n\n+/).filter(Boolean),
     conditions: parseConditionsList(c.chiro_conditions_list ?? ""),
     doctors,
     paris,
-    ss,
     wellnessHeading: c.chiro_wellness_teaser_heading ?? "",
     wellnessBody: c.chiro_wellness_teaser_body ?? "",
     ctaHeading: c.chiro_cta_heading ?? "",
     ctaSubtext: c.chiro_cta_subtext ?? "",
+    ctaParisLabel: c.chiro_cta_paris_label ?? "",
+    ctaFormsLink: c.chiro_cta_forms_link ?? "",
+    scheduleCtaTitle: c.chiro_schedule_cta_title ?? "",
+    scheduleCtaBody: c.chiro_schedule_cta_body ?? "",
+    scheduleCtaSecondary: c.chiro_schedule_cta_secondary ?? "",
     testimonials: [
       { quote: c.chiro_testimonial_1_text ?? "", label: c.chiro_testimonial_1_attr ?? "" },
       { quote: c.chiro_testimonial_2_text ?? "", label: c.chiro_testimonial_2_attr ?? "" },
@@ -85,7 +102,6 @@ export default async function ChiropracticServicePage() {
       <JsonLd
         data={[
           chiropractorJsonLd(paris),
-          chiropractorJsonLd(ss),
           serviceJsonLd({
             name: "Chiropractic Care",
             description:
@@ -98,7 +114,7 @@ export default async function ChiropracticServicePage() {
       />
       <Breadcrumbs items={serviceBreadcrumbs({ name: "Chiropractic", url: "/services/chiropractic" })} />
       <PageHero
-        eyebrow="Chiropractic Associates · Family-owned since 1998"
+        eyebrow="Chiropractic Associates · Paris, TX"
         title={c.chiro_hero_heading}
         lede={c.chiro_hero_subheading}
       />

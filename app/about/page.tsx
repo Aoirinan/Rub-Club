@@ -7,6 +7,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { ChiropracticDoctorCard } from "@/components/ChiropracticDoctorCard";
 import { getContentMany, renderRichText } from "@/lib/cms";
 import { DOCTOR_CMS_KEYS, getDoctorsForMarketing } from "@/lib/cms-doctors";
+import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { CHIRO } from "@/lib/home-verbatim";
 import { IMAGES } from "@/lib/home-images";
 import { organizationJsonLd } from "@/lib/structured-data";
@@ -25,7 +26,13 @@ export const metadata = buildPageMetadata({
 
 export default async function AboutPage() {
   const c = await getContentMany(["about_heading", "about_body", ...DOCTOR_CMS_KEYS]);
-  const doctors = await getDoctorsForMarketing(c);
+  let doctorMedia: Awaited<ReturnType<typeof getSiteOwnerConfig>>["doctorMedia"] = [];
+  try {
+    doctorMedia = (await getSiteOwnerConfig()).doctorMedia;
+  } catch {
+    doctorMedia = [];
+  }
+  const doctors = await getDoctorsForMarketing(c, doctorMedia);
   const bodyParagraphs = (c.about_body ?? "").split(/\n\n+/).filter(Boolean);
 
   return (
@@ -86,6 +93,7 @@ export default async function AboutPage() {
                 imageSrc={member.imageSrc}
                 videoUrl={member.videoUrl}
                 videoFile={member.videoFile}
+                actionVideos={member.actionVideos}
               />
             ))}
           </div>

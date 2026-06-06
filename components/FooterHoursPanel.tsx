@@ -4,6 +4,8 @@ import { usePathname } from "next/navigation";
 import { BookingCta } from "@/components/BookingCta";
 import { LOCATIONS } from "@/lib/constants";
 import type { DomainContextValue } from "@/lib/domain-context";
+import { useSiteBusinessContext } from "@/lib/use-site-business-context";
+import type { SiteBusinessContext } from "@/lib/site-business-context";
 import { footerHoursFocus, type FooterHoursFocus } from "@/lib/footer-hours-context";
 import type { OfficeHoursRow } from "@/lib/office-hours";
 
@@ -30,13 +32,16 @@ export function FooterHoursPanel({
   parisHours,
   sulphurHours,
   initialDomainCtx,
+  initialBusinessContext = "default",
 }: {
   parisHours: readonly OfficeHoursRow[];
   sulphurHours: readonly OfficeHoursRow[];
   initialDomainCtx: DomainContextValue;
+  initialBusinessContext?: SiteBusinessContext;
 }) {
   const pathname = usePathname() ?? "/";
-  const focus = footerHoursFocus(pathname, initialDomainCtx);
+  const businessContext = useSiteBusinessContext(initialBusinessContext);
+  const focus = footerHoursFocus(pathname, initialDomainCtx, businessContext);
   const subtitle = locationLabel(focus);
 
   return (

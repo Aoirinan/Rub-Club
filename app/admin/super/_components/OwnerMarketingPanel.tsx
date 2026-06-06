@@ -24,10 +24,14 @@ import {
   assertCanAddTestimonialVideo,
   type OwnerVideoQuotaSnapshot,
 } from "@/lib/owner-upload-quota";
+import { mergeBusinessNavigationConfig } from "@/lib/business-nav-defaults";
+import { mergeHeaderColors } from "@/lib/header-colors";
+import { BusinessNavigationEditor } from "@/app/admin/super/_components/BusinessNavigationEditor";
+import { HeaderColorsEditor } from "@/app/admin/super/_components/HeaderColorsEditor";
 
-type Tab = "banner" | "booking" | "videos" | "specials" | "doctor" | "siteinfo";
+type Tab = "banner" | "booking" | "videos" | "specials" | "doctor" | "siteinfo" | "biznav" | "headercolors";
 
-const TAB_IDS: Tab[] = ["banner", "booking", "videos", "specials", "doctor", "siteinfo"];
+const TAB_IDS: Tab[] = ["banner", "booking", "videos", "specials", "doctor", "siteinfo", "biznav", "headercolors"];
 
 function tabFromQuery(value: string | null): Tab | null {
   if (value && TAB_IDS.includes(value as Tab)) return value as Tab;
@@ -63,7 +67,11 @@ export function OwnerMarketingPanel() {
       massageTherapistSource?: "team" | "providers" | null;
       videoQuota?: OwnerVideoQuotaSnapshot;
     };
-    setConfig(data.config);
+    setConfig({
+      ...data.config,
+      businessNavigation: mergeBusinessNavigationConfig(data.config.businessNavigation),
+      headerColors: mergeHeaderColors(data.config.headerColors),
+    });
     setMassageTeamMembers(data.massageTeamMembers ?? []);
     setMassageTherapistSource(data.massageTherapistSource ?? null);
     setVideoQuota(data.videoQuota ?? null);
@@ -149,6 +157,50 @@ export function OwnerMarketingPanel() {
     }
     setConfig(data.config!);
     setMsg("Online booking settings saved.");
+  }
+
+  async function saveBusinessNavigation() {
+    if (!config) return;
+    setLoading(true);
+    const businessNavigation = mergeBusinessNavigationConfig(config.businessNavigation);
+    const res = await ownerMarketingFetch("/api/superadmin/config", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ businessNavigation }),
+      credentials: "include",
+    });
+    const data = (await res.json()) as { config?: SiteOwnerSingleton; error?: string };
+    setLoading(false);
+    if (!res.ok) {
+      setMsg(data.error ?? "Save failed");
+      return;
+    }
+    setConfig(data.config!);
+    setMsg("Business navigation saved.");
+  }
+
+  async function saveHeaderColors() {
+    if (!config) return;
+    setLoading(true);
+    const headerColors = mergeHeaderColors(config.headerColors);
+    const res = await ownerMarketingFetch("/api/superadmin/config", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ headerColors }),
+      credentials: "include",
+    });
+    const data = (await res.json()) as { config?: SiteOwnerSingleton; error?: string };
+    setLoading(false);
+    if (!res.ok) {
+      setMsg(data.error ?? "Save failed");
+      return;
+    }
+    setConfig({
+      ...data.config!,
+      businessNavigation: mergeBusinessNavigationConfig(data.config!.businessNavigation),
+      headerColors: mergeHeaderColors(data.config!.headerColors),
+    });
+    setMsg("Header colors saved.");
   }
 
   async function uploadVideo(form: HTMLFormElement) {
@@ -268,6 +320,8 @@ export function OwnerMarketingPanel() {
     { id: "videos", label: "Testimonial videos" },
     { id: "specials", label: "Specials" },
     { id: "doctor", label: "Doctor media" },
+    { id: "biznav", label: "Business navigation" },
+    { id: "headercolors", label: "Header colors" },
     { id: "siteinfo", label: "Other extras" },
   ];
 
@@ -530,6 +584,24 @@ export function OwnerMarketingPanel() {
           videoQuota={videoQuota}
           onReload={loadConfig}
           onMessage={setMsg}
+        />
+      ) : null}
+
+      {tab === "biznav" ? (
+        <BusinessNavigationEditor
+          config={mergeBusinessNavigationConfig(config.businessNavigation)}
+          onChange={(businessNavigation) => setConfig({ ...config, businessNavigation })}
+          onSave={() => void saveBusinessNavigation()}
+          saving={loading}
+        />
+      ) : null}
+
+      {tab === "headercolors" ? (
+        <HeaderColorsEditor
+          config={mergeHeaderColors(config.headerColors)}
+          onChange={(headerColors) => setConfig({ ...config, headerColors })}
+          onSave={() => void saveHeaderColors()}
+          saving={loading}
         />
       ) : null}
 

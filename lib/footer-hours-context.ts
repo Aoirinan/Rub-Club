@@ -1,4 +1,5 @@
 import type { DomainContextValue } from "@/lib/domain-context";
+import type { SiteBusinessContext } from "@/lib/site-business-context";
 
 export type FooterHoursFocus = "paris" | "sulphur_springs" | "both";
 
@@ -18,9 +19,12 @@ export function footerHoursFocusFromPathname(pathname: string): FooterHoursFocus
 export function footerHoursFocus(
   pathname: string,
   domainCtx: DomainContextValue,
+  businessCtx: SiteBusinessContext = "default",
 ): FooterHoursFocus {
   const fromPath = footerHoursFocusFromPathname(pathname);
   if (fromPath) return fromPath;
+  if (businessCtx === "paris_chiro") return "paris";
+  if (businessCtx === "sulphur_springs") return "sulphur_springs";
   if (domainCtx === "massage") return "paris";
   if (domainCtx === "chiro") return "sulphur_springs";
   return "both";

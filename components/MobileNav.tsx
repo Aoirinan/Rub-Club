@@ -10,18 +10,26 @@ import {
   GIFT_CARD_MOBILE_EXPANDED,
   useMassageGiftCardNavExpandedContext,
 } from "@/lib/massage-gift-card-nav-context";
+import { useSiteBusinessContext } from "@/lib/use-site-business-context";
+import type { SiteBusinessContext } from "@/lib/site-business-context";
 
 export function MobileNav({
   items,
   giftCardHref,
   paris,
   sulphur,
+  businessContext: businessContextProp = "default",
 }: {
   items: readonly NavItem[];
   giftCardHref: string;
   paris: LocationInfo;
   sulphur: LocationInfo;
+  businessContext?: SiteBusinessContext;
 }) {
+  const businessContext = useSiteBusinessContext(businessContextProp);
+  const isBusinessScoped =
+    businessContext === "paris_chiro" || businessContext === "sulphur_springs";
+  const hasGiftCardInNav = items.some((i) => i.label === "Gift cards");
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const giftCardExpanded = useMassageGiftCardNavExpandedContext();
@@ -177,49 +185,73 @@ export function MobileNav({
                   </div>
                 );
               })}
-              <a
-                href={giftCardHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`focus-ring mx-4 mb-2 block border border-[#0f5f5c]/30 bg-white px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#0f5f5c] transition-all duration-300 ease-out hover:bg-stone-50 motion-reduce:transition-none ${
-                  giftCardExpanded ? GIFT_CARD_MOBILE_EXPANDED : ""
-                }`}
-                onClick={close}
-              >
-                Gift cards
-              </a>
-              <BookingCta
-                label="Book online"
-                disabledLabel="Contact us"
-                className="focus-ring m-4 bg-[#f2d25d] px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]"
-              />
+              {!hasGiftCardInNav ? (
+                <a
+                  href={giftCardHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`focus-ring mx-4 mb-2 block border border-[#0f5f5c]/30 bg-white px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#0f5f5c] transition-all duration-300 ease-out hover:bg-stone-50 motion-reduce:transition-none ${
+                    giftCardExpanded ? GIFT_CARD_MOBILE_EXPANDED : ""
+                  }`}
+                  onClick={close}
+                >
+                  Gift cards
+                </a>
+              ) : null}
+              {!isBusinessScoped ? (
+                <BookingCta
+                  label="Book online"
+                  disabledLabel="Contact us"
+                  className="focus-ring m-4 bg-[#f2d25d] px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]"
+                />
+              ) : null}
               <div className="border-t border-stone-200 p-4 text-sm">
                 <p className="mb-2 text-xs font-black uppercase tracking-wide text-stone-600">
                   Call us
                 </p>
-                <a
-                  className="block py-1 font-bold text-[#0f5f5c] underline"
-                  href={telHref(paris.phonePrimary)}
-                  onClick={() => track("phone_click", { location: "paris" })}
-                >
-                  Paris {paris.phonePrimary}
-                </a>
-                {paris.phoneSecondary?.trim() ? (
+                {businessContext === "paris_chiro" ? (
                   <a
                     className="block py-1 font-bold text-[#0f5f5c] underline"
-                    href={telHref(paris.phoneSecondary)}
-                    onClick={() => track("phone_click", { location: "rub_club" })}
+                    href={telHref(paris.phonePrimary)}
+                    onClick={() => track("phone_click", { location: "paris" })}
                   >
-                    The Rub Club {paris.phoneSecondary}
+                    Paris {paris.phonePrimary}
                   </a>
-                ) : null}
-                <a
-                  className="block py-1 font-bold text-[#0f5f5c] underline"
-                  href={telHref(sulphur.phonePrimary)}
-                  onClick={() => track("phone_click", { location: "sulphur_springs" })}
-                >
-                  Sulphur Springs {sulphur.phonePrimary}
-                </a>
+                ) : businessContext === "sulphur_springs" ? (
+                  <a
+                    className="block py-1 font-bold text-[#0f5f5c] underline"
+                    href={telHref(sulphur.phonePrimary)}
+                    onClick={() => track("phone_click", { location: "sulphur_springs" })}
+                  >
+                    Sulphur Springs {sulphur.phonePrimary}
+                  </a>
+                ) : (
+                  <>
+                    <a
+                      className="block py-1 font-bold text-[#0f5f5c] underline"
+                      href={telHref(paris.phonePrimary)}
+                      onClick={() => track("phone_click", { location: "paris" })}
+                    >
+                      Paris {paris.phonePrimary}
+                    </a>
+                    {paris.phoneSecondary?.trim() ? (
+                      <a
+                        className="block py-1 font-bold text-[#0f5f5c] underline"
+                        href={telHref(paris.phoneSecondary)}
+                        onClick={() => track("phone_click", { location: "rub_club" })}
+                      >
+                        The Rub Club {paris.phoneSecondary}
+                      </a>
+                    ) : null}
+                    <a
+                      className="block py-1 font-bold text-[#0f5f5c] underline"
+                      href={telHref(sulphur.phonePrimary)}
+                      onClick={() => track("phone_click", { location: "sulphur_springs" })}
+                    >
+                      Sulphur Springs {sulphur.phonePrimary}
+                    </a>
+                  </>
+                )}
                 <div className="mt-3 flex flex-wrap gap-4">
                   <a
                     className="inline-flex items-center gap-2 font-bold text-[#0f5f5c] underline"

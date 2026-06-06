@@ -1,5 +1,12 @@
 import { FieldValue, type Firestore } from "firebase-admin/firestore";
+import { mergeBusinessNavigationConfig } from "@/lib/business-nav-defaults";
 import { getFirestore } from "@/lib/firebase-admin";
+import {
+  mergeHeaderColors,
+  type HeaderColorConfig,
+} from "@/lib/header-colors";
+
+export type { HeaderBandColors, HeaderColorConfig } from "@/lib/header-colors";
 
 const COL = "site_owner_settings";
 const DOC = "singleton";
@@ -86,6 +93,23 @@ export const DEFAULT_EDITABLE_COPY: SiteEditableCopy = {
   footerBlurbHtml: "",
 };
 
+export type BusinessNavChild = {
+  label: string;
+  href: string;
+};
+
+export type BusinessNavItem = {
+  label: string;
+  href: string;
+  external?: boolean;
+  children?: BusinessNavChild[];
+};
+
+export type BusinessNavigationConfig = {
+  parisChiro: BusinessNavItem[];
+  sulphurSprings: BusinessNavItem[];
+};
+
 /** Clinic-controlled public /book availability and optional Square prepay. */
 export type PublicBookingConfig = {
   /** When false, /book shows a call-to-schedule message and the API rejects new requests. */
@@ -110,6 +134,10 @@ export type SiteOwnerSingleton = {
   doctorMedia: DoctorMediaItem[];
   editableCopy: SiteEditableCopy;
   publicBooking: PublicBookingConfig;
+  /** Per-business public navigation (blank = code defaults). */
+  businessNavigation?: BusinessNavigationConfig;
+  /** Per-brand header band colors (blank = code defaults). */
+  headerColors: HeaderColorConfig;
 };
 
 const DEFAULTS: SiteOwnerSingleton = {
@@ -136,6 +164,7 @@ const DEFAULTS: SiteOwnerSingleton = {
   doctorMedia: [],
   editableCopy: DEFAULT_EDITABLE_COPY,
   publicBooking: DEFAULT_PUBLIC_BOOKING,
+  headerColors: mergeHeaderColors(undefined),
 };
 
 function mergeDefaults(partial: Partial<SiteOwnerSingleton> | undefined): SiteOwnerSingleton {
@@ -154,12 +183,14 @@ function mergeDefaults(partial: Partial<SiteOwnerSingleton> | undefined): SiteOw
       ...DEFAULT_PUBLIC_BOOKING,
       ...(partial?.publicBooking ?? {}),
     },
+    businessNavigation: mergeBusinessNavigationConfig(partial?.businessNavigation),
+    headerColors: mergeHeaderColors(partial?.headerColors),
   };
 }
 
 export async function getSiteOwnerConfig(db: Firestore = getFirestore()): Promise<SiteOwnerSingleton> {
   const snap = await db.collection(COL).doc(DOC).get();
-  if (!snap.exists) return { ...DEFAULTS };
+  if (!snap.exists) return mergeDefaults(undefined);
   return mergeDefaults(snap.data() as Partial<SiteOwnerSingleton>);
 }
 

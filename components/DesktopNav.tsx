@@ -58,12 +58,12 @@ function StandardPanel({
 }) {
   return (
     <div className="absolute left-0 top-full z-50 min-w-[220px] pt-1">
-      <div className="bg-[#2980b9] shadow-xl">
+      <div className="bg-[var(--header-nav-bg)] shadow-xl">
         {item.children!.map((c) => (
           <Link
             key={c.href}
             href={c.href}
-            className="block px-5 py-2.5 text-xs font-bold text-white hover:bg-[#1a6da3]"
+            className="block px-5 py-2.5 text-xs font-bold text-white hover:bg-[var(--header-nav-hover)]"
             onClick={onClose}
           >
             {c.label}
@@ -84,7 +84,7 @@ function MegaPanel({
   const groups = groupChildren(item.children!);
   return (
     <div className="absolute left-1/2 top-full z-50 w-[600px] -translate-x-1/2 pt-1 lg:w-[720px]">
-      <div className="bg-[#2980b9] p-5 shadow-xl">
+      <div className="bg-[var(--header-nav-bg)] p-5 shadow-xl">
         <div className="mb-3 border-b border-white/20 pb-3">
           <Link
             href={item.href}
@@ -120,7 +120,13 @@ function MegaPanel({
   );
 }
 
-export function DesktopNav({ items }: { items: readonly NavItem[] }) {
+export function DesktopNav({
+  items,
+  showBookCta = true,
+}: {
+  items: readonly NavItem[];
+  showBookCta?: boolean;
+}) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const navRef = useRef<HTMLElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -158,7 +164,7 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
     <nav
       ref={navRef}
       aria-label="Primary"
-      className="hidden bg-[#2980b9] shadow-md lg:block"
+      className="hidden bg-[var(--header-nav-bg)] shadow-md lg:block"
     >
       <div className="mx-auto flex max-w-6xl items-center justify-center">
         {items.map((item, idx) => {
@@ -237,10 +243,12 @@ export function DesktopNav({ items }: { items: readonly NavItem[] }) {
             </div>
           );
         })}
-        <BookingCta
-          label="Book Now"
-          className="focus-ring ml-2 flex items-center self-stretch bg-[#f2d25d] px-5 text-xs font-black uppercase tracking-wide text-[#0c2d3a] shadow-sm transition-all duration-300 hover:bg-[#e6c13d] xl:text-sm"
-        />
+        {showBookCta ? (
+          <BookingCta
+            label="Book Now"
+            className="focus-ring ml-2 flex items-center self-stretch bg-[#f2d25d] px-5 text-xs font-black uppercase tracking-wide text-[#0c2d3a] shadow-sm transition-all duration-300 hover:bg-[#e6c13d] xl:text-sm"
+          />
+        ) : null}
       </div>
     </nav>
   );

@@ -7,9 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-
-/** Scroll past this (px) before the center logo shrinks to side size. */
-const COMPACT_SCROLL_Y = 48;
+import { resolveHeaderCompact } from "@/lib/header-compact-scroll";
 
 const HeaderCompactContext = createContext(false);
 
@@ -21,17 +19,33 @@ export function SiteHeaderLogoRow({ children }: { children: ReactNode }) {
   const [compact, setCompact] = useState(false);
 
   useEffect(() => {
-    const update = () => setCompact(window.scrollY > COMPACT_SCROLL_Y);
+    let rafId = 0;
+
+    const update = () => {
+      setCompact((prev) => resolveHeaderCompact(prev, window.scrollY));
+    };
+
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        update();
+      });
+    };
+
     update();
-    window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafId) window.cancelAnimationFrame(rafId);
+    };
   }, []);
 
   return (
     <HeaderCompactContext.Provider value={compact}>
       <div
         data-header-compact={compact ? "true" : "false"}
-        className={`bg-white px-4 transition-[padding] duration-300 ease-out ${
+        className={`bg-[var(--header-logo-row-bg)] px-4 transition-[padding] duration-300 ease-out ${
           compact ? "py-1 sm:py-1.5" : "py-2 sm:py-2.5"
         }`}
       >

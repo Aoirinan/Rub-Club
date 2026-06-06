@@ -6,7 +6,6 @@ import { IMAGES } from "@/lib/home-images";
 import {
   CHIRO,
   CHIRO_INTRO_VIDEO_SRC,
-  DOCTORS,
   MASSAGE,
 } from "@/lib/home-verbatim";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
@@ -17,6 +16,7 @@ import { FaqList } from "@/components/FaqList";
 import { MassageTeamGrid } from "@/components/marketing/MassageTeamGrid";
 import { TestimonialVideosSection } from "@/components/TestimonialVideosSection";
 import { AdjustmentsInActionSection } from "@/components/AdjustmentsInActionSection";
+import { ChiropracticDoctorCard } from "@/components/ChiropracticDoctorCard";
 import {
   chiropractorJsonLd,
   faqPageJsonLd,
@@ -24,6 +24,7 @@ import {
 } from "@/lib/structured-data";
 import { HOME_PAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { getContentMany, renderRichText } from "@/lib/cms";
+import { DOCTOR_CMS_KEYS, getDoctorsForMarketing } from "@/lib/cms-doctors";
 import { HOME_INTRO } from "@/lib/home-verbatim";
 import { getLayoutCmsContent } from "@/lib/cms-display";
 import { getParisOfficeHours } from "@/lib/office-hours";
@@ -54,23 +55,29 @@ export default async function Home() {
     "home_awards_text",
     "home_about_blurb",
     "home_testimonials_heading",
+    ...DOCTOR_CMS_KEYS,
   ]);
   const homeFaqs = (await getActiveFaqs()).slice(0, 5);
 
   let displayLocs = mergedDisplayLocations(undefined, cmsLayout);
   let giftHref = effectiveGiftCardUrl(undefined, cmsLayout);
   let awardsHtml: string | null = null;
+  let doctorMedia: Awaited<ReturnType<typeof getSiteOwnerConfig>>["doctorMedia"] = [];
   try {
     const cfg = await getSiteOwnerConfig();
     displayLocs = mergedDisplayLocations(cfg.editableCopy, cmsLayout);
     giftHref = effectiveGiftCardUrl(cfg.editableCopy, cmsLayout);
     const a = cfg.editableCopy.awardsStripHtml.trim();
     if (a) awardsHtml = a;
+    doctorMedia = cfg.doctorMedia;
   } catch {
     /* keep defaults */
   }
   const homeLocList = [displayLocs.paris, displayLocs.sulphur_springs] as const;
-  const massageTeam = await getMassageTeamForMarketing();
+  const [massageTeam, doctors] = await Promise.all([
+    getMassageTeamForMarketing(),
+    getDoctorsForMarketing(c, doctorMedia),
+  ]);
   return (
     <div className="bg-[#f4f2ea]">
       <JsonLd
@@ -362,26 +369,17 @@ export default async function Home() {
             leads care in Sulphur Springs.
           </p>
           <div className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
-            {DOCTORS.map((member) => (
-              <article
+            {doctors.map((member) => (
+              <ChiropracticDoctorCard
                 key={member.name}
-                className="flex flex-col overflow-hidden border border-stone-200 bg-stone-50 shadow-sm"
-              >
-                <div className="relative aspect-[3/4] w-full bg-stone-200">
-                  <Image
-                    src={IMAGES[member.imageKey]}
-                    alt={`Portrait of ${member.name}, ${member.role}`}
-                    fill
-                    className="object-cover object-top"
-                    sizes="(max-width: 640px) 100vw, 33vw"
-                  />
-                </div>
-                <div className="flex flex-1 flex-col p-5">
-                  <h3 className="text-lg font-black text-[#173f3b]">{member.name}</h3>
-                  <p className="text-sm font-bold text-stone-600">{member.role}</p>
-                  <p className="mt-3 flex-1 text-sm leading-relaxed text-stone-700">{member.bio}</p>
-                </div>
-              </article>
+                name={member.name}
+                role={member.role}
+                bio={member.bio}
+                imageSrc={member.imageSrc}
+                videoUrl={member.videoUrl}
+                videoFile={member.videoFile}
+                actionVideos={member.actionVideos}
+              />
             ))}
           </div>
         </section>

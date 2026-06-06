@@ -23,6 +23,7 @@ import {
   websiteJsonLd,
 } from "@/lib/structured-data";
 import { getSiteOwnerConfig, bannerIsActivePublic } from "@/lib/site-owner-config";
+import { mergeHeaderColors } from "@/lib/header-colors";
 import {
   getLayoutCmsContent,
   headerBrandContentFromCms,
@@ -42,6 +43,10 @@ import {
   DOMAIN_CTX_COOKIE,
   parseDomainContextValue,
 } from "@/lib/domain-context";
+import {
+  BUSINESS_CTX_COOKIE,
+  parseBusinessContextValue,
+} from "@/lib/site-business-context";
 import { getParisOfficeHours, getSulphurOfficeHours } from "@/lib/office-hours";
 
 export const revalidate = 60;
@@ -104,6 +109,9 @@ export default async function RootLayout({
   const initialDomainCtx = parseDomainContextValue(
     cookieStore.get(DOMAIN_CTX_COOKIE)?.value,
   );
+  const initialBusinessContext = parseBusinessContextValue(
+    cookieStore.get(BUSINESS_CTX_COOKIE)?.value,
+  );
 
   const [cms, bookingConfig, parisHours, sulphurHours] = await Promise.all([
     getLayoutCmsContent(),
@@ -115,8 +123,10 @@ export default async function RootLayout({
   let displayLocs = mergedDisplayLocations(undefined, cms);
   let giftCardSticky = effectiveGiftCardSticky(undefined, cms);
   let footerBlurbHtml: string | null = null;
+  let headerColors = mergeHeaderColors(undefined);
   try {
     const cfg = await getSiteOwnerConfig();
+    headerColors = cfg.headerColors;
     displayLocs = mergedDisplayLocations(cfg.editableCopy, cms);
     giftCardSticky = effectiveGiftCardSticky(cfg.editableCopy, cms);
     const fb = cfg.editableCopy.footerBlurbHtml.trim();
@@ -158,6 +168,8 @@ export default async function RootLayout({
                   giftCardHref={giftCardSticky.href}
                   showTopPhoneBar={showTopPhoneBar}
                   headerBranding={headerBranding}
+                  headerColors={headerColors}
+                  initialBusinessContext={initialBusinessContext}
                 />
                 {salesBanner ? <HomepageSalesBanner payload={salesBanner} /> : null}
               </>
@@ -173,6 +185,7 @@ export default async function RootLayout({
                   parisHours={parisHours}
                   sulphurHours={sulphurHours}
                   initialDomainCtx={initialDomainCtx}
+                  initialBusinessContext={initialBusinessContext}
                 />
                 <DomainSpecialsPopup />
               </>

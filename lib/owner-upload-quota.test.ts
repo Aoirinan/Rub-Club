@@ -10,6 +10,7 @@ import {
   countSitewideOwnerVideos,
 } from "@/lib/owner-upload-quota";
 import type { SiteOwnerSingleton } from "@/lib/site-owner-config";
+import { DEFAULT_HEADER_COLORS } from "@/lib/header-colors";
 
 const emptyConfig = {
   banner: { enabled: false, showOnHomepage: true, html: "", expiresAt: null },
@@ -45,6 +46,7 @@ const emptyConfig = {
     disabledMessage: "",
     onlinePaymentsEnabled: false,
   },
+  headerColors: DEFAULT_HEADER_COLORS,
 } satisfies SiteOwnerSingleton;
 
 describe("owner-upload-quota", () => {
