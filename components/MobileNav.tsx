@@ -27,8 +27,6 @@ export function MobileNav({
   businessContext?: SiteBusinessContext;
 }) {
   const businessContext = useSiteBusinessContext(businessContextProp);
-  const isBusinessScoped =
-    businessContext === "paris_chiro" || businessContext === "sulphur_springs";
   const hasGiftCardInNav = items.some((i) => i.label === "Gift cards");
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -198,13 +196,10 @@ export function MobileNav({
                   Gift cards
                 </a>
               ) : null}
-              {!isBusinessScoped ? (
-                <BookingCta
-                  label="Book online"
-                  disabledLabel="Contact us"
-                  className="focus-ring m-4 bg-[#f2d25d] px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]"
-                />
-              ) : null}
+              <BookingCta
+                label="Book Now"
+                className="focus-ring m-4 block bg-[#f2d25d] px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]"
+              />
               <div className="border-t border-stone-200 p-4 text-sm">
                 <p className="mb-2 text-xs font-black uppercase tracking-wide text-stone-600">
                   Call us

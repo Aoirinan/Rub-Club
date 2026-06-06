@@ -73,7 +73,7 @@ export function FooterHoursPanel({
         ) : null}
       </div>
       <BookingCta
-        label="Book online"
+        label="Book Now"
         variant="compact"
         className="focus-ring mt-4 inline-flex bg-[#f2d25d] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]"
       />

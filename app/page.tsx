@@ -256,7 +256,7 @@ export default async function Home() {
               </ul>
               <div className="flex flex-wrap gap-3">
                 <BookingCta
-                  label="Book chiropractic online"
+                  label="Book chiropractic"
                   query="service=chiropractic"
                   variant="teal"
                 />
@@ -310,7 +310,7 @@ export default async function Home() {
               ))}
               <div className="flex flex-wrap gap-3">
                 <BookingCta
-                  label="Book massage online"
+                  label="Book massage"
                   query="service=massage&location=paris"
                   variant="teal"
                 />
@@ -513,7 +513,7 @@ export default async function Home() {
             </div>
           </div>
           <div className="flex flex-wrap gap-3 border-t border-white/15 pt-6">
-            <BookingCta label="Book online" />
+            <BookingCta label="Book Now" />
             <Link
               href="/contact"
               className="focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#173f3b]"

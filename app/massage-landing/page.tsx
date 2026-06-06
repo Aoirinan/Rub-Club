@@ -26,7 +26,7 @@ export default function MassageLandingPage() {
             availability — call ahead if you are unsure.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <BookingCta label="Book online" variant="teal" />
+            <BookingCta label="Book Now" variant="teal" />
             <Link
               href="/services/massage"
               className="focus-ring inline-flex border-2 border-[#0f5f5c] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-[#0f5f5c]/5"

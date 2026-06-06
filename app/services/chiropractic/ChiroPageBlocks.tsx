@@ -183,7 +183,7 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
           <p className="mt-3 max-w-3xl text-stone-700">{data.ctaSubtext}</p>
           <div className="mt-6 flex min-h-[56px] flex-col flex-wrap gap-3 sm:flex-row">
             <BookingCta
-              label="Book chiropractic online"
+              label="Book chiropractic"
               query="service=chiropractic&location=paris"
               variant="teal"
               className="focus-ring flex min-h-[56px] flex-1 items-center justify-center rounded-lg bg-[#0f5f5c] px-4 py-3 text-center text-base font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"

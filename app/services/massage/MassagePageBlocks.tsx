@@ -118,7 +118,7 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
             </a>
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <BookingCta label="Book massage online" query="service=massage&location=paris" variant="teal" />
+            <BookingCta label="Book massage" query="service=massage&location=paris" variant="teal" />
             <Link
               href="/patient-forms"
               className="focus-ring border-2 border-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-[#0f5f5c]/5"

@@ -31,29 +31,19 @@ export function buildDefaultNavItems(giftCardHref: string): NavItem[] {
     },
     {
       href: "/services/chiropractic",
-      label: "Chiro",
+      label: "Chiropractic",
       children: [
-        { href: "/services/chiropractic", label: "Chiro Paris" },
-        { href: "/sulphur-springs", label: "Chiro Sulphur Springs" },
+        { href: "/services/chiropractic", label: "Paris" },
+        { href: "/sulphur-springs", label: "Sulphur Springs" },
       ],
     },
     { href: WELLNESS_CARE_PLANS_PATH, label: "Wellness Plan" },
-    {
-      href: "/locations/paris",
-      label: "Locations",
-      children: [
-        { href: "/locations/paris", label: "Paris, TX" },
-        { href: "/locations/sulphur-springs", label: "Sulphur Springs, TX" },
-      ],
-    },
-    { href: "/about", label: "About" },
-    { href: "/faq", label: "FAQ" },
     {
       href: giftCardHref,
       label: "Gift cards",
       external: true,
     },
-    { href: "/patient-forms", label: "Patient forms" },
+    { href: "/patient-forms", label: "Patient Forms" },
     { href: "/contact", label: "Contact" },
   ];
 }
@@ -66,8 +56,6 @@ export function SiteHeaderClient({
   headerBranding,
   headerColors,
   initialBusinessContext = "default",
-  parisChiroNavItems,
-  sulphurSpringsNavItems,
 }: {
   paris: LocationInfo;
   sulphur: LocationInfo;
@@ -76,18 +64,13 @@ export function SiteHeaderClient({
   headerBranding?: HeaderBrandContent;
   headerColors: HeaderColorConfig;
   initialBusinessContext?: SiteBusinessContext;
-  parisChiroNavItems: NavItem[];
-  sulphurSpringsNavItems: NavItem[];
 }) {
   const businessContext = useSiteBusinessContext(initialBusinessContext);
   const isBusinessScoped =
     businessContext === "paris_chiro" || businessContext === "sulphur_springs";
 
-  const navItems = isBusinessScoped
-    ? businessContext === "paris_chiro"
-      ? parisChiroNavItems
-      : sulphurSpringsNavItems
-    : buildDefaultNavItems(giftCardHref);
+  // Same nav on every page; only the color theme changes with business context.
+  const navItems = buildDefaultNavItems(giftCardHref);
 
   const rub = paris.phoneSecondary?.trim();
 
@@ -198,11 +181,7 @@ export function SiteHeaderClient({
         />
       </SiteHeaderLogoRow>
 
-      {isBusinessScoped ? (
-        <BusinessSubNav items={navItems} showBookCta={false} />
-      ) : (
-        <BusinessSubNav items={navItems} showBookCta />
-      )}
+      <BusinessSubNav items={navItems} showBookCta />
     </HeaderThemeProvider>
   );
 }

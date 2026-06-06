@@ -103,7 +103,7 @@ export function LocationsSection({ titleAs = "h2", compact = false }: Props) {
       )}
 
       <div className="flex flex-wrap gap-3 border-t border-white/15 pt-6">
-        <BookingCta label="Book online" />
+        <BookingCta label="Book Now" />
       </div>
     </section>
   );
