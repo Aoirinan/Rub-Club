@@ -101,6 +101,46 @@ Gentle Massage Therapy — Light-pressure massage for sensitive clients, older a
 
 Trigger Point & Lymphatic — Focused release of stubborn knots, plus gentle lymphatic drainage when appropriate.`;
 
+const MASSAGE_PRICES_DEFAULT = `## Massage sessions
+
+- 30-minute massage — $40
+- 60-minute massage — $75
+
+## Add-on services
+
+- Natural hot stone — +$10
+- Cupping — +$10
+- Scraping — +$10
+- KT taping — +$12
+- Prenatal belly taping — +$15
+- Hot towels — +$5
+- Essential oils — +$5
+
+## Gift certificate packages
+
+- Ten 30-minute gift certificates — $338
+- Ten 60-minute gift certificates — $650
+- Custom packages available — we can build a package around your needs.
+
+## Memberships
+
+Memberships are monthly and billed by auto-debit only. Tips are not included. Call 903-739-9959 to set one up.
+
+- Once a month — one 30-minute massage per month — $35 (save $5 a month)
+- Twice a month — two 30-minute massages per month (or one 60-minute) — $65
+- Two hours a month — two 60-minute massages per month — $130 (save $20)
+- Four times a month — four 60-minute massages per month — $260 (save $56)
+
+## Massage & adjustments (Chiro-Fitness)
+
+- One 30-minute massage + one adjustment per month — $75
+- One 60-minute massage + one adjustment per month — $105
+- Two 30-minute massages + two adjustments per month — $145
+- Two 60-minute massages + two adjustments per month — $210
+- Four 60-minute massages + four adjustments per month — $420
+
+Prices are subject to change at any time.`;
+
 const SS_HOURS_DEFAULT = `Monday â€“ Friday: 9:00 AM â€“ 5:00 PM
 Saturday â€“ Sunday: Closed`;
 
@@ -165,6 +205,7 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "massage_intro_body", pageLabel: "Massage", sectionLabel: "Intro", fieldLabel: "Body Copy", type: "richtext" },
   { id: "massage_services_list", pageLabel: "Massage", sectionLabel: "Services", fieldLabel: "Services Offered", type: "richtext" },
   { id: "massage_cta_heading", pageLabel: "Massage", sectionLabel: "CTA", fieldLabel: "Heading", type: "text" },
+  { id: "massage_prices_body", pageLabel: "Massage", sectionLabel: "Prices", fieldLabel: "Prices page body (markdown)", type: "richtext" },
 
   {
     id: "paris_hours",
@@ -349,6 +390,7 @@ export const DEFAULTS: Record<string, string> = {
   massage_intro_body: MASSAGE.stressParas.join("\n\n"),
   massage_services_list: MASSAGE_SERVICES_DEFAULT,
   massage_cta_heading: MASSAGE.contactTitle,
+  massage_prices_body: MASSAGE_PRICES_DEFAULT,
 
   paris_hours: PARIS_HOURS_DEFAULT_TEXT,
 

@@ -2,8 +2,10 @@ import { getContentMany } from "@/lib/cms";
 import {
   SS_INJURIES,
   SS_PATIENT_RESOURCES,
+  SS_RESOURCE_ARTICLES,
   SS_SERVICES,
   type SSInjury,
+  type SSResourceArticle,
   type SSService,
 } from "@/lib/sulphur-springs-content";
 import { ssPageBodyId, ssPageMetaId } from "@/lib/ss-cms-registry";
@@ -15,11 +17,22 @@ export type SSPageContent = {
   title: string;
   metaDescription: string;
   body: string;
-  kind: "service" | "injury";
+  kind: "service" | "injury" | "resource";
 };
 
-function pickPage(slug: string): (SSService | SSInjury) | null {
-  return SS_SERVICES.find((s) => s.slug === slug) ?? SS_INJURIES.find((i) => i.slug === slug) ?? null;
+function pickPage(slug: string): (SSService | SSInjury | SSResourceArticle) | null {
+  return (
+    SS_SERVICES.find((s) => s.slug === slug) ??
+    SS_INJURIES.find((i) => i.slug === slug) ??
+    SS_RESOURCE_ARTICLES.find((a) => a.slug === slug) ??
+    null
+  );
+}
+
+function pageKind(slug: string): SSPageContent["kind"] {
+  if (SS_SERVICES.some((s) => s.slug === slug)) return "service";
+  if (SS_INJURIES.some((i) => i.slug === slug)) return "injury";
+  return "resource";
 }
 
 export async function getSSPageContent(slug: string): Promise<SSPageContent | null> {
@@ -29,7 +42,7 @@ export async function getSSPageContent(slug: string): Promise<SSPageContent | nu
   const bodyId = ssPageBodyId(slug);
   const metaId = ssPageMetaId(slug);
   const cms = await getContentMany([bodyId, metaId]);
-  const kind = SS_SERVICES.some((s) => s.slug === slug) ? "service" : "injury";
+  const kind = pageKind(slug);
 
   return {
     slug,
@@ -46,5 +59,9 @@ export async function getSSPatientResourcesIntro(): Promise<string> {
 }
 
 export function allSSPageSlugs(): string[] {
-  return [...SS_SERVICES.map((s) => s.slug), ...SS_INJURIES.map((i) => i.slug)];
+  return [
+    ...SS_SERVICES.map((s) => s.slug),
+    ...SS_INJURIES.map((i) => i.slug),
+    ...SS_RESOURCE_ARTICLES.map((a) => a.slug),
+  ];
 }

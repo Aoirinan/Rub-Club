@@ -310,6 +310,66 @@ Professional athletes recognize tremendous value in chiropractic care because th
 ] as const;
 
 /* ------------------------------------------------------------------ */
+/*  Educational / About Chiropractic articles                          */
+/* ------------------------------------------------------------------ */
+
+export type SSResourceArticle = {
+  slug: string;
+  title: string;
+  metaDescription: string;
+  body: string;
+};
+
+export const SS_RESOURCE_ARTICLES: readonly SSResourceArticle[] = [
+  {
+    slug: "about-chiropractic",
+    title: "About Chiropractic",
+    metaDescription:
+      "Learn what chiropractic is, its history, how it works, and how subluxations and spinal degeneration affect your health — from Chiropractic Associates of Sulphur Springs.",
+    body: `## What is Chiropractic?
+
+Chiropractic is a natural, drug-free approach to health that focuses on the relationship between the spine and the nervous system. It is based on the idea that the body is self-healing and self-regulating, and that much of that control happens through the brain, spinal cord, and the nerves that branch throughout the body. When the spine is properly aligned and moving well, the nervous system can do its job without interference, and the body is better able to function and heal.
+
+## A Brief History
+
+Spinal manipulation has been used to relieve pain for thousands of years; even Hippocrates documented manipulative techniques in ancient Greece. Modern chiropractic began in 1895 and has since grown into one of the most widely used forms of conservative, non-surgical care for back pain, neck pain, and headaches.
+
+## How Chiropractic Works
+
+Your body is controlled by the brain through the spinal cord and a vast network of nerves. When vertebrae shift out of place, they can put pressure on those nerves and interrupt the signals traveling between the brain and the rest of the body. A chiropractic adjustment is a precise movement that restores proper alignment and motion to the joint, relieving that pressure. With the interference removed, the nervous system can function the way it was designed to.
+
+## What is a Subluxation?
+
+When a vertebra becomes misaligned or moves out of its normal position, chiropractors call it a subluxation. Subluxations can result from anything from a minor slip or bump to a car accident or sudden trauma. A subluxated vertebra places pressure on nearby nerves and blood vessels, which can interrupt the clear signals the brain needs to coordinate the body. Left uncorrected, subluxations can lead to muscle spasms and increasing pain.
+
+## Spinal Degeneration
+
+When subluxations go uncorrected for a long time, the spine can begin to degenerate, much like a tooth that is neglected. Discs lose height and flexibility, bone spurs may form, and movement becomes restricted. Catching and correcting spinal problems early, and maintaining alignment over time, helps slow this process and keeps the spine healthier for longer.`,
+  },
+  {
+    slug: "vertebral-subluxation-complex",
+    title: "Vertebral Subluxation Complex",
+    metaDescription:
+      "Understand the vertebral subluxation complex — the components of a misaligned spinal joint and why it matters for your nervous system and overall health.",
+    body: `The vertebral subluxation complex is the chiropractic term for the changes that occur in and around a spinal joint when a vertebra is misaligned or not moving properly. Rather than a single problem, it describes several components that tend to occur together.
+
+## Components of the Subluxation Complex
+
+- Misalignment of the vertebra (kinesiopathology) — the bone moves out of its normal position or loses its normal range of motion.
+- Nerve pressure or irritation (neuropathology) — the misalignment can irritate or compress nearby nerves, interfering with signals between the brain and body.
+- Muscle changes (myopathology) — surrounding muscles may spasm, weaken, or develop scar tissue over time.
+- Soft-tissue damage (histopathology) — ligaments, discs, and other tissues can become inflamed or damaged.
+- Spinal decay (pathophysiology) — over time, uncorrected subluxations can contribute to degeneration of the spine.
+
+## Why It Matters
+
+Because the nervous system coordinates nearly every function in the body, ongoing nerve interference from a subluxation can affect far more than just local pain. Chiropractic care aims to identify these subluxations and correct them with specific adjustments, restoring proper motion and relieving pressure on the nervous system.
+
+If you would like to know whether subluxations may be affecting you, contact our Sulphur Springs office for an evaluation.`,
+  },
+] as const;
+
+/* ------------------------------------------------------------------ */
 /*  Patient Resources                                                  */
 /* ------------------------------------------------------------------ */
 

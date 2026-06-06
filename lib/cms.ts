@@ -60,6 +60,7 @@ export const CMS_REVALIDATE_PATHS = [
   "/services/chiropractic",
   "/services/chiropractic/wellness-care-plans",
   "/services/massage",
+  "/services/massage/prices",
   "/sulphur-springs",
   "/sulphur-springs/massage",
   "/insurance",

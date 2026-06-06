@@ -11,6 +11,7 @@ import type { DoctorCmsEntry } from "@/lib/cms-doctors";
 import type { ChiroTreatment } from "@/lib/chiro-treatments";
 import { CHIRO } from "@/lib/home-verbatim";
 import { WELLNESS_CARE_PLANS_PATH, telHref, type LocationInfo } from "@/lib/constants";
+import { PARIS_CHIRO_SERVICE_NAV } from "@/lib/paris-chiro-services";
 import type { PublicBookingConfig } from "@/lib/site-owner-config";
 
 export type ChiroPageData = {
@@ -88,6 +89,20 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
                 <p className="mt-2 text-sm leading-relaxed text-stone-600">{t.desc}</p>
               </div>
             ))}
+          </div>
+          <div className="mt-8 border-t border-stone-200 pt-6">
+            <h3 className="text-sm font-black uppercase tracking-wide text-[#173f3b]">
+              More therapies we offer
+            </h3>
+            <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              {PARIS_CHIRO_SERVICE_NAV.map((s) => (
+                <li key={s.href}>
+                  <Link href={s.href} className="font-bold text-[#0f5f5c] underline hover:text-[#0f817b]">
+                    {s.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
       );

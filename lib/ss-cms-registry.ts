@@ -1,5 +1,10 @@
 import type { ContentFieldMeta } from "@/lib/cms-registry";
-import { SS_INJURIES, SS_PATIENT_RESOURCES, SS_SERVICES } from "@/lib/sulphur-springs-content";
+import {
+  SS_INJURIES,
+  SS_PATIENT_RESOURCES,
+  SS_RESOURCE_ARTICLES,
+  SS_SERVICES,
+} from "@/lib/sulphur-springs-content";
 
 export function ssPageBodyId(slug: string): string {
   return `ss_page_${slug}_body`;
@@ -51,6 +56,25 @@ export function buildSSCmsRegistry(): ContentFieldMeta[] {
     );
   }
 
+  for (const a of SS_RESOURCE_ARTICLES) {
+    fields.push(
+      {
+        id: ssPageBodyId(a.slug),
+        pageLabel: "SS subpages",
+        sectionLabel: a.title,
+        fieldLabel: "Page body (## headings, - bullets, blank line between paragraphs)",
+        type: "richtext",
+      },
+      {
+        id: ssPageMetaId(a.slug),
+        pageLabel: "SS subpages",
+        sectionLabel: a.title,
+        fieldLabel: "SEO meta description (optional override)",
+        type: "text",
+      },
+    );
+  }
+
   fields.push({
     id: "ss_patient_resources_intro",
     pageLabel: "SS subpages",
@@ -75,10 +99,15 @@ export function buildSSCmsDefaults(): Record<string, string> {
     defaults[ssPageBodyId(i.slug)] = i.body;
     defaults[ssPageMetaId(i.slug)] = i.metaDescription;
   }
+  for (const a of SS_RESOURCE_ARTICLES) {
+    defaults[ssPageBodyId(a.slug)] = a.body;
+    defaults[ssPageMetaId(a.slug)] = a.metaDescription;
+  }
   return defaults;
 }
 
 export const SS_PAGE_SLUGS = [
   ...SS_SERVICES.map((s) => s.slug),
   ...SS_INJURIES.map((i) => i.slug),
+  ...SS_RESOURCE_ARTICLES.map((a) => a.slug),
 ] as const;

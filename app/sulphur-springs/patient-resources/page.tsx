@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { getSSPatientResourcesIntro } from "@/lib/ss-cms-content";
-import { SS_PATIENT_RESOURCES } from "@/lib/sulphur-springs-content";
+import { SS_PATIENT_RESOURCES, SS_RESOURCE_ARTICLES } from "@/lib/sulphur-springs-content";
 import { telHref } from "@/lib/constants";
 
 export const metadata = buildPageMetadata({
@@ -38,9 +39,19 @@ export default async function PatientResourcesPage() {
             <h2 className="mt-8 text-xl font-black text-[#173f3b]">
               About Chiropractic
             </h2>
-            <ul className="list-disc space-y-1 pl-6 text-stone-700">
-              {SS_PATIENT_RESOURCES.aboutChiroTopics.map((topic) => (
-                <li key={topic}>{topic}</li>
+            <p className="leading-relaxed text-stone-700">
+              Learn more about how chiropractic works and why it helps:
+            </p>
+            <ul className="list-disc space-y-2 pl-6">
+              {SS_RESOURCE_ARTICLES.map((article) => (
+                <li key={article.slug}>
+                  <Link
+                    href={`/sulphur-springs/${article.slug}`}
+                    className="font-bold text-[#0f5f5c] underline hover:text-[#173f3b]"
+                  >
+                    {article.title}
+                  </Link>
+                </li>
               ))}
             </ul>
 

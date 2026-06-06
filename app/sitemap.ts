@@ -12,7 +12,11 @@ const ENTRIES: { path: string; changeFrequency: ChangeFrequency; priority: numbe
   // canonical 200 URLs. Their targets (/services/*, /about, /contact) are below.
   { path: "/services/chiropractic", changeFrequency: "monthly", priority: 0.85 },
   { path: "/services/chiropractic/wellness-care-plans", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/services/chiropractic/therapeutic-ultrasound", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/services/chiropractic/degenerative-disc-disease", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/services/chiropractic/postural-rehabilitation", changeFrequency: "monthly", priority: 0.6 },
   { path: "/services/massage", changeFrequency: "monthly", priority: 0.85 },
+  { path: "/services/massage/prices", changeFrequency: "monthly", priority: 0.6 },
   { path: "/locations/paris", changeFrequency: "monthly", priority: 0.82 },
   { path: "/locations/paris/staff", changeFrequency: "monthly", priority: 0.7 },
   { path: "/locations/sulphur-springs", changeFrequency: "monthly", priority: 0.82 },
@@ -42,6 +46,8 @@ const ENTRIES: { path: string; changeFrequency: ChangeFrequency; priority: numbe
   { path: "/sulphur-springs/personal-injury", changeFrequency: "monthly", priority: 0.6 },
   { path: "/sulphur-springs/sports-injury", changeFrequency: "monthly", priority: 0.6 },
   { path: "/sulphur-springs/patient-resources", changeFrequency: "monthly", priority: 0.55 },
+  { path: "/sulphur-springs/about-chiropractic", changeFrequency: "monthly", priority: 0.55 },
+  { path: "/sulphur-springs/vertebral-subluxation-complex", changeFrequency: "monthly", priority: 0.55 },
   { path: "/sulphur-springs/q-and-a", changeFrequency: "monthly", priority: 0.55 },
 ];
 

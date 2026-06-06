@@ -33,11 +33,18 @@ export default async function SulphurSpringsSubpage({ params }: Props) {
   const page = await getSSPageContent(slug);
   if (!page) notFound();
 
-  const ctaTitle = page.kind === "injury" ? "Need treatment?" : "Schedule an appointment";
+  const ctaTitle =
+    page.kind === "injury"
+      ? "Need treatment?"
+      : page.kind === "resource"
+        ? "Have questions?"
+        : "Schedule an appointment";
   const ctaBody =
     page.kind === "injury"
       ? "Contact our Sulphur Springs office for a thorough examination."
-      : "Contact our Sulphur Springs office to discuss whether this treatment is right for you.";
+      : page.kind === "resource"
+        ? "Contact our Sulphur Springs office and our team will be happy to help."
+        : "Contact our Sulphur Springs office to discuss whether this treatment is right for you.";
 
   return (
     <>
