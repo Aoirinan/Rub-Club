@@ -173,7 +173,7 @@ export function DesktopNav({
 
           return (
             <div
-              key={item.href}
+              key={`${idx}-${item.href}`}
               className="relative"
               onMouseEnter={() => handleEnter(idx, hasChildren)}
               onMouseLeave={handleLeave}

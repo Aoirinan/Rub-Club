@@ -93,7 +93,7 @@ export function DomainSpecialsPopup() {
           ) : null}
           {bodyHtml ? (
             <div
-              className="prose prose-sm max-w-none text-stone-800 prose-a:text-[#0f5f5c]"
+              className="prose prose-sm max-w-none text-stone-800 prose-a:font-semibold prose-a:text-blue-600 prose-a:no-underline prose-a:hover:underline"
               dangerouslySetInnerHTML={{ __html: linkifyHtmlUrls(bodyHtml) }}
             />
           ) : null}

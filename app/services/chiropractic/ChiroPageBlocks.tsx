@@ -8,15 +8,22 @@ import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { IMAGES } from "@/lib/home-images";
 import { renderRichText } from "@/lib/cms";
 import type { DoctorCmsEntry } from "@/lib/cms-doctors";
-import { CHIRO_TREATMENT_OFFERINGS } from "@/lib/chiro-treatments";
+import type { ChiroTreatment } from "@/lib/chiro-treatments";
 import { CHIRO } from "@/lib/home-verbatim";
 import { WELLNESS_CARE_PLANS_PATH, telHref, type LocationInfo } from "@/lib/constants";
 import type { PublicBookingConfig } from "@/lib/site-owner-config";
 
 export type ChiroPageData = {
+  chooseTitle: string;
   introParagraphs: string[];
   conditions: string[];
   doctors: DoctorCmsEntry[];
+  doctorsHeading: string;
+  doctorsIntro: string;
+  treatmentsHeading: string;
+  treatmentsIntro: string;
+  treatments: ChiroTreatment[];
+  testimonialsHeading: string;
   paris: LocationInfo;
   wellnessHeading: string;
   wellnessBody: string;
@@ -37,7 +44,7 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
       return (
         <section className="grid gap-10 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-2">
           <div className="space-y-4">
-            <h2 className="text-3xl font-black text-[#173f3b]">{CHIRO.chooseTitle}</h2>
+            <h2 className="text-3xl font-black text-[#173f3b]">{data.chooseTitle}</h2>
             {data.introParagraphs.map((p, idx) => (
               <div
                 key={`intro-${idx}`}
@@ -65,11 +72,14 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
     case "treatments":
       return (
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">Treatments We Combine</h2>
-          <p className="mt-3 max-w-3xl leading-relaxed text-stone-700">{CHIRO.treatmentsIntro}</p>
+          <h2 className="text-2xl font-black text-[#173f3b]">{data.treatmentsHeading}</h2>
+          <p className="mt-3 max-w-3xl leading-relaxed text-stone-700">{data.treatmentsIntro}</p>
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {CHIRO_TREATMENT_OFFERINGS.map((t) => (
-              <div key={t.name} className="flex flex-col rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+            {data.treatments.map((t, idx) => (
+              <div
+                key={`${idx}-${t.name}`}
+                className="flex flex-col rounded-lg border border-stone-200 bg-white p-5 shadow-sm"
+              >
                 <div className="text-[#0f5f5c]">
                   <ChiroTreatmentIcon name={t.name} />
                 </div>
@@ -85,10 +95,11 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
     case "doctors":
       return (
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">Our Paris chiropractors</h2>
-          <p className="mt-2 max-w-2xl text-sm text-stone-600">
-            Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins practice at our Paris office.
-          </p>
+          <h2 className="text-2xl font-black text-[#173f3b]">{data.doctorsHeading}</h2>
+          <p
+            className="mt-2 max-w-2xl text-sm text-stone-600"
+            dangerouslySetInnerHTML={{ __html: renderRichText(data.doctorsIntro) }}
+          />
           <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {data.doctors.map((member) => (
               <ChiropracticDoctorCard
@@ -146,7 +157,7 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
     case "testimonials":
       return data.testimonials.length > 0 ? (
         <section className="bg-[#f8f8f6] px-4 py-12 sm:px-8">
-          <h2 className="text-center text-2xl font-black text-[#173f3b]">What Our Chiropractic Patients Say</h2>
+          <h2 className="text-center text-2xl font-black text-[#173f3b]">{data.testimonialsHeading}</h2>
           <div className="mx-auto mt-10 grid max-w-6xl gap-8 lg:grid-cols-3">
             {data.testimonials.map((t, idx) => (
               <blockquote

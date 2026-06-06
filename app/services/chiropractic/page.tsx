@@ -18,13 +18,21 @@ import { pageKeywords } from "@/lib/seo-keywords";
 import { getScopeVisualLayout } from "@/lib/cms-display";
 import { getPageBlockOrder } from "@/lib/page-layout-db";
 import { ServicePageVisualSection } from "@/components/ServicePageVisualSection";
+import { parseChiroTreatments } from "@/lib/chiro-treatments";
 import { ChiroPageBlock } from "./ChiroPageBlocks";
 
 const CHIRO_CMS_IDS = [
   "chiro_hero_heading",
   "chiro_hero_subheading",
+  "chiro_choose_title",
   "chiro_intro_body",
   "chiro_conditions_list",
+  "chiro_doctors_heading",
+  "chiro_doctors_intro",
+  "chiro_treatments_heading",
+  "chiro_treatments_intro",
+  "chiro_treatments_list",
+  "chiro_testimonials_heading",
   "chiro_cta_heading",
   "chiro_cta_subtext",
   "chiro_cta_paris_label",
@@ -76,9 +84,16 @@ export default async function ChiropracticServicePage() {
   ]);
   const paris = LOCATIONS.paris;
   const blockData = {
+    chooseTitle: c.chiro_choose_title ?? "",
     introParagraphs: (c.chiro_intro_body ?? "").split(/\n\n+/).filter(Boolean),
     conditions: parseConditionsList(c.chiro_conditions_list ?? ""),
     doctors,
+    doctorsHeading: c.chiro_doctors_heading ?? "",
+    doctorsIntro: c.chiro_doctors_intro ?? "",
+    treatmentsHeading: c.chiro_treatments_heading ?? "",
+    treatmentsIntro: c.chiro_treatments_intro ?? "",
+    treatments: parseChiroTreatments(c.chiro_treatments_list ?? ""),
+    testimonialsHeading: c.chiro_testimonials_heading ?? "",
     paris,
     wellnessHeading: c.chiro_wellness_teaser_heading ?? "",
     wellnessBody: c.chiro_wellness_teaser_body ?? "",

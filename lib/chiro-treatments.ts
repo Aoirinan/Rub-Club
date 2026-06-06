@@ -12,7 +12,7 @@ export const CHIRO_TREATMENT_OFFERINGS = [
     desc: "Low-level electrical pulses that ease muscle spasms and speed tissue recovery.",
   },
   {
-    name: "Moist Heat & Cryotherapy",
+    name: "Heat & Cryotherapy",
     desc: "Targeted heat and cold application to reduce inflammation and improve circulation.",
   },
   {
@@ -37,3 +37,30 @@ export const CHIRO_TREATMENT_OFFERINGS = [
 export const CHIRO_TREATMENT_NAMES: readonly string[] = CHIRO_TREATMENT_OFFERINGS.map(
   (t) => t.name,
 );
+
+export type ChiroTreatment = { name: string; desc: string };
+
+/**
+ * Default value for the editable treatments list CMS field.
+ * One card per line as "Name — Description"; reorder/add/remove by editing lines.
+ */
+export const CHIRO_TREATMENTS_LIST_DEFAULT: string = CHIRO_TREATMENT_OFFERINGS.map(
+  (t) => `${t.name} — ${t.desc}`,
+).join("\n");
+
+/** Parse the editable treatments list (one "Name — Description" per line) into cards. */
+export function parseChiroTreatments(value: string): ChiroTreatment[] {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const name = (line.split(/\s+[—–-]\s+/)[0] ?? "").trim();
+      const desc = line
+        .slice(name.length)
+        .replace(/^\s*[—–-]\s*/, "")
+        .trim();
+      return { name, desc };
+    })
+    .filter((t) => t.name.length > 0);
+}

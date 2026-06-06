@@ -22,7 +22,7 @@ export function ChiroTreatmentIcon({ name }: { name: string }) {
           <path d="M28 4L12 26h10l-2 18 18-28H26l2-12z" />
         </svg>
       );
-    case "Moist Heat & Cryotherapy":
+    case "Heat & Cryotherapy":
       return (
         <svg viewBox="0 0 48 48" className="h-12 w-12" fill="none" aria-hidden>
           <path

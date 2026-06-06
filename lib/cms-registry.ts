@@ -7,6 +7,7 @@ import {
   HOME_INTRO,
   MASSAGE,
 } from "@/lib/home-verbatim";
+import { CHIRO_TREATMENTS_LIST_DEFAULT } from "@/lib/chiro-treatments";
 export const PARIS_HOURS_DEFAULT_TEXT = MASSAGE.hours.map((r) => `${r.day}|${r.hours}`).join("\n");
 import { siteShortName } from "@/lib/site-content";
 import {
@@ -105,11 +106,19 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "home_awards_text", pageLabel: "Home", sectionLabel: "Awards Strip", fieldLabel: "Awards Text", type: "text" },
   { id: "home_about_blurb", pageLabel: "Home", sectionLabel: "About Section", fieldLabel: "Body Copy", type: "richtext" },
   { id: "home_testimonials_heading", pageLabel: "Home", sectionLabel: "Testimonials", fieldLabel: "Section Heading", type: "text" },
+  { id: "home_testimonials_intro", pageLabel: "Home", sectionLabel: "Testimonials", fieldLabel: "Intro paragraph", type: "richtext" },
 
   { id: "chiro_hero_heading", pageLabel: "Chiropractic", sectionLabel: "Hero", fieldLabel: "Main Heading", type: "text" },
   { id: "chiro_hero_subheading", pageLabel: "Chiropractic", sectionLabel: "Hero", fieldLabel: "Subheading", type: "text" },
-  { id: "chiro_intro_body", pageLabel: "Chiropractic", sectionLabel: "Intro", fieldLabel: "Body Copy", type: "richtext" },
+  { id: "chiro_choose_title", pageLabel: "Chiropractic", sectionLabel: "Intro", fieldLabel: "Section heading (shared with Home 'Choose Our Chiropractors')", type: "text" },
+  { id: "chiro_intro_body", pageLabel: "Chiropractic", sectionLabel: "Intro", fieldLabel: "Body Copy (shared with Home 'Choose Our Chiropractors')", type: "richtext" },
   { id: "chiro_conditions_list", pageLabel: "Chiropractic", sectionLabel: "Conditions", fieldLabel: "Conditions (comma-separated)", type: "text" },
+  { id: "chiro_doctors_heading", pageLabel: "Chiropractic", sectionLabel: "Doctors block", fieldLabel: "Heading", type: "text" },
+  { id: "chiro_doctors_intro", pageLabel: "Chiropractic", sectionLabel: "Doctors block", fieldLabel: "Intro paragraph", type: "richtext" },
+  { id: "chiro_treatments_heading", pageLabel: "Chiropractic", sectionLabel: "Treatments", fieldLabel: "Heading", type: "text" },
+  { id: "chiro_treatments_intro", pageLabel: "Chiropractic", sectionLabel: "Treatments", fieldLabel: "Intro paragraph", type: "text" },
+  { id: "chiro_treatments_list", pageLabel: "Chiropractic", sectionLabel: "Treatments", fieldLabel: "Treatment cards (one per line: Name — Description)", type: "richtext" },
+  { id: "chiro_testimonials_heading", pageLabel: "Chiropractic", sectionLabel: "Testimonials", fieldLabel: "Section heading", type: "text" },
   { id: "chiro_cta_heading", pageLabel: "Chiropractic", sectionLabel: "CTA", fieldLabel: "Heading", type: "text" },
   { id: "chiro_cta_subtext", pageLabel: "Chiropractic", sectionLabel: "CTA", fieldLabel: "Subtext", type: "text" },
   { id: "chiro_cta_paris_label", pageLabel: "Chiropractic", sectionLabel: "CTA", fieldLabel: "Paris call button label", type: "text" },
@@ -166,6 +175,10 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
     fieldLabel: "Hours (one line per range: Monday â€“ Friday|9:00 AM â€“ 5:00 PM)",
     type: "richtext",
   },
+  { id: "ss_massage_hero_heading", pageLabel: "Sulphur Springs", sectionLabel: "Massage page", fieldLabel: "Hero heading", type: "text" },
+  { id: "ss_massage_hero_subheading", pageLabel: "Sulphur Springs", sectionLabel: "Massage page", fieldLabel: "Hero subheading", type: "text" },
+  { id: "ss_massage_intro_body", pageLabel: "Sulphur Springs", sectionLabel: "Massage page", fieldLabel: "Intro body copy", type: "richtext" },
+  { id: "ss_massage_services_list", pageLabel: "Sulphur Springs", sectionLabel: "Massage page", fieldLabel: "Services (one per line: Name — Description)", type: "richtext" },
 
   { id: "about_heading", pageLabel: "About", sectionLabel: "Hero", fieldLabel: "Main Heading", type: "text" },
   { id: "about_body", pageLabel: "About", sectionLabel: "Story", fieldLabel: "Body Copy", type: "richtext" },
@@ -272,12 +285,22 @@ export const DEFAULTS: Record<string, string> = {
     "Voted Best Chiropractic Center & Best Massage â€” The Paris News reader polls.",
   home_about_blurb: HOME_INTRO.body,
   home_testimonials_heading: "What our patients say",
+  home_testimonials_intro:
+    "Voted Best Chiropractic Center and Best Massage in The Paris News reader polls. Below are stories adapted from public Google reviews (paraphrased, not copied word-for-word).",
 
   chiro_hero_heading: "Efficient, evidence-informed chiropractic care",
   chiro_hero_subheading:
     "Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins serve patients across Northeast Texas from Paris and Sulphur Springs.",
+  chiro_choose_title: CHIRO.chooseTitle,
   chiro_intro_body: `${CHIRO.chooseLead}\n\n${CHIRO.chooseP2}\n\n${CHIRO.chooseP3}`,
   chiro_conditions_list: CHIRO.conditions.join(", "),
+  chiro_doctors_heading: "Our Paris chiropractors",
+  chiro_doctors_intro:
+    "Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins practice at our Paris office.",
+  chiro_treatments_heading: "Treatments We Combine",
+  chiro_treatments_intro: CHIRO.treatmentsIntro,
+  chiro_treatments_list: CHIRO_TREATMENTS_LIST_DEFAULT,
+  chiro_testimonials_heading: "What Our Chiropractic Patients Say",
   chiro_cta_heading: CHIRO.contactUsTitle,
   chiro_cta_subtext: CHIRO.callCta,
   chiro_cta_paris_label: "Call Paris Office",
@@ -325,6 +348,15 @@ export const DEFAULTS: Record<string, string> = {
   ss_intro_body:
     "Welcome to our practice! We hope that you will find this website helpful in learning more about our office, our chiropractic care, and how chiropractic care can improve your quality of life.\n\nWe understand that although our patients may be diagnosed with the same condition, they may respond differently to treatments. For this reason, we tailor a specific plan of action to meet your needs, goals and unique condition.",
   ss_hours: SS_HOURS_DEFAULT,
+
+  ss_massage_hero_heading: "Massage Therapy in Sulphur Springs, TX",
+  ss_massage_hero_subheading:
+    "Licensed therapeutic massage to complement your chiropractic care. Call 903-919-5020 to ask about availability.",
+  ss_massage_intro_body:
+    "Massage therapy pairs naturally with chiropractic care — easing muscle tension, improving circulation, and helping your adjustments hold. Our Sulphur Springs team can help you decide whether soft-tissue work belongs in your care plan and coordinate it with your chiropractor.\n\nQuestions about massage in Sulphur Springs? Call 903-919-5020 and our front desk will walk you through options and scheduling.",
+  ss_massage_services_list: `Therapeutic Massage — Soft-tissue work coordinated with your chiropractic plan to support recovery between adjustments.
+Deep Tissue Massage — Slow, targeted pressure to release chronic tension in the neck, shoulders, lower back, and hips.
+Trigger Point & Lymphatic — Focused release of stubborn knots, plus gentle lymphatic drainage when appropriate.`,
 
   about_heading: "About our practice",
   about_body: `Chiropractic Associates was founded in Paris, TX in 1998 by Dr. Greg Thompson. As the practice grew, Dr. Thompson opened The Rub Club so that licensed massage therapists could coordinate care directly with the chiropractic team â€” same building, same schedule, same standards.

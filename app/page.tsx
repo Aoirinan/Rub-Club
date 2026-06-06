@@ -23,7 +23,7 @@ import {
   massageJsonLd,
 } from "@/lib/structured-data";
 import { HOME_PAGE_TESTIMONIALS } from "@/lib/testimonials";
-import { getContentMany, renderRichText } from "@/lib/cms";
+import { getContentMany, parseConditionsList, renderRichText } from "@/lib/cms";
 import { DOCTOR_CMS_KEYS, getDoctorsForMarketing } from "@/lib/cms-doctors";
 import { HOME_INTRO } from "@/lib/home-verbatim";
 import { getLayoutCmsContent } from "@/lib/cms-display";
@@ -55,9 +55,15 @@ export default async function Home() {
     "home_awards_text",
     "home_about_blurb",
     "home_testimonials_heading",
+    "home_testimonials_intro",
+    "chiro_choose_title",
+    "chiro_intro_body",
+    "chiro_conditions_list",
     ...DOCTOR_CMS_KEYS,
   ]);
   const homeFaqs = (await getActiveFaqs()).slice(0, 5);
+  const chooseParagraphs = (c.chiro_intro_body ?? "").split(/\n\n+/).filter(Boolean);
+  const chooseConditions = parseConditionsList(c.chiro_conditions_list ?? "");
 
   let displayLocs = mergedDisplayLocations(undefined, cmsLayout);
   let giftHref = effectiveGiftCardUrl(undefined, cmsLayout);
@@ -235,12 +241,16 @@ export default async function Home() {
         >
           <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
             <div className="space-y-5">
-              <h2 className="text-3xl font-black text-[#173f3b]">{CHIRO.chooseTitle}</h2>
-              <p className="leading-relaxed text-stone-700">{CHIRO.chooseLead}</p>
-              <p className="leading-relaxed text-stone-700">{CHIRO.chooseP2}</p>
-              <p className="leading-relaxed text-stone-700">{CHIRO.chooseP3}</p>
+              <h2 className="text-3xl font-black text-[#173f3b]">{c.chiro_choose_title}</h2>
+              {chooseParagraphs.map((p, idx) => (
+                <p
+                  key={`choose-${idx}`}
+                  className="leading-relaxed text-stone-700"
+                  dangerouslySetInnerHTML={{ __html: renderRichText(p) }}
+                />
+              ))}
               <ul className="list-disc space-y-2 pl-6 text-stone-700">
-                {CHIRO.conditions.map((item) => (
+                {chooseConditions.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
@@ -331,8 +341,12 @@ export default async function Home() {
           <h2 id="testimonials" className="text-3xl font-black text-[#173f3b]">
             {c.home_testimonials_heading}
           </h2>
+          <div
+            className="mt-2 text-sm text-stone-600 [&_a]:font-bold [&_a]:text-[#0f5f5c] [&_a]:underline"
+            dangerouslySetInnerHTML={{ __html: renderRichText(c.home_testimonials_intro) }}
+          />
           <p className="mt-2 text-sm text-stone-600">
-            Adapted from public Google reviews (paraphrased) — read more or leave your own on{" "}
+            Read more or leave your own on{" "}
             <Link className="font-bold text-[#0f5f5c] underline" href="/reviews">
               our reviews page
             </Link>

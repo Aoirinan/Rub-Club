@@ -21,17 +21,23 @@ import type { SiteBusinessContext } from "@/lib/site-business-context";
 
 export function buildDefaultNavItems(giftCardHref: string): NavItem[] {
   return [
-    { href: "/services/massage", label: "Massage" },
     {
-      href: "/services/chiropractic",
-      label: "Chiropractic",
+      href: "/services/massage",
+      label: "Massage",
       children: [
-        { href: "/services/chiropractic", label: "Chiropractic care" },
-        { href: WELLNESS_CARE_PLANS_PATH, label: "Wellness care plans" },
+        { href: "/services/massage", label: "Paris" },
+        { href: "/sulphur-springs/massage", label: "Sulphur Springs" },
       ],
     },
-    { href: "/", label: "Paris Texas" },
-    { href: "/sulphur-springs", label: "Sulphur Springs" },
+    {
+      href: "/services/chiropractic",
+      label: "Chiro",
+      children: [
+        { href: "/services/chiropractic", label: "Chiro Paris" },
+        { href: "/sulphur-springs", label: "Chiro Sulphur Springs" },
+      ],
+    },
+    { href: WELLNESS_CARE_PLANS_PATH, label: "Wellness Plan" },
     {
       href: "/locations/paris",
       label: "Locations",

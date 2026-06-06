@@ -102,7 +102,7 @@ export function MobileNav({
               </button>
             </div>
             <nav aria-label="Mobile" className="flex flex-col">
-              {items.map((item) => {
+              {items.map((item, idx) => {
                 const hasChildren = !!item.children?.length;
                 const isExpanded = expanded === item.label;
 
@@ -110,7 +110,7 @@ export function MobileNav({
                   if (item.external) {
                     return (
                       <a
-                        key={item.href}
+                        key={`${idx}-${item.href}`}
                         href={item.href}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -123,7 +123,7 @@ export function MobileNav({
                   }
                   return (
                     <Link
-                      key={item.href}
+                      key={`${idx}-${item.href}`}
                       href={item.href}
                       className="focus-ring border-b border-stone-100 px-4 py-3 text-sm font-bold uppercase tracking-wide text-[#173f3b] hover:bg-stone-50"
                       onClick={close}
@@ -134,7 +134,7 @@ export function MobileNav({
                 }
 
                 return (
-                  <div key={item.href} className="border-b border-stone-100">
+                  <div key={`${idx}-${item.href}`} className="border-b border-stone-100">
                     <div className="flex items-center">
                       <Link
                         href={item.href}
