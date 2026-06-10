@@ -27,10 +27,8 @@ export { HEADER_SHOW_TOP_PHONE_BAR_FIELD, parseHeaderShowTopPhoneBar };
 
 const LAYOUT_CMS_IDS = [
   HEADER_SHOW_TOP_PHONE_BAR_FIELD,
-  "header_rub_label",
   "header_chiro_label",
   "header_ss_label",
-  "header_rub_logo",
   "header_chiro_logo",
   "header_ss_logo",
   "footer_tagline",
@@ -56,7 +54,7 @@ export async function getHeaderBrandingLayout(): Promise<HeaderBrandingLayout> {
   return parseHeaderBrandingLayout(values);
 }
 
-const HEADER_BRAND_KEYS: HeaderBrandKey[] = ["rub", "chiro", "ss"];
+const HEADER_BRAND_KEYS: HeaderBrandKey[] = ["chiro", "ss"];
 
 /** Build the editable header branding (labels + logos) from CMS values, falling back to defaults. */
 export function headerBrandContentFromCms(

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import {
   BUSINESS_CTX_COOKIE,
   businessContextCookieValue,
+  isSharedPathname,
 } from "@/lib/site-business-context";
 import {
   DOMAIN_CTX_COOKIE,
@@ -71,12 +72,22 @@ export async function middleware(request: NextRequest) {
     res.cookies.set(DOMAIN_CTX_COOKIE, ctx, cookieOpts());
   }
 
-  const { pathname } = request.nextUrl;
-  const businessCtx = businessContextCookieValue(pathname);
-  if (businessCtx) {
-    res.cookies.set(BUSINESS_CTX_COOKIE, businessCtx, cookieOpts());
-  } else {
-    res.cookies.delete(BUSINESS_CTX_COOKIE);
+  // Don't mutate context cookies on link prefetches — only on real navigations.
+  const isPrefetch =
+    request.headers.get("next-router-prefetch") === "1" ||
+    request.headers.get("purpose") === "prefetch" ||
+    request.headers.get("sec-purpose")?.includes("prefetch");
+
+  if (!isPrefetch) {
+    const { pathname } = request.nextUrl;
+    const businessCtx = businessContextCookieValue(pathname);
+    if (businessCtx) {
+      res.cookies.set(BUSINESS_CTX_COOKIE, businessCtx, cookieOpts());
+    } else if (!isSharedPathname(pathname)) {
+      // Paris-site page (home, massage, …): reset. Shared pages keep the
+      // visitor's current site context so the brand color stays put.
+      res.cookies.delete(BUSINESS_CTX_COOKIE);
+    }
   }
 
   return res;

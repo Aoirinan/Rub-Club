@@ -245,10 +245,8 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
     fieldLabel: "Show dark phone bar above logos",
     type: "text",
   },
-  { id: "header_rub_label", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Rub Club label (under logo)", type: "text" },
   { id: "header_chiro_label", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Chiropractic (Paris) label (under logo)", type: "text" },
   { id: "header_ss_label", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Sulphur Springs label (under logo)", type: "text" },
-  { id: "header_rub_logo", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Rub Club logo", type: "image" },
   { id: "header_chiro_logo", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Chiropractic (Paris) logo", type: "image" },
   { id: "header_ss_logo", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Sulphur Springs logo (replaces icon + text lockup)", type: "image" },
   { id: "footer_tagline", pageLabel: "Footer", sectionLabel: "Footer", fieldLabel: "Tagline", type: "text" },
@@ -422,10 +420,8 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
     "Call the office that's most convenient, or send us a message and we will follow up during office hours.",
 
   header_show_top_phone_bar: "true",
-  header_rub_label: "Massage",
   header_chiro_label: "Chiropractic — Paris",
   header_ss_label: "Chiro / Massage",
-  header_rub_logo: IMAGES.rubClubLogo,
   header_chiro_logo: BRAND_LOGOS.chiropractic,
   header_ss_logo: "",
 

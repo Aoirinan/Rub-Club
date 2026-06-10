@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import {
+  isSharedPathname,
   readBusinessContextCookie,
   resolveBusinessContext,
   type SiteBusinessContext,
@@ -14,8 +15,13 @@ export function useSiteBusinessContext(
 ): SiteBusinessContext {
   const pathname = usePathname() ?? "/";
   return useMemo(() => {
-    const fromPath = resolveBusinessContext(pathname, readBusinessContextCookie());
-    if (fromPath !== "default") return fromPath;
-    return initialContext !== "default" ? initialContext : "default";
+    const resolved = resolveBusinessContext(pathname, readBusinessContextCookie());
+    if (resolved !== "default") return resolved;
+    // During SSR/hydration the cookie isn't readable; trust the server-provided
+    // context, but only on shared pages — Paris-site pages always reset.
+    if (isSharedPathname(pathname) && initialContext !== "default") {
+      return initialContext;
+    }
+    return "default";
   }, [pathname, initialContext]);
 }

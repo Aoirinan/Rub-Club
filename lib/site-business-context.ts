@@ -24,8 +24,37 @@ export function businessContextFromPathname(pathname: string): SiteBusinessConte
 }
 
 /**
- * Resolve effective business context: pathname wins when on a business route;
- * otherwise fall back to cookie (for shared pages like /contact, /patient-forms).
+ * Pages that exist once but are reachable from both "sites" (Paris and
+ * Sulphur Springs). On these, the header keeps the brand color of the site
+ * the visitor came from (cookie). Everything else that isn't a business
+ * route belongs to the Paris site and resets the context.
+ */
+const SHARED_PATH_PREFIXES = [
+  "/patient-forms",
+  "/contact",
+  "/book",
+  "/faq",
+  "/insurance",
+  "/reviews",
+  "/about",
+  "/privacy",
+  "/terms",
+  "/website-privacy",
+  "/auth",
+] as const;
+
+export function isSharedPathname(pathname: string): boolean {
+  const p = pathname.split("?")[0] ?? "/";
+  return SHARED_PATH_PREFIXES.some(
+    (prefix) => p === prefix || p.startsWith(`${prefix}/`),
+  );
+}
+
+/**
+ * Resolve effective business context:
+ * - business route → context from pathname;
+ * - shared page (contact, patient forms, booking, …) → sticky cookie value;
+ * - anything else (home, massage, …) is a Paris-site page → default.
  */
 export function resolveBusinessContext(
   pathname: string,
@@ -33,7 +62,8 @@ export function resolveBusinessContext(
 ): SiteBusinessContext {
   const fromPath = businessContextFromPathname(pathname);
   if (fromPath !== "default") return fromPath;
-  return parseBusinessContextValue(cookieValue);
+  if (isSharedPathname(pathname)) return parseBusinessContextValue(cookieValue);
+  return "default";
 }
 
 /** Read `rub_business_ctx` in the browser (client components only). */

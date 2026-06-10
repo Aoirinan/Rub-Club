@@ -4,8 +4,6 @@ export const HEADER_BRANDING_LAYOUT_FIELD = "header_branding_layout" as const;
 
 /** Legacy height fields — used for migration only. */
 export const HEADER_BRANDING_LEGACY_FIELD_IDS = [
-  "rub_logo_height_side",
-  "rub_logo_height_center",
   "chiro_logo_height_side",
   "chiro_logo_height_center",
   "ss_logo_height_side",
@@ -13,9 +11,9 @@ export const HEADER_BRANDING_LEGACY_FIELD_IDS = [
   "ss_logo_icon_scale",
 ] as const;
 
-export type HeaderBrandKey = "rub" | "chiro" | "ss";
+export type HeaderBrandKey = "chiro" | "ss";
 
-export const HEADER_BRAND_KEYS: HeaderBrandKey[] = ["rub", "chiro", "ss"];
+export const HEADER_BRAND_KEYS: HeaderBrandKey[] = ["chiro", "ss"];
 
 /** v1 freeform box (legacy data only). */
 export type HeaderBrandBox = {
@@ -75,7 +73,6 @@ export const HEADER_BRANDING_LAYOUT_DEFAULT: HeaderBrandingLayoutV2 = {
   version: 2,
   preset: "standard",
   brands: {
-    rub: { showPhone: true, logoSize: "large", align: "center" },
     chiro: { showPhone: true, logoSize: "medium", align: "left" },
     ss: { showPhone: true, logoSize: "medium", align: "left", iconScale: 88 },
   },
@@ -90,7 +87,6 @@ export const HEADER_PRESET_HEIGHT_PX: Record<HeaderPreset, number> = {
 
 /** Logo pixel height per brand by chosen size. */
 export const LOGO_HEIGHT_PX: Record<HeaderBrandKey, Record<LogoSize, number>> = {
-  rub: { small: 36, medium: 56, large: 72 },
   chiro: { small: 34, medium: 52, large: 68 },
   ss: { small: 36, medium: 54, large: 70 },
 };
@@ -166,7 +162,6 @@ export function headerBrandLayerBoxes(
 function legacyDefaultBox(key: HeaderBrandKey): HeaderBrandBox {
   const defaults: Record<HeaderBrandKey, HeaderBrandBox> = {
     chiro: { x: 1, y: 2, w: 30, h: 52 },
-    rub: { x: 33, y: 0, w: 34, h: 58 },
     ss: { x: 67, y: 2, w: 31, h: 52, iconScale: 88 },
   };
   return defaults[key];
@@ -280,7 +275,6 @@ function layoutFromLegacyHeights(
   const frameHeight = 132;
   const hToPct = (px: number) => clamp((px / frameHeight) * 100 * 0.55, 20, 90);
 
-  const rubH = hToPct(parseH("rub_logo_height_center", 64));
   const chiroH = hToPct(parseH("chiro_logo_height_side", 36));
   const ssH = hToPct(parseH("ss_logo_height_side", 36));
   const iconScale = clamp(parseH("ss_logo_icon_scale", 88), ICON_SCALE_MIN, ICON_SCALE_MAX);
@@ -290,7 +284,6 @@ function layoutFromLegacyHeights(
     frameHeight,
     brands: {
       chiro: { x: 1, y: 2, w: 30, h: chiroH },
-      rub: { x: 33, y: 0, w: 34, h: rubH },
       ss: { x: 67, y: 2, w: 31, h: ssH, iconScale },
     },
   });
@@ -330,8 +323,6 @@ export function buildHeaderBrandingCmsRegistry(): ContentFieldMeta[] {
 export function buildHeaderBrandingCmsDefaults(): Record<string, string> {
   return {
     [HEADER_BRANDING_LAYOUT_FIELD]: serializeHeaderBrandingLayout(HEADER_BRANDING_LAYOUT_DEFAULT),
-    rub_logo_height_side: "36",
-    rub_logo_height_center: "64",
     chiro_logo_height_side: "36",
     chiro_logo_height_center: "64",
     ss_logo_height_side: "36",
@@ -341,7 +332,6 @@ export function buildHeaderBrandingCmsDefaults(): Record<string, string> {
 }
 
 export const BRAND_LABELS: Record<HeaderBrandKey, string> = {
-  rub: "Rub Club (massage)",
   chiro: "Chiropractic — Paris",
   ss: "Sulphur Springs",
 };

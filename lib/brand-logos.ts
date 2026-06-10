@@ -1,7 +1,6 @@
 /** Local brand assets under /public/logos. */
 
 export const BRAND_LOGOS = {
-  rubClub: "/logos/rub-club.png",
   /** Paris, TX lockup — wide header variant built from clinic-approved art. */
   chiropractic: "/logos/chiropractic-associates-wide.png",
   /** Original circular lockup (source for `npm run build:chiro-logo`). */
@@ -29,18 +28,16 @@ export function resolveChiroHeaderLogo(src?: string): string {
 
 export type BrandLogoVariant = "home" | "massage" | "chiropractic" | "sulphur-springs";
 
-export type HeaderBrandKey = "rub" | "chiro" | "ss";
+export type HeaderBrandKey = "chiro" | "ss";
 
 /** CMS field ids for editable header labels (text under each logo). */
 export const HEADER_BRAND_LABEL_FIELDS: Record<HeaderBrandKey, string> = {
-  rub: "header_rub_label",
   chiro: "header_chiro_label",
   ss: "header_ss_label",
 };
 
 /** CMS field ids for editable header logo images. */
 export const HEADER_BRAND_LOGO_FIELDS: Record<HeaderBrandKey, string> = {
-  rub: "header_rub_logo",
   chiro: "header_chiro_logo",
   ss: "header_ss_logo",
 };

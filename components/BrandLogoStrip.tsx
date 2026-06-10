@@ -2,9 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SulphurSpringsLockup } from "@/components/SulphurSpringsLockup";
 import { headerBrandPhones } from "@/components/HeaderBrandBlock";
-import { IMAGES } from "@/lib/home-images";
 import {
-  BRAND_LOGOS,
   CHIRO_LOGO_DIMENSIONS,
   resolveChiroHeaderLogo,
   type BrandLogoVariant,
@@ -12,7 +10,7 @@ import {
 } from "@/lib/brand-logos";
 import { telHref, type LocationInfo } from "@/lib/constants";
 
-type BrandKey = "rub" | "chiro" | "ss";
+type BrandKey = "chiro" | "ss";
 
 type LogoEntry = {
   key: BrandKey;
@@ -23,7 +21,7 @@ type LogoEntry = {
   height: number;
 };
 
-/** Wide lockups (Rub Club) — side height; primary is ~30% taller. */
+/** Wide lockups — side height; primary is ~30% taller. */
 const SIDE_LOGO_HEIGHT =
   "h-8 w-auto max-w-[min(100%,200px)] sm:h-9 md:h-10 lg:max-w-[220px]";
 
@@ -32,7 +30,7 @@ const PRIMARY_LOGO_HEIGHT =
 
 /**
  * Wide Paris lockup (~2.9:1) — height-led sizing (width follows aspect ratio).
- * Primary uses a taller cap than Rub so the lockup has similar visual weight.
+ * Primary uses a taller cap so the lockup has similar visual weight.
  */
 const CHIRO_SIDE_LOGO_HEIGHT =
   "h-8 w-auto max-w-[min(100%,280px)] sm:h-9 md:h-10 lg:max-w-[320px]";
@@ -42,14 +40,6 @@ const CHIRO_PRIMARY_LOGO_HEIGHT =
 
 function buildBrandEntries(branding?: HeaderBrandContent): LogoEntry[] {
   return [
-    {
-      key: "rub",
-      src: branding?.logos.rub || IMAGES.rubClubLogo,
-      alt: "The Rub Club Massage",
-      href: "/services/massage",
-      width: 320,
-      height: 65,
-    },
     {
       key: "chiro",
       src: resolveChiroHeaderLogo(branding?.logos.chiro),
@@ -70,35 +60,14 @@ function buildBrandEntries(branding?: HeaderBrandContent): LogoEntry[] {
   ];
 }
 
+/** Massage lives under the Paris site, so everything except Sulphur Springs emphasizes Paris. */
 function primaryKeyForVariant(variant: BrandLogoVariant): BrandKey {
-  switch (variant) {
-    case "massage":
-      return "rub";
-    case "chiropractic":
-      return "chiro";
-    case "sulphur-springs":
-      return "ss";
-    case "home":
-    default:
-      return "rub";
-  }
-}
-
-/** Center column = active brand; left and right are the other two. */
-function orderedForVariant(variant: BrandLogoVariant, entries: LogoEntry[]): LogoEntry[] {
-  const primaryKey = primaryKeyForVariant(variant);
-  const byKey = Object.fromEntries(entries.map((e) => [e.key, e])) as Record<BrandKey, LogoEntry>;
-  const primary = byKey[primaryKey];
-  const sides = (["rub", "chiro", "ss"] as const)
-    .filter((k) => k !== primaryKey)
-    .map((k) => byKey[k]);
-  return [sides[0]!, primary, sides[1]!];
+  return variant === "sulphur-springs" ? "ss" : "chiro";
 }
 
 function columnAlignClass(columnIndex: number): string {
   if (columnIndex === 0) return "items-end justify-self-end text-right";
-  if (columnIndex === 2) return "items-start justify-self-start text-left";
-  return "items-center justify-self-center text-center";
+  return "items-start justify-self-start text-left";
 }
 
 function logoHeightClass(brandKey: BrandKey, emphasize: boolean): string {
@@ -115,8 +84,8 @@ function logoAlignClass(brandKey: BrandKey, emphasize: boolean): string {
 }
 
 /**
- * Hard-coded three-brand header: active page’s logo is centered and 30% larger;
- * phone number and label sit under each logo.
+ * Two-site header: Paris (chiro + massage) on the left, Sulphur Springs on the
+ * right; the active site’s logo is ~30% larger, with phone and label under each.
  */
 export function BrandLogoStrip({
   variant = "home",
@@ -134,12 +103,12 @@ export function BrandLogoStrip({
   compact?: boolean;
   className?: string;
 }) {
-  const entries = orderedForVariant(variant, buildBrandEntries(branding));
+  const entries = buildBrandEntries(branding);
   const primaryKey = primaryKeyForVariant(variant);
 
   return (
     <div
-      className={`grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-3 sm:gap-[0.5in] lg:mx-auto ${className}`}
+      className={`grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-end gap-3 sm:gap-[0.5in] lg:mx-auto ${className}`}
     >
       {entries.map((entry, columnIndex) => {
         const primary = entry.key === primaryKey;

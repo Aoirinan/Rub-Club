@@ -37,6 +37,14 @@ export function buildDefaultNavItems(giftCardHref: string): NavItem[] {
         { href: "/sulphur-springs", label: "Sulphur Springs" },
       ],
     },
+    {
+      href: "/locations/paris/staff",
+      label: "Staff",
+      children: [
+        { href: "/locations/paris/staff", label: "Paris" },
+        { href: "/sulphur-springs/staff", label: "Sulphur Springs" },
+      ],
+    },
     { href: WELLNESS_CARE_PLANS_PATH, label: "Wellness Plan" },
     {
       href: giftCardHref,
