@@ -31,11 +31,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "cdcssl.ibsrv.net",
-        pathname: "/ibimg/**",
-      },
-      {
-        protocol: "https",
         hostname: "storage.googleapis.com",
         pathname: "/**",
       },
