@@ -21,7 +21,7 @@ export function DoctorCardVideoAccordion({ videos }: { videos: VideoItem[] }) {
         }
       }}
     >
-      <summary className="focus-ring flex cursor-pointer list-none items-center gap-1 text-sm font-bold text-[#0f5f5c] hover:text-[#0f817b] [&::-webkit-details-marker]:hidden">
+      <summary className="focus-ring flex cursor-pointer list-none items-center gap-1 text-sm font-bold text-[#015949] hover:text-[#0b7a64] [&::-webkit-details-marker]:hidden">
         Video
         <svg
           width="10"

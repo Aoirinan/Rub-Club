@@ -13,7 +13,7 @@ export function LocationsSection({ titleAs = "h2", compact = false }: Props) {
   const TitleTag = titleAs;
 
   return (
-    <section id="locations" className="scroll-mt-32 space-y-8 bg-[#173f3b] p-6 text-white shadow-xl sm:p-10">
+    <section id="locations" className="scroll-mt-32 space-y-8 bg-[#013a30] p-6 text-white shadow-xl sm:p-10">
       <TitleTag className="text-2xl font-black">{MASSAGE.contactTitle}</TitleTag>
 
       {compact ? (
@@ -21,17 +21,17 @@ export function LocationsSection({ titleAs = "h2", compact = false }: Props) {
           <p>
             Main office:{" "}
             <strong className="text-white">{MASSAGE.rubClubAddressLines.join(", ")}</strong>. Chiropractic:{" "}
-            <a className="font-bold text-[#f2d25d] hover:underline" href="tel:9037855551">
+            <a className="font-bold text-[#f19f1f] hover:underline" href="tel:9037855551">
               903-785-5551
             </a>
             . Massage desk:{" "}
-            <a className="font-bold text-[#f2d25d] hover:underline" href="tel:9037399959">
+            <a className="font-bold text-[#f19f1f] hover:underline" href="tel:9037399959">
               903-739-9959
             </a>
             .
           </p>
           <p>
-            <Link className="inline-flex font-black text-[#f2d25d] underline hover:text-white" href="/locations">
+            <Link className="inline-flex font-black text-[#f19f1f] underline hover:text-white" href="/locations">
               View all hours, Sulphur Springs, and maps
             </Link>
           </p>
@@ -39,7 +39,7 @@ export function LocationsSection({ titleAs = "h2", compact = false }: Props) {
       ) : (
         <div className="grid gap-8 lg:grid-cols-2">
           <div>
-            <h2 className="text-lg font-black text-[#f2d25d]">{MASSAGE.hoursTitle}</h2>
+            <h2 className="text-lg font-black text-[#f19f1f]">{MASSAGE.hoursTitle}</h2>
             <p className="mt-1 text-sm text-white/80">{MASSAGE.hoursSubtitle}</p>
             <dl className="mt-4 space-y-2 text-sm">
               {MASSAGE.hours.map((row) => (
@@ -51,7 +51,7 @@ export function LocationsSection({ titleAs = "h2", compact = false }: Props) {
             </dl>
           </div>
           <div>
-            <h2 className="text-lg font-black text-[#f2d25d]">{MASSAGE.locationTitle}</h2>
+            <h2 className="text-lg font-black text-[#f19f1f]">{MASSAGE.locationTitle}</h2>
             <p className="mt-4 text-xl font-black">{MASSAGE.rubClubAddressTitle}</p>
             <p className="mt-2 text-teal-50">
               <span className="block font-bold">Address</span>
@@ -62,7 +62,7 @@ export function LocationsSection({ titleAs = "h2", compact = false }: Props) {
               ))}
             </p>
             <p className="mt-4">
-              <span className="block text-sm font-bold text-[#f2d25d]">Contact Information</span>
+              <span className="block text-sm font-bold text-[#f19f1f]">Contact Information</span>
               <a className="text-lg font-black hover:underline" href="tel:9037399959">
                 903-739-9959
               </a>
@@ -79,7 +79,7 @@ export function LocationsSection({ titleAs = "h2", compact = false }: Props) {
                     ))}
                   </p>
                   <a
-                    className="mt-1 inline-block font-bold text-[#f2d25d] hover:underline"
+                    className="mt-1 inline-block font-bold text-[#f19f1f] hover:underline"
                     href={`tel:${loc.phonePrimary.replaceAll("-", "")}`}
                   >
                     {loc.phonePrimary}
@@ -88,7 +88,7 @@ export function LocationsSection({ titleAs = "h2", compact = false }: Props) {
                     <p className="mt-1">
                       Massage desk:{" "}
                       <a
-                        className="font-bold text-[#f2d25d] hover:underline"
+                        className="font-bold text-[#f19f1f] hover:underline"
                         href={`tel:${loc.phoneSecondary.replaceAll("-", "")}`}
                       >
                         {loc.phoneSecondary}

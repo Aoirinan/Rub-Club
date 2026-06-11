@@ -55,7 +55,7 @@ function HeaderPreview({ colors }: { colors: HeaderBandColors }) {
         Phone bar preview
       </div>
       <div
-        className="px-3 py-3 text-center text-[10px] font-semibold text-[#173f3b]"
+        className="px-3 py-3 text-center text-[10px] font-semibold text-[#013a30]"
         style={{ backgroundColor: colors.logoRowBg }}
       >
         Logo row preview
@@ -118,7 +118,7 @@ export function HeaderColorsEditor({
       <p className="text-sm text-slate-600">
         Header colors switch automatically by business section: Paris / massage / home use the first
         palette; Sulphur Springs pages use the second. Dark logo-row backgrounds may reduce text
-        contrast — text colors stay fixed for now.
+        contrast â€” text colors stay fixed for now.
       </p>
 
       <BandEditor
@@ -139,9 +139,9 @@ export function HeaderColorsEditor({
         type="button"
         disabled={saving}
         onClick={onSave}
-        className="rounded-lg bg-[#0f5f5c] px-4 py-2 text-sm font-bold text-white hover:bg-[#0d524f] disabled:opacity-60"
+        className="rounded-lg bg-[#015949] px-4 py-2 text-sm font-bold text-white hover:bg-[#0d524f] disabled:opacity-60"
       >
-        {saving ? "Saving…" : "Save header colors"}
+        {saving ? "Savingâ€¦" : "Save header colors"}
       </button>
     </div>
   );

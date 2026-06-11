@@ -12,7 +12,7 @@ import { telHref, type LocationInfo } from "@/lib/constants";
 const SERVICES = [
   { name: "Deep Tissue Massage", body: "Slow, targeted pressure to release chronic tension in the neck, shoulders, lower back, and hips." },
   { name: "Swedish Massage", body: "Long, flowing strokes that relax muscles, boost circulation, and melt away everyday stress." },
-  { name: "Therapeutic Massage", body: "Coordinated with your chiropractic plan — designed to support recovery between adjustments." },
+  { name: "Therapeutic Massage", body: "Coordinated with your chiropractic plan â€” designed to support recovery between adjustments." },
   { name: "Prenatal Massage", body: "Side-lying, pregnancy-safe positioning with techniques to ease swelling, hip pressure, and tension headaches." },
   { name: "Sports Massage", body: "Pre- and post-event work focused on recovery, range of motion, and getting you back to training without rushing tissue." },
   { name: "Hot Stone Massage", body: "Heated stones paired with hands-on work to warm tight muscles and release deep tension." },
@@ -32,9 +32,9 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
   switch (id) {
     case "intro":
       return (
-        <section className="grid gap-10 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="grid gap-10 border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-5">
-            <h2 className="text-3xl font-black text-[#173f3b]">{MASSAGE.stressTitle}</h2>
+            <h2 className="text-3xl font-black text-[#013a30]">{MASSAGE.stressTitle}</h2>
             {data.introParagraphs.map((p) => (
               <p
                 key={p.slice(0, 40)}
@@ -56,8 +56,8 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
       );
     case "services":
       return (
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">Services we offer</h2>
+        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-2xl font-black text-[#013a30]">Services we offer</h2>
           {data.serviceLines.length > 0 ? (
             <div className="mt-6 space-y-4 text-sm leading-relaxed text-stone-700">
               {data.serviceLines.map((line) => (
@@ -71,7 +71,7 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
             <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {SERVICES.map((s) => (
                 <article key={s.name} className="border border-stone-200 bg-stone-50 p-5 shadow-sm">
-                  <h3 className="text-lg font-black text-[#173f3b]">{s.name}</h3>
+                  <h3 className="text-lg font-black text-[#013a30]">{s.name}</h3>
                   <p className="mt-3 text-sm leading-relaxed text-stone-700">{s.body}</p>
                 </article>
               ))}
@@ -79,17 +79,17 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
           )}
           <p className="mt-6 text-sm leading-relaxed text-stone-700">
             Need more than soft-tissue work?{" "}
-            <Link href="/services/chiropractic" className="font-bold text-[#0f5f5c] underline">
+            <Link href="/services/chiropractic" className="font-bold text-[#015949] underline">
               Explore our chiropractic care
             </Link>{" "}
-            — our massage and chiropractic teams coordinate care under one roof.
+            â€” our massage and chiropractic teams coordinate care under one roof.
           </p>
         </section>
       );
     case "when_to":
       return (
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">When to get a massage</h2>
+        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-2xl font-black text-[#013a30]">When to get a massage</h2>
           <p className="mt-4 max-w-3xl leading-relaxed text-stone-700">{MASSAGE.whenBody}</p>
         </section>
       );
@@ -104,7 +104,7 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
             <>
               For insurance coordination, personal injury case management, and other Paris office
               roles, see{" "}
-              <Link href="/locations/paris/staff" className="font-bold text-[#0f5f5c] underline">
+              <Link href="/locations/paris/staff" className="font-bold text-[#015949] underline">
                 Meet our Paris office team
               </Link>
               .
@@ -114,15 +114,15 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
       );
     case "visit":
       return (
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">Visit us in Paris</h2>
+        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-2xl font-black text-[#013a30]">Visit us in Paris</h2>
           <p className="mt-3 leading-relaxed text-stone-700">
-            {data.paris.streetAddress} · Paris, TX
+            {data.paris.streetAddress} Â· Paris, TX
           </p>
           <p className="mt-2 text-stone-700">
             Massage desk:{" "}
             <a
-              className="font-bold text-[#0f5f5c] underline"
+              className="font-bold text-[#015949] underline"
               href={telHref(data.paris.phoneSecondary ?? data.paris.phonePrimary)}
             >
               {data.paris.phoneSecondary ?? data.paris.phonePrimary}
@@ -132,13 +132,13 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
             <BookingCta label="Book massage" query="service=massage&location=paris" variant="teal" />
             <Link
               href="/services/massage/prices"
-              className="focus-ring border-2 border-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-[#0f5f5c]/5"
+              className="focus-ring border-2 border-[#015949] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#015949] hover:bg-[#25455e]/5"
             >
               View prices
             </Link>
             <Link
               href="/patient-forms"
-              className="focus-ring border-2 border-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-[#0f5f5c]/5"
+              className="focus-ring border-2 border-[#015949] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#015949] hover:bg-[#25455e]/5"
             >
               New-client form
             </Link>

@@ -13,7 +13,7 @@ import { getServicesHubContent } from "@/lib/static-pages-content";
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "Services — Chiropractic & Massage in Paris & Sulphur Springs, TX",
+  title: "Services â€” Chiropractic & Massage in Paris & Sulphur Springs, TX",
   description:
     "Chiropractic care, wellness memberships, and therapeutic massage at Chiropractic Associates and The Rub Club in Paris and Sulphur Springs, TX.",
   path: SERVICES_HUB_PATH,
@@ -72,9 +72,9 @@ function ServiceCard({
   links: { label: string; href: string }[];
 }) {
   return (
-    <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-8">
-      <h2 className="text-xl font-black text-[#173f3b]">
-        <Link href={href} className="hover:text-[#0f5f5c]">
+    <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-8">
+      <h2 className="text-xl font-black text-[#013a30]">
+        <Link href={href} className="hover:text-[#015949]">
           {title}
         </Link>
       </h2>
@@ -84,7 +84,7 @@ function ServiceCard({
           <li key={l.href}>
             <Link
               href={l.href}
-              className="text-sm font-bold text-[#0f5f5c] underline hover:text-[#173f3b]"
+              className="text-sm font-bold text-[#015949] underline hover:text-[#013a30]"
             >
               {l.label}
             </Link>
@@ -93,7 +93,7 @@ function ServiceCard({
       </ul>
       <Link
         href={href}
-        className="focus-ring mt-6 inline-flex bg-[#0f5f5c] px-5 py-2.5 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
+        className="focus-ring mt-6 inline-flex bg-[#25455e] px-5 py-2.5 text-sm font-black uppercase tracking-wide text-white hover:bg-[#1b3649]"
       >
         Learn more
       </Link>

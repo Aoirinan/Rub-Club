@@ -25,12 +25,12 @@ export function MassageTeamGrid({
   const isHome = variant === "home";
 
   return (
-    <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
+    <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
       <TitleTag
         className={
           isHome
-            ? "text-center text-3xl font-black text-[#173f3b]"
-            : "text-2xl font-black text-[#173f3b]"
+            ? "text-center text-3xl font-black text-[#013a30]"
+            : "text-2xl font-black text-[#013a30]"
         }
       >
         {title}
@@ -67,7 +67,7 @@ export function MassageTeamGrid({
               />
             </div>
             <div className="flex flex-1 flex-col p-5">
-              <h3 className="text-lg font-black text-[#173f3b]">{member.name}</h3>
+              <h3 className="text-lg font-black text-[#013a30]">{member.name}</h3>
               {member.role ? <p className="text-sm font-bold text-stone-600">{member.role}</p> : null}
               <p className="mt-3 flex-1 text-sm leading-relaxed text-stone-700">{member.bio}</p>
             </div>

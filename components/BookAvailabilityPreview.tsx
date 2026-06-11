@@ -16,7 +16,7 @@ type Slot = { startIso: string; label: string };
 
 const fieldLabel = "block text-xs font-bold uppercase tracking-wide text-stone-600";
 const fieldControl =
-  "w-full min-h-[48px] rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-base text-[#173f3b] shadow-sm";
+  "w-full min-h-[48px] rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-base text-[#013a30] shadow-sm";
 
 function todayIso(): string {
   return DateTime.now().setZone(TIME_ZONE).toFormat("yyyy-LL-dd");
@@ -87,17 +87,17 @@ export function BookAvailabilityPreview({
 
   return (
     <div className="space-y-8">
-      <div className="rounded-2xl border border-[#0f5f5c]/25 bg-[#f0faf8] p-5 sm:p-6">
-        <p className="text-lg font-black text-[#173f3b]">
+      <div className="rounded-2xl border border-[#015949]/25 bg-[#f0faf8] p-5 sm:p-6">
+        <p className="text-lg font-black text-[#013a30]">
           Select a time and call us to confirm your appointment
         </p>
         <p className="mt-2 text-sm leading-relaxed text-stone-700">
-          Openings below are for reference. Online booking with payment is coming soon — for now,
+          Openings below are for reference. Online booking with payment is coming soon â€” for now,
           choose a time and call so we can hold it for you.
         </p>
         <a
           href={telHref(phone)}
-          className="mt-4 inline-flex min-h-[48px] items-center rounded-xl bg-[#0f5f5c] px-6 py-3 text-lg font-black text-white hover:bg-[#0c4a48]"
+          className="mt-4 inline-flex min-h-[48px] items-center rounded-xl bg-[#015949] px-6 py-3 text-lg font-black text-white hover:bg-[#0c4a48]"
         >
           Call {phone}
         </a>
@@ -154,13 +154,13 @@ export function BookAvailabilityPreview({
       <div>
         <p className={fieldLabel}>Available times</p>
         {loadingSlots ? (
-          <p className="mt-3 text-sm text-stone-600">Loading openings…</p>
+          <p className="mt-3 text-sm text-stone-600">Loading openingsâ€¦</p>
         ) : slotsError ? (
           <p className="mt-3 text-sm text-amber-900">{slotsError}</p>
         ) : slots && slots.length === 0 ? (
           <p className="mt-3 text-sm text-stone-700">
-            No openings on this day — try another date or call{" "}
-            <a className="font-bold text-[#0f5f5c] underline" href={telHref(phone)}>
+            No openings on this day â€” try another date or call{" "}
+            <a className="font-bold text-[#015949] underline" href={telHref(phone)}>
               {phone}
             </a>
             .
@@ -173,8 +173,8 @@ export function BookAvailabilityPreview({
                   type="button"
                   className={`focus-ring min-h-[44px] rounded-xl border px-4 py-2.5 text-sm font-bold ${
                     selectedSlot?.startIso === slot.startIso
-                      ? "border-[#0f5f5c] bg-[#0f5f5c] text-white"
-                      : "border-stone-300 bg-white text-[#173f3b] hover:border-[#0f5f5c]"
+                      ? "border-[#015949] bg-[#015949] text-white"
+                      : "border-stone-300 bg-white text-[#013a30] hover:border-[#015949]"
                   }`}
                   onClick={() => setSelectedSlot(slot)}
                 >
@@ -185,9 +185,9 @@ export function BookAvailabilityPreview({
           </ul>
         )}
         {selectedSlot ? (
-          <p className="mt-4 text-sm font-semibold text-[#173f3b]">
-            Selected: {selectedSlot.label} — call{" "}
-            <a className="font-black text-[#0f5f5c] underline" href={telHref(phone)}>
+          <p className="mt-4 text-sm font-semibold text-[#013a30]">
+            Selected: {selectedSlot.label} â€” call{" "}
+            <a className="font-black text-[#015949] underline" href={telHref(phone)}>
               {phone}
             </a>{" "}
             to confirm.
@@ -196,7 +196,7 @@ export function BookAvailabilityPreview({
       </div>
 
       <p className="text-center text-sm">
-        <Link href="/contact" className="font-bold text-[#0f5f5c] underline">
+        <Link href="/contact" className="font-bold text-[#015949] underline">
           Contact form
         </Link>
       </p>

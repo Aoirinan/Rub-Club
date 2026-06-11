@@ -63,7 +63,7 @@ export function PatientLookupPanel({ open, getIdToken, isSuperadmin, onClose }: 
   if (!open) return null;
 
   function formatAppt(ms: number | null): string {
-    if (!ms) return "—";
+    if (!ms) return "â€”";
     return DateTime.fromMillis(ms, { zone: TIME_ZONE }).toFormat("LLL d, yyyy");
   }
 
@@ -89,7 +89,7 @@ export function PatientLookupPanel({ open, getIdToken, isSuperadmin, onClose }: 
             className="rounded-full p-2 text-slate-600 hover:bg-slate-100"
             aria-label="Close"
           >
-            ✕
+            âœ•
           </button>
         </header>
 
@@ -106,7 +106,7 @@ export function PatientLookupPanel({ open, getIdToken, isSuperadmin, onClose }: 
               />
             </div>
             <div className="flex-1 overflow-y-auto">
-              {loading ? <p className="px-4 py-6 text-sm text-slate-600">Searching…</p> : null}
+              {loading ? <p className="px-4 py-6 text-sm text-slate-600">Searchingâ€¦</p> : null}
               {!loading && debounced && patients.length === 0 ? (
                 <p className="px-4 py-6 text-sm text-slate-600">No patients found.</p>
               ) : null}
@@ -123,7 +123,7 @@ export function PatientLookupPanel({ open, getIdToken, isSuperadmin, onClose }: 
                       </p>
                       <p className="text-sm text-slate-600">{p.phone}</p>
                       <p className="mt-1 text-xs text-slate-500">
-                        {p.totalVisits} visits · Next: {formatAppt(p.nextAppointmentDateMs)}
+                        {p.totalVisits} visits Â· Next: {formatAppt(p.nextAppointmentDateMs)}
                       </p>
                     </button>
                   </li>
@@ -141,7 +141,7 @@ export function PatientLookupPanel({ open, getIdToken, isSuperadmin, onClose }: 
             />
             <Link
               href={`/admin/patients/${selectedId}`}
-              className="mt-4 inline-block text-sm font-semibold text-[#0f5f5c] underline"
+              className="mt-4 inline-block text-sm font-semibold text-[#015949] underline"
             >
               Open full profile
             </Link>

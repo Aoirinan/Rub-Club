@@ -10,11 +10,11 @@ import { getDisplayLocations } from "@/lib/cms-display";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
 
 export const metadata = buildPageMetadata({
-  title: "Patient Resources — Sulphur Springs Chiropractic",
+  title: "Patient Resources â€” Sulphur Springs Chiropractic",
   description:
     "Chiropractic patient resources, helpful links, and educational topics from Chiropractic Associates of Sulphur Springs.",
   path: "/sulphur-springs/patient-resources",
-  ogTitle: "Patient Resources — Sulphur Springs, TX",
+  ogTitle: "Patient Resources â€” Sulphur Springs, TX",
 });
 
 export const revalidate = 60;
@@ -36,15 +36,15 @@ export default async function PatientResourcesPage() {
         ]}
       />
       <PageHero
-        eyebrow="Chiropractic Associates · Sulphur Springs"
+        eyebrow="Chiropractic Associates Â· Sulphur Springs"
         title="Patient Resources"
       />
       <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
+        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
           <div className="prose prose-stone max-w-none">
             <p className="leading-relaxed text-stone-700">{intro}</p>
 
-            <h2 className="mt-8 text-xl font-black text-[#173f3b]">
+            <h2 className="mt-8 text-xl font-black text-[#013a30]">
               About Chiropractic
             </h2>
             <p className="leading-relaxed text-stone-700">
@@ -55,7 +55,7 @@ export default async function PatientResourcesPage() {
                 <li key={article.slug}>
                   <Link
                     href={`/sulphur-springs/${article.slug}`}
-                    className="font-bold text-[#0f5f5c] underline hover:text-[#173f3b]"
+                    className="font-bold text-[#015949] underline hover:text-[#013a30]"
                   >
                     {article.title}
                   </Link>
@@ -63,7 +63,7 @@ export default async function PatientResourcesPage() {
               ))}
             </ul>
 
-            <h2 className="mt-8 text-xl font-black text-[#173f3b]">
+            <h2 className="mt-8 text-xl font-black text-[#013a30]">
               Helpful Links
             </h2>
             <ul className="list-disc space-y-2 pl-6">
@@ -73,7 +73,7 @@ export default async function PatientResourcesPage() {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-bold text-[#0f5f5c] underline hover:text-[#173f3b]"
+                    className="font-bold text-[#015949] underline hover:text-[#013a30]"
                   >
                     {link.label}
                   </a>
@@ -82,10 +82,10 @@ export default async function PatientResourcesPage() {
             </ul>
           </div>
         </section>
-        <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
+        <LocationHoursSection location={ss} hours={ssHours} accent="#015949" />
         <ScheduleCtaCard
           title="Have questions?"
-          body="Contact our Sulphur Springs office — we're happy to help."
+          body="Contact our Sulphur Springs office â€” we're happy to help."
           secondary={{ label: `Call ${ss.phonePrimary}`, href: telHref(ss.phonePrimary) }}
         />
       </div>

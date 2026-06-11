@@ -34,10 +34,10 @@ export function SalesBannerBar({ payload }: { payload: SalesBannerPayload }) {
     <div
       role="region"
       aria-label="Announcement"
-      className="relative z-30 border-b border-white/20 bg-[#0f5f5c] px-4 py-3 text-center text-sm text-white shadow-md"
+      className="relative z-30 border-b border-white/20 bg-[#015949] px-4 py-3 text-center text-sm text-white shadow-md"
     >
       <div
-        className="mx-auto max-w-5xl pr-10 [&_a]:font-bold [&_a]:text-[#f2d25d] [&_a]:underline"
+        className="mx-auto max-w-5xl pr-10 [&_a]:font-bold [&_a]:text-[#f19f1f] [&_a]:underline"
         dangerouslySetInnerHTML={{ __html: payload.html }}
       />
       <button

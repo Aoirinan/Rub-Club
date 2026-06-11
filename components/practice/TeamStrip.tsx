@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { SectionHeading } from "@/components/practice/SectionHeading";
 import { renderRichText } from "@/lib/cms-registry";
 import type { PracticeTeamSection } from "@/lib/practice-pages-shared";
 
@@ -73,9 +74,7 @@ export function TeamStrip({
 
   return (
     <section className="border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-10">
-      {data.heading.trim() ? (
-        <h2 className="text-2xl font-black text-[var(--pp-heading)]">{data.heading}</h2>
-      ) : null}
+      {data.heading.trim() ? <SectionHeading>{data.heading}</SectionHeading> : null}
       {data.intro.trim() ? (
         <p
           className="mt-2 max-w-2xl text-sm text-stone-600"

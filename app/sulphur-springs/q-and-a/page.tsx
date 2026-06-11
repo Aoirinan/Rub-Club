@@ -11,11 +11,11 @@ import { getSulphurSpringsFaqs } from "@/lib/site-faqs";
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "Q & A — Sulphur Springs Chiropractic",
+  title: "Q & A â€” Sulphur Springs Chiropractic",
   description:
     "Frequently asked questions about chiropractic care at Chiropractic Associates of Sulphur Springs.",
   path: "/sulphur-springs/q-and-a",
-  ogTitle: "Q & A — Sulphur Springs, TX",
+  ogTitle: "Q & A â€” Sulphur Springs, TX",
 });
 
 export default async function QAndAPage() {
@@ -36,17 +36,17 @@ export default async function QAndAPage() {
         ]}
       />
       <PageHero
-        eyebrow="Chiropractic Associates · Sulphur Springs"
+        eyebrow="Chiropractic Associates Â· Sulphur Springs"
         title="Questions & Answers"
       />
       <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
+        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
           <FaqList entries={faqs} />
         </section>
-        <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
+        <LocationHoursSection location={ss} hours={ssHours} accent="#015949" />
         <ScheduleCtaCard
           title="Still have questions?"
-          body="Contact our Sulphur Springs office — we're happy to help."
+          body="Contact our Sulphur Springs office â€” we're happy to help."
           secondary={{ label: `Call ${ss.phonePrimary}`, href: telHref(ss.phonePrimary) }}
         />
       </div>

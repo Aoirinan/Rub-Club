@@ -18,9 +18,9 @@ export function useMassageGiftCardNavExpandedContext(): boolean {
   return useContext(MassageGiftCardNavContext);
 }
 
-/** Layout-sized growth (~50%) so flex reflows — gold in-bar, no transform overlap. */
+/** Layout-sized growth (~50%) so flex reflows â€” gold in-bar, no transform overlap. */
 export const GIFT_CARD_DESKTOP_EXPANDED =
-  "bg-[#f2d25d] px-7 py-2 text-sm text-[#0c2d3a] shadow-sm hover:bg-[#e6c13d] xl:px-9 xl:text-base";
+  "bg-[#f19f1f] px-7 py-2 text-sm text-[#01302a] shadow-sm hover:bg-[#d88c12] xl:px-9 xl:text-base";
 
 export const GIFT_CARD_MOBILE_EXPANDED =
-  "!border-[#f2d25d] !bg-[#f2d25d] !px-6 !py-4 !text-base !text-[#173f3b] shadow-sm";
+  "!border-[#f19f1f] !bg-[#f19f1f] !px-6 !py-4 !text-base !text-[#013a30] shadow-sm";

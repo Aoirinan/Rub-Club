@@ -12,12 +12,12 @@ import {
 } from "@/lib/wellness-care-plans-content";
 
 export const metadata = buildPageMetadata({
-  title: "Wellness Care Plans — Chiropractic Associates, Paris, TX",
+  title: "Wellness Care Plans â€” Chiropractic Associates, Paris, TX",
   brandInTitle: true,
   description:
     "Chiro-Fitness and Acu-Fit monthly wellness memberships: adjustments, massage combos, therapy, acupuncture, and rehab sessions at our Paris, TX office.",
   path: WELLNESS_CARE_PLANS_PATH,
-  ogTitle: "Wellness care plans — Chiropractic Associates",
+  ogTitle: "Wellness care plans â€” Chiropractic Associates",
   ogDescription:
     "Monthly wellness membership options for chiropractic, massage, therapy, and acupuncture in Paris, TX.",
 });
@@ -47,9 +47,9 @@ export default async function WellnessCarePlansPage() {
           {content.sections.map((section) => (
             <section
               key={section.id}
-              className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-8"
+              className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-8"
             >
-              <h2 className="text-xl font-black text-[#173f3b]">{section.title}</h2>
+              <h2 className="text-xl font-black text-[#013a30]">{section.title}</h2>
               {section.subtitle ? (
                 <p className="mt-1 text-xs font-black uppercase tracking-wide text-stone-500">
                   {section.subtitle}
@@ -58,7 +58,7 @@ export default async function WellnessCarePlansPage() {
               <ul className="mt-4 space-y-2.5 text-sm leading-relaxed text-stone-700">
                 {section.lines.map((line) => (
                   <li key={line} className="flex gap-2">
-                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#0f5f5c]" aria-hidden />
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#015949]" aria-hidden />
                     <span>{line}</span>
                   </li>
                 ))}
@@ -67,8 +67,8 @@ export default async function WellnessCarePlansPage() {
           ))}
         </div>
 
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-xl font-black text-[#173f3b]">{content.closingHeadline}</h2>
+        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-xl font-black text-[#013a30]">{content.closingHeadline}</h2>
           <ul className="mt-4 list-disc space-y-2 pl-5 text-stone-700">
             {content.closingLines.map((line) => (
               <li key={line}>{line}</li>
@@ -78,12 +78,12 @@ export default async function WellnessCarePlansPage() {
             Questions about which tier fits you?{" "}
             <Link
               href="/services/chiropractic"
-              className="font-bold text-[#0f5f5c] underline hover:text-[#173f3b]"
+              className="font-bold text-[#015949] underline hover:text-[#013a30]"
             >
               Back to chiropractic services
             </Link>{" "}
             or call{" "}
-            <a className="font-bold text-[#0f5f5c] underline" href={telHref(parisPhone)}>
+            <a className="font-bold text-[#015949] underline" href={telHref(parisPhone)}>
               {parisPhone}
             </a>
             .

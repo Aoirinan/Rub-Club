@@ -21,7 +21,7 @@ type Props = {
 };
 
 function parseInitialScope(raw?: string): PageBuilderScopeId {
-  // Legacy bookmark: the header-layout editor was removed (header logos/labels live under Footer → Header).
+  // Legacy bookmark: the header-layout editor was removed (header logos/labels live under Footer â†’ Header).
   if (raw === "header-branding") return "footer";
   if (raw && isPageLayoutId(raw)) return raw;
   if (raw && isFaqItemsScope(raw)) return raw;
@@ -145,7 +145,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
       <header className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
         <h1 className="text-lg font-bold text-slate-900">Website editor</h1>
         <span className="hidden text-xs text-slate-500 sm:inline">
-          Pick what to edit, change a field, save — changes appear on the live site within ~60 seconds.
+          Pick what to edit, change a field, save â€” changes appear on the live site within ~60 seconds.
         </span>
         <div className="flex flex-1 flex-wrap items-center justify-end gap-3">
           <label className="text-sm">
@@ -177,9 +177,9 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
               href={livePath}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-semibold text-[#0f5f5c] underline"
+              className="text-sm font-semibold text-[#015949] underline"
             >
-              View live ↗
+              View live â†—
             </a>
           ) : null}
           <button
@@ -211,7 +211,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
             ) : null}
           </div>
           {cms.loading ? (
-            <p className="text-sm text-slate-600">Loading…</p>
+            <p className="text-sm text-slate-600">Loadingâ€¦</p>
           ) : (
             main
           )}
@@ -221,15 +221,15 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
           <aside className="hidden w-full shrink-0 border-t border-slate-200 bg-white lg:flex lg:w-[640px] lg:flex-col lg:border-l lg:border-t-0">
             <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2">
               <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                Live preview — {livePath}
+                Live preview â€” {livePath}
               </p>
               <a
                 href={livePath}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-semibold text-[#0f5f5c] underline"
+                className="text-xs font-semibold text-[#015949] underline"
               >
-                Open ↗
+                Open â†—
               </a>
             </div>
             <iframe

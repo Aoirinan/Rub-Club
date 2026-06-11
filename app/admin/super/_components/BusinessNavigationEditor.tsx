@@ -70,7 +70,7 @@ function NavItemEditor({
             disabled={!canMoveUp}
             onClick={onMoveUp}
           >
-            ↑
+            â†‘
           </button>
           <button
             type="button"
@@ -78,7 +78,7 @@ function NavItemEditor({
             disabled={!canMoveDown}
             onClick={onMoveDown}
           >
-            ↓
+            â†“
           </button>
           <button
             type="button"
@@ -127,7 +127,7 @@ function NavItemEditor({
         ))}
         <button
           type="button"
-          className="text-xs font-semibold text-[#0f5f5c] underline"
+          className="text-xs font-semibold text-[#015949] underline"
           onClick={() =>
             onChange({
               ...item,
@@ -174,7 +174,7 @@ export function BusinessNavigationEditor({
         <h2 className="text-lg font-bold">Business navigation</h2>
         <p className="mt-1 text-sm text-slate-600">
           Edit the dropdown navigation shown when visitors enter via the Paris Chiro or Sulphur Springs
-          brand. Gift cards, booking links, and patient forms can stay in the menu — remove anything
+          brand. Gift cards, booking links, and patient forms can stay in the menu â€” remove anything
           unrelated to that business.
         </p>
       </div>
@@ -186,7 +186,7 @@ export function BusinessNavigationEditor({
             type="button"
             onClick={() => setActiveBusiness(key)}
             className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
-              activeBusiness === key ? "bg-[#0f5f5c] text-white" : "bg-slate-100 text-slate-800"
+              activeBusiness === key ? "bg-[#015949] text-white" : "bg-slate-100 text-slate-800"
             }`}
           >
             {BUSINESS_LABELS[key]}
@@ -225,10 +225,10 @@ export function BusinessNavigationEditor({
         <button
           type="button"
           disabled={saving}
-          className="rounded-lg bg-[#0f5f5c] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+          className="rounded-lg bg-[#015949] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
           onClick={onSave}
         >
-          {saving ? "Saving…" : "Save business navigation"}
+          {saving ? "Savingâ€¦" : "Save business navigation"}
         </button>
       </div>
     </section>

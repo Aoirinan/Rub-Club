@@ -21,9 +21,9 @@ import { useSiteBusinessContext } from "@/lib/use-site-business-context";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
 
 const PARIS_CHIRO_TAGLINE =
-  "Chiropractic Associates in Paris, TX — family-owned care since 1998.";
+  "Chiropractic Associates in Paris, TX â€” family-owned care since 1998.";
 const SS_TAGLINE =
-  "Chiropractic Associates of Sulphur Springs — your spine health specialists in Northeast Texas.";
+  "Chiropractic Associates of Sulphur Springs â€” your spine health specialists in Northeast Texas.";
 
 export function SiteFooterClient({
   locations = LOCATION_LIST,
@@ -42,7 +42,7 @@ export function SiteFooterClient({
   footerBlurbHtml?: string | null;
   footerTagline?: string | null;
   footerCopyright?: string | null;
-  /** Raw CMS "Label — /path" link lists per business context. */
+  /** Raw CMS "Label â€” /path" link lists per business context. */
   footerLinks?: Partial<Record<SiteBusinessContext, string | undefined>>;
   parisHours: readonly OfficeHoursRow[];
   sulphurHours: readonly OfficeHoursRow[];
@@ -66,19 +66,19 @@ export function SiteFooterClient({
     ? PARIS_CHIRO_TAGLINE
     : isSulphur
       ? SS_TAGLINE
-      : "Family-owned wellness in Northeast Texas. Two practices, one address in Paris — plus chiropractic care in Sulphur Springs.";
+      : "Family-owned wellness in Northeast Texas. Two practices, one address in Paris â€” plus chiropractic care in Sulphur Springs.";
   const tagline = footerTagline?.trim() || defaultTagline;
   const copyrightLine =
-    footerCopyright?.trim() || `© ${year} ${siteShortName}. All rights reserved.`;
+    footerCopyright?.trim() || `Â© ${year} ${siteShortName}. All rights reserved.`;
 
   return (
-    <footer className="mt-12 border-t-4 border-[#0f5f5c] bg-[#23312e] text-white/85">
+    <footer className="mt-12 border-t-4 border-[#015949] bg-[#23312e] text-white/85">
       <div className="mx-auto grid max-w-6xl gap-x-8 gap-y-6 px-4 py-8 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <p className="text-base font-black tracking-tight text-white">{siteShortName}</p>
           {footerBlurbHtml?.trim() && !isBusinessScoped ? (
             <div
-              className="mt-2 text-sm leading-relaxed text-white/80 [&_p]:my-1 [&_a]:font-bold [&_a]:text-[#f2d25d] [&_a]:underline [&_a:hover]:text-white"
+              className="mt-2 text-sm leading-relaxed text-white/80 [&_p]:my-1 [&_a]:font-bold [&_a]:text-[#f19f1f] [&_a]:underline [&_a:hover]:text-white"
               dangerouslySetInnerHTML={{ __html: footerBlurbHtml }}
             />
           ) : (
@@ -87,16 +87,16 @@ export function SiteFooterClient({
           {isBusinessScoped ? (
             <Link
               href="/"
-              className="mt-3 inline-block text-xs font-bold uppercase tracking-wide text-[#f2d25d] hover:underline"
+              className="mt-3 inline-block text-xs font-bold uppercase tracking-wide text-[#f19f1f] hover:underline"
             >
-              All practices →
+              All practices â†’
             </Link>
           ) : null}
         </div>
         <div className="space-y-4 text-sm">
           {filteredLocations.map((loc) => (
             <div key={loc.id}>
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f2d25d]">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f19f1f]">
                 {loc.shortName}
               </p>
               <p className="mt-1 text-white">{loc.streetAddress}</p>
@@ -104,7 +104,7 @@ export function SiteFooterClient({
                 {loc.addressLocality}, {loc.addressRegion} {loc.postalCode}
               </p>
               <a
-                className="mt-1 inline-block font-bold text-[#f2d25d] hover:underline"
+                className="mt-1 inline-block font-bold text-[#f19f1f] hover:underline"
                 href={telHref(loc.phonePrimary)}
               >
                 {loc.phonePrimary}
@@ -113,7 +113,7 @@ export function SiteFooterClient({
                 <p className="text-xs text-white/60">
                   Massage desk:{" "}
                   <a
-                    className="font-bold text-[#f2d25d] hover:underline"
+                    className="font-bold text-[#f19f1f] hover:underline"
                     href={telHref(loc.phoneSecondary)}
                   >
                     {loc.phoneSecondary}
@@ -124,7 +124,7 @@ export function SiteFooterClient({
           ))}
         </div>
         <nav aria-label="Footer quick links" className="text-sm">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f2d25d]">Explore</p>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f19f1f]">Explore</p>
           <ul className="mt-3 space-y-1">
             {footerLinksForContext(businessContext, footerLinks?.[businessContext]).map((link) =>
               link.external ? (
@@ -169,25 +169,25 @@ export function SiteFooterClient({
         <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
           <span>{copyrightLine}</span>
           <span aria-hidden className="text-white/30">
-            ·
+            Â·
           </span>
           <Link className="hover:underline" href={PRIVACY_PRACTICES_PATH}>
             Privacy practices
           </Link>
           <span aria-hidden className="text-white/30">
-            ·
+            Â·
           </span>
           <Link className="hover:underline" href={WEBSITE_PRIVACY_PATH}>
             Website privacy
           </Link>
           <span aria-hidden className="text-white/30">
-            ·
+            Â·
           </span>
           <Link className="hover:underline" href={TERMS_PATH}>
             Terms
           </Link>
           <span aria-hidden className="text-white/30">
-            ·
+            Â·
           </span>
           <Link className="hover:underline" href="/admin/login">
             Staff

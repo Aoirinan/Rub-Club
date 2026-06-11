@@ -52,17 +52,18 @@ export function QuickActionsRow({ data }: { data: PracticeQuickActionsSection })
   if (items.length === 0) return null;
 
   return (
-    <section aria-label="Quick links" className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+    <section
+      aria-label="Quick links"
+      className="flex flex-wrap items-start justify-center gap-6 sm:gap-10"
+    >
       {items.map((item) => (
         <Link
           key={`${item.label}-${item.url}`}
           href={item.url}
-          className="group flex flex-col items-center gap-3 rounded-lg border-t-4 border-[var(--pp-accent)] bg-white p-5 text-center shadow-md transition hover:shadow-lg"
+          className="group flex h-40 w-40 flex-col items-center justify-center gap-2 rounded-full border-4 border-white bg-[#015949] p-4 text-center text-white shadow-lg transition group-hover:shadow-xl hover:scale-105 hover:bg-[#0b7a64] sm:h-52 sm:w-52 sm:gap-3"
         >
-          <span className="text-[var(--pp-accent)]">
-            <QuickActionIcon icon={item.icon} />
-          </span>
-          <span className="text-sm font-black uppercase tracking-wide text-[var(--pp-heading)] group-hover:text-[var(--pp-accent)]">
+          <QuickActionIcon icon={item.icon} />
+          <span className="text-xs font-bold uppercase leading-snug tracking-wide sm:text-sm">
             {item.label}
           </span>
         </Link>

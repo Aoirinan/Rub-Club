@@ -108,7 +108,7 @@ export function PatientCsvImportModal({ open, getIdToken, onDismiss, onBusy }: P
           <p className="text-sm">
             <button
               type="button"
-              className="font-semibold text-[#0f5f5c] underline"
+              className="font-semibold text-[#015949] underline"
               onClick={async () => {
                 const token = await getIdToken();
                 if (!token) return;
@@ -176,7 +176,7 @@ export function PatientCsvImportModal({ open, getIdToken, onDismiss, onBusy }: P
             onClick={() => void runImport()}
             className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
           >
-            {busy ? "Importing…" : "Import"}
+            {busy ? "Importingâ€¦" : "Import"}
           </button>
         </div>
       </div>

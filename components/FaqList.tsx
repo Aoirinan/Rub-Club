@@ -6,11 +6,11 @@ export function FaqList({ entries }: { entries: readonly FaqEntry[] }) {
     <div className="divide-y divide-stone-200">
       {entries.map((e) => (
         <details key={e.q} className="group py-4">
-          <summary className="focus-ring flex cursor-pointer items-center justify-between gap-3 text-base font-bold text-[#173f3b]">
+          <summary className="focus-ring flex cursor-pointer items-center justify-between gap-3 text-base font-bold text-[#013a30]">
             <span>{e.q}</span>
             <span
               aria-hidden
-              className="text-xl font-black text-[#0f5f5c] transition group-open:rotate-45"
+              className="text-xl font-black text-[#015949] transition group-open:rotate-45"
             >
               +
             </span>

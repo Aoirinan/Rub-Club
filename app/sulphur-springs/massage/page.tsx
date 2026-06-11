@@ -17,13 +17,13 @@ import { siteUrl } from "@/lib/site-content";
 export const revalidate = 60;
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Massage Therapy in Sulphur Springs, TX — Chiropractic Associates",
+  title: "Massage Therapy in Sulphur Springs, TX â€” Chiropractic Associates",
   description:
     "Therapeutic massage to complement chiropractic care in Sulphur Springs, TX. Call 903-919-5020 to ask about availability.",
   path: "/sulphur-springs/massage",
   keywords: pageKeywords(["Sulphur Springs massage", "massage Sulphur Springs TX"]),
   ogDescription:
-    "Therapeutic massage in Sulphur Springs, TX — coordinated with your chiropractic care.",
+    "Therapeutic massage in Sulphur Springs, TX â€” coordinated with your chiropractic care.",
 });
 
 export default async function SulphurSpringsMassagePage() {
@@ -60,14 +60,14 @@ export default async function SulphurSpringsMassagePage() {
         ]}
       />
       <PageHero
-        eyebrow="Chiropractic Associates · Sulphur Springs, TX"
+        eyebrow="Chiropractic Associates Â· Sulphur Springs, TX"
         title={c.ss_massage_hero_heading}
         lede={c.ss_massage_hero_subheading}
       />
 
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
         {introParagraphs.length > 0 ? (
-          <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
+          <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
             <div className="max-w-3xl space-y-4 leading-relaxed text-stone-700">
               {introParagraphs.map((p, idx) => (
                 <p
@@ -80,15 +80,15 @@ export default async function SulphurSpringsMassagePage() {
         ) : null}
 
         {services.length > 0 ? (
-          <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-            <h2 className="text-2xl font-black text-[#173f3b]">Massage services</h2>
+          <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
+            <h2 className="text-2xl font-black text-[#013a30]">Massage services</h2>
             <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {services.map((s, idx) => (
                 <article
                   key={`${idx}-${s.name}`}
                   className="border border-stone-200 bg-stone-50 p-5 shadow-sm"
                 >
-                  <h3 className="text-lg font-black text-[#173f3b]">{s.name}</h3>
+                  <h3 className="text-lg font-black text-[#013a30]">{s.name}</h3>
                   <p className="mt-3 text-sm leading-relaxed text-stone-700">{s.desc}</p>
                 </article>
               ))}
@@ -96,14 +96,14 @@ export default async function SulphurSpringsMassagePage() {
           </section>
         ) : null}
 
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">Visit us in Sulphur Springs</h2>
+        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-2xl font-black text-[#013a30]">Visit us in Sulphur Springs</h2>
           <p className="mt-3 leading-relaxed text-stone-700">
-            {ss.streetAddress} · {ss.addressLocality}, {ss.addressRegion}
+            {ss.streetAddress} Â· {ss.addressLocality}, {ss.addressRegion}
           </p>
           <p className="mt-2 text-stone-700">
             Sulphur Springs office:{" "}
-            <a className="font-bold text-[#0f5f5c] underline" href={telHref(ss.phonePrimary)}>
+            <a className="font-bold text-[#015949] underline" href={telHref(ss.phonePrimary)}>
               {ss.phonePrimary}
             </a>
           </p>
@@ -115,14 +115,14 @@ export default async function SulphurSpringsMassagePage() {
             />
             <Link
               href="/sulphur-springs"
-              className="focus-ring border-2 border-[#0f5f5c] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-[#0f5f5c]/5"
+              className="focus-ring border-2 border-[#015949] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#015949] hover:bg-[#25455e]/5"
             >
               Sulphur Springs chiropractic
             </Link>
           </div>
         </section>
 
-        <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
+        <LocationHoursSection location={ss} hours={ssHours} accent="#015949" />
       </div>
     </div>
   );

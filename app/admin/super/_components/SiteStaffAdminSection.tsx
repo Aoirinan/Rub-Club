@@ -7,7 +7,7 @@ import type { SiteStaffBrand, SiteStaffMemberStored } from "@/lib/site-staff";
 type Props = {
   auth: Auth | null;
   onNotify: (message: string | null) => void;
-  /** When set (Website editor → Paris/Sulphur staff), list and add form target one location. */
+  /** When set (Website editor â†’ Paris/Sulphur staff), list and add form target one location. */
   locationFocus?: "paris" | "sulphur";
 };
 
@@ -385,10 +385,10 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
       <div>
         <h2 className="text-lg font-semibold text-slate-900">
           {locationFocus === "paris"
-            ? "Office staff — Paris"
+            ? "Office staff â€” Paris"
             : locationFocus === "sulphur"
-              ? "Office staff — Sulphur Springs"
-              : "Office staff — Paris & Sulphur Springs"}
+              ? "Office staff â€” Sulphur Springs"
+              : "Office staff â€” Paris & Sulphur Springs"}
         </h2>
         <p className="mt-2 text-sm text-slate-600">
           {staffPath ? (
@@ -403,7 +403,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
               <code className="rounded bg-slate-100 px-1">/sulphur-springs/staff</code>.
             </>
           )}{" "}
-          Massage therapists are managed separately in Website editor → Massage page.
+          Massage therapists are managed separately in Website editor â†’ Massage page.
         </p>
         {sectionAlert ? (
           <div
@@ -418,7 +418,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
           </div>
         ) : null}
         {loading ? (
-          <p className="mt-2 text-xs text-slate-500">Loading…</p>
+          <p className="mt-2 text-xs text-slate-500">Loadingâ€¦</p>
         ) : siteUsesCustomList ? (
           <p className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-950">
             Your staff {locationFocus ? "page is" : "pages are"} live (
@@ -427,7 +427,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
           </p>
         ) : (
           <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
-            Using the default list — import or add someone to customize.
+            Using the default list â€” import or add someone to customize.
           </p>
         )}
       </div>
@@ -439,7 +439,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
           onClick={() => void seedDefaults()}
           className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {seeding ? "Importing…" : "Import people already on the website"}
+          {seeding ? "Importingâ€¦" : "Import people already on the website"}
         </button>
       </div>
 
@@ -452,7 +452,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
               onClick={() => setBrandFilter(key)}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                 brandFilter === key
-                  ? "bg-[#0f5f5c] text-white"
+                  ? "bg-[#015949] text-white"
                   : "border border-slate-300 bg-white text-slate-800"
               }`}
             >
@@ -531,7 +531,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
         </label>
         <label className="block space-y-1 text-sm">
           <span className="font-medium text-slate-800">
-            Intro video (optional — shows a &ldquo;Meet&rdquo; button under their name)
+            Intro video (optional â€” shows a &ldquo;Meet&rdquo; button under their name)
           </span>
           <input
             type="file"
@@ -539,7 +539,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
             className="w-full text-sm"
             onChange={(e) => setNewVideo(e.target.files?.[0] ?? null)}
           />
-          <span className="block text-xs text-slate-500">MP4, MOV, or WebM — max 80 MB.</span>
+          <span className="block text-xs text-slate-500">MP4, MOV, or WebM â€” max 80 MB.</span>
         </label>
         <button
           type="button"
@@ -547,7 +547,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
           onClick={() => void createMember()}
           className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
         >
-          {saving ? "Saving…" : "Add staff member"}
+          {saving ? "Savingâ€¦" : "Add staff member"}
         </button>
       </div>
 
@@ -638,7 +638,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
               onChange={(e) => setEditVideo(e.target.files?.[0] ?? null)}
             />
             <span className="block text-xs text-slate-500">
-              MP4, MOV, or WebM — max 80 MB. Shows a &ldquo;Meet&rdquo; button under their name on the website.
+              MP4, MOV, or WebM â€” max 80 MB. Shows a &ldquo;Meet&rdquo; button under their name on the website.
             </span>
           </label>
           {editing.videoUrl && !editVideo ? (
@@ -696,12 +696,12 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
                       <span className="ml-2 text-xs font-normal text-amber-800">(hidden)</span>
                     ) : null}
                     {m.featured ? (
-                      <span className="ml-2 text-xs font-normal text-[#0f5f5c]">(featured)</span>
+                      <span className="ml-2 text-xs font-normal text-[#015949]">(featured)</span>
                     ) : null}
                   </div>
                   <div className="text-xs text-slate-600">
-                    {m.title} · {brandLabel(m.brand)} · order {m.order}
-                    {m.videoUrl ? " · has intro video" : ""}
+                    {m.title} Â· {brandLabel(m.brand)} Â· order {m.order}
+                    {m.videoUrl ? " Â· has intro video" : ""}
                   </div>
                 </div>
               </div>
@@ -713,7 +713,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
                   className="rounded border border-slate-300 bg-white px-2 py-1 text-xs disabled:opacity-40"
                   aria-label="Move up"
                 >
-                  ↑
+                  â†‘
                 </button>
                 <button
                   type="button"
@@ -722,7 +722,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
                   className="rounded border border-slate-300 bg-white px-2 py-1 text-xs disabled:opacity-40"
                   aria-label="Move down"
                 >
-                  ↓
+                  â†“
                 </button>
                 <button
                   type="button"
@@ -737,7 +737,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
                   onClick={() => void deleteMember(m)}
                   className="rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 disabled:opacity-50"
                 >
-                  {deletingId === m.id ? "Removing…" : "Delete"}
+                  {deletingId === m.id ? "Removingâ€¦" : "Delete"}
                 </button>
               </div>
             </li>

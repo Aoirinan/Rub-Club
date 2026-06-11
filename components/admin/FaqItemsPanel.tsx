@@ -169,7 +169,7 @@ export function FaqItemsPanel({ getIdToken }: Props) {
             <button
               type="button"
               disabled={busy}
-              className="rounded-full bg-[#0f5f5c] px-4 py-2 text-xs font-bold text-white"
+              className="rounded-full bg-[#015949] px-4 py-2 text-xs font-bold text-white"
               onClick={() => void saveFaq()}
             >
               Save FAQ
@@ -189,14 +189,14 @@ export function FaqItemsPanel({ getIdToken }: Props) {
               <span className="min-w-0 flex-1 font-medium text-slate-900">{f.question}</span>
               <span className="rounded bg-yellow-100 px-2 py-0.5 text-xs text-yellow-900">{f.category}</span>
               <button type="button" className="text-xs font-semibold underline" onClick={() => moveFaq(i, -1)}>
-                ↑
+                â†‘
               </button>
               <button type="button" className="text-xs font-semibold underline" onClick={() => moveFaq(i, 1)}>
-                ↓
+                â†“
               </button>
               <button
                 type="button"
-                className="text-xs font-semibold text-[#0f5f5c] underline"
+                className="text-xs font-semibold text-[#015949] underline"
                 onClick={() =>
                   setFaqForm({
                     mode: "edit",

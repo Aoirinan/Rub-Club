@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Open_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -52,9 +52,10 @@ import { getParisOfficeHours, getSulphurOfficeHours } from "@/lib/office-hours";
 
 export const revalidate = 60;
 
-const geistSans = Geist({
+const openSans = Open_Sans({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -96,7 +97,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0f5f5c",
+  themeColor: "#015949",
   colorScheme: "light",
 };
 
@@ -162,11 +163,11 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-[#f4f2ea] text-stone-900 antialiased`}
+        className={`${openSans.variable} ${geistMono.variable} min-h-screen bg-[#f5f3ee] text-stone-900 antialiased`}
       >
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-[#173f3b] focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-[#013a30] focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white"
         >
           Skip to content
         </a>

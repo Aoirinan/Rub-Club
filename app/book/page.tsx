@@ -46,29 +46,29 @@ export default async function BookPage({
               Home
             </Link>
             <span aria-hidden className="mx-1">
-              ›
+              â€º
             </span>
             <span className="font-semibold text-stone-900">Book</span>
           </nav>
-          <h1 className="mt-8 text-2xl font-black text-[#173f3b] sm:text-3xl">Book an appointment</h1>
+          <h1 className="mt-8 text-2xl font-black text-[#013a30] sm:text-3xl">Book an appointment</h1>
           {bookingConfig.disabledMessage ? (
             <p className="mt-3 text-sm text-stone-600">{bookingConfig.disabledMessage}</p>
           ) : null}
-          <div className="mt-8 rounded-2xl border border-[#0f5f5c]/25 bg-[#f0faf8] p-5 sm:p-6">
-            <p className="text-lg font-black text-[#173f3b]">Online booking is currently off</p>
+          <div className="mt-8 rounded-2xl border border-[#015949]/25 bg-[#f0faf8] p-5 sm:p-6">
+            <p className="text-lg font-black text-[#013a30]">Online booking is currently off</p>
             <p className="mt-2 text-sm leading-relaxed text-stone-700">
               Please call and we will schedule your visit directly.
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <a
                 href={`tel:${displayLocs.paris.phonePrimary.replace(/\D/g, "")}`}
-                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#0f5f5c] px-5 py-3 text-sm font-black text-white hover:bg-[#0c4a48]"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#015949] px-5 py-3 text-sm font-black text-white hover:bg-[#0c4a48]"
               >
                 Call Paris {displayLocs.paris.phonePrimary}
               </a>
               <a
                 href={`tel:${displayLocs.sulphur_springs.phonePrimary.replace(/\D/g, "")}`}
-                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#0f5f5c] px-5 py-3 text-sm font-black text-white hover:bg-[#0c4a48]"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#015949] px-5 py-3 text-sm font-black text-white hover:bg-[#0c4a48]"
               >
                 Call Sulphur Springs {displayLocs.sulphur_springs.phonePrimary}
               </a>
@@ -94,7 +94,7 @@ export default async function BookPage({
               Home
             </Link>
           </li>
-          <li aria-hidden>›</li>
+          <li aria-hidden>â€º</li>
           <li className="font-semibold text-stone-900">Book</li>
         </ol>
       </nav>

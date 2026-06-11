@@ -29,7 +29,7 @@ type Me = {
 };
 
 function formatWhen(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "â€”";
   try {
     return new Date(iso).toLocaleString(undefined, {
       dateStyle: "medium",
@@ -124,7 +124,7 @@ function ContactInbox() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 text-center text-sm text-slate-600">
         <p>Sign in on the scheduler page first.</p>
-        <Link href="/admin/login" className="mt-4 inline-block font-semibold text-[#0f5f5c] underline">
+        <Link href="/admin/login" className="mt-4 inline-block font-semibold text-[#015949] underline">
           Staff sign in
         </Link>
       </div>
@@ -138,11 +138,11 @@ function ContactInbox() {
           <div>
             <h1 className="text-xl font-semibold text-slate-900">Contact form inbox</h1>
             <p className="mt-1 max-w-xl text-sm text-slate-600">
-              All messages from the public contact form appear here. Front desk should check this page — email is
+              All messages from the public contact form appear here. Front desk should check this page â€” email is
               optional backup only.
             </p>
             <p className="text-xs text-slate-500">
-              Signed in as {auth?.currentUser?.email ?? "…"} ({staffRoleLabel(me.role)})
+              Signed in as {auth?.currentUser?.email ?? "â€¦"} ({staffRoleLabel(me.role)})
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -150,7 +150,7 @@ function ContactInbox() {
               href="/admin"
               className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900"
             >
-              ← Scheduler
+              â† Scheduler
             </Link>
             <button
               type="button"
@@ -188,8 +188,8 @@ function ContactInbox() {
             <p className="font-semibold">No optional office email copy</p>
             <p className="mt-1">
               <code className="rounded bg-white/80 px-1">OFFICE_NOTIFICATION_EMAIL</code> is not set on this server.
-              That is fine for front desk — use this inbox. To also email Sean (
-              <code className="rounded bg-white/80 px-1">dr.seanwelborn@gmail.com</code>), set it in Vercel →
+              That is fine for front desk â€” use this inbox. To also email Sean (
+              <code className="rounded bg-white/80 px-1">dr.seanwelborn@gmail.com</code>), set it in Vercel â†’
               Production environment variables.
             </p>
           </div>
@@ -202,7 +202,7 @@ function ContactInbox() {
               type="button"
               onClick={() => setFilter(s)}
               className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
-                filter === s ? "bg-[#0f5f5c] text-white" : "bg-white text-slate-700 ring-1 ring-slate-200"
+                filter === s ? "bg-[#015949] text-white" : "bg-white text-slate-700 ring-1 ring-slate-200"
               }`}
             >
               {s}
@@ -216,7 +216,7 @@ function ContactInbox() {
         ) : null}
 
         {loading ? (
-          <p className="text-sm text-slate-600">Loading…</p>
+          <p className="text-sm text-slate-600">Loadingâ€¦</p>
         ) : submissions.length === 0 ? (
           <p className="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-600">
             No messages in this view.
@@ -250,7 +250,7 @@ function ContactInbox() {
                         {s.status}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-xs text-slate-500">{s.topic ?? "General"} · {formatWhen(s.createdAt)}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{s.topic ?? "General"} Â· {formatWhen(s.createdAt)}</p>
                     {!s.officeEmailSent ? (
                       <p className="mt-1 text-xs text-slate-500">Optional office email copy not sent</p>
                     ) : null}
@@ -270,7 +270,7 @@ function ContactInbox() {
                   <div className="flex flex-wrap gap-2">
                     <a
                       href={`mailto:${encodeURIComponent(selected.email)}?subject=${encodeURIComponent(`Re: ${selected.topic ?? "Your message"}`)}`}
-                      className="rounded-full bg-[#0f5f5c] px-4 py-2 text-xs font-bold text-white"
+                      className="rounded-full bg-[#015949] px-4 py-2 text-xs font-bold text-white"
                     >
                       Reply by email
                     </a>
@@ -297,7 +297,7 @@ function ContactInbox() {
                   <div>
                     <dt className="font-semibold text-slate-500">Email</dt>
                     <dd>
-                      <a className="text-[#0f5f5c] underline" href={`mailto:${selected.email}`}>
+                      <a className="text-[#015949] underline" href={`mailto:${selected.email}`}>
                         {selected.email}
                       </a>
                     </dd>
@@ -306,7 +306,7 @@ function ContactInbox() {
                     <div>
                       <dt className="font-semibold text-slate-500">Phone</dt>
                       <dd>
-                        <a className="text-[#0f5f5c] underline" href={`tel:${selected.phone}`}>
+                        <a className="text-[#015949] underline" href={`tel:${selected.phone}`}>
                           {selected.phone}
                         </a>
                       </dd>
@@ -315,7 +315,7 @@ function ContactInbox() {
                   <div className="sm:col-span-2">
                     <dt className="font-semibold text-slate-500">Delivery</dt>
                     <dd className="text-slate-700">
-                      Office email: {selected.officeEmailSent ? "sent" : "not sent"} · Visitor auto-reply:{" "}
+                      Office email: {selected.officeEmailSent ? "sent" : "not sent"} Â· Visitor auto-reply:{" "}
                       {selected.autoReplySent ? "sent" : "not sent"}
                     </dd>
                   </div>
@@ -337,7 +337,7 @@ function ContactInbox() {
 
 export default function AdminContactPage() {
   return (
-    <Suspense fallback={<div className="px-4 py-16 text-center text-sm">Loading…</div>}>
+    <Suspense fallback={<div className="px-4 py-16 text-center text-sm">Loadingâ€¦</div>}>
       <ContactInbox />
     </Suspense>
   );

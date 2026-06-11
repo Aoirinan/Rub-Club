@@ -79,7 +79,7 @@ export function DomainSpecialsPopup() {
       aria-labelledby="specials-title"
     >
       <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl">
-        <h2 id="specials-title" className="text-xl font-black text-[#173f3b]">
+        <h2 id="specials-title" className="text-xl font-black text-[#013a30]">
           {modalTitle}
         </h2>
         <div className="mt-4 space-y-4">
@@ -101,7 +101,7 @@ export function DomainSpecialsPopup() {
         <button
           type="button"
           onClick={close}
-          className="focus-ring mt-6 w-full rounded-full bg-[#0f5f5c] py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
+          className="focus-ring mt-6 w-full rounded-full bg-[#25455e] py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#1b3649]"
         >
           {closeLabel}
         </button>

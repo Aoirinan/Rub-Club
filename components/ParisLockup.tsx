@@ -9,11 +9,11 @@ export function ParisLockup({
   heightPx = 60,
   className = "",
   title = "Chiropractic Associates",
-  subtitle = "& The Rub Club · Paris, TX",
+  subtitle = "& The Rub Club Â· Paris, TX",
 }: {
   heightPx?: number;
   className?: string;
-  /** CMS-editable lockup text (Footer → Header in site content). */
+  /** CMS-editable lockup text (Footer â†’ Header in site content). */
   title?: string;
   subtitle?: string;
 }) {
@@ -33,7 +33,7 @@ export function ParisLockup({
         priority
       />
       <span className="flex min-w-0 flex-col justify-center text-left leading-tight">
-        <span className="whitespace-nowrap text-base font-black tracking-tight text-[#173f3b] sm:text-lg md:text-xl lg:text-2xl">
+        <span className="whitespace-nowrap text-base font-black tracking-tight text-[#013a30] sm:text-lg md:text-xl lg:text-2xl">
           {title}
         </span>
         {subtitle ? (

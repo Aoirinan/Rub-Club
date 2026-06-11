@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { GIFT_CARD_ORDER_URL } from "@/lib/constants";
 
 export const DEFAULT_GIFT_CARD_STICKY_LABEL =
-  "Give the Gift of Wellness — Buy a Gift Card";
+  "Give the Gift of Wellness â€” Buy a Gift Card";
 
 export type GiftCardStickyBannerProps = {
   href?: string;
@@ -60,7 +60,7 @@ export function GiftCardStickyBanner({
     <div
       role="region"
       aria-label="Gift card promotion"
-      className="fixed bottom-0 left-0 right-0 z-50 flex min-h-[52px] items-stretch bg-[#0f5f5c] shadow-[0_-4px_20px_rgba(0,0,0,0.2)]"
+      className="fixed bottom-0 left-0 right-0 z-50 flex min-h-[52px] items-stretch bg-[#015949] shadow-[0_-4px_20px_rgba(0,0,0,0.2)]"
     >
       <a
         href={href}
@@ -76,7 +76,7 @@ export function GiftCardStickyBanner({
         className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-white/10 text-lg font-bold leading-none text-white hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
         aria-label="Dismiss gift card banner"
       >
-        ×
+        Ã—
       </button>
     </div>
   );

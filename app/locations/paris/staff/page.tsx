@@ -12,11 +12,11 @@ import { resolveSiteStaffForBrand, type SiteStaffDisplayMember } from "@/lib/sit
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "Meet the Staff — Paris, TX Office",
+  title: "Meet the Staff â€” Paris, TX Office",
   description:
-    "Meet the Chiropractic Associates Paris office team — insurance, personal injury case management, front desk, therapy tech, rehab coaching, and marketing.",
+    "Meet the Chiropractic Associates Paris office team â€” insurance, personal injury case management, front desk, therapy tech, rehab coaching, and marketing.",
   path: "/locations/paris/staff",
-  ogTitle: "Meet the Staff — Paris, TX",
+  ogTitle: "Meet the Staff â€” Paris, TX",
   ogDescription:
     "Insurance coordinators, case managers, front desk, and support staff at our Paris main office.",
 });
@@ -91,7 +91,7 @@ export default async function ParisOfficeStaffPage() {
         ]}
       />
       <PageHero
-        eyebrow="Chiropractic Associates · Paris, TX"
+        eyebrow="Chiropractic Associates Â· Paris, TX"
         title={page.heroTitle}
         lede={page.heroLede}
       />
@@ -99,14 +99,14 @@ export default async function ParisOfficeStaffPage() {
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
         <p className="text-center text-sm text-stone-600">
           Looking for massage therapists?{" "}
-          <Link href="/services/massage" className="font-bold text-[#0f5f5c] underline">
+          <Link href="/services/massage" className="font-bold text-[#015949] underline">
             Meet The Rub Club team
           </Link>
           .
         </p>
 
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">{page.sectionHeading}</h2>
+        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-2xl font-black text-[#013a30]">{page.sectionHeading}</h2>
           <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {staff.map((member) => (
               <article
@@ -115,7 +115,7 @@ export default async function ParisOfficeStaffPage() {
               >
                 <StaffPhoto member={member} />
                 <div className="flex flex-1 flex-col p-5">
-                  <h3 className="text-lg font-black text-[#173f3b]">{member.name}</h3>
+                  <h3 className="text-lg font-black text-[#013a30]">{member.name}</h3>
                   <p className="text-sm font-bold text-stone-600">{member.role}</p>
                   <BioBlock bio={member.bio} />
                 </div>

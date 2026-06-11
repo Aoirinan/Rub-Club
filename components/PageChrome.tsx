@@ -25,7 +25,7 @@ export function Breadcrumbs({ items }: { items: readonly Crumb[] }) {
                     {c.name}
                   </Link>
                 )}
-                {!last ? <span aria-hidden>›</span> : null}
+                {!last ? <span aria-hidden>â€º</span> : null}
               </li>
             );
           })}
@@ -46,21 +46,21 @@ export function PageHero({
   lede?: string;
 }) {
   return (
-    <header className="relative mb-8 mt-4 overflow-hidden bg-gradient-to-r from-[#0c3937] via-[#173f3b] to-[#0f5f5c]">
+    <header className="relative mb-8 mt-4 overflow-hidden bg-gradient-to-r from-[#01302a] via-[#013a30] to-[#015949]">
       <div
         aria-hidden
-        className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-[#0f817b]/20 blur-2xl"
+        className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-[#0b7a64]/20 blur-2xl"
       />
       <div className="relative mx-auto max-w-6xl px-4 py-10 sm:py-14">
         {eyebrow ? (
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f2d25d]">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f19f1f]">
             {eyebrow}
           </p>
         ) : null}
         <h1 className="mt-2 text-4xl font-black tracking-tight text-white drop-shadow sm:text-5xl">
           {title}
         </h1>
-        <div aria-hidden className="mt-4 h-1 w-16 bg-[#f2d25d]" />
+        <div aria-hidden className="mt-4 h-1 w-16 bg-[#f19f1f]" />
         {lede ? (
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-white/90">{lede}</p>
         ) : null}
@@ -79,9 +79,9 @@ function CtaButton({
   variant: "primary" | "secondary";
 }) {
   const primaryClass =
-    "focus-ring bg-[#f2d25d] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]";
+    "focus-ring bg-[#25455e] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#1b3649]";
   const secondaryClass =
-    "focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#173f3b]";
+    "focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#013a30]";
 
   if (!href) {
     return (
@@ -122,7 +122,7 @@ export function CtaCard({
   secondary?: { label: string; href: string | null };
 }) {
   return (
-    <section className="border-t-4 border-[#0f5f5c] bg-[#173f3b] px-6 py-10 text-white shadow-md sm:px-10">
+    <section className="border-t-4 border-[#015949] bg-[#013a30] px-6 py-10 text-white shadow-md sm:px-10">
       <h2 className="text-2xl font-black">{title}</h2>
       {body ? <p className="mt-3 max-w-2xl text-white/90">{body}</p> : null}
       <div className="mt-6 flex flex-wrap gap-3">

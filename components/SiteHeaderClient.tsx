@@ -120,7 +120,7 @@ function HeaderSocialIcons() {
   return (
     <div className="hidden shrink-0 flex-col items-end gap-2 text-sm sm:text-base lg:flex">
       <span
-        className={`font-bold text-[#173f3b] transition-all duration-300 ease-out motion-reduce:transition-none ${
+        className={`font-bold text-[#013a30] transition-all duration-300 ease-out motion-reduce:transition-none ${
           compact ? "sr-only" : ""
         }`}
       >
@@ -131,7 +131,7 @@ function HeaderSocialIcons() {
           href={FACEBOOK_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex shrink-0 text-[#173f3b] transition-colors hover:text-[#0f5f5c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f5f5c]"
+          className="inline-flex shrink-0 text-[#013a30] transition-colors hover:text-[#015949] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#015949]"
           aria-label="Chiropractic Associates on Facebook (opens in a new tab)"
         >
           <svg
@@ -148,7 +148,7 @@ function HeaderSocialIcons() {
           href={INSTAGRAM_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex shrink-0 text-[#173f3b] transition-colors hover:text-[#0f5f5c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f5f5c]"
+          className="inline-flex shrink-0 text-[#013a30] transition-colors hover:text-[#015949] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#015949]"
           aria-label="The Rub Club on Instagram (opens in a new tab)"
         >
           <svg
@@ -225,7 +225,7 @@ export function SiteHeaderClient({
                     |
                   </span>
                   <a
-                    className="mt-1 block text-[#f2d25d] hover:underline md:mt-0 md:inline"
+                    className="mt-1 block text-[#f19f1f] hover:underline md:mt-0 md:inline"
                     href={telHref(rub)}
                   >
                     The Rub Club: {rub}

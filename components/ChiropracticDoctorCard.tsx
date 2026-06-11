@@ -15,7 +15,7 @@ export type ChiropracticDoctorCardProps = {
   imageSrc: string;
   /** Local intro clip at `/media/doctors/[videoFile]` when CMS stores a filename. */
   videoFile?: string | null;
-  /** Full URL from CMS Storage — takes precedence over videoFile when set. */
+  /** Full URL from CMS Storage â€” takes precedence over videoFile when set. */
   videoUrl?: string | null;
   /** Owner-uploaded adjustment clips from Firestore doctor media. */
   actionVideos?: DoctorActionVideo[];
@@ -64,7 +64,7 @@ export function ChiropracticDoctorCard({
         />
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="text-lg font-black text-[#173f3b]">{name}</h3>
+        <h3 className="text-lg font-black text-[#013a30]">{name}</h3>
         <p className="text-sm font-bold text-stone-600">{role}</p>
         <DoctorCardVideoAccordion videos={videos} />
         <p className="mt-3 flex-1 text-sm leading-relaxed text-stone-700">{bio}</p>

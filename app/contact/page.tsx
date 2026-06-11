@@ -18,7 +18,7 @@ import {
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "Contact us — Paris & Sulphur Springs offices",
+  title: "Contact us â€” Paris & Sulphur Springs offices",
   description:
     "Phone numbers, addresses, and hours for The Rub Club and Chiropractic Associates in Paris and Sulphur Springs, TX. Send a message or call us directly.",
   path: "/contact",
@@ -51,9 +51,9 @@ export default async function ContactPage() {
           {locationList.map((loc) => (
             <article
               key={loc.id}
-              className="space-y-4 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md"
+              className="space-y-4 border-t-4 border-[#015949] bg-white p-6 shadow-md"
             >
-              <h2 className="text-xl font-black text-[#173f3b]">{loc.name}</h2>
+              <h2 className="text-xl font-black text-[#013a30]">{loc.name}</h2>
               <address className="not-italic text-sm text-stone-700">
                 {loc.addressLines.map((line) => (
                   <span key={line} className="block">
@@ -63,16 +63,16 @@ export default async function ContactPage() {
               </address>
               <div className="space-y-1 text-sm">
                 <p>
-                  <span className="font-bold text-[#173f3b]">Office: </span>
-                  <a className="focus-ring font-bold text-[#0f5f5c] underline" href={telHref(loc.phonePrimary)}>
+                  <span className="font-bold text-[#013a30]">Office: </span>
+                  <a className="focus-ring font-bold text-[#015949] underline" href={telHref(loc.phonePrimary)}>
                     {loc.phonePrimary}
                   </a>
                 </p>
                 {loc.phoneSecondary ? (
                   <p>
-                    <span className="font-bold text-[#173f3b]">Massage desk: </span>
+                    <span className="font-bold text-[#013a30]">Massage desk: </span>
                     <a
-                      className="focus-ring font-bold text-[#0f5f5c] underline"
+                      className="focus-ring font-bold text-[#015949] underline"
                       href={telHref(loc.phoneSecondary)}
                     >
                       {loc.phoneSecondary}
@@ -85,13 +85,13 @@ export default async function ContactPage() {
                   href={loc.mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="focus-ring inline-flex items-center gap-2 border-2 border-[#0f5f5c] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-[#0f5f5c]/5"
+                  className="focus-ring inline-flex items-center gap-2 border-2 border-[#015949] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#015949] hover:bg-[#25455e]/5"
                 >
                   Get directions
                 </a>
                 <Link
                   href={`/locations/${loc.slug}`}
-                  className="focus-ring inline-flex items-center gap-2 border-2 border-[#0f5f5c] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#0f5f5c] hover:bg-[#0f5f5c]/5"
+                  className="focus-ring inline-flex items-center gap-2 border-2 border-[#015949] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#015949] hover:bg-[#25455e]/5"
                 >
                   Location details
                 </Link>
@@ -100,9 +100,9 @@ export default async function ContactPage() {
           ))}
         </section>
 
-        <section className="grid gap-8 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[1.2fr_0.8fr]">
+        <section className="grid gap-8 border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[1.2fr_0.8fr]">
           <div>
-            <h2 className="text-2xl font-black text-[#173f3b]">Send us a message</h2>
+            <h2 className="text-2xl font-black text-[#013a30]">Send us a message</h2>
             <p className="mt-2 text-sm text-stone-700">
               {contactAppointmentCopy(isPublicBookingEnabled(bookingConfig))}
             </p>
@@ -112,7 +112,7 @@ export default async function ContactPage() {
           </div>
           <aside className="space-y-4 text-sm">
             <div className="bg-stone-50 p-5 ring-1 ring-stone-200">
-              <h3 className="text-base font-black text-[#173f3b]">Office hours</h3>
+              <h3 className="text-base font-black text-[#013a30]">Office hours</h3>
               <OfficeHoursTable rows={parisHours} rowClassName="flex justify-between gap-3 border-b border-stone-200 py-1" />
             </div>
             <div className="rounded border border-amber-200 bg-amber-50 p-4 text-amber-900">

@@ -98,7 +98,7 @@ export function PatientProfileBody({ patientId, getIdToken, isSuperadmin, compac
     }
   }
 
-  if (loading) return <p className="text-sm text-slate-600">Loading…</p>;
+  if (loading) return <p className="text-sm text-slate-600">Loadingâ€¦</p>;
   if (error) return <p className="text-sm text-rose-700">{error}</p>;
   if (!patient) return <p className="text-sm text-slate-600">Patient not found.</p>;
 
@@ -199,7 +199,7 @@ export function PatientProfileBody({ patientId, getIdToken, isSuperadmin, compac
             <div>
               <dt className="text-xs text-slate-500">Phone</dt>
               <dd>
-                <a href={`tel:${patient.phone}`} className="font-medium text-[#0f5f5c]">
+                <a href={`tel:${patient.phone}`} className="font-medium text-[#015949]">
                   {patient.phone}
                 </a>
               </dd>
@@ -240,7 +240,7 @@ export function PatientProfileBody({ patientId, getIdToken, isSuperadmin, compac
                 <dt className="text-xs text-slate-500">Insurance</dt>
                 <dd>
                   {patient.insuranceCarrier}
-                  {patient.insuranceMemberId ? ` · ${patient.insuranceMemberId}` : ""}
+                  {patient.insuranceMemberId ? ` Â· ${patient.insuranceMemberId}` : ""}
                 </dd>
               </div>
             ) : null}
@@ -321,13 +321,13 @@ export function PatientProfileBody({ patientId, getIdToken, isSuperadmin, compac
                       const paid =
                         typeof b.paidAmountCents === "number"
                           ? `$${(b.paidAmountCents / 100).toFixed(2)}`
-                          : "—";
+                          : "â€”";
                       return (
                         <tr key={String(b.id)}>
-                          <td className="px-3 py-2">{dt?.toFormat("LLL d, yyyy") ?? "—"}</td>
-                          <td className="px-3 py-2">{dt?.toFormat("h:mm a") ?? "—"}</td>
-                          <td className="px-3 py-2 capitalize">{String(b.serviceLine ?? "—")}</td>
-                          <td className="px-3 py-2">{String(b.providerDisplayName ?? "—")}</td>
+                          <td className="px-3 py-2">{dt?.toFormat("LLL d, yyyy") ?? "â€”"}</td>
+                          <td className="px-3 py-2">{dt?.toFormat("h:mm a") ?? "â€”"}</td>
+                          <td className="px-3 py-2 capitalize">{String(b.serviceLine ?? "â€”")}</td>
+                          <td className="px-3 py-2">{String(b.providerDisplayName ?? "â€”")}</td>
                           <td className="px-3 py-2">
                             <span
                               className={`rounded-full border px-2 py-0.5 font-semibold ${visitDisplayStatusClasses(display)}`}

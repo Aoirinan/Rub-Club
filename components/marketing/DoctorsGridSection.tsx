@@ -4,7 +4,7 @@ import { DOCTORS } from "@/lib/home-verbatim";
 
 type Props = {
   titleAs?: "h1" | "h2";
-  /** When false, omit the “Our Chiropractors” heading (use when the page already supplies an H1). */
+  /** When false, omit the â€œOur Chiropractorsâ€ heading (use when the page already supplies an H1). */
   showSectionTitle?: boolean;
 };
 
@@ -14,11 +14,11 @@ export function DoctorsGridSection({ titleAs = "h2", showSectionTitle = true }: 
   return (
     <section
       id="our-chiropractors"
-      className="scroll-mt-32 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10"
+      className="scroll-mt-32 border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10"
     >
       {showSectionTitle ? (
         <>
-          <TitleTag className="text-center text-3xl font-black text-[#173f3b]">Our Chiropractors</TitleTag>
+          <TitleTag className="text-center text-3xl font-black text-[#013a30]">Our Chiropractors</TitleTag>
           <p className="mx-auto mt-4 max-w-3xl text-center leading-relaxed text-stone-700">
             Meet the doctors who lead care at Chiropractic Associates in Paris and Sulphur Springs.
           </p>
@@ -41,9 +41,9 @@ export function DoctorsGridSection({ titleAs = "h2", showSectionTitle = true }: 
             </div>
             <div className="flex flex-1 flex-col p-5">
               {showSectionTitle ? (
-                <h3 className="text-lg font-black text-[#173f3b]">{member.name}</h3>
+                <h3 className="text-lg font-black text-[#013a30]">{member.name}</h3>
               ) : (
-                <h2 className="text-lg font-black text-[#173f3b]">{member.name}</h2>
+                <h2 className="text-lg font-black text-[#013a30]">{member.name}</h2>
               )}
               <p className="text-sm font-bold text-stone-600">{member.role}</p>
               <p className="mt-3 flex-1 text-sm leading-relaxed text-stone-700">{member.bio}</p>

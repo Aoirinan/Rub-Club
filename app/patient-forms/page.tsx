@@ -14,9 +14,9 @@ export const metadata = buildPageMetadata({
   description:
     "Download chiropractic new patient and personal injury intake paperwork, massage new-client forms, or complete our online intake before your visit in Paris or Sulphur Springs, TX.",
   path: "/patient-forms",
-  ogTitle: "Patient Forms — Chiropractic Associates",
+  ogTitle: "Patient Forms â€” Chiropractic Associates",
   ogDescription:
-    "Chiropractic and massage intake forms for Paris and Sulphur Springs — online or printable PDF.",
+    "Chiropractic and massage intake forms for Paris and Sulphur Springs â€” online or printable PDF.",
 });
 
 export default async function PatientFormsPage() {
@@ -35,8 +35,8 @@ export default async function PatientFormsPage() {
       />
       <PageHero eyebrow={c.heroEyebrow} title={c.heroTitle} lede={c.heroLede} />
       <div className="mx-auto max-w-3xl space-y-6 px-4 pb-16">
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-8">
-          <h2 className="text-xl font-black text-[#173f3b]">{c.chiroHeading}</h2>
+        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-8">
+          <h2 className="text-xl font-black text-[#013a30]">{c.chiroHeading}</h2>
           <p className="mt-2 text-sm leading-relaxed text-stone-700">{c.chiroIntro}</p>
           <MarkdownBulletList text={c.chiroBullets} />
           <a
@@ -44,7 +44,7 @@ export default async function PatientFormsPage() {
             download="chiropractic-new-patient-packet.pdf"
             target="_blank"
             rel="noopener noreferrer"
-            className="focus-ring mt-6 inline-flex bg-[#0f5f5c] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
+            className="focus-ring mt-6 inline-flex bg-[#25455e] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#1b3649]"
           >
             Download 9-page chiropractic intake packet (PDF)
           </a>
@@ -52,7 +52,7 @@ export default async function PatientFormsPage() {
             Interested in ongoing chiropractic wellness options? See our{" "}
             <Link
               href={WELLNESS_CARE_PLANS_PATH}
-              className="font-bold text-[#0f5f5c] underline hover:text-[#173f3b]"
+              className="font-bold text-[#015949] underline hover:text-[#013a30]"
             >
               wellness care plans overview
             </Link>
@@ -60,18 +60,18 @@ export default async function PatientFormsPage() {
           </p>
         </section>
 
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-8 text-center shadow-md sm:p-12">
+        <section className="border-t-4 border-[#015949] bg-white p-8 text-center shadow-md sm:p-12">
           <p className="text-sm font-bold uppercase tracking-wide text-stone-600">
             Massage (The Rub Club)
           </p>
-          <h2 className="mt-2 text-xl font-black text-[#173f3b]">{c.massageHeading}</h2>
+          <h2 className="mt-2 text-xl font-black text-[#013a30]">{c.massageHeading}</h2>
           <p className="mt-3 text-stone-700">{c.massageBody}</p>
           <a
             href={MASSAGE_NEW_CLIENT_PDF}
             download="rub-club-new-client-form.pdf"
             target="_blank"
             rel="noopener noreferrer"
-            className="focus-ring mt-6 inline-flex bg-[#0f5f5c] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0f817b]"
+            className="focus-ring mt-6 inline-flex bg-[#25455e] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#1b3649]"
           >
             Download massage new-client form (PDF)
           </a>
@@ -87,7 +87,7 @@ export default async function PatientFormsPage() {
               <p className="text-xs font-bold uppercase tracking-wide text-amber-900">Paris, TX</p>
               <a
                 href={telHref(displayLocs.paris.phonePrimary)}
-                className="mt-1 block text-lg font-black text-[#173f3b] hover:underline"
+                className="mt-1 block text-lg font-black text-[#013a30] hover:underline"
               >
                 {displayLocs.paris.phonePrimary}
               </a>
@@ -98,7 +98,7 @@ export default async function PatientFormsPage() {
               </p>
               <a
                 href={telHref(displayLocs.sulphur_springs.phonePrimary)}
-                className="mt-1 block text-lg font-black text-[#173f3b] hover:underline"
+                className="mt-1 block text-lg font-black text-[#013a30] hover:underline"
               >
                 {displayLocs.sulphur_springs.phonePrimary}
               </a>

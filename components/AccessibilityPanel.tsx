@@ -74,14 +74,14 @@ function ToggleRow({
       aria-pressed={pressed}
       onClick={onClick}
       className={`focus-ring flex w-full items-center justify-between rounded px-3 py-2 text-left text-sm font-bold transition-colors ${
-        pressed ? "bg-[#0f5f5c] text-white" : "bg-stone-100 text-[#173f3b] hover:bg-stone-200"
+        pressed ? "bg-[#015949] text-white" : "bg-stone-100 text-[#013a30] hover:bg-stone-200"
       }`}
     >
       {label}
       <span
         aria-hidden
         className={`ml-3 inline-block h-2.5 w-2.5 shrink-0 rounded-full ${
-          pressed ? "bg-[#f2d25d]" : "bg-stone-300"
+          pressed ? "bg-[#f19f1f]" : "bg-stone-300"
         }`}
       />
     </button>
@@ -146,25 +146,25 @@ export function AccessibilityPanel() {
           aria-label="Accessibility options"
           className="absolute bottom-14 left-0 w-64 rounded-xl border border-stone-200 bg-white p-3 shadow-2xl"
         >
-          <p className="px-1 pb-2 text-xs font-black uppercase tracking-wide text-[#173f3b]">
+          <p className="px-1 pb-2 text-xs font-black uppercase tracking-wide text-[#013a30]">
             Accessibility options
           </p>
           <div className="mb-2 flex items-center gap-2 px-1">
-            <span className="flex-1 text-sm font-bold text-[#173f3b]">Text size</span>
+            <span className="flex-1 text-sm font-bold text-[#013a30]">Text size</span>
             <button
               type="button"
               onClick={() => update({ fontStep: Math.max(MIN_FONT_STEP, prefs.fontStep - 1) })}
               disabled={prefs.fontStep <= MIN_FONT_STEP}
-              className="focus-ring h-8 w-8 rounded bg-stone-100 text-base font-black text-[#173f3b] hover:bg-stone-200 disabled:opacity-40"
+              className="focus-ring h-8 w-8 rounded bg-stone-100 text-base font-black text-[#013a30] hover:bg-stone-200 disabled:opacity-40"
               aria-label="Decrease text size"
             >
-              A−
+              Aâˆ’
             </button>
             <button
               type="button"
               onClick={() => update({ fontStep: Math.min(MAX_FONT_STEP, prefs.fontStep + 1) })}
               disabled={prefs.fontStep >= MAX_FONT_STEP}
-              className="focus-ring h-8 w-8 rounded bg-stone-100 text-base font-black text-[#173f3b] hover:bg-stone-200 disabled:opacity-40"
+              className="focus-ring h-8 w-8 rounded bg-stone-100 text-base font-black text-[#013a30] hover:bg-stone-200 disabled:opacity-40"
               aria-label="Increase text size"
             >
               A+
@@ -200,7 +200,7 @@ export function AccessibilityPanel() {
           <button
             type="button"
             onClick={reset}
-            className="focus-ring mt-2 w-full rounded px-3 py-2 text-center text-sm font-bold text-stone-600 underline hover:text-[#0f5f5c]"
+            className="focus-ring mt-2 w-full rounded px-3 py-2 text-center text-sm font-bold text-stone-600 underline hover:text-[#015949]"
           >
             Reset all
           </button>
@@ -211,7 +211,7 @@ export function AccessibilityPanel() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label="Accessibility options"
-        className="focus-ring flex h-11 w-11 items-center justify-center rounded-full bg-[#0f5f5c] text-white shadow-lg hover:bg-[#0f817b]"
+        className="focus-ring flex h-11 w-11 items-center justify-center rounded-full bg-[#015949] text-white shadow-lg hover:bg-[#0b7a64]"
       >
         <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden>
           <circle cx="12" cy="4.5" r="2.2" />

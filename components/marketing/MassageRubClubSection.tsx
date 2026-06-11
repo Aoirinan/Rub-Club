@@ -12,11 +12,11 @@ export function MassageRubClubSection({ stressTitleAs = "h2" }: Props) {
   return (
     <section
       id="the-rub-club"
-      className="scroll-mt-32 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10"
+      className="scroll-mt-32 border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10"
     >
       <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
         <div className="space-y-5">
-          <TitleTag className="text-3xl font-black text-[#173f3b]">{MASSAGE.stressTitle}</TitleTag>
+          <TitleTag className="text-3xl font-black text-[#013a30]">{MASSAGE.stressTitle}</TitleTag>
           {MASSAGE.stressParas.map((p) => (
             <p key={p} className="leading-relaxed text-stone-700">
               {p}
@@ -36,11 +36,11 @@ export function MassageRubClubSection({ stressTitleAs = "h2" }: Props) {
 
       <div className="mt-10 grid gap-10 border-t border-stone-200 pt-8 lg:grid-cols-2">
         <div>
-          <h2 className="text-xl font-black text-[#173f3b]">{MASSAGE.whenTitle}</h2>
+          <h2 className="text-xl font-black text-[#013a30]">{MASSAGE.whenTitle}</h2>
           <p className="mt-4 leading-relaxed text-stone-700">{MASSAGE.whenBody}</p>
         </div>
         <div>
-          <h2 className="text-xl font-black text-[#173f3b]">{MASSAGE.treatmentsTitle}</h2>
+          <h2 className="text-xl font-black text-[#013a30]">{MASSAGE.treatmentsTitle}</h2>
           <p className="mt-4 leading-relaxed text-stone-700">{MASSAGE.treatmentsIntro}</p>
           <ul className="mt-4 list-disc space-y-2 pl-6 text-stone-700">
             {MASSAGE.treatmentsList.map((t) => (
@@ -51,7 +51,7 @@ export function MassageRubClubSection({ stressTitleAs = "h2" }: Props) {
       </div>
 
       <div className="mt-10 bg-[#f2efe3] p-6">
-        <h2 className="text-2xl font-black text-[#173f3b]">{MASSAGE.closingTitle}</h2>
+        <h2 className="text-2xl font-black text-[#013a30]">{MASSAGE.closingTitle}</h2>
         {MASSAGE.closingParas.map((p) => (
           <p key={p} className="mt-4 leading-relaxed text-stone-700">
             {p}

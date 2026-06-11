@@ -1,13 +1,9 @@
 import Link from "next/link";
+import { SectionHeading } from "@/components/practice/SectionHeading";
 import type {
   PracticeReviewsSection,
   PracticeTestimonial,
 } from "@/lib/practice-pages-shared";
-
-function initialFor(name: string): string {
-  const trimmed = name.trim();
-  return trimmed ? trimmed[0]!.toUpperCase() : "★";
-}
 
 /** Patient review cards (horizontal snap scroll on mobile, grid on desktop). */
 export function PatientReviews({
@@ -22,39 +18,26 @@ export function PatientReviews({
   if (rows.length === 0) return null;
 
   return (
-    <section className="bg-[#f8f8f6] px-4 py-12 sm:px-8">
-      {data.heading.trim() ? (
-        <h2 className="text-center text-2xl font-black text-[var(--pp-heading)]">
-          {data.heading}
-        </h2>
-      ) : null}
+    <section className="px-4 py-12 sm:px-8">
+      {data.heading.trim() ? <SectionHeading>{data.heading}</SectionHeading> : null}
       <div className="mx-auto mt-10 flex max-w-6xl snap-x snap-mandatory gap-6 overflow-x-auto pb-2 lg:grid lg:grid-cols-3 lg:gap-8 lg:overflow-visible">
         {rows.map((t) => (
           <blockquote
             key={t.id}
-            className="flex w-[85%] shrink-0 snap-center flex-col border-b-4 border-[var(--pp-accent)] bg-white p-6 shadow-sm sm:w-[60%] lg:w-auto"
+            className="flex w-[85%] shrink-0 snap-center flex-col rounded-xl bg-white p-7 text-center shadow-md sm:w-[60%] lg:w-auto"
           >
-            <div className="flex items-center gap-3">
-              <span
-                aria-hidden
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--pp-accent)] text-lg font-black text-white"
-              >
-                {initialFor(t.name)}
-              </span>
-              {t.name.trim() || t.context.trim() ? (
-                <div className="min-w-0">
-                  {t.name.trim() ? (
-                    <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-                      {t.name}
-                    </p>
-                  ) : null}
-                  {t.context.trim() ? (
-                    <p className="text-xs text-stone-400">{t.context}</p>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-            <p className="mt-4 flex-1 text-stone-700">&ldquo;{t.quote}&rdquo;</p>
+            {t.name.trim() ? (
+              <p className="text-xl font-semibold text-stone-700">{t.name}</p>
+            ) : null}
+            {t.context.trim() ? (
+              <p className="mt-1 text-xs text-stone-400">{t.context}</p>
+            ) : null}
+            <span aria-hidden className="mt-4 text-5xl font-black leading-none text-[#015949]">
+              &ldquo;
+            </span>
+            <p className="mt-2 flex-1 text-sm font-bold leading-relaxed text-[#015949]">
+              {t.quote}
+            </p>
           </blockquote>
         ))}
       </div>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { OfficeHoursTable } from "@/components/OfficeHoursTable";
+import { SectionHeading } from "@/components/practice/SectionHeading";
 import { telHref } from "@/lib/constants";
 import type { OfficeHoursRow } from "@/lib/office-hours";
 import type { PracticeLocationBlockSection } from "@/lib/practice-pages-shared";
@@ -77,9 +78,7 @@ export function LocationContactBlock({
 
       <div className="grid gap-10 border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[1fr_1fr]">
         <div className="space-y-6">
-          {data.heading.trim() ? (
-            <h2 className="text-2xl font-black text-[var(--pp-heading)]">{data.heading}</h2>
-          ) : null}
+          {data.heading.trim() ? <SectionHeading>{data.heading}</SectionHeading> : null}
           <div>
             <h3 className="text-sm font-black uppercase tracking-wide text-[var(--pp-accent)]">
               {location.name}

@@ -59,7 +59,7 @@ export function MobileNav({
     <>
       <button
         type="button"
-        className="focus-ring inline-flex items-center justify-center gap-2 rounded border border-[#0f5f5c]/30 bg-white px-3 py-1.5 text-xs font-black uppercase tracking-wide text-[#173f3b] lg:hidden"
+        className="focus-ring inline-flex items-center justify-center gap-2 rounded border border-[#015949]/30 bg-white px-3 py-1.5 text-xs font-black uppercase tracking-wide text-[#013a30] lg:hidden"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
         aria-expanded={open}
@@ -87,12 +87,12 @@ export function MobileNav({
           />
           <div className="mobile-drawer-panel absolute right-0 top-0 h-full w-[88%] max-w-sm overflow-y-auto bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-stone-200 px-4 py-3">
-              <span className="text-sm font-black uppercase tracking-wide text-[#0f5f5c]">Menu</span>
+              <span className="text-sm font-black uppercase tracking-wide text-[#015949]">Menu</span>
               <button
                 type="button"
                 onClick={close}
                 aria-label="Close menu"
-                className="focus-ring rounded p-2 text-[#173f3b]"
+                className="focus-ring rounded p-2 text-[#013a30]"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
                   <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -112,7 +112,7 @@ export function MobileNav({
                         href={item.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="focus-ring border-b border-stone-100 px-4 py-3 text-sm font-bold uppercase tracking-wide text-[#173f3b] hover:bg-stone-50"
+                        className="focus-ring border-b border-stone-100 px-4 py-3 text-sm font-bold uppercase tracking-wide text-[#013a30] hover:bg-stone-50"
                         onClick={close}
                       >
                         {item.label}
@@ -123,7 +123,7 @@ export function MobileNav({
                     <Link
                       key={`${idx}-${item.href}`}
                       href={item.href}
-                      className="focus-ring border-b border-stone-100 px-4 py-3 text-sm font-bold uppercase tracking-wide text-[#173f3b] hover:bg-stone-50"
+                      className="focus-ring border-b border-stone-100 px-4 py-3 text-sm font-bold uppercase tracking-wide text-[#013a30] hover:bg-stone-50"
                       onClick={close}
                     >
                       {item.label}
@@ -136,14 +136,14 @@ export function MobileNav({
                     <div className="flex items-center">
                       <Link
                         href={item.href}
-                        className="focus-ring flex-1 px-4 py-3 text-sm font-bold uppercase tracking-wide text-[#173f3b] hover:bg-stone-50"
+                        className="focus-ring flex-1 px-4 py-3 text-sm font-bold uppercase tracking-wide text-[#013a30] hover:bg-stone-50"
                         onClick={close}
                       >
                         {item.label}
                       </Link>
                       <button
                         type="button"
-                        className="focus-ring px-4 py-3 text-[#0f5f5c]"
+                        className="focus-ring px-4 py-3 text-[#015949]"
                         onClick={() => toggle(item.label)}
                         aria-expanded={isExpanded}
                         aria-label={`Expand ${item.label} submenu`}
@@ -174,7 +174,7 @@ export function MobileNav({
                                 key={clinic.name}
                                 className="border-b border-stone-200/70 px-8 py-3 last:border-b-0"
                               >
-                                <p className="text-xs font-black uppercase tracking-wide text-[#173f3b]">
+                                <p className="text-xs font-black uppercase tracking-wide text-[#013a30]">
                                   {clinic.name}
                                 </p>
                                 <address className="mt-1 not-italic text-xs leading-relaxed text-stone-600">
@@ -189,7 +189,7 @@ export function MobileNav({
                                     <a
                                       key={p.number}
                                       href={telHref(p.number)}
-                                      className="block text-xs font-bold text-[#0f5f5c] underline"
+                                      className="block text-xs font-bold text-[#015949] underline"
                                       onClick={() =>
                                         track("phone_click", { location: clinic.name.toLowerCase() })
                                       }
@@ -203,14 +203,14 @@ export function MobileNav({
                                     href={clinic.mapsUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-block text-xs font-bold text-[#0f5f5c] underline"
+                                    className="inline-block text-xs font-bold text-[#015949] underline"
                                   >
                                     Get directions
                                   </a>
                                   {clinic.contactHref ? (
                                     <Link
                                       href={clinic.contactHref}
-                                      className="inline-block text-xs font-bold text-[#0f5f5c] underline"
+                                      className="inline-block text-xs font-bold text-[#015949] underline"
                                       onClick={close}
                                     >
                                       Contact page
@@ -223,7 +223,7 @@ export function MobileNav({
                               <Link
                                 key={c.href}
                                 href={c.href}
-                                className="focus-ring block px-8 py-2 text-xs font-bold uppercase tracking-wide text-[#173f3b]/80 hover:text-[#0f5f5c]"
+                                className="focus-ring block px-8 py-2 text-xs font-bold uppercase tracking-wide text-[#013a30]/80 hover:text-[#015949]"
                                 onClick={close}
                               >
                                 {c.label}
@@ -232,7 +232,7 @@ export function MobileNav({
                         {item.clinics?.length ? (
                           <Link
                             href={item.href}
-                            className="focus-ring block px-8 py-2 text-xs font-black uppercase tracking-wide text-[#0f5f5c] underline"
+                            className="focus-ring block px-8 py-2 text-xs font-black uppercase tracking-wide text-[#015949] underline"
                             onClick={close}
                           >
                             Send us a message
@@ -248,7 +248,7 @@ export function MobileNav({
                   href={giftCardHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`focus-ring mx-4 mb-2 block border border-[#0f5f5c]/30 bg-white px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#0f5f5c] transition-all duration-300 ease-out hover:bg-stone-50 motion-reduce:transition-none ${
+                  className={`focus-ring mx-4 mb-2 block border border-[#015949]/30 bg-white px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#015949] transition-all duration-300 ease-out hover:bg-stone-50 motion-reduce:transition-none ${
                     giftCardExpanded ? GIFT_CARD_MOBILE_EXPANDED : ""
                   }`}
                   onClick={close}
@@ -258,7 +258,7 @@ export function MobileNav({
               ) : null}
               <BookingCta
                 label="Book Now"
-                className="focus-ring m-4 block bg-[#f2d25d] px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]"
+                className="focus-ring m-4 block bg-[#25455e] px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-white hover:bg-[#1b3649]"
               />
               <div className="border-t border-stone-200 p-4 text-sm">
                 <p className="mb-2 text-xs font-black uppercase tracking-wide text-stone-600">
@@ -266,7 +266,7 @@ export function MobileNav({
                 </p>
                 {businessContext === "paris_chiro" ? (
                   <a
-                    className="block py-1 font-bold text-[#0f5f5c] underline"
+                    className="block py-1 font-bold text-[#015949] underline"
                     href={telHref(paris.phonePrimary)}
                     onClick={() => track("phone_click", { location: "paris" })}
                   >
@@ -274,7 +274,7 @@ export function MobileNav({
                   </a>
                 ) : businessContext === "sulphur_springs" ? (
                   <a
-                    className="block py-1 font-bold text-[#0f5f5c] underline"
+                    className="block py-1 font-bold text-[#015949] underline"
                     href={telHref(sulphur.phonePrimary)}
                     onClick={() => track("phone_click", { location: "sulphur_springs" })}
                   >
@@ -283,7 +283,7 @@ export function MobileNav({
                 ) : (
                   <>
                     <a
-                      className="block py-1 font-bold text-[#0f5f5c] underline"
+                      className="block py-1 font-bold text-[#015949] underline"
                       href={telHref(paris.phonePrimary)}
                       onClick={() => track("phone_click", { location: "paris" })}
                     >
@@ -291,7 +291,7 @@ export function MobileNav({
                     </a>
                     {paris.phoneSecondary?.trim() ? (
                       <a
-                        className="block py-1 font-bold text-[#0f5f5c] underline"
+                        className="block py-1 font-bold text-[#015949] underline"
                         href={telHref(paris.phoneSecondary)}
                         onClick={() => track("phone_click", { location: "rub_club" })}
                       >
@@ -299,7 +299,7 @@ export function MobileNav({
                       </a>
                     ) : null}
                     <a
-                      className="block py-1 font-bold text-[#0f5f5c] underline"
+                      className="block py-1 font-bold text-[#015949] underline"
                       href={telHref(sulphur.phonePrimary)}
                       onClick={() => track("phone_click", { location: "sulphur_springs" })}
                     >
@@ -309,7 +309,7 @@ export function MobileNav({
                 )}
                 <div className="mt-3 flex flex-wrap gap-4">
                   <a
-                    className="inline-flex items-center gap-2 font-bold text-[#0f5f5c] underline"
+                    className="inline-flex items-center gap-2 font-bold text-[#015949] underline"
                     href={FACEBOOK_URL}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -327,7 +327,7 @@ export function MobileNav({
                     Facebook
                   </a>
                   <a
-                    className="inline-flex items-center gap-2 font-bold text-[#0f5f5c] underline"
+                    className="inline-flex items-center gap-2 font-bold text-[#015949] underline"
                     href={INSTAGRAM_URL}
                     target="_blank"
                     rel="noopener noreferrer"

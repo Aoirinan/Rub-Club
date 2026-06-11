@@ -121,7 +121,7 @@ export function NotificationSettingsEditor({ getIdToken }: Props) {
   return (
     <div className="space-y-6">
       <p className="text-sm text-slate-600">
-        Reminders are sent only when staff click <strong>Send reminders</strong> on the scheduler — never
+        Reminders are sent only when staff click <strong>Send reminders</strong> on the scheduler â€” never
         on a timer. Production can override reschedule email with{" "}
         <code className="rounded bg-slate-100 px-1">RESCHEDULE_EMAIL</code> in Vercel.
         {envReschedule ? (
@@ -167,7 +167,7 @@ export function NotificationSettingsEditor({ getIdToken }: Props) {
             key={c}
             type="button"
             onClick={() => setChannel(c)}
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${channel === c ? "bg-[#0f5f5c] text-white" : "bg-slate-100 text-slate-700"}`}
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${channel === c ? "bg-[#015949] text-white" : "bg-slate-100 text-slate-700"}`}
           >
             {c === "sms" ? "Text" : "Email"}
           </button>
@@ -278,7 +278,7 @@ export function NotificationSettingsEditor({ getIdToken }: Props) {
           onClick={() => void save({ sms: templates.sms, email: templates.email })}
           className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white"
         >
-          {saving ? "Saving…" : "Save templates"}
+          {saving ? "Savingâ€¦" : "Save templates"}
         </button>
       </div>
 

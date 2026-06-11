@@ -50,7 +50,7 @@ export function CmsFieldEditor({ field, busy, onSave, onReset, compact }: Props)
             <p className="mt-1 truncate text-xs text-slate-600">{valuePreview}</p>
           ) : null}
         </div>
-        <span className="shrink-0 text-xs text-slate-400">{expanded ? "▲" : "▼"}</span>
+        <span className="shrink-0 text-xs text-slate-400">{expanded ? "â–²" : "â–¼"}</span>
       </button>
       {expanded ? (
         <div className="space-y-2 border-t border-slate-200 px-3 py-3">
@@ -58,7 +58,7 @@ export function CmsFieldEditor({ field, busy, onSave, onReset, compact }: Props)
             <label className="flex items-center gap-2 text-sm text-slate-800">
               <input
                 type="checkbox"
-                className="h-4 w-4 rounded border-slate-300 text-[#0f5f5c] focus:ring-[#0f5f5c]"
+                className="h-4 w-4 rounded border-slate-300 text-[#015949] focus:ring-[#015949]"
                 checked={isTopPhoneBarEnabled(draft)}
                 onChange={(e) => setDraft(e.target.checked ? "true" : "false")}
               />
@@ -124,7 +124,7 @@ export function CmsFieldEditor({ field, busy, onSave, onReset, compact }: Props)
               <button
                 type="button"
                 disabled={busy}
-                className="rounded-lg bg-[#0f5f5c] px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+                className="rounded-lg bg-[#015949] px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
                 onClick={() => void onSave(field.id, draft)}
               >
                 Save

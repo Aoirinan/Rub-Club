@@ -18,7 +18,7 @@ import {
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "Contact us — Chiropractic Associates of Sulphur Springs",
+  title: "Contact us â€” Chiropractic Associates of Sulphur Springs",
   description:
     "Phone number, address, and hours for Chiropractic Associates of Sulphur Springs at 207 Jefferson St. E. Call 903-919-5020 or send us a message.",
   path: "/sulphur-springs/contact",
@@ -51,15 +51,15 @@ export default async function SulphurSpringsContactPage() {
         ]}
       />
       <PageHero
-        eyebrow="Chiropractic Associates · Sulphur Springs"
+        eyebrow="Chiropractic Associates Â· Sulphur Springs"
         title={c.ss_contact_heading}
         lede={c.ss_contact_subtext}
       />
 
       <div className="mx-auto max-w-6xl space-y-10 px-4 pb-16">
-        <section className="grid gap-8 border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-2">
+        <section className="grid gap-8 border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-2">
           <div className="space-y-4">
-            <h2 className="text-xl font-black text-[#173f3b]">{ss.name}</h2>
+            <h2 className="text-xl font-black text-[#013a30]">{ss.name}</h2>
             <address className="not-italic text-sm text-stone-700">
               {ss.addressLines.map((line) => (
                 <span key={line} className="block">
@@ -68,8 +68,8 @@ export default async function SulphurSpringsContactPage() {
               ))}
             </address>
             <p className="text-sm">
-              <span className="font-bold text-[#173f3b]">Office: </span>
-              <a className="focus-ring font-bold text-[#2980b9] underline" href={telHref(ss.phonePrimary)}>
+              <span className="font-bold text-[#013a30]">Office: </span>
+              <a className="focus-ring font-bold text-[#015949] underline" href={telHref(ss.phonePrimary)}>
                 {ss.phonePrimary}
               </a>
             </p>
@@ -78,13 +78,13 @@ export default async function SulphurSpringsContactPage() {
                 href={ss.mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="focus-ring inline-flex items-center gap-2 border-2 border-[#2980b9] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#2980b9] hover:bg-[#2980b9]/5"
+                className="focus-ring inline-flex items-center gap-2 border-2 border-[#015949] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#015949] hover:bg-[#25455e]/5"
               >
                 Get directions
               </a>
               <Link
                 href="/locations/sulphur-springs"
-                className="focus-ring inline-flex items-center gap-2 border-2 border-[#2980b9] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#2980b9] hover:bg-[#2980b9]/5"
+                className="focus-ring inline-flex items-center gap-2 border-2 border-[#015949] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#015949] hover:bg-[#25455e]/5"
               >
                 Location details
               </Link>
@@ -104,9 +104,9 @@ export default async function SulphurSpringsContactPage() {
           </div>
         </section>
 
-        <section className="grid gap-8 border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[1.2fr_0.8fr]">
+        <section className="grid gap-8 border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[1.2fr_0.8fr]">
           <div>
-            <h2 className="text-2xl font-black text-[#173f3b]">Send us a message</h2>
+            <h2 className="text-2xl font-black text-[#013a30]">Send us a message</h2>
             <p className="mt-2 text-sm text-stone-700">
               {contactAppointmentCopy(isPublicBookingEnabled(bookingConfig))}
             </p>
@@ -116,7 +116,7 @@ export default async function SulphurSpringsContactPage() {
           </div>
           <aside className="space-y-4 text-sm">
             <div className="bg-stone-50 p-5 ring-1 ring-stone-200">
-              <h3 className="text-base font-black text-[#173f3b]">Office hours</h3>
+              <h3 className="text-base font-black text-[#013a30]">Office hours</h3>
               <OfficeHoursTable rows={ssHours} rowClassName="flex justify-between gap-3 border-b border-stone-200 py-1" />
             </div>
             <div className="rounded border border-amber-200 bg-amber-50 p-4 text-amber-900">

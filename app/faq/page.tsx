@@ -16,7 +16,7 @@ export const metadata = buildPageMetadata({
   description:
     "Answers about insurance, cancellation, what to bring, pricing, and what to expect at your first chiropractic or massage appointment in Paris, TX.",
   path: "/faq",
-  ogTitle: "FAQ — Chiropractic Associates",
+  ogTitle: "FAQ â€” Chiropractic Associates",
   ogDescription:
     "Insurance, scheduling, and first-visit answers for our Paris and Sulphur Springs offices.",
 });
@@ -39,7 +39,7 @@ export default async function FaqPage() {
         lede={c.faq_intro}
       />
       <div className="mx-auto max-w-3xl space-y-8 px-4 pb-16">
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
+        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
           <FaqList entries={faqs} />
         </section>
         <ScheduleCtaCard

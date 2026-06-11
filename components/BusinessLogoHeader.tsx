@@ -30,7 +30,7 @@ export function BusinessLogoHeader({
   const href = isParis ? "/services/chiropractic" : "/sulphur-springs";
   const cmsLabel = isParis ? branding?.labels.chiro : branding?.labels.ss;
   const phoneLabel =
-    cmsLabel || (isParis ? "Chiropractic — Paris" : "Chiro / Massage — Sulphur Springs");
+    cmsLabel || (isParis ? "Chiropractic â€” Paris" : "Chiro / Massage â€” Sulphur Springs");
   // Managers can upload a Sulphur Springs logo image; empty means use the icon + text lockup.
   const ssLogoSrc = branding?.logos.ss || undefined;
 
@@ -38,10 +38,10 @@ export function BusinessLogoHeader({
     <div className="flex w-full flex-col items-center gap-1 text-center">
       <Link
         href={href}
-        className="block w-fit max-w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f5f5c]"
+        className="block w-fit max-w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#015949]"
         aria-label={
           isParis
-            ? "Chiropractic Associates — Paris, TX"
+            ? "Chiropractic Associates â€” Paris, TX"
             : "Chiropractic Associates of Sulphur Springs"
         }
       >
@@ -61,7 +61,7 @@ export function BusinessLogoHeader({
             ) : (
               <Image
                 src={resolveChiroHeaderLogo(branding?.logos.chiro)}
-                alt="Chiropractic Associates — Paris, TX"
+                alt="Chiropractic Associates â€” Paris, TX"
                 width={600}
                 height={200}
                 sizes="(max-width: 640px) 90vw, 600px"
@@ -90,7 +90,7 @@ export function BusinessLogoHeader({
       </Link>
       <a
         href={telHref(location.phonePrimary)}
-        className={`max-w-full truncate font-black text-[#0f5f5c] hover:underline transition-all duration-300 ease-out motion-reduce:transition-none ${
+        className={`max-w-full truncate font-black text-[#015949] hover:underline transition-all duration-300 ease-out motion-reduce:transition-none ${
           compact ? "text-xs md:text-sm" : "text-sm md:text-base"
         }`}
       >

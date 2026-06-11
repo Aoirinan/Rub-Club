@@ -46,7 +46,7 @@ export function FooterHoursPanel({
 
   return (
     <div className="text-sm">
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f2d25d]">Hours</p>
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f19f1f]">Hours</p>
       {subtitle ? (
         <p className="mt-1 text-xs font-bold text-white/70">{subtitle}</p>
       ) : null}
@@ -54,7 +54,7 @@ export function FooterHoursPanel({
         {focus === "paris" || focus === "both" ? (
           <div>
             {focus === "both" ? (
-              <p className="mb-2 text-xs font-black uppercase tracking-[0.14em] text-[#f2d25d]">
+              <p className="mb-2 text-xs font-black uppercase tracking-[0.14em] text-[#f19f1f]">
                 {LOCATIONS.paris.shortName}
               </p>
             ) : null}
@@ -64,7 +64,7 @@ export function FooterHoursPanel({
         {focus === "sulphur_springs" || focus === "both" ? (
           <div>
             {focus === "both" ? (
-              <p className="mb-2 text-xs font-black uppercase tracking-[0.14em] text-[#f2d25d]">
+              <p className="mb-2 text-xs font-black uppercase tracking-[0.14em] text-[#f19f1f]">
                 {LOCATIONS.sulphur_springs.shortName}
               </p>
             ) : null}
@@ -75,7 +75,7 @@ export function FooterHoursPanel({
       <BookingCta
         label="Book Now"
         variant="compact"
-        className="focus-ring mt-4 inline-flex bg-[#f2d25d] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#173f3b] hover:bg-[#e6c13d]"
+        className="focus-ring mt-4 inline-flex bg-[#25455e] px-4 py-2 text-xs font-black uppercase tracking-wide text-white hover:bg-[#1b3649]"
       />
     </div>
   );

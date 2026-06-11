@@ -146,7 +146,7 @@ export function PracticeTestimonialsPanel({ location, getIdToken }: Props) {
           />
           <input
             className="w-full rounded border px-3 py-2 text-sm"
-            placeholder="Context (optional, e.g. Auto injury recovery · Google review)"
+            placeholder="Context (optional, e.g. Auto injury recovery Â· Google review)"
             value={form.context}
             onChange={(e) => setForm({ ...form, context: e.target.value })}
           />
@@ -168,7 +168,7 @@ export function PracticeTestimonialsPanel({ location, getIdToken }: Props) {
             <button
               type="button"
               disabled={busy || !form.quote.trim()}
-              className="rounded-full bg-[#0f5f5c] px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+              className="rounded-full bg-[#015949] px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
               onClick={() => void save()}
             >
               Save review
@@ -186,7 +186,7 @@ export function PracticeTestimonialsPanel({ location, getIdToken }: Props) {
             <span className="min-w-0 flex-1">
               <span className="font-medium text-slate-900">{r.name || "(no name)"}</span>
               <span className="ml-2 text-slate-500">
-                {r.quote.length > 80 ? `${r.quote.slice(0, 80)}…` : r.quote}
+                {r.quote.length > 80 ? `${r.quote.slice(0, 80)}â€¦` : r.quote}
               </span>
             </span>
             <button
@@ -200,14 +200,14 @@ export function PracticeTestimonialsPanel({ location, getIdToken }: Props) {
               {r.published ? "Published" : "Hidden"}
             </button>
             <button type="button" className="text-xs font-semibold underline" onClick={() => void move(i, -1)}>
-              ↑
+              â†‘
             </button>
             <button type="button" className="text-xs font-semibold underline" onClick={() => void move(i, 1)}>
-              ↓
+              â†“
             </button>
             <button
               type="button"
-              className="text-xs font-semibold text-[#0f5f5c] underline"
+              className="text-xs font-semibold text-[#015949] underline"
               onClick={() =>
                 setForm({
                   mode: "edit",

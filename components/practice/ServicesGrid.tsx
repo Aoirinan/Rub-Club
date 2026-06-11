@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ChiroTreatmentIcon } from "@/components/ChiroTreatmentIcon";
+import { SectionHeading } from "@/components/practice/SectionHeading";
 import type {
   PracticeServiceCard,
   PracticeServicesGridSection,
@@ -11,7 +12,7 @@ function CardBody({ card }: { card: PracticeServiceCard }) {
   return (
     <>
       {card.imageUrl.trim() ? (
-        <div className="relative -mx-5 -mt-5 mb-4 aspect-[3/2] overflow-hidden bg-stone-100">
+        <div className="relative mb-5 aspect-[3/2] w-full overflow-hidden rounded-lg bg-stone-100">
           <Image
             src={card.imageUrl}
             alt={card.name}
@@ -22,19 +23,19 @@ function CardBody({ card }: { card: PracticeServiceCard }) {
           />
         </div>
       ) : (
-        <div className="text-[var(--pp-accent)]">
+        <div className="mx-auto text-[var(--pp-accent)]">
           <ChiroTreatmentIcon name={card.name} />
         </div>
       )}
-      <h3 className="mt-3 text-base font-black text-[var(--pp-heading)] group-hover:text-[var(--pp-accent)]">
+      <h3 className="text-xl font-semibold text-stone-800 group-hover:text-[var(--pp-accent)] sm:text-2xl">
         {card.name}
       </h3>
       {card.blurb.trim() ? (
-        <p className="mt-2 flex-1 text-sm leading-relaxed text-stone-600">{card.blurb}</p>
+        <p className="mt-3 flex-1 text-sm leading-relaxed text-stone-500">{card.blurb}</p>
       ) : null}
       {card.href.trim() ? (
-        <span className="mt-3 inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide text-[var(--pp-accent)]">
-          Read More <span aria-hidden>&rarr;</span>
+        <span className="mx-auto mt-5 inline-flex bg-[#25455e] px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-white transition group-hover:bg-[#1b3649]">
+          Read More
         </span>
       ) : null}
     </>
@@ -57,27 +58,27 @@ export function ServicesGrid({
   if (cards.length === 0) return null;
 
   return (
-    <section className="border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-10">
-      {data.heading.trim() ? (
-        <h2 className="text-2xl font-black text-[var(--pp-heading)]">{data.heading}</h2>
-      ) : null}
+    <section className="py-4">
+      {data.heading.trim() ? <SectionHeading>{data.heading}</SectionHeading> : null}
       {data.intro.trim() ? (
-        <p className="mt-3 max-w-3xl leading-relaxed text-stone-700">{data.intro}</p>
+        <p className="mx-auto mt-5 max-w-3xl text-center leading-relaxed text-stone-500">
+          {data.intro}
+        </p>
       ) : null}
-      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card, idx) =>
           card.href.trim() ? (
             <Link
               key={`${idx}-${card.name}`}
               href={card.href}
-              className="group flex flex-col overflow-hidden rounded-lg border border-stone-200 bg-white p-5 shadow-sm transition hover:border-[var(--pp-accent)] hover:shadow-md"
+              className="group flex flex-col overflow-hidden rounded-xl bg-white p-5 text-center shadow-md transition hover:shadow-lg"
             >
               <CardBody card={card} />
             </Link>
           ) : (
             <div
               key={`${idx}-${card.name}`}
-              className="flex flex-col overflow-hidden rounded-lg border border-stone-200 bg-white p-5 shadow-sm"
+              className="group flex flex-col overflow-hidden rounded-xl bg-white p-5 text-center shadow-md"
             >
               <CardBody card={card} />
             </div>

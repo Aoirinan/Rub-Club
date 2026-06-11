@@ -18,7 +18,7 @@ import {
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "Meet the Staff — Sulphur Springs Chiropractic",
+  title: "Meet the Staff â€” Sulphur Springs Chiropractic",
   description:
     "Meet Dr. Conner Collins and the care team at Chiropractic Associates of Sulphur Springs. Chiropractor, massage therapists, rehab therapy, and front-desk staff serving Hopkins County, TX.",
   path: "/sulphur-springs/staff",
@@ -110,19 +110,19 @@ export default async function SulphurSpringsStaffPage() {
         ]}
       />
       <PageHero
-        eyebrow="Chiropractic Associates · Sulphur Springs"
+        eyebrow="Chiropractic Associates Â· Sulphur Springs"
         title={page.heroTitle}
         lede={page.heroLede || undefined}
       />
 
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
         {featured ? (
-          <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
+          <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_2fr]">
               <StaffPhoto member={featured} />
               <div className="space-y-4">
                 <div>
-                  <h2 className="text-2xl font-black text-[#173f3b]">{featured.name}</h2>
+                  <h2 className="text-2xl font-black text-[#013a30]">{featured.name}</h2>
                   <p className="text-sm font-bold text-stone-600">{featured.role}</p>
                 </div>
                 <div className="max-w-md">
@@ -134,8 +134,8 @@ export default async function SulphurSpringsStaffPage() {
           </section>
         ) : null}
 
-        <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#173f3b]">{page.sectionHeading}</h2>
+        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-2xl font-black text-[#013a30]">{page.sectionHeading}</h2>
           <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {rest.map((member) => (
               <article
@@ -144,7 +144,7 @@ export default async function SulphurSpringsStaffPage() {
               >
                 <StaffPhoto member={member} />
                 <div className="flex flex-1 flex-col p-5">
-                  <h3 className="text-lg font-black text-[#173f3b]">{member.name}</h3>
+                  <h3 className="text-lg font-black text-[#013a30]">{member.name}</h3>
                   <p className="text-sm font-bold text-stone-600">{member.role}</p>
                   <StaffVideo member={member} />
                   <BioBlock bio={member.bio} />
@@ -154,7 +154,7 @@ export default async function SulphurSpringsStaffPage() {
           </div>
         </section>
 
-        <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
+        <LocationHoursSection location={ss} hours={ssHours} accent="#015949" />
 
         <ScheduleCtaCard
           title={page.ctaTitle}

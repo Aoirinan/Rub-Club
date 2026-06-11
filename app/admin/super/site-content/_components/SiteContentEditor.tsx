@@ -86,11 +86,11 @@ const BADGE_CLASS: Record<string, string> = {
 
 function truncate(s: string, n = 60): string {
   const t = s.replace(/\s+/g, " ").trim();
-  return t.length <= n ? t : `${t.slice(0, n)}…`;
+  return t.length <= n ? t : `${t.slice(0, n)}â€¦`;
 }
 
 function timeAgo(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "â€”";
   const ms = Date.now() - new Date(iso).getTime();
   const m = Math.floor(ms / 60000);
   if (m < 1) return "just now";
@@ -282,7 +282,7 @@ export function SiteContentEditor() {
         const data = (await res.json()) as { error?: string };
         if (!res.ok) throw new Error(data.error ?? "Save failed");
       }
-      showToast("ok", "Saved — live on site within 60 seconds");
+      showToast("ok", "Saved â€” live on site within 60 seconds");
       setEditingId(null);
       await loadAll();
     } catch (e) {
@@ -381,18 +381,18 @@ export function SiteContentEditor() {
         <h1 className="text-2xl font-semibold text-slate-900">Site content</h1>
         <p className="mt-1 text-sm text-slate-600">
           Managers can edit public page copy, staff and doctor names/titles/photos/bios, massage team, and FAQs. Use the
-          tabs below — changes appear on the live site within about 60 seconds. Adding or removing a team member still
+          tabs below â€” changes appear on the live site within about 60 seconds. Adding or removing a team member still
           requires a developer.
         </p>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#0f5f5c]/25 bg-[#0f5f5c]/5 px-4 py-3">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#015949]/25 bg-[#015949]/5 px-4 py-3">
           <p className="text-sm text-slate-700">
-            <span className="font-bold text-[#173f3b]">Page layout?</span> Reorder or hide whole sections on Massage,
+            <span className="font-bold text-[#013a30]">Page layout?</span> Reorder or hide whole sections on Massage,
             Chiropractic, and Sulphur pages in the{" "}
             <span className="font-semibold">Page builder</span> tab above (not here).
           </p>
           <Link
             href="/admin/super/page-builder"
-            className="shrink-0 rounded-lg bg-[#0f5f5c] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0c4e4b]"
+            className="shrink-0 rounded-lg bg-[#015949] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0c4e4b]"
           >
             Open page builder
           </Link>
@@ -412,7 +412,7 @@ export function SiteContentEditor() {
       {selectedPage !== "Massage team" ? (
         <input
           type="search"
-          placeholder="Search fields across all pages…"
+          placeholder="Search fields across all pagesâ€¦"
           className="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -506,7 +506,7 @@ export function SiteContentEditor() {
                     <button
                       type="button"
                       disabled={busy}
-                      className="rounded-full bg-[#0f5f5c] px-4 py-2 text-xs font-bold text-white"
+                      className="rounded-full bg-[#015949] px-4 py-2 text-xs font-bold text-white"
                       onClick={() => void saveFaq()}
                     >
                       Save FAQ
@@ -545,14 +545,14 @@ export function SiteContentEditor() {
                         Active
                       </label>
                       <button type="button" className="text-xs font-semibold underline" onClick={() => moveFaq(i, -1)}>
-                        ↑
+                        â†‘
                       </button>
                       <button type="button" className="text-xs font-semibold underline" onClick={() => moveFaq(i, 1)}>
-                        ↓
+                        â†“
                       </button>
                       <button
                         type="button"
-                        className="text-xs font-semibold text-[#0f5f5c] underline"
+                        className="text-xs font-semibold text-[#015949] underline"
                         onClick={() =>
                           setFaqForm({
                             mode: "edit",
@@ -597,7 +597,7 @@ export function SiteContentEditor() {
                   <span className="ml-auto max-w-[40%] truncate text-xs text-slate-500">{truncate(field.value)}</span>
                   <button
                     type="button"
-                    className="text-xs font-bold text-[#0f5f5c] underline"
+                    className="text-xs font-bold text-[#015949] underline"
                     onClick={() => {
                       setEditingId(field.id);
                       setDraft(field.value);
@@ -669,7 +669,7 @@ export function SiteContentEditor() {
                       <button
                         type="button"
                         disabled={busy}
-                        className="rounded-full bg-[#0f5f5c] px-5 py-2 text-sm font-bold text-white"
+                        className="rounded-full bg-[#015949] px-5 py-2 text-sm font-bold text-white"
                         onClick={() => void saveField(field.id, draft)}
                       >
                         Save
@@ -703,7 +703,7 @@ export function SiteContentEditor() {
               <tr key={e.id} className="border-b border-slate-100">
                 <td className="py-2 pr-2 font-medium">{e.fieldLabel}</td>
                 <td className="py-2 pr-2">{e.pageLabel}</td>
-                <td className="py-2 pr-2 text-slate-600">{e.changedBy || "—"}</td>
+                <td className="py-2 pr-2 text-slate-600">{e.changedBy || "â€”"}</td>
                 <td className="py-2 text-slate-600">{timeAgo(e.changedAt)}</td>
               </tr>
             ))}
