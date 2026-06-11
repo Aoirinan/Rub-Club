@@ -75,7 +75,7 @@ export function SiteFooterClient({
           <p className="text-base font-black tracking-tight text-white">{siteShortName}</p>
           {footerBlurbHtml?.trim() && !isBusinessScoped ? (
             <div
-              className="prose prose-invert prose-sm mt-2 max-w-none text-white/80 prose-a:text-[#f2d25d] prose-a:font-bold prose-p:my-1"
+              className="mt-2 text-sm leading-relaxed text-white/80 [&_p]:my-1 [&_a]:font-bold [&_a]:text-[#f2d25d] [&_a]:underline [&_a:hover]:text-white"
               dangerouslySetInnerHTML={{ __html: footerBlurbHtml }}
             />
           ) : (

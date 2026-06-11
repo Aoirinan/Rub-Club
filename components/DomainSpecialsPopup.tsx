@@ -93,7 +93,7 @@ export function DomainSpecialsPopup() {
           ) : null}
           {bodyHtml ? (
             <div
-              className="prose prose-sm max-w-none text-stone-800 prose-a:font-semibold prose-a:text-blue-600 prose-a:no-underline prose-a:hover:underline"
+              className="text-sm leading-relaxed text-stone-800 [&_p]:my-1 [&_a]:font-semibold [&_a]:text-blue-600 [&_a]:underline [&_a]:break-all [&_a:hover]:text-blue-800"
               dangerouslySetInnerHTML={{ __html: linkifyHtmlUrls(bodyHtml) }}
             />
           ) : null}
