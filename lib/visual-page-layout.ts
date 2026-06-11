@@ -163,7 +163,6 @@ export const VISUAL_SCOPE_REVALIDATE_PATHS: Partial<Record<VisualScopeId, string
   home: "/",
   footer: "/",
   navigation: "/",
-  "header-branding": "/",
   about: "/about",
   contact: "/contact",
   wellness: "/wellness-care-plans",
@@ -172,4 +171,5 @@ export const VISUAL_SCOPE_REVALIDATE_PATHS: Partial<Record<VisualScopeId, string
   "patient-forms": "/patient-forms",
   "faq-copy": "/faq",
   "services-hub": "/services",
+  "paris-chiro-pages": "/services/chiropractic",
 };

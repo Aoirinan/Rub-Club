@@ -162,9 +162,6 @@ export function buildContentScopeVisualLayout(scopeId: ContentScopeId): VisualPa
 }
 
 export function buildDefaultVisualLayoutForScope(scope: VisualScopeId): VisualPageLayout {
-  if (scope === "header-branding") {
-    return normalizeVisualPageLayout({ version: 1, frameHeight: 120, layers: [] });
-  }
   if (isPageLayoutId(scope)) {
     return buildServicePageVisualLayout(scope);
   }

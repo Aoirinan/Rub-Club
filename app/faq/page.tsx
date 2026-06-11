@@ -6,7 +6,8 @@ import { getContentMany } from "@/lib/cms";
 import { getActiveFaqs } from "@/lib/site-faqs";
 import { faqPageJsonLd } from "@/lib/structured-data";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
-import { LOCATIONS, telHref } from "@/lib/constants";
+import { telHref } from "@/lib/constants";
+import { getDisplayLocations } from "@/lib/cms-display";
 
 export const revalidate = 60;
 
@@ -21,8 +22,12 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function FaqPage() {
-  const c = await getContentMany(["faq_heading", "faq_intro"]);
-  const faqs = await getActiveFaqs();
+  const [c, faqs, displayLocs] = await Promise.all([
+    getContentMany(["faq_heading", "faq_intro"]),
+    getActiveFaqs(),
+    getDisplayLocations(),
+  ]);
+  const paris = displayLocs.paris;
 
   return (
     <>
@@ -42,8 +47,8 @@ export default async function FaqPage() {
           body="The fastest way to reach us is by phone during office hours, or send a message and we'll respond as soon as we can."
           contactLabel="Contact us"
           secondary={{
-            label: `Call Paris ${LOCATIONS.paris.phonePrimary}`,
-            href: telHref(LOCATIONS.paris.phonePrimary),
+            label: `Call Paris ${paris.phonePrimary}`,
+            href: telHref(paris.phonePrimary),
           }}
         />
       </div>

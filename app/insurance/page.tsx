@@ -4,6 +4,7 @@ import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { MarkdownBulletList } from "@/components/SsMarkdownBody";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { telHref } from "@/lib/constants";
+import { getDisplayLocations } from "@/lib/cms-display";
 import { getInsurancePageContent } from "@/lib/static-pages-content";
 
 export const revalidate = 60;
@@ -19,7 +20,10 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function InsurancePage() {
-  const c = await getInsurancePageContent();
+  const [c, displayLocs] = await Promise.all([
+    getInsurancePageContent(),
+    getDisplayLocations(),
+  ]);
 
   return (
     <>
@@ -57,12 +61,15 @@ export default async function InsurancePage() {
           <h2 className="text-xl font-black text-[#173f3b]">{c.verifyHeading}</h2>
           <p className="text-stone-700">{c.verifyBody}</p>
           <p className="text-sm font-bold text-[#0f5f5c]">
-            <a className="focus-ring underline" href={telHref("903-785-5551")}>
-              Call Paris: 903-785-5551
+            <a className="focus-ring underline" href={telHref(displayLocs.paris.phonePrimary)}>
+              Call Paris: {displayLocs.paris.phonePrimary}
             </a>{" "}
             ·{" "}
-            <a className="focus-ring underline" href={telHref("903-919-5020")}>
-              Call Sulphur Springs: 903-919-5020
+            <a
+              className="focus-ring underline"
+              href={telHref(displayLocs.sulphur_springs.phonePrimary)}
+            >
+              Call Sulphur Springs: {displayLocs.sulphur_springs.phonePrimary}
             </a>
           </p>
         </section>

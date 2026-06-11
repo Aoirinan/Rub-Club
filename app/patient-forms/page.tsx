@@ -2,7 +2,8 @@ import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { MarkdownBulletList } from "@/components/SsMarkdownBody";
-import { LOCATIONS, WELLNESS_CARE_PLANS_PATH } from "@/lib/constants";
+import { WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
+import { getDisplayLocations } from "@/lib/cms-display";
 import { CHIRO_INTAKE_PACKET_PDF, MASSAGE_NEW_CLIENT_PDF } from "@/lib/privacy";
 import { getPatientFormsContent } from "@/lib/static-pages-content";
 
@@ -19,7 +20,10 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function PatientFormsPage() {
-  const c = await getPatientFormsContent();
+  const [c, displayLocs] = await Promise.all([
+    getPatientFormsContent(),
+    getDisplayLocations(),
+  ]);
 
   return (
     <>
@@ -82,10 +86,10 @@ export default async function PatientFormsPage() {
             <div className="rounded border border-amber-200 bg-white p-4">
               <p className="text-xs font-bold uppercase tracking-wide text-amber-900">Paris, TX</p>
               <a
-                href={`tel:${LOCATIONS.paris.phonePrimary.replace(/\D/g, "")}`}
+                href={telHref(displayLocs.paris.phonePrimary)}
                 className="mt-1 block text-lg font-black text-[#173f3b] hover:underline"
               >
-                {LOCATIONS.paris.phonePrimary}
+                {displayLocs.paris.phonePrimary}
               </a>
             </div>
             <div className="rounded border border-amber-200 bg-white p-4">
@@ -93,10 +97,10 @@ export default async function PatientFormsPage() {
                 Sulphur Springs, TX
               </p>
               <a
-                href={`tel:${LOCATIONS.sulphur_springs.phonePrimary.replace(/\D/g, "")}`}
+                href={telHref(displayLocs.sulphur_springs.phonePrimary)}
                 className="mt-1 block text-lg font-black text-[#173f3b] hover:underline"
               >
-                {LOCATIONS.sulphur_springs.phonePrimary}
+                {displayLocs.sulphur_springs.phonePrimary}
               </a>
             </div>
           </div>

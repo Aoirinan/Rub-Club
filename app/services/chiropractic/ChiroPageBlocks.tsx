@@ -11,7 +11,10 @@ import type { DoctorCmsEntry } from "@/lib/cms-doctors";
 import type { ChiroTreatment } from "@/lib/chiro-treatments";
 import { CHIRO } from "@/lib/home-verbatim";
 import { WELLNESS_CARE_PLANS_PATH, telHref, type LocationInfo } from "@/lib/constants";
-import { PARIS_CHIRO_SERVICE_NAV } from "@/lib/paris-chiro-services";
+import {
+  PARIS_CHIRO_SERVICE_NAV,
+  parisChiroServiceSlugForName,
+} from "@/lib/paris-chiro-services";
 import type { PublicBookingConfig } from "@/lib/site-owner-config";
 
 export type ChiroPageData = {
@@ -71,41 +74,75 @@ export function ChiroPageBlock({ id, data }: { id: string; data: ChiroPageData }
           </div>
         </section>
       );
-    case "treatments":
+    case "treatments": {
+      const cardSlugs = new Set(
+        data.treatments
+          .map((t) => parisChiroServiceSlugForName(t.name))
+          .filter((s): s is string => Boolean(s)),
+      );
+      const moreTherapies = PARIS_CHIRO_SERVICE_NAV.filter(
+        (s) => !cardSlugs.has(s.href.split("/").pop() ?? ""),
+      );
       return (
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
           <h2 className="text-2xl font-black text-[#173f3b]">{data.treatmentsHeading}</h2>
           <p className="mt-3 max-w-3xl leading-relaxed text-stone-700">{data.treatmentsIntro}</p>
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {data.treatments.map((t, idx) => (
-              <div
-                key={`${idx}-${t.name}`}
-                className="flex flex-col rounded-lg border border-stone-200 bg-white p-5 shadow-sm"
-              >
-                <div className="text-[#0f5f5c]">
-                  <ChiroTreatmentIcon name={t.name} />
+            {data.treatments.map((t, idx) => {
+              const slug = parisChiroServiceSlugForName(t.name);
+              const inner = (
+                <>
+                  <div className="text-[#0f5f5c]">
+                    <ChiroTreatmentIcon name={t.name} />
+                  </div>
+                  <h3 className={`mt-3 text-base font-black text-[#173f3b] ${slug ? "group-hover:text-[#0f5f5c]" : ""}`}>
+                    {t.name}
+                  </h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-stone-600">{t.desc}</p>
+                  {slug ? (
+                    <span className="mt-3 inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide text-[#0f5f5c]">
+                      Learn more <span aria-hidden>&rarr;</span>
+                    </span>
+                  ) : null}
+                </>
+              );
+              return slug ? (
+                <Link
+                  key={`${idx}-${t.name}`}
+                  href={`/services/chiropractic/${slug}`}
+                  className="group flex flex-col rounded-lg border border-stone-200 bg-white p-5 shadow-sm transition hover:border-[#0f5f5c]/40 hover:shadow-md"
+                >
+                  {inner}
+                </Link>
+              ) : (
+                <div
+                  key={`${idx}-${t.name}`}
+                  className="flex flex-col rounded-lg border border-stone-200 bg-white p-5 shadow-sm"
+                >
+                  {inner}
                 </div>
-                <h3 className="mt-3 text-base font-black text-[#173f3b]">{t.name}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-stone-600">{t.desc}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
-          <div className="mt-8 border-t border-stone-200 pt-6">
-            <h3 className="text-sm font-black uppercase tracking-wide text-[#173f3b]">
-              More therapies we offer
-            </h3>
-            <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-              {PARIS_CHIRO_SERVICE_NAV.map((s) => (
-                <li key={s.href}>
-                  <Link href={s.href} className="font-bold text-[#0f5f5c] underline hover:text-[#0f817b]">
-                    {s.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {moreTherapies.length > 0 ? (
+            <div className="mt-8 border-t border-stone-200 pt-6">
+              <h3 className="text-sm font-black uppercase tracking-wide text-[#173f3b]">
+                More therapies we offer
+              </h3>
+              <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                {moreTherapies.map((s) => (
+                  <li key={s.href}>
+                    <Link href={s.href} className="font-bold text-[#0f5f5c] underline hover:text-[#0f817b]">
+                      {s.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </section>
       );
+    }
     case "adjustments":
       return <AdjustmentsInActionSection />;
     case "doctors":

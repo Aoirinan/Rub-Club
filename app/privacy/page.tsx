@@ -1,7 +1,7 @@
 import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
-import { LOCATIONS } from "@/lib/constants";
+import { getDisplayLocations } from "@/lib/cms-display";
 import { LegalRelatedLinks } from "@/components/LegalRelatedLinks";
 import { PRIVACY_PRACTICES_PATH } from "@/lib/legal";
 import { getNppDownloadLink } from "@/lib/privacy";
@@ -13,9 +13,9 @@ export const metadata = buildPageMetadata({
   path: "/privacy",
 });
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
   const nppDownload = getNppDownloadLink();
-  const paris = LOCATIONS.paris;
+  const paris = (await getDisplayLocations()).paris;
 
   return (
     <>

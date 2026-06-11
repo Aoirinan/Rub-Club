@@ -1,0 +1,47 @@
+import Image from "next/image";
+import { BRAND_LOGOS } from "@/lib/brand-logos";
+
+/**
+ * Paris header lockup: circular brand mark + type, mirroring SulphurSpringsLockup.
+ * Replaces the padded wide PNG whose curved text was unreadable at header sizes.
+ */
+export function ParisLockup({
+  heightPx = 60,
+  className = "",
+  title = "Chiropractic Associates",
+  subtitle = "& The Rub Club · Paris, TX",
+}: {
+  heightPx?: number;
+  className?: string;
+  /** CMS-editable lockup text (Footer → Header in site content). */
+  title?: string;
+  subtitle?: string;
+}) {
+  return (
+    <span
+      className={`inline-flex max-w-full items-center gap-2 sm:gap-2.5 ${className}`}
+      style={{ height: `${heightPx}px` }}
+    >
+      <Image
+        src={BRAND_LOGOS.chiropracticSource}
+        alt=""
+        width={160}
+        height={120}
+        aria-hidden
+        className="w-auto shrink-0 object-contain"
+        style={{ height: "100%" }}
+        priority
+      />
+      <span className="flex min-w-0 flex-col justify-center text-left leading-tight">
+        <span className="whitespace-nowrap text-base font-black tracking-tight text-[#173f3b] sm:text-lg md:text-xl lg:text-2xl">
+          {title}
+        </span>
+        {subtitle ? (
+          <span className="whitespace-nowrap text-[0.7rem] font-bold text-[#b03a2e] sm:text-xs md:text-sm">
+            {subtitle}
+          </span>
+        ) : null}
+      </span>
+    </span>
+  );
+}

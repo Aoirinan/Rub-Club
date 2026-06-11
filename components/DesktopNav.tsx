@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { BookingCta } from "@/components/BookingCta";
+import { telHref } from "@/lib/constants";
 import {
   GIFT_CARD_DESKTOP_EXPANDED,
   useMassageGiftCardNavExpandedContext,
@@ -10,12 +11,24 @@ import {
 
 export type NavChild = { href: string; label: string; group?: string };
 
+/** Per-clinic contact details rendered inside the Contact dropdown. */
+export type ContactClinicInfo = {
+  name: string;
+  addressLines: readonly string[];
+  phones: { label: string; number: string }[];
+  mapsUrl: string;
+  /** Dedicated contact page for this clinic. */
+  contactHref?: string;
+};
+
 export type NavItem = {
   href: string;
   label: string;
   external?: boolean;
   children?: NavChild[];
   mega?: boolean;
+  /** When set, the dropdown renders clinic contact blocks instead of links. */
+  clinics?: ContactClinicInfo[];
 };
 
 function groupChildren(children: NavChild[]): Map<string, NavChild[]> {
@@ -40,11 +53,82 @@ function DropdownItem({
 
   return (
     <div ref={ref} className="relative">
-      {item.mega ? (
+      {item.clinics?.length ? (
+        <ContactPanel item={item} onClose={onClose} />
+      ) : item.mega ? (
         <MegaPanel item={item} onClose={onClose} />
       ) : (
         <StandardPanel item={item} onClose={onClose} />
       )}
+    </div>
+  );
+}
+
+function ContactPanel({
+  item,
+  onClose,
+}: {
+  item: NavItem;
+  onClose: () => void;
+}) {
+  return (
+    <div className="absolute left-1/2 top-full z-50 w-[460px] -translate-x-1/2 pt-1 lg:w-[540px]">
+      <div className="bg-[var(--header-nav-bg)] p-5 shadow-xl">
+        <div className="grid grid-cols-2 gap-x-6">
+          {item.clinics!.map((clinic) => (
+            <div key={clinic.name} className="text-white">
+              <p className="text-xs font-black uppercase tracking-[0.18em]">{clinic.name}</p>
+              <address className="mt-2 not-italic text-xs font-semibold leading-relaxed text-white/85">
+                {clinic.addressLines.map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))}
+              </address>
+              <div className="mt-2 space-y-1">
+                {clinic.phones.map((p) => (
+                  <a
+                    key={p.number}
+                    href={telHref(p.number)}
+                    className="block text-xs font-bold hover:underline"
+                  >
+                    <span className="text-white/70">{p.label}: </span>
+                    {p.number}
+                  </a>
+                ))}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                <a
+                  href={clinic.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block text-xs font-bold underline hover:text-white/80"
+                >
+                  Get directions
+                </a>
+                {clinic.contactHref ? (
+                  <Link
+                    href={clinic.contactHref}
+                    className="inline-block text-xs font-bold underline hover:text-white/80"
+                    onClick={onClose}
+                  >
+                    Contact page &rarr;
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 border-t border-white/20 pt-3">
+          <Link
+            href={item.href}
+            className="text-xs font-black uppercase tracking-widest text-white hover:underline"
+            onClick={onClose}
+          >
+            Send us a message &rarr;
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
@@ -168,7 +252,7 @@ export function DesktopNav({
     >
       <div className="mx-auto flex max-w-6xl items-center justify-center">
         {items.map((item, idx) => {
-          const hasChildren = !!item.children?.length;
+          const hasChildren = !!item.children?.length || !!item.clinics?.length;
           const isOpen = openIdx === idx;
 
           return (

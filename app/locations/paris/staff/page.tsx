@@ -3,12 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
-import { telHref, LOCATIONS } from "@/lib/constants";
+import { telHref } from "@/lib/constants";
+import { getDisplayLocations } from "@/lib/cms-display";
 import { getParisStaffPageContent } from "@/lib/paris-staff-cms";
 import { renderRichText } from "@/lib/cms";
 import { resolveSiteStaffForBrand, type SiteStaffDisplayMember } from "@/lib/site-staff";
-
-const paris = LOCATIONS.paris;
 
 export const revalidate = 60;
 
@@ -74,10 +73,12 @@ function BioBlock({ bio }: { bio: string }) {
 }
 
 export default async function ParisOfficeStaffPage() {
-  const [staff, page] = await Promise.all([
+  const [staff, page, displayLocs] = await Promise.all([
     resolveSiteStaffForBrand("paris"),
     getParisStaffPageContent(),
+    getDisplayLocations(),
   ]);
+  const paris = displayLocs.paris;
 
   return (
     <>
@@ -127,7 +128,7 @@ export default async function ParisOfficeStaffPage() {
           title={page.ctaTitle}
           body={page.ctaBody}
           secondary={{
-            label: "Call 903-785-5551",
+            label: `Call ${paris.phonePrimary}`,
             href: telHref(paris.phonePrimary),
           }}
         />

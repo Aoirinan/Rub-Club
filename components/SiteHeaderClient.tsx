@@ -19,22 +19,26 @@ import type { HeaderColorConfig } from "@/lib/header-colors";
 import { useSiteBusinessContext } from "@/lib/use-site-business-context";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
 
-export function buildDefaultNavItems(giftCardHref: string): NavItem[] {
+export function buildDefaultNavItems(
+  giftCardHref: string,
+  paris: LocationInfo,
+  sulphur: LocationInfo,
+): NavItem[] {
   return [
-    {
-      href: "/services/massage",
-      label: "Massage",
-      children: [
-        { href: "/services/massage", label: "Paris" },
-        { href: "/sulphur-springs/massage", label: "Sulphur Springs" },
-      ],
-    },
     {
       href: "/services/chiropractic",
       label: "Chiropractic",
       children: [
         { href: "/services/chiropractic", label: "Paris" },
         { href: "/sulphur-springs", label: "Sulphur Springs" },
+      ],
+    },
+    {
+      href: "/services/massage",
+      label: "Massage",
+      children: [
+        { href: "/services/massage", label: "Paris" },
+        { href: "/sulphur-springs/massage", label: "Sulphur Springs" },
       ],
     },
     {
@@ -45,14 +49,45 @@ export function buildDefaultNavItems(giftCardHref: string): NavItem[] {
         { href: "/sulphur-springs/staff", label: "Sulphur Springs" },
       ],
     },
-    { href: WELLNESS_CARE_PLANS_PATH, label: "Wellness Plan" },
+    {
+      href: WELLNESS_CARE_PLANS_PATH,
+      label: "Wellness Plan",
+      children: [
+        { href: WELLNESS_CARE_PLANS_PATH, label: "Wellness Plan" },
+        { href: "/services/massage/prices", label: "Massage Prices" },
+      ],
+    },
     {
       href: giftCardHref,
       label: "Gift cards",
       external: true,
     },
     { href: "/patient-forms", label: "Patient Forms" },
-    { href: "/contact", label: "Contact" },
+    {
+      href: "/contact",
+      label: "Contact",
+      clinics: [
+        {
+          name: "Paris",
+          addressLines: paris.addressLines,
+          phones: [
+            { label: "Office", number: paris.phonePrimary },
+            ...(paris.phoneSecondary?.trim()
+              ? [{ label: "Massage desk", number: paris.phoneSecondary }]
+              : []),
+          ],
+          mapsUrl: paris.mapsUrl,
+          contactHref: "/contact",
+        },
+        {
+          name: "Sulphur Springs",
+          addressLines: sulphur.addressLines,
+          phones: [{ label: "Office", number: sulphur.phonePrimary }],
+          mapsUrl: sulphur.mapsUrl,
+          contactHref: "/sulphur-springs/contact",
+        },
+      ],
+    },
   ];
 }
 
@@ -78,7 +113,7 @@ export function SiteHeaderClient({
     businessContext === "paris_chiro" || businessContext === "sulphur_springs";
 
   // Same nav on every page; only the color theme changes with business context.
-  const navItems = buildDefaultNavItems(giftCardHref);
+  const navItems = buildDefaultNavItems(giftCardHref, paris, sulphur);
 
   const rub = paris.phoneSecondary?.trim();
 

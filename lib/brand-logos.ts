@@ -26,6 +26,21 @@ export function resolveChiroHeaderLogo(src?: string): string {
   return trimmed;
 }
 
+/**
+ * True when the CMS chiro logo is unset or one of the bundled defaults —
+ * in that case the header renders the icon + text ParisLockup instead of a flat image.
+ */
+export function isDefaultChiroLogo(src?: string): boolean {
+  const trimmed = src?.trim() ?? "";
+  if (!trimmed) return true;
+  return (
+    trimmed === BRAND_LOGOS.chiropractic ||
+    trimmed === BRAND_LOGOS.chiropracticSource ||
+    trimmed.endsWith("chiropractic-associates.png") ||
+    trimmed.endsWith("chiropractic-associates-wide.png")
+  );
+}
+
 export type BrandLogoVariant = "home" | "massage" | "chiropractic" | "sulphur-springs";
 
 export type HeaderBrandKey = "chiro" | "ss";
@@ -49,4 +64,6 @@ export const HEADER_BRAND_LOGO_FIELDS: Record<HeaderBrandKey, string> = {
 export type HeaderBrandContent = {
   labels: Record<HeaderBrandKey, string>;
   logos: Record<HeaderBrandKey, string>;
+  /** Text lines rendered next to the Paris circular mark (icon + text lockup). */
+  parisLockup: { title: string; subtitle: string };
 };

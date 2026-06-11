@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
+import { getDisplayLocations } from "@/lib/cms-display";
 import { chiropracticWellnessBreadcrumbs } from "@/lib/service-breadcrumbs";
 import { getContentMany } from "@/lib/cms";
 import {
@@ -24,8 +25,12 @@ export const metadata = buildPageMetadata({
 export const revalidate = 60;
 
 export default async function WellnessCarePlansPage() {
-  const raw = await getContentMany([...WELLNESS_PAGE_CMS_FIELD_IDS]);
+  const [raw, displayLocs] = await Promise.all([
+    getContentMany([...WELLNESS_PAGE_CMS_FIELD_IDS]),
+    getDisplayLocations(),
+  ]);
   const content = buildWellnessCarePlansContent(raw);
+  const parisPhone = displayLocs.paris.phonePrimary;
 
   return (
     <>
@@ -78,8 +83,8 @@ export default async function WellnessCarePlansPage() {
               Back to chiropractic services
             </Link>{" "}
             or call{" "}
-            <a className="font-bold text-[#0f5f5c] underline" href={telHref("903-785-5551")}>
-              903-785-5551
+            <a className="font-bold text-[#0f5f5c] underline" href={telHref(parisPhone)}>
+              {parisPhone}
             </a>
             .
           </p>
@@ -90,7 +95,7 @@ export default async function WellnessCarePlansPage() {
           body={content.ctaBody}
           bookLabel="Book chiropractic online"
           query="service=chiropractic"
-          secondary={{ label: "Call Paris 903-785-5551", href: telHref("903-785-5551") }}
+          secondary={{ label: `Call Paris ${parisPhone}`, href: telHref(parisPhone) }}
         />
       </div>
     </>

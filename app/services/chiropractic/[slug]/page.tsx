@@ -2,14 +2,41 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
+import { LocationHoursSection } from "@/components/LocationHoursSection";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { SsMarkdownBody } from "@/components/SsMarkdownBody";
-import { LOCATIONS, telHref } from "@/lib/constants";
+import { telHref } from "@/lib/constants";
+import { getDisplayLocations } from "@/lib/cms-display";
+import { getParisOfficeHours } from "@/lib/office-hours";
+import { getContentMany } from "@/lib/cms";
 import { allParisChiroServiceSlugs, getParisChiroService } from "@/lib/paris-chiro-services";
+import { parisChiroPageBodyId, parisChiroPageMetaId } from "@/lib/paris-chiro-cms-registry";
 
 export const revalidate = 60;
 
 type Props = { params: Promise<{ slug: string }> };
+
+type ParisChiroPageContent = {
+  slug: string;
+  title: string;
+  metaDescription: string;
+  body: string;
+};
+
+/** Static page copy with manager edits from the CMS (Paris chiro pages scope) applied. */
+async function getParisChiroPageContent(slug: string): Promise<ParisChiroPageContent | null> {
+  const base = getParisChiroService(slug);
+  if (!base) return null;
+  const bodyId = parisChiroPageBodyId(slug);
+  const metaId = parisChiroPageMetaId(slug);
+  const cms = await getContentMany([bodyId, metaId]);
+  return {
+    slug,
+    title: base.title,
+    metaDescription: cms[metaId]?.trim() || base.metaDescription,
+    body: cms[bodyId]?.trim() || base.body,
+  };
+}
 
 export async function generateStaticParams() {
   return allParisChiroServiceSlugs().map((slug) => ({ slug }));
@@ -17,7 +44,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const page = getParisChiroService(slug);
+  const page = await getParisChiroPageContent(slug);
   if (!page) return { title: "Chiropractic" };
 
   return buildPageMetadata({
@@ -30,10 +57,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ParisChiroServicePage({ params }: Props) {
   const { slug } = await params;
-  const page = getParisChiroService(slug);
+  const [page, parisHours, displayLocs] = await Promise.all([
+    getParisChiroPageContent(slug),
+    getParisOfficeHours(),
+    getDisplayLocations(),
+  ]);
   if (!page) notFound();
 
-  const phone = LOCATIONS.paris.phonePrimary;
+  const paris = displayLocs.paris;
+  const phone = paris.phonePrimary;
 
   return (
     <>
@@ -51,6 +83,7 @@ export default async function ParisChiroServicePage({ params }: Props) {
             <SsMarkdownBody body={page.body} />
           </div>
         </section>
+        <LocationHoursSection location={paris} hours={parisHours} />
         <ScheduleCtaCard
           title="Schedule an appointment"
           body="Contact our Paris office to discuss whether this treatment is right for you."

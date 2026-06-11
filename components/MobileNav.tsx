@@ -101,7 +101,7 @@ export function MobileNav({
             </div>
             <nav aria-label="Mobile" className="flex flex-col">
               {items.map((item, idx) => {
-                const hasChildren = !!item.children?.length;
+                const hasChildren = !!item.children?.length || !!item.clinics?.length;
                 const isExpanded = expanded === item.label;
 
                 if (!hasChildren) {
@@ -168,16 +168,76 @@ export function MobileNav({
                     </div>
                     {isExpanded ? (
                       <div className="bg-stone-50 pb-2">
-                        {item.children!.map((c) => (
+                        {item.clinics?.length
+                          ? item.clinics.map((clinic) => (
+                              <div
+                                key={clinic.name}
+                                className="border-b border-stone-200/70 px-8 py-3 last:border-b-0"
+                              >
+                                <p className="text-xs font-black uppercase tracking-wide text-[#173f3b]">
+                                  {clinic.name}
+                                </p>
+                                <address className="mt-1 not-italic text-xs leading-relaxed text-stone-600">
+                                  {clinic.addressLines.map((line) => (
+                                    <span key={line} className="block">
+                                      {line}
+                                    </span>
+                                  ))}
+                                </address>
+                                <div className="mt-1 space-y-0.5">
+                                  {clinic.phones.map((p) => (
+                                    <a
+                                      key={p.number}
+                                      href={telHref(p.number)}
+                                      className="block text-xs font-bold text-[#0f5f5c] underline"
+                                      onClick={() =>
+                                        track("phone_click", { location: clinic.name.toLowerCase() })
+                                      }
+                                    >
+                                      {p.label}: {p.number}
+                                    </a>
+                                  ))}
+                                </div>
+                                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5">
+                                  <a
+                                    href={clinic.mapsUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-block text-xs font-bold text-[#0f5f5c] underline"
+                                  >
+                                    Get directions
+                                  </a>
+                                  {clinic.contactHref ? (
+                                    <Link
+                                      href={clinic.contactHref}
+                                      className="inline-block text-xs font-bold text-[#0f5f5c] underline"
+                                      onClick={close}
+                                    >
+                                      Contact page
+                                    </Link>
+                                  ) : null}
+                                </div>
+                              </div>
+                            ))
+                          : item.children!.map((c) => (
+                              <Link
+                                key={c.href}
+                                href={c.href}
+                                className="focus-ring block px-8 py-2 text-xs font-bold uppercase tracking-wide text-[#173f3b]/80 hover:text-[#0f5f5c]"
+                                onClick={close}
+                              >
+                                {c.label}
+                              </Link>
+                            ))}
+                        {item.clinics?.length ? (
                           <Link
-                            key={c.href}
-                            href={c.href}
-                            className="focus-ring block px-8 py-2 text-xs font-bold uppercase tracking-wide text-[#173f3b]/80 hover:text-[#0f5f5c]"
+                            href={item.href}
+                            className="focus-ring block px-8 py-2 text-xs font-black uppercase tracking-wide text-[#0f5f5c] underline"
                             onClick={close}
                           >
-                            {c.label}
+                            Send us a message
                           </Link>
-                        ))}
+                        ) : null}
                       </div>
                     ) : null}
                   </div>

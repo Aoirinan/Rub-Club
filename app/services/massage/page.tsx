@@ -4,7 +4,6 @@ import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { getContentMany } from "@/lib/cms";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
-import { LOCATIONS } from "@/lib/constants";
 import { serviceBreadcrumbs } from "@/lib/service-breadcrumbs";
 import {
   getPublicBookingConfig,
@@ -14,7 +13,7 @@ import {
 import { massageJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
 import { pageKeywords } from "@/lib/seo-keywords";
-import { getScopeVisualLayout } from "@/lib/cms-display";
+import { getDisplayLocations, getScopeVisualLayout } from "@/lib/cms-display";
 import { getPageBlockOrder } from "@/lib/page-layout-db";
 import { ServicePageVisualSection } from "@/components/ServicePageVisualSection";
 import { MassagePageBlock } from "./MassagePageBlocks";
@@ -42,12 +41,13 @@ export default async function MassageServicePage() {
     "massage_services_list",
     "massage_cta_heading",
   ]);
-  const [massageTeam, blockOrder, visual] = await Promise.all([
+  const [massageTeam, blockOrder, visual, displayLocs] = await Promise.all([
     getMassageTeamForMarketing(),
     getPageBlockOrder("massage"),
     getScopeVisualLayout("massage"),
+    getDisplayLocations(),
   ]);
-  const paris = LOCATIONS.paris;
+  const paris = displayLocs.paris;
   const introParagraphs = (c.massage_intro_body ?? "").split(/\n\n+/).filter(Boolean);
   const serviceLines = (c.massage_services_list ?? "").split(/\n\n+/).filter(Boolean);
   const blockData = { introParagraphs, serviceLines, massageTeam, paris };

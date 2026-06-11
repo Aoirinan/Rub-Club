@@ -2,8 +2,7 @@ import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { LocationDetail } from "@/components/LocationDetail";
-import { LOCATIONS } from "@/lib/constants";
-import { getReviewUrlForLocation } from "@/lib/cms-display";
+import { getDisplayLocations, getReviewUrlForLocation } from "@/lib/cms-display";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
 import { chiropractorJsonLd } from "@/lib/structured-data";
 
@@ -19,14 +18,16 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function SulphurSpringsLocationPage() {
-  const [reviewUrl, officeHours] = await Promise.all([
+  const [reviewUrl, officeHours, displayLocs] = await Promise.all([
     getReviewUrlForLocation("sulphur_springs"),
     getSulphurOfficeHours(),
+    getDisplayLocations(),
   ]);
+  const ss = displayLocs.sulphur_springs;
 
   return (
     <>
-      <JsonLd data={chiropractorJsonLd(LOCATIONS.sulphur_springs)} />
+      <JsonLd data={chiropractorJsonLd(ss)} />
       <Breadcrumbs
         items={[
           { name: "Home", url: "/" },
@@ -36,14 +37,10 @@ export default async function SulphurSpringsLocationPage() {
       />
       <PageHero
         eyebrow="Second office · Sulphur Springs, TX"
-        title="Sulphur Springs, TX — 207 Jefferson St. E"
+        title={`Sulphur Springs, TX — ${ss.streetAddress}`}
         lede="Chiropractic Associates' second location, conveniently located on Jefferson St. E with weekday hours."
       />
-      <LocationDetail
-        location={LOCATIONS.sulphur_springs}
-        reviewUrl={reviewUrl}
-        officeHours={officeHours}
-      />
+      <LocationDetail location={ss} reviewUrl={reviewUrl} officeHours={officeHours} />
     </>
   );
 }

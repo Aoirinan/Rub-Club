@@ -1,25 +1,28 @@
 import { buildPageMetadata } from "@/lib/page-metadata";
 import Image from "next/image";
 import { BookingCta } from "@/components/BookingCta";
-import { telHref, LOCATIONS } from "@/lib/constants";
+import { telHref } from "@/lib/constants";
 import { getContentMany } from "@/lib/cms";
+import { ssPageMetaId } from "@/lib/ss-cms-registry";
+import { SS_SERVICES } from "@/lib/sulphur-springs-content";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
 import { resolveSiteStaffForBrand, splitFeaturedAndGrid } from "@/lib/site-staff";
 import { pageKeywords } from "@/lib/seo-keywords";
-import { getScopeVisualLayout } from "@/lib/cms-display";
+import { getDisplayLocations, getScopeVisualLayout } from "@/lib/cms-display";
 import { getPageBlockOrder } from "@/lib/page-layout-db";
 import { ServicePageVisualSection } from "@/components/ServicePageVisualSection";
 import { JsonLd } from "@/components/JsonLd";
 import { chiropractorJsonLd } from "@/lib/structured-data";
+import { SS_STAFF_SEED } from "@/lib/site-staff-seed-rosters";
 import { SulphurPageBlock } from "./SulphurPageBlocks";
-
-const ss = LOCATIONS.sulphur_springs;
 
 const SS_DOCTOR_FALLBACK = {
   name: "Dr. Conner Collins",
   role: "Chiropractor",
   image: "/images/staff-ss/conner-collins.webp",
-  bio: "Dr. Conner Collins is a chiropractor who takes a practical, hands-on approach to patient care.",
+  bio:
+    SS_STAFF_SEED.find((m) => m.id === "dr_conner_collins")?.bio ||
+    "Dr. Conner Collins is a chiropractor who takes a practical, hands-on approach to patient care.",
 };
 
 export const revalidate = 60;
@@ -36,13 +39,23 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function SulphurSpringsPage() {
-  const [c, ssOfficeHours, staff, blockOrder, visual] = await Promise.all([
-    getContentMany(["ss_hero_heading", "ss_intro_body", "ss_hours"]),
+  const serviceMetaIds = SS_SERVICES.map((s) => ssPageMetaId(s.slug));
+  const [c, ssOfficeHours, staff, blockOrder, visual, displayLocs] = await Promise.all([
+    getContentMany([
+      "ss_hero_heading",
+      "ss_intro_body",
+      "ss_hours",
+      "ss_doctor_heading",
+      "ss_doctor_intro",
+      ...serviceMetaIds,
+    ]),
     getSulphurOfficeHours(),
     resolveSiteStaffForBrand("sulphur"),
     getPageBlockOrder("sulphur-springs"),
     getScopeVisualLayout("sulphur-springs"),
+    getDisplayLocations(),
   ]);
+  const ss = displayLocs.sulphur_springs;
   const { featured } = splitFeaturedAndGrid(staff);
   const doctor = featured
     ? {
@@ -50,14 +63,23 @@ export default async function SulphurSpringsPage() {
         role: featured.role,
         image: featured.image ?? SS_DOCTOR_FALLBACK.image,
         bio: featured.bio || SS_DOCTOR_FALLBACK.bio,
+        ...(featured.videoUrl ? { videoUrl: featured.videoUrl } : {}),
       }
     : SS_DOCTOR_FALLBACK;
+  const services = SS_SERVICES.map((s) => ({
+    href: `/sulphur-springs/${s.slug}`,
+    label: s.title,
+    blurb: c[ssPageMetaId(s.slug)]?.trim() || s.metaDescription,
+  }));
   const blockData = {
     heroHeading: c.ss_hero_heading ?? "",
     introParagraphs: (c.ss_intro_body ?? "").split(/\n\n+/).filter(Boolean),
     ss,
     ssOfficeHours,
     doctor,
+    doctorHeading: c.ss_doctor_heading?.trim() ?? "",
+    doctorIntro: c.ss_doctor_intro?.trim() ?? "",
+    services,
   };
 
   return (
@@ -84,7 +106,7 @@ export default async function SulphurSpringsPage() {
               className="focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#173f3b]"
               href={telHref(ss.phonePrimary)}
             >
-              Call (903) 919-5020
+              Call {ss.phonePrimary}
             </a>
           </div>
         </div>

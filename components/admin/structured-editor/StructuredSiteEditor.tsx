@@ -21,7 +21,8 @@ type Props = {
 };
 
 function parseInitialScope(raw?: string): PageBuilderScopeId {
-  if (raw === "header-branding") return "home";
+  // Legacy bookmark: the header-layout editor was removed (header logos/labels live under Footer → Header).
+  if (raw === "header-branding") return "footer";
   if (raw && isPageLayoutId(raw)) return raw;
   if (raw && isFaqItemsScope(raw)) return raw;
   if (raw && isContentScopeId(raw)) return raw;
@@ -44,6 +45,7 @@ function scopeLivePath(scope: PageBuilderScopeId): string | null {
   if (scope === "faq-copy") return "/faq";
   if (scope === "services-hub") return "/services";
   if (scope === "paris-office") return "/locations/paris";
+  if (scope === "paris-chiro-pages") return "/services/chiropractic";
   if (scope === "paris-staff") return "/locations/paris/staff";
   if (scope === "ss-staff") return "/sulphur-springs/staff";
   if (scope === "ss-subpages") return "/sulphur-springs";
@@ -161,7 +163,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
                 ))}
               </optgroup>
               <optgroup label="Site copy">
-                {CONTENT_SCOPES.filter((s) => s.id !== "header-branding").map((s) => (
+                {CONTENT_SCOPES.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.label}
                   </option>

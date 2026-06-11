@@ -3,7 +3,8 @@ import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { SsMarkdownBody } from "@/components/SsMarkdownBody";
 import { getContentMany, DEFAULTS } from "@/lib/cms";
-import { LOCATIONS, telHref } from "@/lib/constants";
+import { telHref } from "@/lib/constants";
+import { getDisplayLocations } from "@/lib/cms-display";
 
 export const metadata = buildPageMetadata({
   title: "Massage Prices — The Rub Club, Paris TX",
@@ -16,9 +17,12 @@ export const metadata = buildPageMetadata({
 export const revalidate = 60;
 
 export default async function MassagePricesPage() {
-  const c = await getContentMany(["massage_prices_body"]);
+  const [c, displayLocs] = await Promise.all([
+    getContentMany(["massage_prices_body"]),
+    getDisplayLocations(),
+  ]);
   const body = c.massage_prices_body?.trim() || DEFAULTS.massage_prices_body || "";
-  const massagePhone = LOCATIONS.paris.phoneSecondary ?? LOCATIONS.paris.phonePrimary;
+  const massagePhone = displayLocs.paris.phoneSecondary ?? displayLocs.paris.phonePrimary;
 
   return (
     <>

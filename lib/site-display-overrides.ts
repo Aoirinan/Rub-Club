@@ -39,6 +39,11 @@ export function mergedDisplayLocations(
   if (cms?.footer_massage_phone?.trim()) paris.phoneSecondary = cms.footer_massage_phone.trim();
   if (cms?.footer_ss_phone?.trim()) sulphur_springs.phonePrimary = cms.footer_ss_phone.trim();
 
+  const parisMaps = cms?.footer_paris_maps_url?.trim();
+  if (parisMaps && /^https?:\/\//i.test(parisMaps)) paris.mapsUrl = parisMaps;
+  const ssMaps = cms?.footer_ss_maps_url?.trim();
+  if (ssMaps && /^https?:\/\//i.test(ssMaps)) sulphur_springs.mapsUrl = ssMaps;
+
   if (copy?.parisChiroPhone?.trim()) paris.phonePrimary = copy.parisChiroPhone.trim();
   if (copy?.rubClubMassagePhone?.trim()) paris.phoneSecondary = copy.rubClubMassagePhone.trim();
   if (copy?.sulphurChiroPhone?.trim()) sulphur_springs.phonePrimary = copy.sulphurChiroPhone.trim();

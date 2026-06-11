@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { ContactForm } from "@/components/ContactForm";
-import { LOCATION_LIST, telHref } from "@/lib/constants";
+import { telHref } from "@/lib/constants";
+import { getDisplayLocations } from "@/lib/cms-display";
 import { organizationJsonLd } from "@/lib/structured-data";
 import { getParisOfficeHours } from "@/lib/office-hours";
 import { OfficeHoursTable } from "@/components/OfficeHoursTable";
@@ -27,15 +28,17 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function ContactPage() {
-  const [c, bookingConfig, parisHours] = await Promise.all([
+  const [c, bookingConfig, parisHours, displayLocs] = await Promise.all([
     getContentMany(["contact_heading", "contact_subtext"]),
     getPublicBookingConfig(),
     getParisOfficeHours(),
+    getDisplayLocations(),
   ]);
+  const locationList = [displayLocs.paris, displayLocs.sulphur_springs];
 
   return (
     <>
-      <JsonLd data={organizationJsonLd()} />
+      <JsonLd data={organizationJsonLd(locationList)} />
       <Breadcrumbs items={[{ name: "Home", url: "/" }, { name: "Contact", url: "/contact" }]} />
       <PageHero
         eyebrow="We're here to help"
@@ -45,7 +48,7 @@ export default async function ContactPage() {
 
       <div className="mx-auto max-w-6xl space-y-10 px-4 pb-16">
         <section className="grid gap-6 sm:grid-cols-2">
-          {LOCATION_LIST.map((loc) => (
+          {locationList.map((loc) => (
             <article
               key={loc.id}
               className="space-y-4 border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md"

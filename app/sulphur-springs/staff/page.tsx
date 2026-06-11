@@ -1,8 +1,12 @@
 import { buildPageMetadata } from "@/lib/page-metadata";
 import Image from "next/image";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
+import { DoctorCardVideoAccordion } from "@/components/DoctorCardVideoAccordion";
+import { LocationHoursSection } from "@/components/LocationHoursSection";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
-import { telHref, LOCATIONS } from "@/lib/constants";
+import { telHref } from "@/lib/constants";
+import { getDisplayLocations } from "@/lib/cms-display";
+import { getSulphurOfficeHours } from "@/lib/office-hours";
 import { renderRichText } from "@/lib/cms";
 import { getSSStaffPageContent } from "@/lib/ss-cms-content";
 import {
@@ -10,8 +14,6 @@ import {
   splitFeaturedAndGrid,
   type SiteStaffDisplayMember,
 } from "@/lib/site-staff";
-
-const ss = LOCATIONS.sulphur_springs;
 
 export const revalidate = 60;
 
@@ -59,6 +61,21 @@ function StaffPhoto({ member, className }: { member: SiteStaffDisplayMember; cla
   );
 }
 
+function meetVideoLabel(fullName: string): string {
+  const without = fullName.replace(/^Dr\.\s*/i, "").trim();
+  const first = without.split(/\s+/)[0] ?? without;
+  return /^Dr\.\s*/i.test(fullName) ? `Meet Dr. ${first}` : `Meet ${first}`;
+}
+
+function StaffVideo({ member }: { member: SiteStaffDisplayMember }) {
+  if (!member.videoUrl) return null;
+  return (
+    <DoctorCardVideoAccordion
+      videos={[{ src: member.videoUrl, label: meetVideoLabel(member.name) }]}
+    />
+  );
+}
+
 function BioBlock({ bio }: { bio: string }) {
   if (!bio.trim()) return null;
   return (
@@ -74,10 +91,13 @@ function BioBlock({ bio }: { bio: string }) {
 }
 
 export default async function SulphurSpringsStaffPage() {
-  const [allStaff, page] = await Promise.all([
+  const [allStaff, page, ssHours, displayLocs] = await Promise.all([
     resolveSiteStaffForBrand("sulphur"),
     getSSStaffPageContent(),
+    getSulphurOfficeHours(),
+    getDisplayLocations(),
   ]);
+  const ss = displayLocs.sulphur_springs;
   const { featured, grid: rest } = splitFeaturedAndGrid(allStaff);
 
   return (
@@ -105,6 +125,9 @@ export default async function SulphurSpringsStaffPage() {
                   <h2 className="text-2xl font-black text-[#173f3b]">{featured.name}</h2>
                   <p className="text-sm font-bold text-stone-600">{featured.role}</p>
                 </div>
+                <div className="max-w-md">
+                  <StaffVideo member={featured} />
+                </div>
                 <BioBlock bio={featured.bio} />
               </div>
             </div>
@@ -123,6 +146,7 @@ export default async function SulphurSpringsStaffPage() {
                 <div className="flex flex-1 flex-col p-5">
                   <h3 className="text-lg font-black text-[#173f3b]">{member.name}</h3>
                   <p className="text-sm font-bold text-stone-600">{member.role}</p>
+                  <StaffVideo member={member} />
                   <BioBlock bio={member.bio} />
                 </div>
               </article>
@@ -130,11 +154,13 @@ export default async function SulphurSpringsStaffPage() {
           </div>
         </section>
 
+        <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
+
         <ScheduleCtaCard
           title={page.ctaTitle}
           body={page.ctaBody}
           secondary={{
-            label: "Call 903-919-5020",
+            label: `Call ${ss.phonePrimary}`,
             href: telHref(ss.phonePrimary),
           }}
         />

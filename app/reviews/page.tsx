@@ -1,8 +1,7 @@
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { TestimonialVideosSection } from "@/components/TestimonialVideosSection";
-import { LOCATION_LIST } from "@/lib/constants";
-import { getReviewUrlForLocation } from "@/lib/cms-display";
+import { getDisplayLocations, getReviewUrlForLocation } from "@/lib/cms-display";
 import { getReviewsPageContent } from "@/lib/static-pages-content";
 
 export const revalidate = 60;
@@ -17,10 +16,12 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function ReviewsPage() {
+  const displayLocs = await getDisplayLocations();
+  const locationList = [displayLocs.paris, displayLocs.sulphur_springs];
   const [content, reviewLinks] = await Promise.all([
     getReviewsPageContent(),
     Promise.all(
-      LOCATION_LIST.map(async (loc) => ({
+      locationList.map(async (loc) => ({
         id: loc.id,
         shortName: loc.shortName,
         url: await getReviewUrlForLocation(loc.id),

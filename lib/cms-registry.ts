@@ -20,11 +20,11 @@ import {
   buildParisStaffCmsRegistry,
 } from "@/lib/paris-staff-cms-registry";
 import { buildSSCmsDefaults, buildSSCmsRegistry } from "@/lib/ss-cms-registry";
-import { buildSSStaffCmsDefaults, buildSSStaffCmsRegistry } from "@/lib/ss-staff-cms-registry";
 import {
-  buildHeaderBrandingCmsDefaults,
-  buildHeaderBrandingCmsRegistry,
-} from "@/lib/header-branding-cms";
+  buildParisChiroCmsDefaults,
+  buildParisChiroCmsRegistry,
+} from "@/lib/paris-chiro-cms-registry";
+import { buildSSStaffCmsDefaults, buildSSStaffCmsRegistry } from "@/lib/ss-staff-cms-registry";
 import {
   STATIC_PAGES_CMS_REGISTRY,
   buildStaticPagesCmsDefaults,
@@ -43,6 +43,7 @@ export type ContentPageKey =
   | "Chiropractic"
   | "Massage"
   | "Paris / main office"
+  | "Paris chiro pages"
   | "Paris staff"
   | "Sulphur Springs"
   | "Sulphur staff"
@@ -56,7 +57,6 @@ export type ContentPageKey =
   | "Contact"
   | "Footer"
   | "Navigation"
-  | "Header branding"
   | "Doctors"
   | "Wellness care plans";
 
@@ -217,6 +217,8 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
 
   { id: "ss_hero_heading", pageLabel: "Sulphur Springs", sectionLabel: "Hero", fieldLabel: "Main Heading", type: "text" },
   { id: "ss_intro_body", pageLabel: "Sulphur Springs", sectionLabel: "Intro", fieldLabel: "Body Copy", type: "richtext" },
+  { id: "ss_doctor_heading", pageLabel: "Sulphur Springs", sectionLabel: "Doctor spotlight", fieldLabel: "Section heading", type: "text" },
+  { id: "ss_doctor_intro", pageLabel: "Sulphur Springs", sectionLabel: "Doctor spotlight", fieldLabel: "Intro line (blank = auto from doctor name)", type: "text" },
   {
     id: "ss_hours",
     pageLabel: "Sulphur Springs",
@@ -238,6 +240,9 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "contact_heading", pageLabel: "Contact", sectionLabel: "Hero", fieldLabel: "Heading", type: "text" },
   { id: "contact_subtext", pageLabel: "Contact", sectionLabel: "Hero", fieldLabel: "Subtext", type: "text" },
 
+  { id: "ss_contact_heading", pageLabel: "Sulphur Springs", sectionLabel: "Contact page", fieldLabel: "Heading", type: "text" },
+  { id: "ss_contact_subtext", pageLabel: "Sulphur Springs", sectionLabel: "Contact page", fieldLabel: "Subtext", type: "text" },
+
   {
     id: "header_show_top_phone_bar",
     pageLabel: "Footer",
@@ -247,14 +252,21 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   },
   { id: "header_chiro_label", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Chiropractic (Paris) label (under logo)", type: "text" },
   { id: "header_ss_label", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Sulphur Springs label (under logo)", type: "text" },
-  { id: "header_chiro_logo", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Chiropractic (Paris) logo", type: "image" },
+  { id: "header_chiro_logo", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Chiropractic (Paris) logo (replaces icon + text lockup)", type: "image" },
   { id: "header_ss_logo", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Sulphur Springs logo (replaces icon + text lockup)", type: "image" },
+  { id: "header_paris_lockup_title", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Paris lockup title (next to logo)", type: "text" },
+  { id: "header_paris_lockup_subtitle", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Paris lockup subtitle (next to logo)", type: "text" },
   { id: "footer_tagline", pageLabel: "Footer", sectionLabel: "Footer", fieldLabel: "Tagline", type: "text" },
-  { id: "footer_paris_address", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Address", type: "text" },
-  { id: "footer_paris_phone", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Phone", type: "phone" },
-  { id: "footer_massage_phone", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Massage Desk Phone", type: "phone" },
-  { id: "footer_ss_address", pageLabel: "Footer", sectionLabel: "Sulphur Springs", fieldLabel: "Address", type: "text" },
-  { id: "footer_ss_phone", pageLabel: "Footer", sectionLabel: "Sulphur Springs", fieldLabel: "Phone", type: "phone" },
+  { id: "footer_paris_address", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Address (header, footer, contact pages + location sections)", type: "text" },
+  { id: "footer_paris_phone", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Phone (header, footer, contact pages + location sections)", type: "phone" },
+  { id: "footer_massage_phone", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Massage Desk Phone (header, footer + Contact menu)", type: "phone" },
+  { id: "footer_paris_maps_url", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Google Maps directions link", type: "text" },
+  { id: "footer_ss_address", pageLabel: "Footer", sectionLabel: "Sulphur Springs", fieldLabel: "Address (header, footer, contact pages + location sections)", type: "text" },
+  { id: "footer_ss_phone", pageLabel: "Footer", sectionLabel: "Sulphur Springs", fieldLabel: "Phone (header, footer, contact pages + location sections)", type: "phone" },
+  { id: "footer_ss_maps_url", pageLabel: "Footer", sectionLabel: "Sulphur Springs", fieldLabel: "Google Maps directions link", type: "text" },
+
+  { id: "location_section_heading", pageLabel: "Footer", sectionLabel: "Location & hours sections", fieldLabel: "Location heading (subpage bottom sections)", type: "text" },
+  { id: "hours_section_heading", pageLabel: "Footer", sectionLabel: "Location & hours sections", fieldLabel: "Hours heading (subpage bottom sections)", type: "text" },
   { id: "footer_copyright", pageLabel: "Footer", sectionLabel: "Footer", fieldLabel: "Copyright Text", type: "text" },
 
   { id: "nav_giftcard_url", pageLabel: "Navigation", sectionLabel: "Links", fieldLabel: "Gift Card URL", type: "url" },
@@ -318,9 +330,9 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   },
 
   ...buildSSCmsRegistry(),
+  ...buildParisChiroCmsRegistry(),
   ...buildParisStaffCmsRegistry(),
   ...buildSSStaffCmsRegistry(),
-  ...buildHeaderBrandingCmsRegistry(),
   ...STATIC_PAGES_CMS_REGISTRY,
 ];
 
@@ -392,6 +404,9 @@ export const DEFAULTS: Record<string, string> = {
 
   paris_hours: PARIS_HOURS_DEFAULT_TEXT,
 
+  ss_doctor_heading: "Our Sulphur Springs chiropractor",
+  ss_doctor_intro: "",
+
   ss_hero_heading: "Chiropractic Care Created Precisely For You",
   ss_intro_body:
     "Welcome to our practice! We hope that you will find this website helpful in learning more about our office, our chiropractic care, and how chiropractic care can improve your quality of life.\n\nWe understand that although our patients may be diagnosed with the same condition, they may respond differently to treatments. For this reason, we tailor a specific plan of action to meet your needs, goals and unique condition.",
@@ -419,19 +434,30 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
   contact_subtext:
     "Call the office that's most convenient, or send us a message and we will follow up during office hours.",
 
+  ss_contact_heading: "Contact our Sulphur Springs office",
+  ss_contact_subtext:
+    "Call us at 903-919-5020, or send us a message and we will follow up during office hours.",
+
   header_show_top_phone_bar: "true",
   header_chiro_label: "Chiropractic — Paris",
   header_ss_label: "Chiro / Massage",
   header_chiro_logo: BRAND_LOGOS.chiropractic,
   header_ss_logo: "",
+  header_paris_lockup_title: "Chiropractic Associates",
+  header_paris_lockup_subtitle: "& The Rub Club · Paris, TX",
 
   footer_tagline:
     "Family-owned wellness in Northeast Texas. Two practices, one address in Paris â€” plus chiropractic care in Sulphur Springs.",
   footer_paris_address: `${paris.streetAddress}, ${paris.addressLocality}, ${paris.addressRegion} ${paris.postalCode}`,
   footer_paris_phone: paris.phonePrimary,
   footer_massage_phone: paris.phoneSecondary ?? "903-739-9959",
+  footer_paris_maps_url: paris.mapsUrl,
   footer_ss_address: `${ss.streetAddress}, ${ss.addressLocality}, ${ss.addressRegion} ${ss.postalCode}`,
   footer_ss_phone: ss.phonePrimary,
+  footer_ss_maps_url: ss.mapsUrl,
+
+  location_section_heading: "Our Location",
+  hours_section_heading: "Office Hours",
   footer_copyright: `Â© ${new Date().getFullYear()} ${siteShortName}. All rights reserved.`,
 
   nav_giftcard_url: GIFT_CARD_ORDER_URL,
@@ -439,9 +465,9 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
 
   ...wellnessCarePlansDefaults(),
   ...buildSSCmsDefaults(),
+  ...buildParisChiroCmsDefaults(),
   ...buildParisStaffCmsDefaults(),
   ...buildSSStaffCmsDefaults(),
-  ...buildHeaderBrandingCmsDefaults(),
   ...buildStaticPagesCmsDefaults(),
 };
 

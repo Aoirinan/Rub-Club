@@ -5,7 +5,6 @@ import { JsonLd } from "@/components/JsonLd";
 import { getContentMany, parseConditionsList } from "@/lib/cms";
 import { DOCTOR_CMS_KEYS, getDoctorsForMarketing } from "@/lib/cms-doctors";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
-import { LOCATIONS } from "@/lib/constants";
 import {
   getPublicBookingConfig,
   isPublicBookingEnabled,
@@ -15,7 +14,7 @@ import { serviceBreadcrumbs } from "@/lib/service-breadcrumbs";
 import { chiropractorJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
 import { pageKeywords } from "@/lib/seo-keywords";
-import { getScopeVisualLayout } from "@/lib/cms-display";
+import { getDisplayLocations, getScopeVisualLayout } from "@/lib/cms-display";
 import { getPageBlockOrder } from "@/lib/page-layout-db";
 import { ServicePageVisualSection } from "@/components/ServicePageVisualSection";
 import { parseChiroTreatments } from "@/lib/chiro-treatments";
@@ -83,7 +82,7 @@ export default async function ChiropracticServicePage() {
     getPageBlockOrder("chiropractic"),
     getScopeVisualLayout("chiropractic"),
   ]);
-  const paris = LOCATIONS.paris;
+  const paris = (await getDisplayLocations()).paris;
   const blockData = {
     chooseTitle: c.chiro_choose_title ?? "",
     introParagraphs: (c.chiro_intro_body ?? "").split(/\n\n+/).filter(Boolean),

@@ -4,14 +4,15 @@ import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { BookingCta } from "@/components/BookingCta";
+import { LocationHoursSection } from "@/components/LocationHoursSection";
+import { getSulphurOfficeHours } from "@/lib/office-hours";
 import { getContentMany, renderRichText } from "@/lib/cms";
 import { parseChiroTreatments } from "@/lib/chiro-treatments";
-import { LOCATIONS, telHref } from "@/lib/constants";
+import { telHref } from "@/lib/constants";
+import { getDisplayLocations } from "@/lib/cms-display";
 import { pageKeywords } from "@/lib/seo-keywords";
 import { serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
-
-const ss = LOCATIONS.sulphur_springs;
 
 export const revalidate = 60;
 
@@ -26,12 +27,17 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default async function SulphurSpringsMassagePage() {
-  const c = await getContentMany([
-    "ss_massage_hero_heading",
-    "ss_massage_hero_subheading",
-    "ss_massage_intro_body",
-    "ss_massage_services_list",
+  const [c, ssHours, displayLocs] = await Promise.all([
+    getContentMany([
+      "ss_massage_hero_heading",
+      "ss_massage_hero_subheading",
+      "ss_massage_intro_body",
+      "ss_massage_services_list",
+    ]),
+    getSulphurOfficeHours(),
+    getDisplayLocations(),
   ]);
+  const ss = displayLocs.sulphur_springs;
   const introParagraphs = (c.ss_massage_intro_body ?? "").split(/\n\n+/).filter(Boolean);
   const services = parseChiroTreatments(c.ss_massage_services_list ?? "");
 
@@ -115,6 +121,8 @@ export default async function SulphurSpringsMassagePage() {
             </Link>
           </div>
         </section>
+
+        <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
       </div>
     </div>
   );

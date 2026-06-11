@@ -8,6 +8,7 @@ export type ContentScopeId =
   | "home"
   | "wellness"
   | "paris-office"
+  | "paris-chiro-pages"
   | "paris-staff"
   | "ss-staff"
   | "ss-subpages"
@@ -20,7 +21,6 @@ export type ContentScopeId =
   | "contact"
   | "footer"
   | "navigation"
-  | "header-branding"
   | "doctors-global";
 
 export type PageBuilderScopeId = PageLayoutId | ContentScopeId | "faq-items";
@@ -30,6 +30,7 @@ export function isContentScopeId(v: string): v is ContentScopeId {
     v === "home" ||
     v === "wellness" ||
     v === "paris-office" ||
+    v === "paris-chiro-pages" ||
     v === "paris-staff" ||
     v === "ss-staff" ||
     v === "ss-subpages" ||
@@ -42,7 +43,6 @@ export function isContentScopeId(v: string): v is ContentScopeId {
     v === "contact" ||
     v === "footer" ||
     v === "navigation" ||
-    v === "header-branding" ||
     v === "doctors-global"
   );
 }
@@ -59,6 +59,7 @@ const CONTENT_SCOPE_PAGES: Record<ContentScopeId, ContentPageKey[]> = {
   home: ["Home"],
   wellness: ["Wellness care plans"],
   "paris-office": ["Paris / main office"],
+  "paris-chiro-pages": ["Paris chiro pages"],
   "paris-staff": ["Paris staff"],
   "ss-staff": ["Sulphur staff"],
   "ss-subpages": ["SS subpages"],
@@ -71,7 +72,6 @@ const CONTENT_SCOPE_PAGES: Record<ContentScopeId, ContentPageKey[]> = {
   contact: ["Contact"],
   footer: ["Footer"],
   navigation: ["Navigation"],
-  "header-branding": ["Header branding"],
   "doctors-global": ["Doctors"],
 };
 
@@ -120,7 +120,9 @@ export const CONTENT_SCOPES: ContentScopeDef[] = (
           ? "Sulphur subpages"
           : id === "paris-office"
             ? "Paris office"
-            : id === "paris-staff"
+            : id === "paris-chiro-pages"
+              ? "Paris chiro pages"
+              : id === "paris-staff"
               ? "Paris staff"
               : id === "ss-staff"
                 ? "Sulphur staff"
@@ -128,13 +130,10 @@ export const CONTENT_SCOPES: ContentScopeDef[] = (
                 ? "Services hub"
                 : id === "patient-forms"
                   ? "Patient forms"
-                  : id === "header-branding"
-                    ? "Header logos"
+                  : id === "footer"
+                    ? "Header & footer"
                     : id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, " "),
-  description:
-    id === "header-branding"
-      ? "Adjust header logo sizes per brand"
-      : `Edit ${pageLabels.join(", ")} copy`,
+  description: `Edit ${pageLabels.join(", ")} copy`,
   sections: buildSectionsForPageLabels(pageLabels),
 }));
 

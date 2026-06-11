@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { track } from "@/lib/analytics";
 
-export function ContactForm() {
+export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -20,12 +20,13 @@ export function ContactForm() {
       return;
     }
     setSubmitting(true);
-    track("contact_submitted", { topic });
+    const sentTopic = locationTag ? `${topic} — ${locationTag}` : topic;
+    track("contact_submitted", { topic: sentTopic });
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, email, phone, topic, message, website }),
+        body: JSON.stringify({ name, email, phone, topic: sentTopic, message, website }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {

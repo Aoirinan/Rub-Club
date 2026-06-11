@@ -49,6 +49,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
   const [newSpecialties, setNewSpecialties] = useState("");
   const [newFeatured, setNewFeatured] = useState(false);
   const [newPhoto, setNewPhoto] = useState<File | null>(null);
+  const [newVideo, setNewVideo] = useState<File | null>(null);
 
   const [editing, setEditing] = useState<SiteStaffMemberStored | null>(null);
   const [editName, setEditName] = useState("");
@@ -59,6 +60,8 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
   const [editFeatured, setEditFeatured] = useState(false);
   const [editSpecialties, setEditSpecialties] = useState("");
   const [editPhoto, setEditPhoto] = useState<File | null>(null);
+  const [editVideo, setEditVideo] = useState<File | null>(null);
+  const [editRemoveVideo, setEditRemoveVideo] = useState(false);
 
   const load = useCallback(async () => {
     const user = auth?.currentUser;
@@ -219,6 +222,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
       if (newSpecialties.trim()) form.set("specialties", newSpecialties.trim());
       if (newFeatured) form.set("featured", "true");
       form.set("photo", newPhoto);
+      if (newVideo) form.set("video", newVideo);
       const res = await fetch("/api/admin/site-staff", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
@@ -238,6 +242,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
       setNewSpecialties("");
       setNewFeatured(false);
       setNewPhoto(null);
+      setNewVideo(null);
       await load();
       setSectionAlert({ kind: "success", text: "Staff member added." });
     } finally {
@@ -257,7 +262,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
     setSaving(true);
     try {
       const token = await user.getIdToken();
-      if (editPhoto) {
+      if (editPhoto || editVideo) {
         const form = new FormData();
         form.set("name", editName.trim());
         form.set("title", editTitle.trim());
@@ -266,7 +271,9 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
         form.set("active", editActive ? "true" : "false");
         form.set("featured", editFeatured ? "true" : "false");
         form.set("specialties", editSpecialties.trim());
-        form.set("photo", editPhoto);
+        if (editPhoto) form.set("photo", editPhoto);
+        if (editVideo) form.set("video", editVideo);
+        if (editRemoveVideo && !editVideo) form.set("removeVideo", "true");
         const res = await fetch(`/api/admin/site-staff/${encodeURIComponent(editing.id)}`, {
           method: "PATCH",
           headers: { Authorization: `Bearer ${token}` },
@@ -298,6 +305,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
               .split(",")
               .map((s) => s.trim())
               .filter(Boolean),
+            ...(editRemoveVideo ? { removeVideo: true } : {}),
           }),
         });
         const data = await parseAdminJson(res);
@@ -312,6 +320,8 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
       setSectionAlert({ kind: "success", text: "Saved." });
       setEditing(null);
       setEditPhoto(null);
+      setEditVideo(null);
+      setEditRemoveVideo(false);
       await load();
     } finally {
       setSaving(false);
@@ -359,6 +369,8 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
     setEditFeatured(row.featured);
     setEditSpecialties(row.specialties.join(", "));
     setEditPhoto(null);
+    setEditVideo(null);
+    setEditRemoveVideo(false);
   }
 
   const staffPath =
@@ -517,6 +529,18 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
             onChange={(e) => setNewPhoto(e.target.files?.[0] ?? null)}
           />
         </label>
+        <label className="block space-y-1 text-sm">
+          <span className="font-medium text-slate-800">
+            Intro video (optional — shows a &ldquo;Meet&rdquo; button under their name)
+          </span>
+          <input
+            type="file"
+            accept="video/mp4,video/quicktime,video/webm"
+            className="w-full text-sm"
+            onChange={(e) => setNewVideo(e.target.files?.[0] ?? null)}
+          />
+          <span className="block text-xs text-slate-500">MP4, MOV, or WebM — max 80 MB.</span>
+        </label>
         <button
           type="button"
           disabled={saving || loading}
@@ -603,6 +627,30 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
               onChange={(e) => setEditPhoto(e.target.files?.[0] ?? null)}
             />
           </label>
+          <label className="block space-y-1">
+            <span className="font-medium text-slate-800">
+              {editing.videoUrl ? "Replace intro video (optional)" : "Intro video (optional)"}
+            </span>
+            <input
+              type="file"
+              accept="video/mp4,video/quicktime,video/webm"
+              className="w-full text-sm"
+              onChange={(e) => setEditVideo(e.target.files?.[0] ?? null)}
+            />
+            <span className="block text-xs text-slate-500">
+              MP4, MOV, or WebM — max 80 MB. Shows a &ldquo;Meet&rdquo; button under their name on the website.
+            </span>
+          </label>
+          {editing.videoUrl && !editVideo ? (
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={editRemoveVideo}
+                onChange={(e) => setEditRemoveVideo(e.target.checked)}
+              />
+              <span>Remove current intro video</span>
+            </label>
+          ) : null}
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -653,6 +701,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
                   </div>
                   <div className="text-xs text-slate-600">
                     {m.title} · {brandLabel(m.brand)} · order {m.order}
+                    {m.videoUrl ? " · has intro video" : ""}
                   </div>
                 </div>
               </div>

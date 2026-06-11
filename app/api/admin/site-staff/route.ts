@@ -15,7 +15,9 @@ import {
 import { seedSiteStaffCollection } from "@/lib/site-staff-seed";
 import {
   resolveSiteStaffImageContentType,
+  resolveSiteStaffVideoContentType,
   uploadSiteStaffPhoto,
+  uploadSiteStaffVideo,
 } from "@/lib/site-staff-upload";
 import { requireStaff } from "@/lib/staff-auth";
 
@@ -131,6 +133,30 @@ export async function POST(req: Request) {
       const msg = e instanceof Error ? e.message : "Upload failed";
       return NextResponse.json({ error: msg }, { status: 400 });
     }
+    let videoUrl: string | undefined;
+    let videoStoragePath: string | undefined;
+    const videoFile = form.get("video");
+    if (videoFile instanceof File && videoFile.size > 0) {
+      const videoContentType = resolveSiteStaffVideoContentType(videoFile.type);
+      if (!videoContentType) {
+        return NextResponse.json(
+          { error: "Unsupported video type. Use MP4, MOV, or WebM." },
+          { status: 400 },
+        );
+      }
+      try {
+        const up = await uploadSiteStaffVideo({
+          memberId: id,
+          buffer: Buffer.from(await videoFile.arrayBuffer()),
+          contentType: videoContentType,
+        });
+        videoUrl = up.videoUrl;
+        videoStoragePath = up.videoStoragePath;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Video upload failed";
+        return NextResponse.json({ error: msg }, { status: 400 });
+      }
+    }
     const specialties = specialtiesRaw
       ? specialtiesRaw.split(",").map((s) => s.trim()).filter(Boolean)
       : [];
@@ -140,6 +166,7 @@ export async function POST(req: Request) {
       bio,
       photoUrl,
       photoStoragePath,
+      ...(videoUrl ? { videoUrl, videoStoragePath } : {}),
       specialties,
       brand,
       order,

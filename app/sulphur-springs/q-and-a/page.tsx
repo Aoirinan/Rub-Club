@@ -1,8 +1,11 @@
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
+import { LocationHoursSection } from "@/components/LocationHoursSection";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { FaqList } from "@/components/FaqList";
 import { telHref } from "@/lib/constants";
+import { getDisplayLocations } from "@/lib/cms-display";
+import { getSulphurOfficeHours } from "@/lib/office-hours";
 import { getSulphurSpringsFaqs } from "@/lib/site-faqs";
 
 export const revalidate = 60;
@@ -16,7 +19,12 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function QAndAPage() {
-  const faqs = await getSulphurSpringsFaqs();
+  const [faqs, ssHours, displayLocs] = await Promise.all([
+    getSulphurSpringsFaqs(),
+    getSulphurOfficeHours(),
+    getDisplayLocations(),
+  ]);
+  const ss = displayLocs.sulphur_springs;
 
   return (
     <>
@@ -35,10 +43,11 @@ export default async function QAndAPage() {
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-10">
           <FaqList entries={faqs} />
         </section>
+        <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
         <ScheduleCtaCard
           title="Still have questions?"
           body="Contact our Sulphur Springs office — we're happy to help."
-          secondary={{ label: "Call 903-919-5020", href: telHref("903-919-5020") }}
+          secondary={{ label: `Call ${ss.phonePrimary}`, href: telHref(ss.phonePrimary) }}
         />
       </div>
     </>

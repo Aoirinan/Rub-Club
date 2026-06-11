@@ -1,9 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
+import { DoctorCardVideoAccordion } from "@/components/DoctorCardVideoAccordion";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
+import { ChiroTreatmentIcon } from "@/components/ChiroTreatmentIcon";
 import { OfficeHoursTable } from "@/components/OfficeHoursTable";
 import { renderRichText } from "@/lib/cms";
-import { SS_SERVICE_NAV, SS_INJURY_NAV } from "@/lib/sulphur-springs-content";
+import { SS_INJURY_NAV } from "@/lib/sulphur-springs-content";
 import type { OfficeHoursRow } from "@/lib/office-hours";
 import { telHref, type LocationInfo } from "@/lib/constants";
 
@@ -12,6 +14,27 @@ export type SulphurDoctor = {
   role: string;
   image: string;
   bio: string;
+  videoUrl?: string;
+};
+
+function meetLabel(fullName: string): string {
+  const without = fullName.replace(/^Dr\.\s*/i, "").trim();
+  const first = without.split(/\s+/)[0] ?? without;
+  return `Meet Dr. ${first}`;
+}
+
+/** First sentence of a service blurb, for the card grid. */
+function firstSentence(text: string): string {
+  const clean = text.trim();
+  const match = clean.match(/^[^.!?]+[.!?]/);
+  return (match ? match[0] : clean).trim();
+}
+
+export type SulphurServiceCard = {
+  href: string;
+  label: string;
+  /** CMS-editable description (SS subpages meta field); trimmed to one sentence on the card. */
+  blurb: string;
 };
 
 export type SulphurPageData = {
@@ -20,13 +43,17 @@ export type SulphurPageData = {
   ss: LocationInfo;
   ssOfficeHours: OfficeHoursRow[];
   doctor: SulphurDoctor;
+  /** CMS-editable doctor spotlight heading; intro falls back to "{name} practices at...". */
+  doctorHeading: string;
+  doctorIntro: string;
+  services: SulphurServiceCard[];
 };
 
 export function SulphurPageBlock({ id, data }: { id: string; data: SulphurPageData }) {
   switch (id) {
     case "featured_services":
       return (
-        <section aria-label="Featured services" className="grid gap-4 md:grid-cols-4">
+        <section aria-label="Featured services" className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
           {[
             { label: "Pain Relief", href: "/sulphur-springs/common-chiropractic-conditions", desc: "Chiropractic care can help you manage your pain." },
             { label: "Adjustments", href: "/sulphur-springs/adjustments-and-manipulation", desc: "Keep the body functioning at its highest level." },
@@ -36,11 +63,13 @@ export function SulphurPageBlock({ id, data }: { id: string; data: SulphurPageDa
             <Link
               key={tile.label}
               href={tile.href}
-              className="group border-t-4 border-[#2980b9] bg-white p-5 shadow-md transition hover:shadow-lg"
+              className="group flex flex-col rounded-lg border-t-4 border-[#2980b9] bg-white p-5 shadow-md transition hover:shadow-lg"
             >
               <h2 className="text-base font-black text-[#173f3b] group-hover:text-[#2980b9]">{tile.label}</h2>
-              <p className="mt-2 text-xs leading-relaxed text-stone-600">{tile.desc}</p>
-              <span className="mt-3 inline-block text-xs font-black uppercase tracking-wide text-[#2980b9]">Click Here</span>
+              <p className="mt-2 flex-1 text-xs leading-relaxed text-stone-600">{tile.desc}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide text-[#2980b9]">
+                Learn more <span aria-hidden>&rarr;</span>
+              </span>
             </Link>
           ))}
         </section>
@@ -78,37 +107,63 @@ export function SulphurPageBlock({ id, data }: { id: string; data: SulphurPageDa
               />
             </div>
             <a href={telHref(data.ss.phonePrimary)} className="inline-block text-lg font-black text-[#2980b9] hover:underline">
-              (903) 919-5020
+              {data.ss.phonePrimary}
             </a>
           </aside>
         </section>
       );
     case "doctor":
       return (
-        <section className="grid gap-8 border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[minmax(0,1fr)_2fr]">
-          {data.doctor.image ? (
-            <div className="relative aspect-[3/4] w-full overflow-hidden bg-stone-200">
-              <Image
-                src={data.doctor.image}
-                alt={`Portrait of ${data.doctor.name}, ${data.doctor.role}`}
-                fill
-                className="object-cover object-top"
-                sizes="(max-width: 1024px) 100vw, 33vw"
-              />
+        <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-2xl font-black text-[#173f3b]">
+            {data.doctorHeading || "Our Sulphur Springs chiropractor"}
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-stone-600">
+            {data.doctorIntro || `${data.doctor.name} practices at our Sulphur Springs office.`}
+          </p>
+          <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,340px)_1fr]">
+            <div className="overflow-hidden border border-stone-200 bg-stone-50 shadow-sm">
+              <div className="relative aspect-[3/4] w-full bg-stone-200">
+                <Image
+                  src={data.doctor.image}
+                  alt={`Portrait of ${data.doctor.name}, ${data.doctor.role}`}
+                  fill
+                  className="object-cover object-top"
+                  sizes="(max-width: 1024px) 100vw, 340px"
+                  unoptimized={/^https?:\/\//i.test(data.doctor.image)}
+                />
+              </div>
             </div>
-          ) : null}
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-2xl font-black text-[#173f3b]">{data.doctor.name}</h2>
+            <div className="flex flex-col">
+              <h3 className="text-xl font-black text-[#173f3b]">{data.doctor.name}</h3>
               <p className="text-sm font-bold text-stone-600">{data.doctor.role}</p>
+              {data.doctor.videoUrl ? (
+                <div className="max-w-md">
+                  <DoctorCardVideoAccordion
+                    videos={[{ src: data.doctor.videoUrl, label: meetLabel(data.doctor.name) }]}
+                  />
+                </div>
+              ) : null}
+              <div className="mt-4 space-y-4">
+                {data.doctor.bio
+                  .split(/\n{2,}/)
+                  .map((p) => p.trim())
+                  .filter(Boolean)
+                  .map((p, idx) => (
+                    <p key={`doctor-bio-${idx}`} className="leading-relaxed text-stone-700">
+                      {p}
+                    </p>
+                  ))}
+              </div>
+              <div className="mt-6">
+                <Link
+                  href="/sulphur-springs/staff"
+                  className="focus-ring inline-flex bg-[#2980b9] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#1a6da3]"
+                >
+                  Meet the full team
+                </Link>
+              </div>
             </div>
-            <p className="leading-relaxed text-stone-700">{data.doctor.bio.split("\n\n")[0]}</p>
-            <Link
-              href="/sulphur-springs/staff"
-              className="focus-ring inline-flex bg-[#2980b9] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#1a6da3]"
-            >
-              Meet the full team
-            </Link>
           </div>
         </section>
       );
@@ -116,33 +171,47 @@ export function SulphurPageBlock({ id, data }: { id: string; data: SulphurPageDa
       return (
         <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
           <h2 className="text-2xl font-black text-[#173f3b]">Our Services</h2>
-          <p className="mt-2 text-stone-600">
-            We offer a variety of services to treat common conditions and injuries. Call (903) 919-5020 for more information.
+          <p className="mt-3 max-w-3xl leading-relaxed text-stone-700">
+            We offer a variety of services to treat common conditions and injuries. Call {data.ss.phonePrimary} for more information.
           </p>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {SS_SERVICE_NAV.map((s) => (
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {data.services.map((s) => (
               <Link
                 key={s.href}
                 href={s.href}
-                className="group flex items-center gap-3 rounded border border-stone-200 bg-stone-50 px-4 py-3 transition hover:border-[#2980b9]/30 hover:bg-[#2980b9]/5"
+                className="group flex flex-col rounded-lg border border-stone-200 bg-white p-5 shadow-sm transition hover:border-[#2980b9]/40 hover:shadow-md"
               >
-                <span className="text-sm font-bold text-[#173f3b] group-hover:text-[#2980b9]">{s.label}</span>
-                <span className="ml-auto text-stone-400 group-hover:text-[#2980b9]" aria-hidden>&rarr;</span>
+                <div className="text-[#2980b9]">
+                  <ChiroTreatmentIcon name={s.label} />
+                </div>
+                <h3 className="mt-3 text-base font-black text-[#173f3b] group-hover:text-[#2980b9]">
+                  {s.label}
+                </h3>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-stone-600">
+                  {firstSentence(s.blurb)}
+                </p>
+                <span className="mt-3 inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide text-[#2980b9]">
+                  Learn more <span aria-hidden>&rarr;</span>
+                </span>
               </Link>
             ))}
           </div>
-          <h3 className="mt-10 text-lg font-black text-[#173f3b]">Injuries</h3>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {SS_INJURY_NAV.map((i) => (
-              <Link
-                key={i.href}
-                href={i.href}
-                className="group flex items-center gap-3 rounded border border-stone-200 bg-stone-50 px-4 py-3 transition hover:border-[#2980b9]/30 hover:bg-[#2980b9]/5"
-              >
-                <span className="text-sm font-bold text-[#173f3b] group-hover:text-[#2980b9]">{i.label}</span>
-                <span className="ml-auto text-stone-400 group-hover:text-[#2980b9]" aria-hidden>&rarr;</span>
-              </Link>
-            ))}
+          <div className="mt-8 border-t border-stone-200 pt-6">
+            <h3 className="text-sm font-black uppercase tracking-wide text-[#173f3b]">
+              Injuries we treat
+            </h3>
+            <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              {SS_INJURY_NAV.map((i) => (
+                <li key={i.href}>
+                  <Link
+                    href={i.href}
+                    className="font-bold text-[#2980b9] underline hover:text-[#1a6da3]"
+                  >
+                    {i.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
       );
@@ -175,7 +244,7 @@ export function SulphurPageBlock({ id, data }: { id: string; data: SulphurPageDa
           title="Ready for relief?"
           body="Book an appointment online or give us a call — we're here to help you feel better and move better."
           bookLabel="Request appointment"
-          secondary={{ label: "Call (903) 919-5020", href: telHref(data.ss.phonePrimary) }}
+          secondary={{ label: `Call ${data.ss.phonePrimary}`, href: telHref(data.ss.phonePrimary) }}
         />
       );
     default:

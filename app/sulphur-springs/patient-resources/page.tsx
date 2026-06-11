@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
+import { LocationHoursSection } from "@/components/LocationHoursSection";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { getSSPatientResourcesIntro } from "@/lib/ss-cms-content";
 import { SS_PATIENT_RESOURCES, SS_RESOURCE_ARTICLES } from "@/lib/sulphur-springs-content";
 import { telHref } from "@/lib/constants";
+import { getDisplayLocations } from "@/lib/cms-display";
+import { getSulphurOfficeHours } from "@/lib/office-hours";
 
 export const metadata = buildPageMetadata({
   title: "Patient Resources — Sulphur Springs Chiropractic",
@@ -17,7 +20,12 @@ export const metadata = buildPageMetadata({
 export const revalidate = 60;
 
 export default async function PatientResourcesPage() {
-  const intro = await getSSPatientResourcesIntro();
+  const [intro, ssHours, displayLocs] = await Promise.all([
+    getSSPatientResourcesIntro(),
+    getSulphurOfficeHours(),
+    getDisplayLocations(),
+  ]);
+  const ss = displayLocs.sulphur_springs;
   return (
     <>
       <Breadcrumbs
@@ -74,10 +82,11 @@ export default async function PatientResourcesPage() {
             </ul>
           </div>
         </section>
+        <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
         <ScheduleCtaCard
           title="Have questions?"
           body="Contact our Sulphur Springs office — we're happy to help."
-          secondary={{ label: "Call 903-919-5020", href: telHref("903-919-5020") }}
+          secondary={{ label: `Call ${ss.phonePrimary}`, href: telHref(ss.phonePrimary) }}
         />
       </div>
     </>

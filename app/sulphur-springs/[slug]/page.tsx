@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { notFound } from "next/navigation";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
+import { LocationHoursSection } from "@/components/LocationHoursSection";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { SsMarkdownBody } from "@/components/SsMarkdownBody";
 import { telHref } from "@/lib/constants";
+import { getDisplayLocations } from "@/lib/cms-display";
+import { getSulphurOfficeHours } from "@/lib/office-hours";
 import { allSSPageSlugs, getSSPageContent } from "@/lib/ss-cms-content";
 
 export const revalidate = 60;
@@ -30,8 +33,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SulphurSpringsSubpage({ params }: Props) {
   const { slug } = await params;
-  const page = await getSSPageContent(slug);
+  const [page, ssHours, displayLocs] = await Promise.all([
+    getSSPageContent(slug),
+    getSulphurOfficeHours(),
+    getDisplayLocations(),
+  ]);
   if (!page) notFound();
+  const ss = displayLocs.sulphur_springs;
 
   const ctaTitle =
     page.kind === "injury"
@@ -62,10 +70,11 @@ export default async function SulphurSpringsSubpage({ params }: Props) {
             <SsMarkdownBody body={page.body} />
           </div>
         </section>
+        <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
         <ScheduleCtaCard
           title={ctaTitle}
           body={ctaBody}
-          secondary={{ label: "Call 903-919-5020", href: telHref("903-919-5020") }}
+          secondary={{ label: `Call ${ss.phonePrimary}`, href: telHref(ss.phonePrimary) }}
         />
       </div>
     </>

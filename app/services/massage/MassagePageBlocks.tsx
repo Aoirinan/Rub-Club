@@ -151,7 +151,10 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
           title="Have a question first?"
           body="The massage desk can verify available times and answer questions about specific conditions."
           query="service=massage"
-          secondary={{ label: "Call 903-739-9959", href: telHref("903-739-9959") }}
+          secondary={{
+            label: `Call ${data.paris.phoneSecondary ?? data.paris.phonePrimary}`,
+            href: telHref(data.paris.phoneSecondary ?? data.paris.phonePrimary),
+          }}
         />
       );
     default:

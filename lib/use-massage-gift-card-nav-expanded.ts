@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const MASSAGE_PATH_PREFIX = "/services/massage";
 const TOP_THRESHOLD_PX = 8;
 
 function readScrollY(): number {
@@ -15,18 +14,12 @@ function readScrollY(): number {
   );
 }
 
-/** True on /services/massage when the page is scrolled away from the top. */
+/** True on any page once it is scrolled away from the top. */
 export function useMassageGiftCardNavExpanded(): boolean {
   const pathname = usePathname() ?? "";
-  const onMassagePage = pathname.startsWith(MASSAGE_PATH_PREFIX);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    if (!onMassagePage) {
-      setExpanded(false);
-      return;
-    }
-
     const update = () => {
       setExpanded(readScrollY() > TOP_THRESHOLD_PX);
     };
@@ -38,7 +31,7 @@ export function useMassageGiftCardNavExpanded(): boolean {
       window.removeEventListener("scroll", update);
       document.removeEventListener("scroll", update, { capture: true });
     };
-  }, [onMassagePage, pathname]);
+  }, [pathname]);
 
-  return onMassagePage && expanded;
+  return expanded;
 }

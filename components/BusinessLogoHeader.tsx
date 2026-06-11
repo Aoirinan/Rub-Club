@@ -2,17 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { ParisLockup } from "@/components/ParisLockup";
 import { SulphurSpringsLockup } from "@/components/SulphurSpringsLockup";
 import {
-  CHIRO_LOGO_DIMENSIONS,
+  isDefaultChiroLogo,
   resolveChiroHeaderLogo,
   type HeaderBrandContent,
 } from "@/lib/brand-logos";
 import { telHref, type LocationInfo } from "@/lib/constants";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
-
-const CHIRO_LOGO_HEIGHT =
-  "h-10 w-auto max-w-[min(100%,min(100vw-1.5rem,520px)] sm:h-12 md:h-14 lg:h-[3.75rem] xl:max-w-[600px]";
 
 export function BusinessLogoHeader({
   context,
@@ -28,7 +26,11 @@ export function BusinessLogoHeader({
   const isParis = context === "paris_chiro";
   const location = isParis ? paris : sulphur;
   const href = isParis ? "/services/chiropractic" : "/sulphur-springs";
-  const phoneLabel = isParis ? "Chiropractic — Paris" : "Chiro / Massage — Sulphur Springs";
+  const cmsLabel = isParis ? branding?.labels.chiro : branding?.labels.ss;
+  const phoneLabel =
+    cmsLabel || (isParis ? "Chiropractic — Paris" : "Chiro / Massage — Sulphur Springs");
+  // Managers can upload a Sulphur Springs logo image; empty means use the icon + text lockup.
+  const ssLogoSrc = branding?.logos.ss || undefined;
 
   return (
     <div className="flex w-full flex-col items-center gap-1 text-center">
@@ -42,13 +44,32 @@ export function BusinessLogoHeader({
         }
       >
         {isParis ? (
+          isDefaultChiroLogo(branding?.logos.chiro) ? (
+            <ParisLockup
+              heightPx={60}
+              className="max-w-full"
+              title={branding?.parisLockup.title}
+              subtitle={branding?.parisLockup.subtitle}
+            />
+          ) : (
+            <Image
+              src={resolveChiroHeaderLogo(branding?.logos.chiro)}
+              alt="Chiropractic Associates — Paris, TX"
+              width={600}
+              height={200}
+              sizes="(max-width: 640px) 90vw, 600px"
+              className="h-10 w-auto max-w-full object-contain sm:h-12 md:h-14 lg:h-[3.75rem]"
+              priority
+            />
+          )
+        ) : ssLogoSrc ? (
           <Image
-            src={resolveChiroHeaderLogo(branding?.logos.chiro)}
-            alt="Chiropractic Associates — Paris, TX"
-            width={CHIRO_LOGO_DIMENSIONS.width}
-            height={CHIRO_LOGO_DIMENSIONS.height}
-            sizes="(max-width: 640px) 90vw, 600px"
-            className={`${CHIRO_LOGO_HEIGHT} object-contain`}
+            src={ssLogoSrc}
+            alt="Chiropractic Associates of Sulphur Springs"
+            width={360}
+            height={120}
+            sizes="(max-width: 640px) 80vw, 360px"
+            className="h-10 w-auto max-w-full object-contain sm:h-12 md:h-14"
             priority
           />
         ) : (
@@ -68,12 +89,6 @@ export function BusinessLogoHeader({
       <span className="max-w-full truncate text-[10px] font-bold uppercase tracking-wide text-stone-500 md:text-xs">
         {phoneLabel}
       </span>
-      <Link
-        href="/"
-        className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0f5f5c] hover:underline md:text-xs"
-      >
-        All practices →
-      </Link>
     </div>
   );
 }

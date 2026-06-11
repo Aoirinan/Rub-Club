@@ -12,7 +12,9 @@ import {
 import {
   deleteSiteStaffStorageObject,
   resolveSiteStaffImageContentType,
+  resolveSiteStaffVideoContentType,
   uploadSiteStaffPhoto,
+  uploadSiteStaffVideo,
 } from "@/lib/site-staff-upload";
 import { requireStaff } from "@/lib/staff-auth";
 
@@ -39,6 +41,7 @@ const patchJsonSchema = z.object({
   active: z.boolean().optional(),
   featured: z.boolean().optional(),
   specialties: z.array(z.string().max(80)).max(20).optional(),
+  removeVideo: z.boolean().optional(),
 });
 
 type Params = { params: Promise<{ id: string }> };
@@ -143,6 +146,40 @@ export async function PATCH(req: Request, ctx: Params) {
       }
     }
 
+    const videoFile = form.get("video");
+    if (videoFile instanceof File && videoFile.size > 0) {
+      const videoContentType = resolveSiteStaffVideoContentType(videoFile.type);
+      if (!videoContentType) {
+        return NextResponse.json(
+          { error: "Unsupported video type. Use MP4, MOV, or WebM." },
+          { status: 400 },
+        );
+      }
+      const oldVideoPath = existing.get("videoStoragePath");
+      try {
+        const up = await uploadSiteStaffVideo({
+          memberId: id,
+          buffer: Buffer.from(await videoFile.arrayBuffer()),
+          contentType: videoContentType,
+        });
+        updates.videoUrl = up.videoUrl;
+        updates.videoStoragePath = up.videoStoragePath;
+        if (typeof oldVideoPath === "string" && oldVideoPath !== up.videoStoragePath) {
+          await deleteSiteStaffStorageObject(oldVideoPath).catch(() => {});
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Video upload failed";
+        return NextResponse.json({ error: msg }, { status: 400 });
+      }
+    } else if (String(form.get("removeVideo") ?? "") === "true") {
+      const oldVideoPath = existing.get("videoStoragePath");
+      if (typeof oldVideoPath === "string") {
+        await deleteSiteStaffStorageObject(oldVideoPath).catch(() => {});
+      }
+      updates.videoUrl = FieldValue.delete();
+      updates.videoStoragePath = FieldValue.delete();
+    }
+
     if (Object.keys(updates).length <= 2) {
       return NextResponse.json({ error: "No changes submitted" }, { status: 400 });
     }
@@ -185,6 +222,14 @@ export async function PATCH(req: Request, ctx: Params) {
     updates.photoUrl = body.photoUrl.trim();
     updates.photoStoragePath = FieldValue.delete();
   }
+  if (body.removeVideo === true) {
+    const oldVideoPath = existing.get("videoStoragePath");
+    if (typeof oldVideoPath === "string") {
+      await deleteSiteStaffStorageObject(oldVideoPath).catch(() => {});
+    }
+    updates.videoUrl = FieldValue.delete();
+    updates.videoStoragePath = FieldValue.delete();
+  }
 
   if (Object.keys(updates).length <= 2) {
     return NextResponse.json({ error: "No changes" }, { status: 400 });
@@ -218,6 +263,10 @@ export async function DELETE(req: Request, ctx: Params) {
   const path = snap.get("photoStoragePath");
   if (typeof path === "string") {
     await deleteSiteStaffStorageObject(path).catch(() => {});
+  }
+  const videoPath = snap.get("videoStoragePath");
+  if (typeof videoPath === "string") {
+    await deleteSiteStaffStorageObject(videoPath).catch(() => {});
   }
   await ref.delete();
   bumpCache();

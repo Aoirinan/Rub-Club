@@ -8,11 +8,6 @@ import {
   type HeaderBrandKey,
 } from "@/lib/brand-logos";
 import { reviewUrlForLocation, type LocationId, type LocationInfo } from "@/lib/constants";
-import {
-  HEADER_BRANDING_FIELD_IDS,
-  parseHeaderBrandingLayout,
-  type HeaderBrandingLayout,
-} from "@/lib/header-branding-cms";
 import { getVisualPageLayoutIfSet } from "@/lib/visual-page-layout-db";
 import type { VisualPageLayout, VisualScopeId } from "@/lib/visual-page-layout";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
@@ -31,12 +26,16 @@ const LAYOUT_CMS_IDS = [
   "header_ss_label",
   "header_chiro_logo",
   "header_ss_logo",
+  "header_paris_lockup_title",
+  "header_paris_lockup_subtitle",
   "footer_tagline",
   "footer_paris_address",
   "footer_paris_phone",
   "footer_massage_phone",
+  "footer_paris_maps_url",
   "footer_ss_address",
   "footer_ss_phone",
+  "footer_ss_maps_url",
   "footer_copyright",
   "nav_giftcard_url",
   "nav_book_url",
@@ -47,11 +46,6 @@ export type LayoutCmsContent = Record<(typeof LAYOUT_CMS_IDS)[number], string>;
 export async function getLayoutCmsContent(): Promise<LayoutCmsContent> {
   const values = await getContentMany([...LAYOUT_CMS_IDS]);
   return values as LayoutCmsContent;
-}
-
-export async function getHeaderBrandingLayout(): Promise<HeaderBrandingLayout> {
-  const values = await getContentMany([...HEADER_BRANDING_FIELD_IDS]);
-  return parseHeaderBrandingLayout(values);
 }
 
 const HEADER_BRAND_KEYS: HeaderBrandKey[] = ["chiro", "ss"];
@@ -72,7 +66,15 @@ export function headerBrandContentFromCms(
     const rawLogo = logoValue && logoValue.length > 0 ? logoValue : (DEFAULTS[logoId] ?? "");
     logos[key] = key === "chiro" ? resolveChiroHeaderLogo(rawLogo) : rawLogo;
   }
-  return { labels, logos };
+  const parisLockup = {
+    title:
+      cms.header_paris_lockup_title?.trim() || DEFAULTS.header_paris_lockup_title || "",
+    subtitle:
+      cms.header_paris_lockup_subtitle?.trim() ||
+      DEFAULTS.header_paris_lockup_subtitle ||
+      "",
+  };
+  return { labels, logos, parisLockup };
 }
 
 export async function getScopeVisualLayout(
@@ -81,7 +83,6 @@ export async function getScopeVisualLayout(
   return getVisualPageLayoutIfSet(scopeId);
 }
 
-export type { HeaderBrandingLayout };
 export type { VisualPageLayout };
 
 /** Paris + Sulphur locations with CMS → owner settings → constants merge. */

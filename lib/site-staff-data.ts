@@ -13,6 +13,9 @@ export type SiteStaffMemberStored = {
   bio: string;
   photoUrl: string;
   photoStoragePath?: string;
+  /** Optional intro video (e.g. "Meet Dr. Collins"), uploaded via the staff admin. */
+  videoUrl?: string;
+  videoStoragePath?: string;
   specialties: string[];
   brand: SiteStaffBrand;
   order: number;
@@ -27,6 +30,7 @@ export type SiteStaffDisplayMember = {
   role: string;
   bio: string;
   image?: string;
+  videoUrl?: string;
   featured: boolean;
 };
 
@@ -73,6 +77,12 @@ export function parseSiteStaffDoc(
     typeof data.photoStoragePath === "string" && data.photoStoragePath.trim()
       ? data.photoStoragePath.trim()
       : undefined;
+  const videoUrl =
+    typeof data.videoUrl === "string" && data.videoUrl.trim() ? data.videoUrl.trim() : undefined;
+  const videoStoragePath =
+    typeof data.videoStoragePath === "string" && data.videoStoragePath.trim()
+      ? data.videoStoragePath.trim()
+      : undefined;
   const createdAt =
     data.createdAt &&
     typeof data.createdAt === "object" &&
@@ -87,6 +97,8 @@ export function parseSiteStaffDoc(
     bio,
     photoUrl,
     ...(photoStoragePath ? { photoStoragePath } : {}),
+    ...(videoUrl ? { videoUrl } : {}),
+    ...(videoStoragePath ? { videoStoragePath } : {}),
     specialties,
     brand,
     order,
@@ -103,6 +115,7 @@ function storedToDisplay(row: SiteStaffMemberStored): SiteStaffDisplayMember {
     role: row.title,
     bio: row.bio,
     ...(row.photoUrl ? { image: row.photoUrl } : {}),
+    ...(row.videoUrl ? { videoUrl: row.videoUrl } : {}),
     featured: row.featured,
   };
 }

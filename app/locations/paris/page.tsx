@@ -3,8 +3,7 @@ import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { LocationDetail } from "@/components/LocationDetail";
-import { LOCATIONS } from "@/lib/constants";
-import { getReviewUrlForLocation } from "@/lib/cms-display";
+import { getDisplayLocations, getReviewUrlForLocation } from "@/lib/cms-display";
 import { getParisOfficeHours } from "@/lib/office-hours";
 import { chiropractorJsonLd, massageJsonLd } from "@/lib/structured-data";
 
@@ -20,15 +19,17 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function ParisLocationPage() {
-  const [reviewUrl, officeHours] = await Promise.all([
+  const [reviewUrl, officeHours, displayLocs] = await Promise.all([
     getReviewUrlForLocation("paris"),
     getParisOfficeHours(),
+    getDisplayLocations(),
   ]);
+  const paris = displayLocs.paris;
 
   return (
     <>
       <JsonLd
-        data={[chiropractorJsonLd(LOCATIONS.paris), massageJsonLd()]}
+        data={[chiropractorJsonLd(paris), massageJsonLd()]}
       />
       <Breadcrumbs
         items={[
@@ -39,10 +40,10 @@ export default async function ParisLocationPage() {
       />
       <PageHero
         eyebrow="Main office · Paris, TX"
-        title="Paris, TX — 3305 NE Loop 286, Suite A"
+        title={`Paris, TX — ${paris.streetAddress}`}
         lede="Both Chiropractic Associates and The Rub Club operate from this address. Easy parking, friendly front desk, weekday hours."
       />
-      <LocationDetail location={LOCATIONS.paris} reviewUrl={reviewUrl} officeHours={officeHours} />
+      <LocationDetail location={paris} reviewUrl={reviewUrl} officeHours={officeHours} />
       <div className="mx-auto max-w-6xl px-4 pb-16">
         <p className="text-center text-sm text-stone-600">
           <Link href="/locations/paris/staff" className="font-bold text-[#0f5f5c] underline">

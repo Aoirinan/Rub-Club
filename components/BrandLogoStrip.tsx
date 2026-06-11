@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ParisLockup } from "@/components/ParisLockup";
 import { SulphurSpringsLockup } from "@/components/SulphurSpringsLockup";
-import { headerBrandPhones } from "@/components/HeaderBrandBlock";
 import {
   CHIRO_LOGO_DIMENSIONS,
+  isDefaultChiroLogo,
   resolveChiroHeaderLogo,
   type BrandLogoVariant,
   type HeaderBrandContent,
@@ -11,6 +12,31 @@ import {
 import { telHref, type LocationInfo } from "@/lib/constants";
 
 type BrandKey = "chiro" | "ss";
+
+type HeaderBrandPhoneInfo = {
+  phone: string;
+  phoneLabel: string;
+  href: string;
+};
+
+function headerBrandPhones(
+  key: BrandKey,
+  paris: LocationInfo,
+  sulphur: LocationInfo,
+): HeaderBrandPhoneInfo {
+  if (key === "chiro") {
+    return {
+      phone: paris.phonePrimary,
+      phoneLabel: "Chiropractic — Paris",
+      href: "/services/chiropractic",
+    };
+  }
+  return {
+    phone: sulphur.phonePrimary,
+    phoneLabel: "Chiro / Massage",
+    href: "/sulphur-springs",
+  };
+}
 
 type LogoEntry = {
   key: BrandKey;
@@ -65,11 +91,6 @@ function primaryKeyForVariant(variant: BrandLogoVariant): BrandKey {
   return variant === "sulphur-springs" ? "ss" : "chiro";
 }
 
-function columnAlignClass(columnIndex: number): string {
-  if (columnIndex === 0) return "items-end justify-self-end text-right";
-  return "items-start justify-self-start text-left";
-}
-
 function logoHeightClass(brandKey: BrandKey, emphasize: boolean): string {
   if (brandKey === "chiro") {
     return emphasize ? CHIRO_PRIMARY_LOGO_HEIGHT : CHIRO_SIDE_LOGO_HEIGHT;
@@ -84,8 +105,8 @@ function logoAlignClass(brandKey: BrandKey, emphasize: boolean): string {
 }
 
 /**
- * Two-site header: Paris (chiro + massage) on the left, Sulphur Springs on the
- * right; the active site’s logo is ~30% larger, with phone and label under each.
+ * Two-site header: only the current site's logo shows — Paris (chiro + massage)
+ * on Paris pages, the Sulphur Springs lockup on Sulphur Springs pages.
  */
 export function BrandLogoStrip({
   variant = "home",
@@ -103,14 +124,14 @@ export function BrandLogoStrip({
   compact?: boolean;
   className?: string;
 }) {
-  const entries = buildBrandEntries(branding);
   const primaryKey = primaryKeyForVariant(variant);
+  const entries = buildBrandEntries(branding).filter((e) => e.key === primaryKey);
 
   return (
     <div
-      className={`grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-end gap-3 sm:gap-[0.5in] lg:mx-auto ${className}`}
+      className={`flex w-full max-w-6xl items-end justify-center gap-3 sm:gap-[0.5in] lg:mx-auto ${className}`}
     >
-      {entries.map((entry, columnIndex) => {
+      {entries.map((entry) => {
         const primary = entry.key === primaryKey;
         const emphasize = primary && !compact;
         const info = headerBrandPhones(entry.key, paris, sulphur);
@@ -121,6 +142,9 @@ export function BrandLogoStrip({
 
         // Sulphur Springs uses the icon + text lockup unless a manager uploaded a logo image.
         const useSsLockup = entry.key === "ss" && !entry.src;
+        // Paris does the same: icon + text lockup unless a manager uploaded a custom logo.
+        const useParisLockup =
+          entry.key === "chiro" && isDefaultChiroLogo(branding?.logos.chiro);
 
         const logo = useSsLockup ? (
           <SulphurSpringsLockup
@@ -128,6 +152,13 @@ export function BrandLogoStrip({
             compact={ssCompact}
             heightPx={ssHeightPx}
             className={`max-w-full transition-[height] duration-300 ease-out ${!emphasize ? "opacity-90 transition-opacity hover:opacity-100" : ""}`}
+          />
+        ) : useParisLockup ? (
+          <ParisLockup
+            heightPx={emphasize ? 60 : 40}
+            className={`max-w-full transition-[height] duration-300 ease-out ${!emphasize ? "opacity-90 transition-opacity hover:opacity-100" : ""}`}
+            title={branding?.parisLockup.title}
+            subtitle={branding?.parisLockup.subtitle}
           />
         ) : (
           <Image
@@ -150,7 +181,7 @@ export function BrandLogoStrip({
         return (
           <div
             key={entry.key}
-            className={`flex w-fit max-w-full min-w-0 flex-col gap-0.5 transition-[gap] duration-300 ease-out ${columnAlignClass(columnIndex)} ${
+            className={`flex w-fit max-w-full min-w-0 flex-col items-center gap-0.5 text-center transition-[gap] duration-300 ease-out ${
               primary ? "z-[1] md:px-0.5" : ""
             }`}
           >
