@@ -93,7 +93,7 @@ export default async function WellnessCarePlansPage() {
         <ScheduleCtaCard
           title={content.ctaTitle}
           body={content.ctaBody}
-          bookLabel="Book chiropractic online"
+          bookLabel="Book chiropractic"
           query="service=chiropractic"
           secondary={{ label: `Call Paris ${parisPhone}`, href: telHref(parisPhone) }}
         />

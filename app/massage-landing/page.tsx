@@ -6,7 +6,7 @@ import { BookingCta } from "@/components/BookingCta";
 export const metadata = buildPageMetadata({
   title: "Massage Therapy — Paris, TX",
   description:
-    "Therapeutic massage in Paris, Texas at The Rub Club — same trusted team, online booking, and convenient Northeast Texas location.",
+    "Therapeutic massage in Paris, Texas at The Rub Club — same trusted team and convenient Northeast Texas location.",
   path: "/massage-landing",
 });
 

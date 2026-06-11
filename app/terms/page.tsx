@@ -50,7 +50,7 @@ export default function TermsPage() {
         </section>
 
         <section className="border-t-4 border-[#0f5f5c] bg-white p-6 shadow-md sm:p-8">
-          <h2 className="text-lg font-black text-[#173f3b]">Online booking and forms</h2>
+          <h2 className="text-lg font-black text-[#173f3b]">Appointments and forms</h2>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-stone-700">
             <li>
               Appointment requests are subject to availability and confirmation by our office. We may

@@ -83,7 +83,7 @@ export const WELLNESS_CLOSING_LINES = [
 
 export const WELLNESS_CTA_TITLE = "Start your wellness plan";
 export const WELLNESS_CTA_BODY =
-  "Book online or call our Paris office to set up monthly wellness care.";
+  "Call our Paris office to set up monthly wellness care.";
 
 export const CHIRO_WELLNESS_TEASER_HEADING = "Wellness care plans";
 export const CHIRO_WELLNESS_TEASER_BODY =

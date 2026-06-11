@@ -339,7 +339,7 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
 export const DEFAULTS: Record<string, string> = {
   home_hero_heading: "Massage Therapy & Chiropractic Care in Paris & Sulphur Springs, TX",
   home_hero_subheading: CHIRO.spineSub,
-  home_hero_cta_label: "Book Online",
+  home_hero_cta_label: "Book Now",
   home_awards_text:
     "Voted Best Chiropractic Center & Best Massage â€” The Paris News reader polls.",
   home_about_blurb: HOME_INTRO.body,
@@ -396,7 +396,7 @@ export const DEFAULTS: Record<string, string> = {
 
   massage_hero_heading: "Therapeutic massage that meets you where you are",
   massage_hero_subheading:
-    "Licensed therapists. Honest treatment plans. Coordinated with chiropractic care when it helps. Call 903-739-9959 or book online below.",
+    "Licensed therapists. Honest treatment plans. Coordinated with chiropractic care when it helps. Call 903-739-9959 to schedule.",
   massage_intro_body: MASSAGE.stressParas.join("\n\n"),
   massage_services_list: MASSAGE_SERVICES_DEFAULT,
   massage_cta_heading: MASSAGE.contactTitle,

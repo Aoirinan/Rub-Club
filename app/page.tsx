@@ -34,7 +34,6 @@ import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
 import { siteDescription, siteTitle } from "@/lib/site-content";
 import { pageKeywords } from "@/lib/seo-keywords";
-import { homeBookingFooterCopy } from "@/lib/public-booking";
 
 export const revalidate = 60;
 
@@ -522,10 +521,6 @@ export default async function Home() {
             </Link>
           </div>
         </section>
-
-        <p className="border-t border-stone-300 pt-8 text-center text-xs text-stone-600">
-          {homeBookingFooterCopy()}
-        </p>
       </div>
     </div>
   );

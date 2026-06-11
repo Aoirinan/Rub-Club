@@ -8,7 +8,7 @@ import { CHIRO_TREATMENT_NAMES } from "@/lib/chiro-treatments";
 /** Short home-page blurb linking to dedicated SEO routes. */
 export const HOME_INTRO = {
   title: "Chiropractic and massage in Paris, TX",
-  body: "Chiropractic Associates and The Rub Club operate from one Paris address, with chiropractic care also available in Sulphur Springs. Use the pages below for services, provider bios, video, hours, and online booking.",
+  body: "Chiropractic Associates and The Rub Club operate from one Paris address, with chiropractic care also available in Sulphur Springs. Use the pages below for services, provider bios, video, and hours.",
 } as const;
 
 export const CHIRO = {

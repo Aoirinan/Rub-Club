@@ -1,5 +1,3 @@
-import { siteUrl } from "./site-content";
-
 export type FaqEntry = { q: string; a: string };
 
 export const FAQS: readonly FaqEntry[] = [
@@ -29,7 +27,7 @@ export const FAQS: readonly FaqEntry[] = [
   },
   {
     q: "Do you offer same-day appointments?",
-    a: `Often, yes. Use ${siteUrl("/book")} when online booking is on, or call the office and we will do our best to fit you in.`,
+    a: "Often, yes. Call the office and we will do our best to fit you in.",
   },
   {
     q: "Is parking available?",

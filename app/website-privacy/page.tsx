@@ -67,9 +67,9 @@ export default function WebsitePrivacyPage() {
         <Section title="Information we may collect">
           <ul className="list-disc space-y-2 pl-5">
             <li>
-              <strong className="text-[#173f3b]">Contact and booking:</strong> name, phone number,
+              <strong className="text-[#173f3b]">Contact and scheduling:</strong> name, phone number,
               email address, appointment preferences, and messages you send through our contact
-              form or online booking.
+              form.
             </li>
             <li>
               <strong className="text-[#173f3b]">Technical data:</strong> browser type, device
