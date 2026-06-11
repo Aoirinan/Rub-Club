@@ -35,6 +35,7 @@ export function Breadcrumbs({ items }: { items: readonly Crumb[] }) {
   );
 }
 
+/** Backpro-style full-width page-title banner: dark teal band, gold eyebrow + accent bar. */
 export function PageHero({
   eyebrow,
   title,
@@ -45,18 +46,25 @@ export function PageHero({
   lede?: string;
 }) {
   return (
-    <header className="mx-auto max-w-6xl px-4 pb-8 pt-6">
-      {eyebrow ? (
-        <p className="text-xs font-black uppercase tracking-[0.22em] text-[#0f5f5c]">
-          {eyebrow}
-        </p>
-      ) : null}
-      <h1 className="mt-2 text-4xl font-black tracking-tight text-[#173f3b] sm:text-5xl">
-        {title}
-      </h1>
-      {lede ? (
-        <p className="mt-4 max-w-2xl text-lg leading-relaxed text-stone-700">{lede}</p>
-      ) : null}
+    <header className="relative mb-8 mt-4 overflow-hidden bg-gradient-to-r from-[#0c3937] via-[#173f3b] to-[#0f5f5c]">
+      <div
+        aria-hidden
+        className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-[#0f817b]/20 blur-2xl"
+      />
+      <div className="relative mx-auto max-w-6xl px-4 py-10 sm:py-14">
+        {eyebrow ? (
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f2d25d]">
+            {eyebrow}
+          </p>
+        ) : null}
+        <h1 className="mt-2 text-4xl font-black tracking-tight text-white drop-shadow sm:text-5xl">
+          {title}
+        </h1>
+        <div aria-hidden className="mt-4 h-1 w-16 bg-[#f2d25d]" />
+        {lede ? (
+          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-white/90">{lede}</p>
+        ) : null}
+      </div>
     </header>
   );
 }

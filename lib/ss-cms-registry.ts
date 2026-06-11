@@ -14,6 +14,14 @@ export function ssPageMetaId(slug: string): string {
   return `ss_page_${slug}_meta`;
 }
 
+export function ssPageCardBlurbId(slug: string): string {
+  return `ss_page_${slug}_card_blurb`;
+}
+
+export function ssPageCardImageId(slug: string): string {
+  return `ss_page_${slug}_card_image`;
+}
+
 /** CMS registry fields for Sulphur Springs treatment, injury, and patient resources pages. */
 export function buildSSCmsRegistry(): ContentFieldMeta[] {
   const fields: ContentFieldMeta[] = [];
@@ -34,6 +42,20 @@ export function buildSSCmsRegistry(): ContentFieldMeta[] {
         fieldLabel: "SEO meta description (optional override)",
         type: "text",
       },
+      {
+        id: ssPageCardBlurbId(s.slug),
+        pageLabel: "SS subpages",
+        sectionLabel: s.title,
+        fieldLabel: "Services grid card blurb (optional; falls back to meta description)",
+        type: "text",
+      },
+      {
+        id: ssPageCardImageId(s.slug),
+        pageLabel: "SS subpages",
+        sectionLabel: s.title,
+        fieldLabel: "Services grid card image (optional)",
+        type: "image",
+      },
     );
   }
 
@@ -52,6 +74,20 @@ export function buildSSCmsRegistry(): ContentFieldMeta[] {
         sectionLabel: i.title,
         fieldLabel: "SEO meta description (optional override)",
         type: "text",
+      },
+      {
+        id: ssPageCardBlurbId(i.slug),
+        pageLabel: "SS subpages",
+        sectionLabel: i.title,
+        fieldLabel: "Services grid card blurb (optional; falls back to meta description)",
+        type: "text",
+      },
+      {
+        id: ssPageCardImageId(i.slug),
+        pageLabel: "SS subpages",
+        sectionLabel: i.title,
+        fieldLabel: "Services grid card image (optional)",
+        type: "image",
       },
     );
   }
@@ -94,10 +130,14 @@ export function buildSSCmsDefaults(): Record<string, string> {
   for (const s of SS_SERVICES) {
     defaults[ssPageBodyId(s.slug)] = s.body;
     defaults[ssPageMetaId(s.slug)] = s.metaDescription;
+    defaults[ssPageCardBlurbId(s.slug)] = "";
+    defaults[ssPageCardImageId(s.slug)] = "";
   }
   for (const i of SS_INJURIES) {
     defaults[ssPageBodyId(i.slug)] = i.body;
     defaults[ssPageMetaId(i.slug)] = i.metaDescription;
+    defaults[ssPageCardBlurbId(i.slug)] = "";
+    defaults[ssPageCardImageId(i.slug)] = "";
   }
   for (const a of SS_RESOURCE_ARTICLES) {
     defaults[ssPageBodyId(a.slug)] = a.body;

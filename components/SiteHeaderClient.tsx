@@ -7,10 +7,11 @@ import {
   telHref,
   type LocationInfo,
 } from "@/lib/constants";
+import type { ReactNode } from "react";
 import { HeaderBrandLogoStrip } from "@/components/HeaderBrandLogoStrip";
 import { BusinessLogoHeader } from "@/components/BusinessLogoHeader";
 import { BusinessSubNav } from "@/components/BusinessSubNav";
-import { HeaderThemeProvider } from "@/components/HeaderThemeProvider";
+import { HeaderThemeProvider, useHeaderCompact } from "@/components/HeaderThemeProvider";
 import { SiteHeaderLogoRow } from "@/components/SiteHeaderLogoRow";
 import { MobileNav } from "@/components/MobileNav";
 import type { NavItem } from "@/components/DesktopNav";
@@ -91,6 +92,80 @@ export function buildDefaultNavItems(
   ];
 }
 
+/**
+ * Tier-1 wrapper: smoothly collapses to zero height once the visitor scrolls
+ * (backpro-style shrink header). Uses the grid-rows trick so height animates
+ * without hardcoded max-height values. Must render inside HeaderThemeProvider.
+ */
+function HeaderTier1Collapse({ children }: { children: ReactNode }) {
+  const compact = useHeaderCompact();
+  return (
+    <div
+      aria-hidden={compact || undefined}
+      className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none ${
+        compact ? "[grid-template-rows:0fr] opacity-0" : "[grid-template-rows:1fr] opacity-100"
+      }`}
+    >
+      <div className={`min-h-0 overflow-hidden ${compact ? "invisible" : ""}`}>{children}</div>
+    </div>
+  );
+}
+
+/** Social icons that scale down with the rest of the header in compact mode. */
+function HeaderSocialIcons() {
+  const compact = useHeaderCompact();
+  const iconClass = `transition-all duration-300 ease-out motion-reduce:transition-none ${
+    compact ? "h-7 w-7" : "h-9 w-9 sm:h-10 sm:w-10"
+  }`;
+  return (
+    <div className="hidden shrink-0 flex-col items-end gap-2 text-sm sm:text-base lg:flex">
+      <span
+        className={`font-bold text-[#173f3b] transition-all duration-300 ease-out motion-reduce:transition-none ${
+          compact ? "sr-only" : ""
+        }`}
+      >
+        Find us on social media
+      </span>
+      <div className="flex items-center gap-4">
+        <a
+          href={FACEBOOK_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex shrink-0 text-[#173f3b] transition-colors hover:text-[#0f5f5c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f5f5c]"
+          aria-label="Chiropractic Associates on Facebook (opens in a new tab)"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className={iconClass}
+            aria-hidden
+          >
+            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+          </svg>
+        </a>
+        <a
+          href={INSTAGRAM_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex shrink-0 text-[#173f3b] transition-colors hover:text-[#0f5f5c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f5f5c]"
+          aria-label="The Rub Club on Instagram (opens in a new tab)"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className={iconClass}
+            aria-hidden
+          >
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 11-2.881 0 1.44 1.44 0 012.881 0z" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  );
+}
+
 export function SiteHeaderClient({
   paris,
   sulphur,
@@ -120,6 +195,7 @@ export function SiteHeaderClient({
   return (
     <HeaderThemeProvider colors={headerColors} initialBusinessContext={initialBusinessContext}>
       {showTopPhoneBar ? (
+        <HeaderTier1Collapse>
         <div className="bg-[var(--header-phone-bar-bg)] px-4 py-1.5 text-center text-xs font-bold text-white sm:text-sm">
           {businessContext === "paris_chiro" ? (
             <a className="hover:underline" href={telHref(paris.phonePrimary)}>
@@ -159,6 +235,7 @@ export function SiteHeaderClient({
             </>
           )}
         </div>
+        </HeaderTier1Collapse>
       ) : null}
 
       <SiteHeaderLogoRow>
@@ -175,45 +252,7 @@ export function SiteHeaderClient({
           )}
         </div>
 
-        <div className="hidden shrink-0 flex-col items-end gap-2 text-sm sm:text-base lg:flex">
-          <span className="font-bold text-[#173f3b]">Find us on social media</span>
-          <div className="flex items-center gap-4">
-            <a
-              href={FACEBOOK_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex shrink-0 text-[#173f3b] transition-colors hover:text-[#0f5f5c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f5f5c]"
-              aria-label="Chiropractic Associates on Facebook (opens in a new tab)"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="h-9 w-9 sm:h-10 sm:w-10"
-                aria-hidden
-              >
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-            </a>
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex shrink-0 text-[#173f3b] transition-colors hover:text-[#0f5f5c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f5f5c]"
-              aria-label="The Rub Club on Instagram (opens in a new tab)"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="h-9 w-9 sm:h-10 sm:w-10"
-                aria-hidden
-              >
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 11-2.881 0 1.44 1.44 0 012.881 0z" />
-              </svg>
-            </a>
-          </div>
-        </div>
+        <HeaderSocialIcons />
 
         <MobileNav
           items={navItems}

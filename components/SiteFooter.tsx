@@ -10,6 +10,7 @@ export function SiteFooter({
   footerBlurbHtml,
   footerTagline,
   footerCopyright,
+  footerLinks,
   parisHours,
   sulphurHours,
   initialDomainCtx,
@@ -20,6 +21,8 @@ export function SiteFooter({
   footerBlurbHtml?: string | null;
   footerTagline?: string | null;
   footerCopyright?: string | null;
+  /** Raw CMS "Label — /path" link lists per business context. */
+  footerLinks?: Partial<Record<SiteBusinessContext, string | undefined>>;
   parisHours: readonly OfficeHoursRow[];
   sulphurHours: readonly OfficeHoursRow[];
   initialDomainCtx: DomainContextValue;
@@ -32,6 +35,7 @@ export function SiteFooter({
       footerBlurbHtml={footerBlurbHtml}
       footerTagline={footerTagline}
       footerCopyright={footerCopyright}
+      footerLinks={footerLinks}
       parisHours={parisHours}
       sulphurHours={sulphurHours}
       initialDomainCtx={initialDomainCtx}

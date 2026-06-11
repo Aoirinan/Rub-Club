@@ -29,6 +29,11 @@ import {
   STATIC_PAGES_CMS_REGISTRY,
   buildStaticPagesCmsDefaults,
 } from "@/lib/static-pages-cms";
+import {
+  FOOTER_LINKS_DEFAULT_TEXT,
+  FOOTER_LINKS_PARIS_TEXT,
+  FOOTER_LINKS_SS_TEXT,
+} from "@/lib/footer-links";
 
 export type ContentFieldType =
   | "text"
@@ -256,7 +261,49 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "header_ss_logo", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Sulphur Springs logo (replaces icon + text lockup)", type: "image" },
   { id: "header_paris_lockup_title", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Paris lockup title (next to logo)", type: "text" },
   { id: "header_paris_lockup_subtitle", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Paris lockup subtitle (next to logo)", type: "text" },
+  {
+    id: "sticky_call_bar_paris",
+    pageLabel: "Footer",
+    sectionLabel: "Mobile sticky bar",
+    fieldLabel: "Show Call/Book bottom bar — Paris & shared pages (true/false)",
+    type: "text",
+  },
+  {
+    id: "sticky_call_bar_ss",
+    pageLabel: "Footer",
+    sectionLabel: "Mobile sticky bar",
+    fieldLabel: "Show Call/Book bottom bar — Sulphur Springs pages (true/false)",
+    type: "text",
+  },
+  {
+    id: "accessibility_panel_enabled",
+    pageLabel: "Footer",
+    sectionLabel: "Accessibility",
+    fieldLabel: "Show accessibility options button (true/false)",
+    type: "text",
+  },
   { id: "footer_tagline", pageLabel: "Footer", sectionLabel: "Footer", fieldLabel: "Tagline", type: "text" },
+  {
+    id: "footer_links_default",
+    pageLabel: "Footer",
+    sectionLabel: "Footer links",
+    fieldLabel: "Explore links — main site (one per line: Label — /path)",
+    type: "richtext",
+  },
+  {
+    id: "footer_links_paris",
+    pageLabel: "Footer",
+    sectionLabel: "Footer links",
+    fieldLabel: "Explore links — Paris chiropractic pages (one per line: Label — /path)",
+    type: "richtext",
+  },
+  {
+    id: "footer_links_ss",
+    pageLabel: "Footer",
+    sectionLabel: "Footer links",
+    fieldLabel: "Explore links — Sulphur Springs pages (one per line: Label — /path)",
+    type: "richtext",
+  },
   { id: "footer_paris_address", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Address (header, footer, contact pages + location sections)", type: "text" },
   { id: "footer_paris_phone", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Phone (header, footer, contact pages + location sections)", type: "phone" },
   { id: "footer_massage_phone", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Massage Desk Phone (header, footer + Contact menu)", type: "phone" },
@@ -439,6 +486,12 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
     "Call us at 903-919-5020, or send us a message and we will follow up during office hours.",
 
   header_show_top_phone_bar: "true",
+  sticky_call_bar_paris: "true",
+  sticky_call_bar_ss: "true",
+  accessibility_panel_enabled: "true",
+  footer_links_default: FOOTER_LINKS_DEFAULT_TEXT,
+  footer_links_paris: FOOTER_LINKS_PARIS_TEXT,
+  footer_links_ss: FOOTER_LINKS_SS_TEXT,
   header_chiro_label: "Chiropractic — Paris",
   header_ss_label: "Chiro / Massage",
   header_chiro_logo: BRAND_LOGOS.chiropractic,

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { BookingCta } from "@/components/BookingCta";
+import { useHeaderCompact } from "@/components/HeaderThemeProvider";
 import { telHref } from "@/lib/constants";
 import {
   GIFT_CARD_DESKTOP_EXPANDED,
@@ -215,6 +216,11 @@ export function DesktopNav({
   const navRef = useRef<HTMLElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const giftCardExpanded = useMassageGiftCardNavExpandedContext();
+  const compact = useHeaderCompact();
+  // Backpro-style shrink: nav links lose vertical padding once scrolled.
+  const itemPad = `transition-[padding] duration-300 ease-out motion-reduce:transition-none ${
+    compact ? "px-4 py-1.5" : "px-4 py-2"
+  }`;
 
   useEffect(() => {
     if (openIdx === null) return;
@@ -265,7 +271,7 @@ export function DesktopNav({
               {hasChildren ? (
                 <button
                   type="button"
-                  className="focus-ring inline-flex items-center gap-1 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm"
+                  className={`focus-ring inline-flex items-center gap-1 ${itemPad} text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm`}
                   onClick={() => setOpenIdx(isOpen ? null : idx)}
                   aria-expanded={isOpen}
                 >
@@ -292,7 +298,7 @@ export function DesktopNav({
                   className={`focus-ring block shrink-0 font-black uppercase tracking-wide transition-all duration-300 ease-out motion-reduce:transition-none ${
                     giftCardExpanded
                       ? GIFT_CARD_DESKTOP_EXPANDED
-                      : "px-4 py-2 text-xs text-white hover:bg-white/15 xl:px-5 xl:text-sm"
+                      : `${compact ? "px-4 py-1.5" : "px-4 py-2"} text-xs text-white hover:bg-white/15 xl:px-5 xl:text-sm`
                   }`}
                   href={item.href}
                   target="_blank"
@@ -302,7 +308,7 @@ export function DesktopNav({
                 </a>
               ) : item.external ? (
                 <a
-                  className="focus-ring block px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm"
+                  className={`focus-ring block ${itemPad} text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm`}
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -311,7 +317,7 @@ export function DesktopNav({
                 </a>
               ) : (
                 <Link
-                  className="focus-ring block px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm"
+                  className={`focus-ring block ${itemPad} text-xs font-bold uppercase tracking-wide text-white hover:bg-white/15 xl:px-5 xl:text-sm`}
                   href={item.href}
                 >
                   {item.label}

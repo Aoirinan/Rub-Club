@@ -24,6 +24,12 @@ const TABS = [
     capability: "siteContent" as const,
   },
   {
+    href: "/admin/super/practice-pages",
+    label: "Practice pages",
+    match: (path: string) => path.startsWith("/admin/super/practice-pages"),
+    capability: "siteContent" as const,
+  },
+  {
     href: "/admin/super/marketing?tab=booking",
     label: "Promos & booking",
     match: (path: string) => path.startsWith("/admin/super/marketing"),

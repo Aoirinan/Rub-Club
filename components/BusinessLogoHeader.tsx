@@ -11,6 +11,7 @@ import {
 } from "@/lib/brand-logos";
 import { telHref, type LocationInfo } from "@/lib/constants";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
+import { useHeaderCompact } from "@/components/HeaderThemeProvider";
 
 export function BusinessLogoHeader({
   context,
@@ -23,6 +24,7 @@ export function BusinessLogoHeader({
   sulphur: LocationInfo;
   branding?: HeaderBrandContent;
 }) {
+  const compact = useHeaderCompact();
   const isParis = context === "paris_chiro";
   const location = isParis ? paris : sulphur;
   const href = isParis ? "/services/chiropractic" : "/sulphur-springs";
@@ -43,50 +45,62 @@ export function BusinessLogoHeader({
             : "Chiropractic Associates of Sulphur Springs"
         }
       >
-        {isParis ? (
-          isDefaultChiroLogo(branding?.logos.chiro) ? (
-            <ParisLockup
-              heightPx={60}
-              className="max-w-full"
-              title={branding?.parisLockup.title}
-              subtitle={branding?.parisLockup.subtitle}
-            />
-          ) : (
+        <div
+          className={`origin-top transition-transform duration-300 ease-out motion-reduce:transition-none ${
+            compact ? "scale-[0.78]" : "scale-100"
+          }`}
+        >
+          {isParis ? (
+            isDefaultChiroLogo(branding?.logos.chiro) ? (
+              <ParisLockup
+                heightPx={60}
+                className="max-w-full"
+                title={branding?.parisLockup.title}
+                subtitle={branding?.parisLockup.subtitle}
+              />
+            ) : (
+              <Image
+                src={resolveChiroHeaderLogo(branding?.logos.chiro)}
+                alt="Chiropractic Associates — Paris, TX"
+                width={600}
+                height={200}
+                sizes="(max-width: 640px) 90vw, 600px"
+                className="h-10 w-auto max-w-full object-contain sm:h-12 md:h-14 lg:h-[3.75rem]"
+                priority
+              />
+            )
+          ) : ssLogoSrc ? (
             <Image
-              src={resolveChiroHeaderLogo(branding?.logos.chiro)}
-              alt="Chiropractic Associates — Paris, TX"
-              width={600}
-              height={200}
-              sizes="(max-width: 640px) 90vw, 600px"
-              className="h-10 w-auto max-w-full object-contain sm:h-12 md:h-14 lg:h-[3.75rem]"
+              src={ssLogoSrc}
+              alt="Chiropractic Associates of Sulphur Springs"
+              width={360}
+              height={120}
+              sizes="(max-width: 640px) 80vw, 360px"
+              className="h-10 w-auto max-w-full object-contain sm:h-12 md:h-14"
               priority
             />
-          )
-        ) : ssLogoSrc ? (
-          <Image
-            src={ssLogoSrc}
-            alt="Chiropractic Associates of Sulphur Springs"
-            width={360}
-            height={120}
-            sizes="(max-width: 640px) 80vw, 360px"
-            className="h-10 w-auto max-w-full object-contain sm:h-12 md:h-14"
-            priority
-          />
-        ) : (
-          <SulphurSpringsLockup
-            primary
-            heightPx={56}
-            className="max-w-full"
-          />
-        )}
+          ) : (
+            <SulphurSpringsLockup
+              primary
+              heightPx={56}
+              className="max-w-full"
+            />
+          )}
+        </div>
       </Link>
       <a
         href={telHref(location.phonePrimary)}
-        className="max-w-full truncate font-black text-[#0f5f5c] hover:underline text-sm md:text-base"
+        className={`max-w-full truncate font-black text-[#0f5f5c] hover:underline transition-all duration-300 ease-out motion-reduce:transition-none ${
+          compact ? "text-xs md:text-sm" : "text-sm md:text-base"
+        }`}
       >
         {location.phonePrimary}
       </a>
-      <span className="max-w-full truncate text-[10px] font-bold uppercase tracking-wide text-stone-500 md:text-xs">
+      <span
+        className={`max-w-full truncate text-[10px] font-bold uppercase tracking-wide text-stone-500 md:text-xs ${
+          compact ? "hidden" : ""
+        }`}
+      >
         {phoneLabel}
       </span>
     </div>

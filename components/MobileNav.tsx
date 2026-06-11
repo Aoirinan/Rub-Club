@@ -81,11 +81,11 @@ export function MobileNav({
         >
           <button
             type="button"
-            className="absolute inset-0 bg-black/55"
+            className="mobile-drawer-overlay absolute inset-0 bg-black/55"
             aria-label="Close menu"
             onClick={close}
           />
-          <div className="absolute right-0 top-0 h-full w-[88%] max-w-sm overflow-y-auto bg-white shadow-2xl">
+          <div className="mobile-drawer-panel absolute right-0 top-0 h-full w-[88%] max-w-sm overflow-y-auto bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-stone-200 px-4 py-3">
               <span className="text-sm font-black uppercase tracking-wide text-[#0f5f5c]">Menu</span>
               <button

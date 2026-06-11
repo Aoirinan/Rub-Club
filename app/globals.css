@@ -30,3 +30,64 @@ body {
     @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f5f5c];
   }
 }
+
+/* Mobile nav drawer slide-in (drawer mounts on open; animate from off-canvas). */
+@keyframes drawer-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes overlay-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.mobile-drawer-panel {
+  animation: drawer-slide-in 0.25s ease-out;
+}
+.mobile-drawer-overlay {
+  animation: overlay-fade-in 0.2s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-drawer-panel,
+  .mobile-drawer-overlay {
+    animation: none;
+  }
+}
+
+/* Accessibility panel modes (classes toggled on <html> by AccessibilityPanel). */
+html.a11y-grayscale {
+  filter: grayscale(1);
+}
+html.a11y-invert {
+  filter: invert(1) hue-rotate(180deg);
+}
+html.a11y-grayscale.a11y-invert {
+  filter: grayscale(1) invert(1) hue-rotate(180deg);
+}
+/* Keep photos/videos natural when colors are inverted. */
+html.a11y-invert img,
+html.a11y-invert video,
+html.a11y-invert iframe {
+  filter: invert(1) hue-rotate(180deg);
+}
+html.a11y-underline a {
+  text-decoration: underline !important;
+}
+html.a11y-highlight a {
+  background-color: #ffe45e !important;
+  color: #1d1d1d !important;
+}
+html.a11y-readable body,
+html.a11y-readable button,
+html.a11y-readable input,
+html.a11y-readable textarea {
+  font-family: Arial, Verdana, Helvetica, sans-serif !important;
+  letter-spacing: 0.01em;
+}

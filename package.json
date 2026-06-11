@@ -15,6 +15,7 @@
     "backfill:patients": "npx tsx scripts/backfill-patients.ts",
     "storage:apply-cors": "npx tsx scripts/apply-storage-cors.ts",
     "seed:content": "npx tsx scripts/seedContentBlocks.ts",
+    "seed:practice-pages": "npx tsx scripts/seed-practice-pages.ts",
     "purge:insurance-uploads": "npx tsx scripts/purge-insurance-uploads.ts",
     "generate:baa-pdf": "npx tsx scripts/generate-baa-pdf.ts",
     "generate:sow-pdf": "npx tsx scripts/generate-sow-pdf.ts",

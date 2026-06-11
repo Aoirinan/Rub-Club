@@ -1,0 +1,190 @@
+legacy_domain,legacy_path,proposed_destination,confidence,notes
+# WIRED into next.config.ts (June 2026). This file remains the provenance/review record.
+# Source: Wayback Machine CDX index (200-status HTML pages) for all three legacy domains, June 2026.
+# Current behavior in next.config.ts: massageparistexas.com/* -> /services/massage (catch-all) and
+# chiropracticsulphursprings.com/* -> /sulphur-springs (catch-all). The rows below propose per-path
+# upgrades to those catch-alls plus path redirects on the primary domain.
+# confidence: exact = same content exists at destination; close = nearest current equivalent; fallback = content retired, send to best hub.
+#
+# ── chiropracticparistexas.com (primary domain — these become path redirects) ──
+chiropracticparistexas.com,/,/,exact,already the homepage — no rule needed
+chiropracticparistexas.com,/about,/about,exact,same route — no rule needed
+chiropracticparistexas.com,/about.php,/about,exact,
+chiropracticparistexas.com,/about-chiro,/services/chiropractic,close,
+chiropracticparistexas.com,/acupuncture,/services/chiropractic/acupuncture,exact,
+chiropracticparistexas.com,/acupuncture1,/services/chiropractic/acupuncture,exact,
+chiropracticparistexas.com,/adjustments-and-manipulation,/services/chiropractic/chiropractic-adjustments,exact,
+chiropracticparistexas.com,/attorneys.php,/contact,fallback,attorney-referral page retired
+chiropracticparistexas.com,/auto-accident-chiropractic.php,/sulphur-springs/auto-injury,close,injury pages now live under /sulphur-springs — confirm OK for Paris URLs
+chiropracticparistexas.com,/auto-injury,/sulphur-springs/auto-injury,close,same note as above
+chiropracticparistexas.com,/burn-scar-massage,/services/massage,close,specialty blurb retired
+chiropracticparistexas.com,/chiropractic-care,/services/chiropractic,exact,
+chiropracticparistexas.com,/chiropractic-care.php,/services/chiropractic,exact,
+chiropracticparistexas.com,/chiropractic-massage-therapy,/services/chiropractic/therapeutic-massage,exact,
+chiropracticparistexas.com,/cold-laser-therapy,/services/chiropractic,fallback,service no longer offered/listed
+chiropracticparistexas.com,/common-chiropractic-conditions,/sulphur-springs/common-chiropractic-conditions,close,conditions page now lives under SS section
+chiropracticparistexas.com,/conditions/index.php,/services/chiropractic,fallback,
+chiropracticparistexas.com,/contact,/contact,exact,same route — no rule needed
+chiropracticparistexas.com,/contact-us.php,/contact,exact,
+chiropracticparistexas.com,/cryotherapy,/services/chiropractic/heat-and-cryotherapy,exact,
+chiropracticparistexas.com,/ice-pack-cryotherapy,/services/chiropractic/heat-and-cryotherapy,exact,
+chiropracticparistexas.com,/whole-body-cryotherapy,/services/chiropractic/heat-and-cryotherapy,close,
+chiropracticparistexas.com,/custom-foot-orthotics,/services/chiropractic,fallback,service retired
+chiropracticparistexas.com,/deep-tissue-massage,/services/massage,exact,
+chiropracticparistexas.com,/degenerative-disc-disease,/services/chiropractic/degenerative-disc-disease,exact,
+chiropracticparistexas.com,/disclaimers/hipaa_policy,/privacy,exact,
+chiropracticparistexas.com,/disclaimers/privacy_policy,/website-privacy,exact,
+chiropracticparistexas.com,/disclaimers/terms_of_use,/terms,exact,
+chiropracticparistexas.com,/downloads.php,/patient-forms,exact,
+chiropracticparistexas.com,/paperwork.php,/patient-forms,exact,
+chiropracticparistexas.com,/patient-forms,/patient-forms,exact,same route — no rule needed
+chiropracticparistexas.com,/new-patients,/patient-forms,close,
+chiropracticparistexas.com,/patient-resources,/patient-forms,close,Paris resources merged into patient forms
+chiropracticparistexas.com,/educational-videos,/,close,videos now on homepage
+chiropracticparistexas.com,/exercise-videos,/,close,videos now on homepage
+chiropracticparistexas.com,/videos.php,/,close,videos now on homepage
+chiropracticparistexas.com,/electrical-muscle-stimulation,/services/chiropractic/electric-muscle-stimulation,exact,
+chiropracticparistexas.com,/electrical-stimulation-therapies,/services/chiropractic/electric-muscle-stimulation,exact,
+chiropracticparistexas.com,/ems.php,/services/chiropractic/electric-muscle-stimulation,exact,
+chiropracticparistexas.com,/interferential-current-therapy,/services/chiropractic/electric-muscle-stimulation,close,
+chiropracticparistexas.com,/microcurrent-therapy,/services/chiropractic/electric-muscle-stimulation,close,
+chiropracticparistexas.com,/hot-stone-massage,/services/massage,exact,
+chiropracticparistexas.com,/injuries,/sulphur-springs,close,injury hub now in SS services grid
+chiropracticparistexas.com,/injured-we-can-help,/sulphur-springs/personal-injury,close,blog post
+chiropracticparistexas.com,/massage.php,/services/massage,exact,
+chiropracticparistexas.com,/meet-the-doctor,/about,exact,already redirected via /meet-the-doctors rule — add singular form
+chiropracticparistexas.com,/pediatric-care,/services/chiropractic/pediatric-care,exact,
+chiropracticparistexas.com,/pediatric-chiropractic.php,/services/chiropractic/pediatric-care,exact,
+chiropracticparistexas.com,/personal-injury,/sulphur-springs/personal-injury,close,
+chiropracticparistexas.com,/physical-therapy,/services/chiropractic,close,
+chiropracticparistexas.com,/physiotherapy.php,/services/chiropractic,close,
+chiropracticparistexas.com,/postural-rehabilitation.php,/services/chiropractic/postural-rehabilitation,exact,
+chiropracticparistexas.com,/prenatal-chiropractic,/services/chiropractic,fallback,page retired
+chiropracticparistexas.com,/prenatal-massage,/services/massage,exact,
+chiropracticparistexas.com,/products.php,/services,fallback,
+chiropracticparistexas.com,/q-and-a,/faq,exact,
+chiropracticparistexas.com,/relaxation-massage,/services/massage,exact,
+chiropracticparistexas.com,/swedish-massage,/services/massage,exact,
+chiropracticparistexas.com,/thai-massage,/services/massage,exact,
+chiropracticparistexas.com,/sports-massage,/services/massage,exact,
+chiropracticparistexas.com,/what-is-chiropractic-massage-therapy,/services/massage,close,
+chiropracticparistexas.com,/services,/services,exact,same route — no rule needed
+chiropracticparistexas.com,/services.php,/services,exact,
+chiropracticparistexas.com,/spinal-decompression,/services/chiropractic/spinal-decompression,exact,
+chiropracticparistexas.com,/spinal-decompression.php,/services/chiropractic/spinal-decompression,exact,
+chiropracticparistexas.com,/spinal-wellness-tips,/faq,close,
+chiropracticparistexas.com,/spine-care,/services/chiropractic,close,
+chiropracticparistexas.com,/sports-injury,/sulphur-springs/sports-injury,close,
+chiropracticparistexas.com,/staff,/locations/paris/staff,exact,
+chiropracticparistexas.com,/stretch---flex-rehab,/services/chiropractic,close,stretch & flex now a homepage services-grid card
+chiropracticparistexas.com,/testimonials.php,/reviews,exact,
+chiropracticparistexas.com,/testimonials/page,/reviews,exact,
+chiropracticparistexas.com,/therapeutic-exercise,/services/chiropractic,close,
+chiropracticparistexas.com,/therapeutic-ultrasound,/services/chiropractic/therapeutic-ultrasound,exact,
+chiropracticparistexas.com,/ultra-sound.php,/services/chiropractic/therapeutic-ultrasound,exact,
+chiropracticparistexas.com,/vertebral-subluxation-complex,/sulphur-springs/vertebral-subluxation-complex,close,page now lives under SS section
+chiropracticparistexas.com,/wellness-care-plans,/services/chiropractic/wellness-care-plans,exact,
+chiropracticparistexas.com,/x-ray.php,/services/chiropractic,fallback,
+chiropracticparistexas.com,/3d-spine-simulator,/services/chiropractic,fallback,third-party widget retired
+chiropracticparistexas.com,/6-stretches-to-help-low-back-pain,/faq,fallback,blog post retired
+chiropracticparistexas.com,/could-we-help-your-tmj,/faq,fallback,blog post retired
+chiropracticparistexas.com,/headaches-can-be-a-pain-in-the-neck,/faq,fallback,blog post retired
+chiropracticparistexas.com,/how-to-kick-your-reliance-on-pain-medication,/faq,fallback,blog post retired
+chiropracticparistexas.com,/tech-neck,/faq,fallback,blog post retired
+chiropracticparistexas.com,/tendons-muscles-and-ligaments,/faq,fallback,blog post retired
+chiropracticparistexas.com,/whats-the-difference-between-tens-and-ems,/faq,fallback,blog post retired
+chiropracticparistexas.com,/where-is-your-wallet,/faq,fallback,blog post retired
+chiropracticparistexas.com,/index.php/about/,/about,exact,old WordPress paths
+chiropracticparistexas.com,/index.php/chiropractic-care/,/services/chiropractic,exact,
+chiropracticparistexas.com,/index.php/contact-us/,/contact,exact,
+chiropracticparistexas.com,/index.php/paperwork/,/patient-forms,exact,
+chiropracticparistexas.com,/index.php/physiotherapy/,/services/chiropractic,close,
+chiropracticparistexas.com,/index.php/services/,/services,exact,
+chiropracticparistexas.com,/index.php/special-offers/,/services/chiropractic/wellness-care-plans,close,
+chiropracticparistexas.com,/index.php/spinal-decompression,/services/chiropractic/spinal-decompression,exact,
+chiropracticparistexas.com,/index.php/:rest*,/,fallback,catch remaining WP blog/category junk
+chiropracticparistexas.com,/links,/,fallback,
+chiropracticparistexas.com,/sitemap,/,fallback,
+chiropracticparistexas.com,/geosearch.php,/,fallback,SEO junk page
+chiropracticparistexas.com,/rankings.php,/,fallback,SEO junk page
+chiropracticparistexas.com,/meet-the-doctors,/about,exact,ALREADY WIRED in next.config.ts
+chiropracticparistexas.com,/massage,/services/massage,exact,ALREADY WIRED in next.config.ts
+chiropracticparistexas.com,/chiropractic,/services/chiropractic,exact,ALREADY WIRED in next.config.ts
+chiropracticparistexas.com,/locations,/contact,exact,ALREADY WIRED in next.config.ts
+#
+# ── massageparistexas.com (currently catch-all -> /services/massage) ──
+massageparistexas.com,/,/services/massage,exact,matches current catch-all
+massageparistexas.com,/about.htm,/about,close,upgrade from catch-all
+massageparistexas.com,/blogs/:rest*,/services/massage,fallback,blog retired
+massageparistexas.com,/chiropactic.htm,/services/chiropractic,close,(sic — legacy typo)
+massageparistexas.com,/chiropractic-care,/services/chiropractic,exact,
+massageparistexas.com,/chiropractic.php,/services/chiropractic,exact,
+massageparistexas.com,/contact,/contact,exact,
+massageparistexas.com,/contact.htm,/contact,exact,
+massageparistexas.com,/contact.php,/contact,exact,
+massageparistexas.com,/deep-tissue-massage,/services/massage,exact,
+massageparistexas.com,/deep-tissue-massage.php,/services/massage,exact,
+massageparistexas.com,/hot-stone-massage,/services/massage,exact,
+massageparistexas.com,/joint-pain-relief,/services/massage,close,
+massageparistexas.com,/massage-prices,/services/massage/prices,exact,
+massageparistexas.com,/massage-prices.php,/services/massage/prices,exact,
+massageparistexas.com,/massage-therapy,/services/massage,exact,
+massageparistexas.com,/muscle-pain-treatments,/services/massage,close,
+massageparistexas.com,/patient-forms,/patient-forms,exact,
+massageparistexas.com,/prenatal-massage,/services/massage,exact,
+massageparistexas.com,/prenatal-massage.php,/services/massage,exact,
+massageparistexas.com,/sports-massage,/services/massage,exact,
+massageparistexas.com,/sports-massage.php,/services/massage,exact,
+massageparistexas.com,/swedish-massage.php,/services/massage,exact,
+massageparistexas.com,/therapeutic---swedish,/services/massage,exact,
+massageparistexas.com,/therapeutic-massage,/services/massage,exact,
+massageparistexas.com,/therapeutic-massage.php,/services/massage,exact,
+massageparistexas.com,/trigger-point-therapy.php,/services/massage,close,
+massageparistexas.com,/staff,/services/massage,close,therapist bios live on massage page
+massageparistexas.com,/therapists.php,/services/massage,close,
+massageparistexas.com,/:rest*,/services/massage,fallback,keep existing catch-all as the final rule (sitemap/rankings/3d-spine/img/content junk)
+#
+# ── chiropracticsulphursprings.com (currently catch-all -> /sulphur-springs) ──
+chiropracticsulphursprings.com,/,/sulphur-springs,exact,matches current catch-all
+chiropracticsulphursprings.com,/-massage-therapy,/sulphur-springs/massage,exact,
+chiropracticsulphursprings.com,/about-chiro,/sulphur-springs/about-chiropractic,exact,
+chiropracticsulphursprings.com,/about-us,/locations/sulphur-springs,close,
+chiropracticsulphursprings.com,/acupuncture,/sulphur-springs/acupuncture,exact,
+chiropracticsulphursprings.com,/adjustments-and-manipulation,/sulphur-springs/adjustments-and-manipulation,exact,
+chiropracticsulphursprings.com,/appointment-request,/book,exact,
+chiropracticsulphursprings.com,/auto-injury,/sulphur-springs/auto-injury,exact,
+chiropracticsulphursprings.com,/chiro-fitness/rub-club,/services/chiropractic/wellness-care-plans,close,Chiro-Fitness pricing lives on wellness plans page
+chiropracticsulphursprings.com,/chiropractic-massage-therapy,/sulphur-springs/massage,exact,
+chiropracticsulphursprings.com,/common-chiropractic-conditions,/sulphur-springs/common-chiropractic-conditions,exact,
+chiropracticsulphursprings.com,/contact-us,/sulphur-springs/contact,exact,
+chiropracticsulphursprings.com,/covid--19,/sulphur-springs,fallback,page retired
+chiropracticsulphursprings.com,/deep-tissue-massage,/sulphur-springs/massage,exact,
+chiropracticsulphursprings.com,/degenerative-disc-disease,/sulphur-springs/degenerative-disc-disease,exact,
+chiropracticsulphursprings.com,/educational-videos,/sulphur-springs/patient-resources,close,
+chiropracticsulphursprings.com,/exercise-videos,/sulphur-springs/patient-resources,close,
+chiropracticsulphursprings.com,/electrical-muscle-stimulation,/sulphur-springs/electrical-muscle-stimulation,exact,
+chiropracticsulphursprings.com,/ice-pack-cryotherapy,/sulphur-springs/ice-pack-cryotherapy,exact,
+chiropracticsulphursprings.com,/injuries,/sulphur-springs,close,injuries now in services grid
+chiropracticsulphursprings.com,/links,/sulphur-springs/patient-resources,close,
+chiropracticsulphursprings.com,/meet-the-doctors,/sulphur-springs/staff,exact,
+chiropracticsulphursprings.com,/meet-the-staff,/sulphur-springs/staff,exact,
+chiropracticsulphursprings.com,/new-patients,/sulphur-springs/patient-resources,close,
+chiropracticsulphursprings.com,/personal-injury,/sulphur-springs/personal-injury,exact,
+chiropracticsulphursprings.com,/postural-rehabilitation,/sulphur-springs/postural-rehabilitation,exact,
+chiropracticsulphursprings.com,/prenatal-massage,/sulphur-springs/massage,exact,
+chiropracticsulphursprings.com,/relaxation-massage,/sulphur-springs/massage,exact,
+chiropracticsulphursprings.com,/sports-massage,/sulphur-springs/massage,exact,
+chiropracticsulphursprings.com,/swedish-massage,/sulphur-springs/massage,exact,
+chiropracticsulphursprings.com,/what-is-chiropractic-massage-therapy,/sulphur-springs/massage,close,
+chiropracticsulphursprings.com,/q-and-a,/sulphur-springs/q-and-a,exact,
+chiropracticsulphursprings.com,/services,/sulphur-springs,exact,services grid on SS homepage
+chiropracticsulphursprings.com,/spinal-decompression,/sulphur-springs/spinal-decompression,exact,
+chiropracticsulphursprings.com,/spinal-wellness-tips,/sulphur-springs/q-and-a,close,
+chiropracticsulphursprings.com,/sports-injury,/sulphur-springs/sports-injury,exact,
+chiropracticsulphursprings.com,/testimonials,/reviews,exact,
+chiropracticsulphursprings.com,/therapeutic-exercise,/sulphur-springs/therapeutic-exercise,exact,
+chiropracticsulphursprings.com,/therapeutic-ultrasound,/sulphur-springs/therapeutic-ultrasound,exact,
+chiropracticsulphursprings.com,/vertebral-subluxation-complex,/sulphur-springs/vertebral-subluxation-complex,exact,
+chiropracticsulphursprings.com,/x-rays,/sulphur-springs,fallback,x-ray page retired
+chiropracticsulphursprings.com,/sitemap,/sulphur-springs,fallback,
+chiropracticsulphursprings.com,/:rest*,/sulphur-springs,fallback,keep existing catch-all as the final rule

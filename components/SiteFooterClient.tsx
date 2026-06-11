@@ -4,10 +4,10 @@ import Link from "next/link";
 import {
   GIFT_CARD_ORDER_URL,
   LOCATION_LIST,
-  WELLNESS_CARE_PLANS_PATH,
   telHref,
   type LocationInfo,
 } from "@/lib/constants";
+import { footerLinksForContext } from "@/lib/footer-links";
 import type { DomainContextValue } from "@/lib/domain-context";
 import type { OfficeHoursRow } from "@/lib/office-hours";
 import {
@@ -31,6 +31,7 @@ export function SiteFooterClient({
   footerBlurbHtml,
   footerTagline,
   footerCopyright,
+  footerLinks,
   parisHours,
   sulphurHours,
   initialDomainCtx,
@@ -41,6 +42,8 @@ export function SiteFooterClient({
   footerBlurbHtml?: string | null;
   footerTagline?: string | null;
   footerCopyright?: string | null;
+  /** Raw CMS "Label — /path" link lists per business context. */
+  footerLinks?: Partial<Record<SiteBusinessContext, string | undefined>>;
   parisHours: readonly OfficeHoursRow[];
   sulphurHours: readonly OfficeHoursRow[];
   initialDomainCtx: DomainContextValue;
@@ -70,7 +73,7 @@ export function SiteFooterClient({
 
   return (
     <footer className="mt-12 border-t-4 border-[#0f5f5c] bg-[#23312e] text-white/85">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-6xl gap-x-8 gap-y-6 px-4 py-8 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <p className="text-base font-black tracking-tight text-white">{siteShortName}</p>
           {footerBlurbHtml?.trim() && !isBusinessScoped ? (
@@ -122,96 +125,26 @@ export function SiteFooterClient({
         </div>
         <nav aria-label="Footer quick links" className="text-sm">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f2d25d]">Explore</p>
-          <ul className="mt-3 space-y-1.5">
-            {isParisChiro ? (
-              <>
-                <li>
-                  <Link className="hover:underline" href="/services/chiropractic">
-                    Chiropractic care
+          <ul className="mt-3 space-y-1">
+            {footerLinksForContext(businessContext, footerLinks?.[businessContext]).map((link) =>
+              link.external ? (
+                <li key={`${link.label}-${link.href}`}>
+                  <a
+                    className="hover:underline"
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ) : (
+                <li key={`${link.label}-${link.href}`}>
+                  <Link className="hover:underline" href={link.href}>
+                    {link.label}
                   </Link>
                 </li>
-                <li>
-                  <Link className="hover:underline" href={WELLNESS_CARE_PLANS_PATH}>
-                    Wellness care plans
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/locations/paris/staff">
-                    Meet the staff
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/locations/paris">
-                    Office &amp; hours
-                  </Link>
-                </li>
-              </>
-            ) : isSulphur ? (
-              <>
-                <li>
-                  <Link className="hover:underline" href="/sulphur-springs">
-                    Home
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/sulphur-springs/staff">
-                    Meet the staff
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/sulphur-springs/patient-resources">
-                    About chiropractic
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/sulphur-springs/q-and-a">
-                    Q &amp; A
-                  </Link>
-                </li>
-              </>
-            ) : (
-              <>
-                <li>
-                  <Link className="hover:underline" href="/services/massage">
-                    Massage therapy
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/services/chiropractic">
-                    Chiropractic care
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href={WELLNESS_CARE_PLANS_PATH}>
-                    Chiropractic wellness care plans
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/locations/paris">
-                    Paris office
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/locations/sulphur-springs">
-                    Sulphur Springs office
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/sulphur-springs">
-                    Sulphur Springs services
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/sulphur-springs/staff">
-                    Sulphur Springs staff
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/about">
-                    About us
-                  </Link>
-                </li>
-              </>
+              ),
             )}
             <li>
               <a
@@ -222,41 +155,6 @@ export function SiteFooterClient({
               >
                 Gift cards (Square)
               </a>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/faq">
-                FAQ
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/insurance">
-                Insurance &amp; billing
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/patient-forms">
-                Patient forms
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href={PRIVACY_PRACTICES_PATH}>
-                Privacy practices
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href={WEBSITE_PRIVACY_PATH}>
-                Website privacy
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href={TERMS_PATH}>
-                Terms of use
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/contact">
-                Contact
-              </Link>
             </li>
           </ul>
         </nav>

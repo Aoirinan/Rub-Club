@@ -22,6 +22,12 @@ export { HEADER_SHOW_TOP_PHONE_BAR_FIELD, parseHeaderShowTopPhoneBar };
 
 const LAYOUT_CMS_IDS = [
   HEADER_SHOW_TOP_PHONE_BAR_FIELD,
+  "sticky_call_bar_paris",
+  "sticky_call_bar_ss",
+  "accessibility_panel_enabled",
+  "footer_links_default",
+  "footer_links_paris",
+  "footer_links_ss",
   "header_chiro_label",
   "header_ss_label",
   "header_chiro_logo",

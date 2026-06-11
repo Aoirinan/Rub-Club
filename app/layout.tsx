@@ -39,6 +39,7 @@ import {
   getPublicBookingConfig,
   isPublicBookingEnabled,
 } from "@/lib/public-booking-settings";
+import { parseCmsToggle } from "@/lib/sticky-call-bar";
 import {
   DOMAIN_CTX_COOKIE,
   parseDomainContextValue,
@@ -144,6 +145,19 @@ export default async function RootLayout({
   const schemaLocations = [displayLocs.paris, displayLocs.sulphur_springs];
   const showTopPhoneBar = parseHeaderShowTopPhoneBar(cms.header_show_top_phone_bar);
   const headerBranding = headerBrandContentFromCms(cms);
+  const stickyCallBar = {
+    paris: displayLocs.paris,
+    sulphur: displayLocs.sulphur_springs,
+    enabledParis: parseCmsToggle(cms.sticky_call_bar_paris),
+    enabledSS: parseCmsToggle(cms.sticky_call_bar_ss),
+    initialBusinessContext,
+  };
+  const accessibilityPanelEnabled = parseCmsToggle(cms.accessibility_panel_enabled);
+  const footerLinks = {
+    default: cms.footer_links_default,
+    paris_chiro: cms.footer_links_paris,
+    sulphur_springs: cms.footer_links_ss,
+  };
 
   return (
     <html lang="en">
@@ -160,6 +174,8 @@ export default async function RootLayout({
         <PublicBookingProvider enabled={onlineBookingEnabled}>
           <ConditionalMarketingChrome
             giftCardSticky={giftCardSticky}
+            stickyCallBar={stickyCallBar}
+            accessibilityPanelEnabled={accessibilityPanelEnabled}
             header={
               <>
                 <SiteHeader
@@ -182,6 +198,7 @@ export default async function RootLayout({
                   footerBlurbHtml={footerBlurbHtml}
                   footerTagline={cms.footer_tagline}
                   footerCopyright={cms.footer_copyright}
+                  footerLinks={footerLinks}
                   parisHours={parisHours}
                   sulphurHours={sulphurHours}
                   initialDomainCtx={initialDomainCtx}
