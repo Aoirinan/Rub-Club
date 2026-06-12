@@ -49,7 +49,7 @@ function SectionCard({
           onClick={() => setOpen((v) => !v)}
         >
           <span aria-hidden className="text-slate-400">
-            {open ? "â–¾" : "â–¸"}
+            {open ? "▾" : "▸"}
           </span>
           <span className="text-base font-semibold text-slate-900">{title}</span>
         </button>
@@ -148,7 +148,7 @@ function ImageField({
       ) : null}
       <input
         className={INPUT}
-        placeholder="https://â€¦ or /images/â€¦"
+        placeholder="https://… or /images/…"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
@@ -261,7 +261,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
           target="_blank"
           className="text-sm font-semibold text-[#c0392b] underline"
         >
-          View page â†—
+          View page ↗
         </Link>
       </div>
 
@@ -290,13 +290,13 @@ export function PracticePagesEditor({ getIdToken }: Props) {
       ) : null}
 
       {loading || !doc ? (
-        <p className="py-12 text-center text-sm text-slate-600">Loadingâ€¦</p>
+        <p className="py-12 text-center text-sm text-slate-600">Loading…</p>
       ) : (
         <>
           <div className="space-y-4">
             {/* 0. Theme colors */}
             <SectionCard
-              title="0 Â· Theme colors"
+              title="0 · Theme colors"
               hint="Colors for this page's headings, circles, buttons, and hero panel. Leave a field empty to use the location default (red for Paris, blue for Sulphur Springs). Hero panel colors accept 8-digit hex for transparency (e.g. #8e2f23e6). Header/nav bar colors are edited in Website settings."
             >
               <div className="grid gap-4 sm:grid-cols-2">
@@ -353,7 +353,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
 
             {/* 1. Utility bar */}
             <SectionCard
-              title="1 Â· Utility bar"
+              title="1 · Utility bar"
               hint="Thin contact strip at the very top: phones, address (links to Google Maps), social icons."
               published={doc.utilityBar.published}
               onPublishedChange={(v) =>
@@ -378,7 +378,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
                     />
                     <input
                       className={`${INPUT} w-40`}
-                      placeholder="903-â€¦"
+                      placeholder="903-…"
                       value={phone.number}
                       onChange={(e) =>
                         update((p) => {
@@ -463,7 +463,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
                     />
                     <input
                       className={`${INPUT} flex-1`}
-                      placeholder="https://â€¦"
+                      placeholder="https://…"
                       value={s.url}
                       onChange={(e) =>
                         update((p) => {
@@ -510,7 +510,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
 
             {/* 2. Hero */}
             <SectionCard
-              title="2 Â· Hero"
+              title="2 · Hero"
               hint="Full-width photo with the practice heading, tagline, and Request Appointment / Call buttons."
               published={doc.hero.published}
               onPublishedChange={(v) =>
@@ -629,7 +629,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
 
             {/* 3. Quick actions */}
             <SectionCard
-              title="3 Â· Quick actions"
+              title="3 · Quick actions"
               hint="Tappable shortcut cards under the hero. Reorder with the arrows."
               published={doc.quickActions.published}
               onPublishedChange={(v) =>
@@ -692,7 +692,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
                       }))
                     }
                   >
-                    â†‘
+                    ↑
                   </button>
                   <button
                     type="button"
@@ -707,7 +707,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
                       }))
                     }
                   >
-                    â†“
+                    ↓
                   </button>
                   <button
                     type="button"
@@ -745,10 +745,10 @@ export function PracticePagesEditor({ getIdToken }: Props) {
 
             {/* 4. Services grid */}
             <SectionCard
-              title="4 Â· Services grid"
+              title="4 · Services grid"
               hint={
                 doc.servicesGrid.mode === "ss-services"
-                  ? "Cards come from the Sulphur Springs services list. Edit each card's blurb/image under Website â†’ Sulphur subpages."
+                  ? "Cards come from the Sulphur Springs services list. Edit each card's blurb/image under Website → Sulphur subpages."
                   : "Service cards with image (or icon), name, blurb, and Read More link."
               }
               published={doc.servicesGrid.published}
@@ -822,7 +822,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
                             }))
                           }
                         >
-                          â†‘
+                          ↑
                         </button>
                         <button
                           type="button"
@@ -837,7 +837,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
                             }))
                           }
                         >
-                          â†“
+                          ↓
                         </button>
                         <button
                           type="button"
@@ -868,7 +868,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
                         }
                       />
                       <ImageField
-                        label="Card image (optional â€” icon shown when blank)"
+                        label="Card image (optional — icon shown when blank)"
                         value={card.imageUrl}
                         onChange={(url) =>
                           update((p) => {
@@ -905,7 +905,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
 
             {/* 5. About / welcome blocks */}
             <SectionCard
-              title="5 Â· About / welcome blocks"
+              title="5 · About / welcome blocks"
               hint="Stacked two-column sections: rich text beside a photo, with phone and/or link CTAs. The home page stacks two."
             >
               {doc.aboutBlocks.map((block: PracticeAboutBlock, i) => (
@@ -936,7 +936,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
                           update((p) => ({ ...p, aboutBlocks: moveItem(p.aboutBlocks, i, -1) }))
                         }
                       >
-                        â†‘
+                        ↑
                       </button>
                       <button
                         type="button"
@@ -945,7 +945,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
                           update((p) => ({ ...p, aboutBlocks: moveItem(p.aboutBlocks, i, 1) }))
                         }
                       >
-                        â†“
+                        ↓
                       </button>
                       <button
                         type="button"
@@ -1089,7 +1089,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
 
             {/* 6. Patient reviews */}
             <SectionCard
-              title="6 Â· Patient reviews"
+              title="6 · Patient reviews"
               hint="Review cards shown on the page; manage the list below."
               published={doc.reviews.published}
               onPublishedChange={(v) =>
@@ -1152,7 +1152,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
 
             {/* 7. Team strips */}
             <SectionCard
-              title="7 Â· Meet our team"
+              title="7 · Meet our team"
               hint="Photos and credentials come from the doctors / office-staff sections of the site; edit those under Website. Each strip controls a heading, link, and which roster it shows."
             >
               {doc.teamSections.map((section: PracticeTeamSection, i) => (
@@ -1186,7 +1186,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
                           update((p) => ({ ...p, teamSections: moveItem(p.teamSections, i, -1) }))
                         }
                       >
-                        â†‘
+                        ↑
                       </button>
                       <button
                         type="button"
@@ -1195,7 +1195,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
                           update((p) => ({ ...p, teamSections: moveItem(p.teamSections, i, 1) }))
                         }
                       >
-                        â†“
+                        ↓
                       </button>
                       <button
                         type="button"
@@ -1334,8 +1334,8 @@ export function PracticePagesEditor({ getIdToken }: Props) {
 
             {/* 8. Location / contact */}
             <SectionCard
-              title="8 Â· Location & contact"
-              hint="Office info, hours table, and embedded map. Hours come from the existing hours fields (Website â†’ Paris office / Sulphur Springs)."
+              title="8 · Location & contact"
+              hint="Office info, hours table, and embedded map. Hours come from the existing hours fields (Website → Paris office / Sulphur Springs)."
               published={doc.locationBlock.published}
               onPublishedChange={(v) =>
                 update((p) => ({ ...p, locationBlock: { ...p.locationBlock, published: v } }))
@@ -1386,7 +1386,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
             </SectionCard>
 
             {/* 9. Extras */}
-            <SectionCard title="9 Â· Extra blocks" hint="Location-specific promos and link lists (wellness plans, awards, injuries, resourcesâ€¦). Each block has its own publish toggle. Wellness plan prices are edited in Website â†’ Wellness care plans (scope=wellness).">
+            <SectionCard title="9 · Extra blocks" hint="Location-specific promos and link lists (wellness plans, awards, injuries, resources…). Each block has its own publish toggle. Wellness plan prices are edited in Website → Wellness care plans (scope=wellness).">
               {doc.extras.map((extra: PracticeExtra, i) => (
                 <div key={extra.id || i} className="space-y-2 rounded-xl border border-slate-200 p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1520,7 +1520,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
 
             {/* 10. Sticky call bar */}
             <SectionCard
-              title="10 Â· Sticky mobile call bar"
+              title="10 · Sticky mobile call bar"
               hint="Fixed bottom bar on phones: Call Us + Book Now."
               published={doc.stickyCallBar.enabled}
               onPublishedChange={(v) =>
@@ -1587,7 +1587,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
               onClick={() => void save()}
               className="rounded-full bg-[#c0392b] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#962d22] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {saving ? "Savingâ€¦" : dirty ? "Save changes" : "Saved"}
+              {saving ? "Saving…" : dirty ? "Save changes" : "Saved"}
             </button>
             <button
               type="button"

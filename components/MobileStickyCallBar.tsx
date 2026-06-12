@@ -19,7 +19,7 @@ export type MobileStickyCallBarProps = {
 
 /**
  * Routes that mount their own practice-page StickyCallBar (driven by
- * practice_pages CMS) â€” the site-wide bar steps aside there.
+ * practice_pages CMS) — the site-wide bar steps aside there.
  */
 const PRACTICE_BAR_PATHS = new Set(["/", "/services/chiropractic", "/sulphur-springs"]);
 

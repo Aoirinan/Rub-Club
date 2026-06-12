@@ -1,9 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { track } from "@/lib/analytics";
 
 export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
+  const pathname = usePathname() ?? "/";
+  const sulphur = pathname.startsWith("/sulphur-springs");
+  const labelColor = sulphur ? "text-[#0c2d3a]" : "text-[#4a1515]";
+  const submitColor = sulphur
+    ? "bg-[#0c2d3a] hover:bg-[#081f29]"
+    : "bg-[#4a1515] hover:bg-[#341010]";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -20,7 +27,7 @@ export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
       return;
     }
     setSubmitting(true);
-    const sentTopic = locationTag ? `${topic} â€” ${locationTag}` : topic;
+    const sentTopic = locationTag ? `${topic} — ${locationTag}` : topic;
     track("contact_submitted", { topic: sentTopic });
     try {
       const res = await fetch("/api/contact", {
@@ -36,7 +43,7 @@ export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
       }
       setStatus({
         kind: "ok",
-        text: "Thanks â€” your message is on its way. We'll respond during office hours.",
+        text: "Thanks — your message is on its way. We'll respond during office hours.",
       });
       track("contact_succeeded", { topic });
       setName("");
@@ -70,7 +77,7 @@ export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1 text-sm sm:col-span-2">
-          <span className="font-bold text-[#4a1515]">Topic</span>
+          <span className={`font-bold ${labelColor}`}>Topic</span>
           <select
             className="focus-ring w-full border border-stone-300 bg-white px-3 py-2"
             value={topic}
@@ -85,7 +92,7 @@ export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-bold text-[#4a1515]">Full name</span>
+          <span className={`font-bold ${labelColor}`}>Full name</span>
           <input
             className="focus-ring w-full border border-stone-300 px-3 py-2"
             value={name}
@@ -95,7 +102,7 @@ export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-bold text-[#4a1515]">Email</span>
+          <span className={`font-bold ${labelColor}`}>Email</span>
           <input
             type="email"
             className="focus-ring w-full border border-stone-300 px-3 py-2"
@@ -106,7 +113,7 @@ export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
           />
         </label>
         <label className="space-y-1 text-sm sm:col-span-2">
-          <span className="font-bold text-[#4a1515]">Phone (optional)</span>
+          <span className={`font-bold ${labelColor}`}>Phone (optional)</span>
           <input
             className="focus-ring w-full border border-stone-300 px-3 py-2"
             value={phone}
@@ -115,7 +122,7 @@ export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
           />
         </label>
         <label className="space-y-1 text-sm sm:col-span-2">
-          <span className="font-bold text-[#4a1515]">Message</span>
+          <span className={`font-bold ${labelColor}`}>Message</span>
           <textarea
             className="focus-ring min-h-[140px] w-full border border-stone-300 px-3 py-2"
             value={message}
@@ -132,10 +139,10 @@ export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
 
       <button
         type="submit"
-        className="focus-ring bg-[#4a1515] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#341010] disabled:opacity-50"
+        className={`focus-ring ${submitColor} px-5 py-3 text-sm font-black uppercase tracking-wide text-white disabled:opacity-50`}
         disabled={submitting}
       >
-        {submitting ? "Sendingâ€¦" : "Send message"}
+        {submitting ? "Sending…" : "Send message"}
       </button>
 
       {status ? (

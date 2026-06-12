@@ -55,8 +55,8 @@ export default function WebsitePrivacyPage() {
         <Section title="Scope">
           <p>
             This policy applies to visitors and patients using our public website (scheduling,
-            contact forms, and general pages). Information you submit for clinical care â€” including
-            online intake â€” is also governed by our{" "}
+            contact forms, and general pages). Information you submit for clinical care — including
+            online intake — is also governed by our{" "}
             <Link className="font-bold text-[#c0392b] underline" href={PRIVACY_PRACTICES_PATH}>
               Notice of Privacy Practices
             </Link>
@@ -78,7 +78,7 @@ export default function WebsitePrivacyPage() {
             </li>
             <li>
               <strong className="text-[#4a1515]">Patient forms:</strong> health and insurance
-              information you choose to submit on our patient forms page â€” handled under stricter
+              information you choose to submit on our patient forms page — handled under stricter
               safeguards described on our privacy practices page.
             </li>
           </ul>
@@ -107,16 +107,16 @@ export default function WebsitePrivacyPage() {
           </p>
           <ul className="mt-3 list-disc space-y-2 pl-5">
             <li>
-              <strong className="text-[#4a1515]">rub_domain_ctx</strong> â€” remembers whether you
+              <strong className="text-[#4a1515]">rub_domain_ctx</strong> — remembers whether you
               arrived from massage- or chiropractic-focused content so we can show relevant
               information. Not used for advertising.
             </li>
             <li>
-              <strong className="text-[#4a1515]">Staff sign-in</strong> â€” a session cookie used only
+              <strong className="text-[#4a1515]">Staff sign-in</strong> — a session cookie used only
               for authorized clinic staff on admin pages; not set for typical patient browsing.
             </li>
             <li>
-              <strong className="text-[#4a1515]">Analytics (optional)</strong> â€” if enabled, Google
+              <strong className="text-[#4a1515]">Analytics (optional)</strong> — if enabled, Google
               Analytics or Google Tag Manager may collect usage statistics. We configure IP
               anonymization where supported.
             </li>
@@ -144,7 +144,7 @@ export default function WebsitePrivacyPage() {
           <p>
             We use administrative, technical, and physical safeguards appropriate to the type of
             information collected. No website can guarantee perfect security; please use the contact
-            form for general inquiries only â€” not detailed clinical information.
+            form for general inquiries only — not detailed clinical information.
           </p>
         </Section>
 

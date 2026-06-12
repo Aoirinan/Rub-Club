@@ -10,11 +10,11 @@ import { getDisplayLocations } from "@/lib/cms-display";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
 
 export const metadata = buildPageMetadata({
-  title: "Patient Resources â€” Sulphur Springs Chiropractic",
+  title: "Patient Resources — Sulphur Springs Chiropractic",
   description:
     "Chiropractic patient resources, helpful links, and educational topics from Chiropractic Associates of Sulphur Springs.",
   path: "/sulphur-springs/patient-resources",
-  ogTitle: "Patient Resources â€” Sulphur Springs, TX",
+  ogTitle: "Patient Resources — Sulphur Springs, TX",
 });
 
 export const revalidate = 60;
@@ -36,7 +36,8 @@ export default async function PatientResourcesPage() {
         ]}
       />
       <PageHero
-        eyebrow="Chiropractic Associates Â· Sulphur Springs"
+        variant="sulphur"
+        eyebrow="Chiropractic Associates · Sulphur Springs"
         title="Patient Resources"
       />
       <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
@@ -84,8 +85,9 @@ export default async function PatientResourcesPage() {
         </section>
         <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
         <ScheduleCtaCard
+          variant="sulphur"
           title="Have questions?"
-          body="Contact our Sulphur Springs office â€” we're happy to help."
+          body="Contact our Sulphur Springs office — we're happy to help."
           secondary={{ label: `Call ${ss.phonePrimary}`, href: telHref(ss.phonePrimary) }}
         />
       </div>

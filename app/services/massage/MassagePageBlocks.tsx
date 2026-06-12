@@ -12,7 +12,7 @@ import { telHref, type LocationInfo } from "@/lib/constants";
 const SERVICES = [
   { name: "Deep Tissue Massage", body: "Slow, targeted pressure to release chronic tension in the neck, shoulders, lower back, and hips." },
   { name: "Swedish Massage", body: "Long, flowing strokes that relax muscles, boost circulation, and melt away everyday stress." },
-  { name: "Therapeutic Massage", body: "Coordinated with your chiropractic plan â€” designed to support recovery between adjustments." },
+  { name: "Therapeutic Massage", body: "Coordinated with your chiropractic plan — designed to support recovery between adjustments." },
   { name: "Prenatal Massage", body: "Side-lying, pregnancy-safe positioning with techniques to ease swelling, hip pressure, and tension headaches." },
   { name: "Sports Massage", body: "Pre- and post-event work focused on recovery, range of motion, and getting you back to training without rushing tissue." },
   { name: "Hot Stone Massage", body: "Heated stones paired with hands-on work to warm tight muscles and release deep tension." },
@@ -82,7 +82,7 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
             <Link href="/services/chiropractic" className="font-bold text-[#c0392b] underline">
               Explore our chiropractic care
             </Link>{" "}
-            â€” our massage and chiropractic teams coordinate care under one roof.
+            — our massage and chiropractic teams coordinate care under one roof.
           </p>
         </section>
       );
@@ -117,7 +117,7 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
         <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
           <h2 className="text-2xl font-black text-[#4a1515]">Visit us in Paris</h2>
           <p className="mt-3 leading-relaxed text-stone-700">
-            {data.paris.streetAddress} Â· Paris, TX
+            {data.paris.streetAddress} · Paris, TX
           </p>
           <p className="mt-2 text-stone-700">
             Massage desk:{" "}

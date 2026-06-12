@@ -9,11 +9,11 @@ export function ParisLockup({
   heightPx = 60,
   className = "",
   title = "Chiropractic Associates",
-  subtitle = "& The Rub Club Â· Paris, TX",
+  subtitle = "& The Rub Club · Paris, TX",
 }: {
   heightPx?: number;
   className?: string;
-  /** CMS-editable lockup text (Footer â†’ Header in site content). */
+  /** CMS-editable lockup text (Footer → Header in site content). */
   title?: string;
   subtitle?: string;
 }) {

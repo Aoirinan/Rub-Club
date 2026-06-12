@@ -15,7 +15,7 @@ export type ChiropracticDoctorCardProps = {
   imageSrc: string;
   /** Local intro clip at `/media/doctors/[videoFile]` when CMS stores a filename. */
   videoFile?: string | null;
-  /** Full URL from CMS Storage â€” takes precedence over videoFile when set. */
+  /** Full URL from CMS Storage — takes precedence over videoFile when set. */
   videoUrl?: string | null;
   /** Owner-uploaded adjustment clips from Firestore doctor media. */
   actionVideos?: DoctorActionVideo[];

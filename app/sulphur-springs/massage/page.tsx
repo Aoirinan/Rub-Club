@@ -17,13 +17,13 @@ import { siteUrl } from "@/lib/site-content";
 export const revalidate = 60;
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Massage Therapy in Sulphur Springs, TX â€” Chiropractic Associates",
+  title: "Massage Therapy in Sulphur Springs, TX — Chiropractic Associates",
   description:
     "Therapeutic massage to complement chiropractic care in Sulphur Springs, TX. Call 903-919-5020 to ask about availability.",
   path: "/sulphur-springs/massage",
   keywords: pageKeywords(["Sulphur Springs massage", "massage Sulphur Springs TX"]),
   ogDescription:
-    "Therapeutic massage in Sulphur Springs, TX â€” coordinated with your chiropractic care.",
+    "Therapeutic massage in Sulphur Springs, TX — coordinated with your chiropractic care.",
 });
 
 export default async function SulphurSpringsMassagePage() {
@@ -60,7 +60,8 @@ export default async function SulphurSpringsMassagePage() {
         ]}
       />
       <PageHero
-        eyebrow="Chiropractic Associates Â· Sulphur Springs, TX"
+        variant="sulphur"
+        eyebrow="Chiropractic Associates · Sulphur Springs, TX"
         title={c.ss_massage_hero_heading}
         lede={c.ss_massage_hero_subheading}
       />
@@ -99,7 +100,7 @@ export default async function SulphurSpringsMassagePage() {
         <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
           <h2 className="text-2xl font-black text-[#0c2d3a]">Visit us in Sulphur Springs</h2>
           <p className="mt-3 leading-relaxed text-stone-700">
-            {ss.streetAddress} Â· {ss.addressLocality}, {ss.addressRegion}
+            {ss.streetAddress} · {ss.addressLocality}, {ss.addressRegion}
           </p>
           <p className="mt-2 text-stone-700">
             Sulphur Springs office:{" "}

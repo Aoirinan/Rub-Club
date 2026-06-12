@@ -189,10 +189,10 @@ export function FaqItemsPanel({ getIdToken }: Props) {
               <span className="min-w-0 flex-1 font-medium text-slate-900">{f.question}</span>
               <span className="rounded bg-yellow-100 px-2 py-0.5 text-xs text-yellow-900">{f.category}</span>
               <button type="button" className="text-xs font-semibold underline" onClick={() => moveFaq(i, -1)}>
-                â†‘
+                ↑
               </button>
               <button type="button" className="text-xs font-semibold underline" onClick={() => moveFaq(i, 1)}>
-                â†“
+                ↓
               </button>
               <button
                 type="button"

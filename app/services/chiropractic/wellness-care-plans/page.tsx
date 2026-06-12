@@ -12,12 +12,12 @@ import {
 } from "@/lib/wellness-care-plans-content";
 
 export const metadata = buildPageMetadata({
-  title: "Wellness Care Plans â€” Chiropractic Associates, Paris, TX",
+  title: "Wellness Care Plans — Chiropractic Associates, Paris, TX",
   brandInTitle: true,
   description:
     "Chiro-Fitness and Acu-Fit monthly wellness memberships: adjustments, massage combos, therapy, acupuncture, and rehab sessions at our Paris, TX office.",
   path: WELLNESS_CARE_PLANS_PATH,
-  ogTitle: "Wellness care plans â€” Chiropractic Associates",
+  ogTitle: "Wellness care plans — Chiropractic Associates",
   ogDescription:
     "Monthly wellness membership options for chiropractic, massage, therapy, and acupuncture in Paris, TX.",
 });

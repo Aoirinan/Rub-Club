@@ -11,11 +11,11 @@ import { getSulphurSpringsFaqs } from "@/lib/site-faqs";
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "Q & A â€” Sulphur Springs Chiropractic",
+  title: "Q & A — Sulphur Springs Chiropractic",
   description:
     "Frequently asked questions about chiropractic care at Chiropractic Associates of Sulphur Springs.",
   path: "/sulphur-springs/q-and-a",
-  ogTitle: "Q & A â€” Sulphur Springs, TX",
+  ogTitle: "Q & A — Sulphur Springs, TX",
 });
 
 export default async function QAndAPage() {
@@ -36,7 +36,8 @@ export default async function QAndAPage() {
         ]}
       />
       <PageHero
-        eyebrow="Chiropractic Associates Â· Sulphur Springs"
+        variant="sulphur"
+        eyebrow="Chiropractic Associates · Sulphur Springs"
         title="Questions & Answers"
       />
       <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
@@ -45,8 +46,9 @@ export default async function QAndAPage() {
         </section>
         <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
         <ScheduleCtaCard
+          variant="sulphur"
           title="Still have questions?"
-          body="Contact our Sulphur Springs office â€” we're happy to help."
+          body="Contact our Sulphur Springs office — we're happy to help."
           secondary={{ label: `Call ${ss.phonePrimary}`, href: telHref(ss.phonePrimary) }}
         />
       </div>

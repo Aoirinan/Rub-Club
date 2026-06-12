@@ -13,7 +13,7 @@ import { getServicesHubContent } from "@/lib/static-pages-content";
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "Services â€” Chiropractic & Massage in Paris & Sulphur Springs, TX",
+  title: "Services — Chiropractic & Massage in Paris & Sulphur Springs, TX",
   description:
     "Chiropractic care, wellness memberships, and therapeutic massage at Chiropractic Associates and The Rub Club in Paris and Sulphur Springs, TX.",
   path: SERVICES_HUB_PATH,

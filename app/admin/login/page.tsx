@@ -95,7 +95,7 @@ export default function AdminLoginPage() {
           disabled={busy}
           className="w-full bg-[#c0392b] py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#962d22] disabled:opacity-50"
         >
-          {busy ? "Signing inâ€¦" : "Sign in"}
+          {busy ? "Signing in…" : "Sign in"}
         </button>
       </form>
       </div>

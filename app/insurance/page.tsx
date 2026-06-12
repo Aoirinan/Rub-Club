@@ -14,7 +14,7 @@ export const metadata = buildPageMetadata({
   description:
     "What to expect with insurance for chiropractic visits, plus self-pay information for massage therapy at The Rub Club. Call our Paris office to verify benefits.",
   path: "/insurance",
-  ogTitle: "Insurance & Billing â€” Chiropractic Associates",
+  ogTitle: "Insurance & Billing — Chiropractic Associates",
   ogDescription:
     "Insurance accepted for chiropractic care; massage therapy is self-pay. Call to verify benefits before your visit.",
 });
@@ -64,7 +64,7 @@ export default async function InsurancePage() {
             <a className="focus-ring underline" href={telHref(displayLocs.paris.phonePrimary)}>
               Call Paris: {displayLocs.paris.phonePrimary}
             </a>{" "}
-            Â·{" "}
+            ·{" "}
             <a
               className="focus-ring underline"
               href={telHref(displayLocs.sulphur_springs.phonePrimary)}

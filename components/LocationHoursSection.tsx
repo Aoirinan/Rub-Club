@@ -7,7 +7,7 @@ import type { OfficeHoursRow } from "@/lib/office-hours";
 /**
  * "Our Location" + "Office Hours" strip repeated across subpages,
  * mirroring the block the legacy Sulphur Springs site showed on every page.
- * Headings are manager-editable (Footer â†’ Location & hours sections).
+ * Headings are manager-editable (Footer → Location & hours sections).
  */
 export async function LocationHoursSection({
   location,
@@ -16,7 +16,7 @@ export async function LocationHoursSection({
 }: {
   location: LocationInfo;
   hours: readonly OfficeHoursRow[];
-  /** Border/link accent â€” SS blue (#c0392b) or Paris green (#c0392b). */
+  /** Border/link accent — SS blue (#c0392b) or Paris green (#c0392b). */
   accent?: string;
 }) {
   const cms = await getContentMany(["location_section_heading", "hours_section_heading"]);

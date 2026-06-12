@@ -118,7 +118,7 @@ export function HeaderColorsEditor({
       <p className="text-sm text-slate-600">
         Header colors switch automatically by business section: Paris / massage / home use the first
         palette; Sulphur Springs pages use the second. Dark logo-row backgrounds may reduce text
-        contrast â€” text colors stay fixed for now.
+        contrast — text colors stay fixed for now.
       </p>
 
       <BandEditor
@@ -141,7 +141,7 @@ export function HeaderColorsEditor({
         onClick={onSave}
         className="rounded-lg bg-[#c0392b] px-4 py-2 text-sm font-bold text-white hover:bg-[#0d524f] disabled:opacity-60"
       >
-        {saving ? "Savingâ€¦" : "Save header colors"}
+        {saving ? "Saving…" : "Save header colors"}
       </button>
     </div>
   );

@@ -46,7 +46,7 @@ export default async function BookPage({
               Home
             </Link>
             <span aria-hidden className="mx-1">
-              â€º
+              ›
             </span>
             <span className="font-semibold text-stone-900">Book</span>
           </nav>
@@ -94,7 +94,7 @@ export default async function BookPage({
               Home
             </Link>
           </li>
-          <li aria-hidden>â€º</li>
+          <li aria-hidden>›</li>
           <li className="font-semibold text-stone-900">Book</li>
         </ol>
       </nav>

@@ -50,7 +50,7 @@ export function CmsFieldEditor({ field, busy, onSave, onReset, compact }: Props)
             <p className="mt-1 truncate text-xs text-slate-600">{valuePreview}</p>
           ) : null}
         </div>
-        <span className="shrink-0 text-xs text-slate-400">{expanded ? "â–²" : "â–¼"}</span>
+        <span className="shrink-0 text-xs text-slate-400">{expanded ? "▲" : "▼"}</span>
       </button>
       {expanded ? (
         <div className="space-y-2 border-t border-slate-200 px-3 py-3">

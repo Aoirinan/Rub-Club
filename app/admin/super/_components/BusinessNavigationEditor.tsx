@@ -70,7 +70,7 @@ function NavItemEditor({
             disabled={!canMoveUp}
             onClick={onMoveUp}
           >
-            â†‘
+            ↑
           </button>
           <button
             type="button"
@@ -78,7 +78,7 @@ function NavItemEditor({
             disabled={!canMoveDown}
             onClick={onMoveDown}
           >
-            â†“
+            ↓
           </button>
           <button
             type="button"
@@ -174,7 +174,7 @@ export function BusinessNavigationEditor({
         <h2 className="text-lg font-bold">Business navigation</h2>
         <p className="mt-1 text-sm text-slate-600">
           Edit the dropdown navigation shown when visitors enter via the Paris Chiro or Sulphur Springs
-          brand. Gift cards, booking links, and patient forms can stay in the menu â€” remove anything
+          brand. Gift cards, booking links, and patient forms can stay in the menu — remove anything
           unrelated to that business.
         </p>
       </div>
@@ -228,7 +228,7 @@ export function BusinessNavigationEditor({
           className="rounded-lg bg-[#c0392b] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
           onClick={onSave}
         >
-          {saving ? "Savingâ€¦" : "Save business navigation"}
+          {saving ? "Saving…" : "Save business navigation"}
         </button>
       </div>
     </section>

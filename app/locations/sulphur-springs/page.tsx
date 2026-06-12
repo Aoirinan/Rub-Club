@@ -36,6 +36,7 @@ export default async function SulphurSpringsLocationPage() {
         ]}
       />
       <PageHero
+        variant="sulphur"
         eyebrow="Second office · Sulphur Springs, TX"
         title={`Sulphur Springs, TX — ${ss.streetAddress}`}
         lede="Chiropractic Associates' second location, conveniently located on Jefferson St. E with weekday hours."

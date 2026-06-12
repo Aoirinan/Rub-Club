@@ -29,7 +29,7 @@ type Me = {
 };
 
 function formatWhen(iso: string | null): string {
-  if (!iso) return "â€”";
+  if (!iso) return "—";
   try {
     return new Date(iso).toLocaleString(undefined, {
       dateStyle: "medium",
@@ -138,11 +138,11 @@ function ContactInbox() {
           <div>
             <h1 className="text-xl font-semibold text-slate-900">Contact form inbox</h1>
             <p className="mt-1 max-w-xl text-sm text-slate-600">
-              All messages from the public contact form appear here. Front desk should check this page â€” email is
+              All messages from the public contact form appear here. Front desk should check this page — email is
               optional backup only.
             </p>
             <p className="text-xs text-slate-500">
-              Signed in as {auth?.currentUser?.email ?? "â€¦"} ({staffRoleLabel(me.role)})
+              Signed in as {auth?.currentUser?.email ?? "…"} ({staffRoleLabel(me.role)})
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -150,7 +150,7 @@ function ContactInbox() {
               href="/admin"
               className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900"
             >
-              â† Scheduler
+              ← Scheduler
             </Link>
             <button
               type="button"
@@ -188,8 +188,8 @@ function ContactInbox() {
             <p className="font-semibold">No optional office email copy</p>
             <p className="mt-1">
               <code className="rounded bg-white/80 px-1">OFFICE_NOTIFICATION_EMAIL</code> is not set on this server.
-              That is fine for front desk â€” use this inbox. To also email Sean (
-              <code className="rounded bg-white/80 px-1">dr.seanwelborn@gmail.com</code>), set it in Vercel â†’
+              That is fine for front desk — use this inbox. To also email Sean (
+              <code className="rounded bg-white/80 px-1">dr.seanwelborn@gmail.com</code>), set it in Vercel →
               Production environment variables.
             </p>
           </div>
@@ -216,7 +216,7 @@ function ContactInbox() {
         ) : null}
 
         {loading ? (
-          <p className="text-sm text-slate-600">Loadingâ€¦</p>
+          <p className="text-sm text-slate-600">Loading…</p>
         ) : submissions.length === 0 ? (
           <p className="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-600">
             No messages in this view.
@@ -250,7 +250,7 @@ function ContactInbox() {
                         {s.status}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-xs text-slate-500">{s.topic ?? "General"} Â· {formatWhen(s.createdAt)}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{s.topic ?? "General"} · {formatWhen(s.createdAt)}</p>
                     {!s.officeEmailSent ? (
                       <p className="mt-1 text-xs text-slate-500">Optional office email copy not sent</p>
                     ) : null}
@@ -315,7 +315,7 @@ function ContactInbox() {
                   <div className="sm:col-span-2">
                     <dt className="font-semibold text-slate-500">Delivery</dt>
                     <dd className="text-slate-700">
-                      Office email: {selected.officeEmailSent ? "sent" : "not sent"} Â· Visitor auto-reply:{" "}
+                      Office email: {selected.officeEmailSent ? "sent" : "not sent"} · Visitor auto-reply:{" "}
                       {selected.autoReplySent ? "sent" : "not sent"}
                     </dd>
                   </div>
@@ -337,7 +337,7 @@ function ContactInbox() {
 
 export default function AdminContactPage() {
   return (
-    <Suspense fallback={<div className="px-4 py-16 text-center text-sm">Loadingâ€¦</div>}>
+    <Suspense fallback={<div className="px-4 py-16 text-center text-sm">Loading…</div>}>
       <ContactInbox />
     </Suspense>
   );

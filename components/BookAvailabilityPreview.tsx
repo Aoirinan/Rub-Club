@@ -92,7 +92,7 @@ export function BookAvailabilityPreview({
           Select a time and call us to confirm your appointment
         </p>
         <p className="mt-2 text-sm leading-relaxed text-stone-700">
-          Openings below are for reference. Online booking with payment is coming soon â€” for now,
+          Openings below are for reference. Online booking with payment is coming soon — for now,
           choose a time and call so we can hold it for you.
         </p>
         <a
@@ -154,12 +154,12 @@ export function BookAvailabilityPreview({
       <div>
         <p className={fieldLabel}>Available times</p>
         {loadingSlots ? (
-          <p className="mt-3 text-sm text-stone-600">Loading openingsâ€¦</p>
+          <p className="mt-3 text-sm text-stone-600">Loading openings…</p>
         ) : slotsError ? (
           <p className="mt-3 text-sm text-amber-900">{slotsError}</p>
         ) : slots && slots.length === 0 ? (
           <p className="mt-3 text-sm text-stone-700">
-            No openings on this day â€” try another date or call{" "}
+            No openings on this day — try another date or call{" "}
             <a className="font-bold text-[#c0392b] underline" href={telHref(phone)}>
               {phone}
             </a>
@@ -186,7 +186,7 @@ export function BookAvailabilityPreview({
         )}
         {selectedSlot ? (
           <p className="mt-4 text-sm font-semibold text-[#4a1515]">
-            Selected: {selectedSlot.label} â€” call{" "}
+            Selected: {selectedSlot.label} — call{" "}
             <a className="font-black text-[#c0392b] underline" href={telHref(phone)}>
               {phone}
             </a>{" "}

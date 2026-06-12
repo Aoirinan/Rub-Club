@@ -90,11 +90,11 @@ function brandedShell(params: {
         <tr><td style="padding:16px 24px 24px 24px;border-top:1px solid #e6e2d3;
                        font-size:12px;color:${MUTED};line-height:1.5;">
           <p style="margin:0 0 6px 0;">
-            ${escapeHtml(siteShortName)} Â· Paris &amp; Sulphur Springs, TX
+            ${escapeHtml(siteShortName)} · Paris &amp; Sulphur Springs, TX
           </p>
           <p style="margin:0;">
-            Paris office: <a href="tel:+19037855551" style="color:${PRIMARY};">903-785-5551</a> Â·
-            The Rub Club: <a href="tel:+19037399959" style="color:${PRIMARY};">903-739-9959</a> Â·
+            Paris office: <a href="tel:+19037855551" style="color:${PRIMARY};">903-785-5551</a> ·
+            The Rub Club: <a href="tel:+19037399959" style="color:${PRIMARY};">903-739-9959</a> ·
             Sulphur Springs: <a href="tel:+19039195020" style="color:${PRIMARY};">903-919-5020</a>
           </p>
         </td></tr>
@@ -109,9 +109,9 @@ function detailsTable(ctx: BookingEmailContext): string {
   const loc = LOCATIONS[ctx.locationId];
   const rows: [string, string][] = [
     ["When", formatChicagoDateTimeLong(ctx.start)],
-    ["Service", `${serviceLineEmailLabel(ctx.serviceLine)} Â· ${ctx.durationMin} min`],
+    ["Service", `${serviceLineEmailLabel(ctx.serviceLine)} · ${ctx.durationMin} min`],
     ["Provider", ctx.providerDisplayName || "First available"],
-    ["Location", `${loc.shortName} â€” ${loc.streetAddress}`],
+    ["Location", `${loc.shortName} — ${loc.streetAddress}`],
   ];
   return `
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
@@ -133,7 +133,7 @@ function detailsTable(ctx: BookingEmailContext): string {
 
 /**
  * Patient email sent when an appointment request is first received.
- * No calendar invite yet â€” only after the office accepts.
+ * No calendar invite yet — only after the office accepts.
  */
 export function patientPendingEmail(
   ctx: BookingEmailContext,
@@ -144,21 +144,21 @@ export function patientPendingEmail(
   html: string;
 } {
   const loc = LOCATIONS[ctx.locationId];
-  const subject = `Request received â€” ${formatChicagoDateTimeShort(ctx.start)}`;
+  const subject = `Request received — ${formatChicagoDateTimeShort(ctx.start)}`;
 
   const recLine = opts?.recurrenceNote?.trim();
 
   const text = [
     `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
     "",
-    "Thanks â€” we got your appointment request. The office will review it and email you again as soon as it is confirmed.",
+    "Thanks — we got your appointment request. The office will review it and email you again as soon as it is confirmed.",
     "",
     `Requested time: ${formatChicagoDateTimeLong(ctx.start)}`,
     `Service: ${serviceLineEmailLabel(ctx.serviceLine)} (${ctx.durationMin} min)`,
     `Provider: ${ctx.providerDisplayName || "First available"}`,
-    `Location: ${loc.name} â€” ${loc.addressLines.join(", ")}`,
+    `Location: ${loc.name} — ${loc.addressLines.join(", ")}`,
     "",
-    "Status: PENDING â€” we have not yet confirmed this appointment.",
+    "Status: PENDING — we have not yet confirmed this appointment.",
     "",
     ...(recLine ? [recLine, ""] : []),
     `Need to change or cancel? Call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
@@ -173,9 +173,9 @@ export function patientPendingEmail(
 
   const body = `
     <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
-    <p style="margin:12px 0 0 0;">Thanks â€” we received your appointment request. The office will review it and email you again as soon as it is confirmed. You do not need to do anything else right now.</p>
+    <p style="margin:12px 0 0 0;">Thanks — we received your appointment request. The office will review it and email you again as soon as it is confirmed. You do not need to do anything else right now.</p>
     <p style="margin:12px 0 0 0;padding:10px 12px;background:#fdf6e0;border:1px solid #f19f1f;border-radius:6px;font-size:14px;font-weight:700;color:${TEXT};">
-      Status: PENDING â€” we have not yet confirmed this appointment.
+      Status: PENDING — we have not yet confirmed this appointment.
     </p>
     ${detailsTable(ctx)}
     ${prefNote}
@@ -206,7 +206,7 @@ export function patientPendingEmail(
 
 /**
  * Patient email sent once the office has accepted the request.
- * This is the "real" confirmation â€” pair it with the ICS attachment.
+ * This is the "real" confirmation — pair it with the ICS attachment.
  */
 export function patientAcceptedEmail(ctx: BookingEmailContext): {
   subject: string;
@@ -214,22 +214,22 @@ export function patientAcceptedEmail(ctx: BookingEmailContext): {
   html: string;
 } {
   const loc = LOCATIONS[ctx.locationId];
-  const subject = `Appointment confirmed â€” ${formatChicagoDateTimeShort(ctx.start)}`;
+  const subject = `Appointment confirmed — ${formatChicagoDateTimeShort(ctx.start)}`;
 
   const text = [
     `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
     "",
-    "Good news â€” your appointment has been confirmed.",
+    "Good news — your appointment has been confirmed.",
     "",
     `When: ${formatChicagoDateTimeLong(ctx.start)}`,
     `Service: ${serviceLineEmailLabel(ctx.serviceLine)} (${ctx.durationMin} min)`,
     `Provider: ${ctx.providerDisplayName || "First available"}`,
-    `Location: ${loc.name} â€” ${loc.addressLines.join(", ")}`,
+    `Location: ${loc.name} — ${loc.addressLines.join(", ")}`,
     "",
     "Before your visit:",
-    "â€¢ Arrive 10â€“15 minutes early for paperwork on a first visit (5 minutes for returning patients).",
-    "â€¢ Bring photo ID and your insurance card if you have one.",
-    "â€¢ Comfortable clothing is fine for both massage and chiropractic.",
+    "• Arrive 10–15 minutes early for paperwork on a first visit (5 minutes for returning patients).",
+    "• Bring photo ID and your insurance card if you have one.",
+    "• Comfortable clothing is fine for both massage and chiropractic.",
     "",
     `To reschedule or cancel: call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
     ...(ctx.patientManageUrl
@@ -246,12 +246,12 @@ export function patientAcceptedEmail(ctx: BookingEmailContext): {
 
   const body = `
     <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
-    <p style="margin:12px 0 0 0;">Good news â€” your appointment has been confirmed. We've attached a calendar invite (.ics) to add it to your calendar.</p>
+    <p style="margin:12px 0 0 0;">Good news — your appointment has been confirmed. We've attached a calendar invite (.ics) to add it to your calendar.</p>
     ${detailsTable(ctx)}
     ${prefNote}
     <h2 style="margin:20px 0 6px 0;font-size:16px;color:${TEXT};">Before your visit</h2>
     <ul style="margin:0;padding-left:18px;color:${TEXT};font-size:14px;line-height:1.6;">
-      <li>Arrive 10â€“15 minutes early for paperwork on a first visit (5 minutes for returning patients).</li>
+      <li>Arrive 10–15 minutes early for paperwork on a first visit (5 minutes for returning patients).</li>
       <li>Bring photo ID and your insurance card if you have one.</li>
       <li>Comfortable clothing is fine for massage and chiropractic appointments.</li>
     </ul>
@@ -292,14 +292,14 @@ export function patientDeclinedEmail(
   reason?: string,
 ): { subject: string; text: string; html: string } {
   const loc = LOCATIONS[ctx.locationId];
-  const subject = `Unable to confirm â€” ${formatChicagoDateTimeShort(ctx.start)}`;
+  const subject = `Unable to confirm — ${formatChicagoDateTimeShort(ctx.start)}`;
 
   const cleanReason = (reason ?? "").trim();
 
   const text = [
     `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
     "",
-    "We're sorry â€” we weren't able to confirm the appointment you requested.",
+    "We're sorry — we weren't able to confirm the appointment you requested.",
     "",
     `Requested time: ${formatChicagoDateTimeLong(ctx.start)}`,
     `Service: ${serviceLineEmailLabel(ctx.serviceLine)} (${ctx.durationMin} min)`,
@@ -322,7 +322,7 @@ export function patientDeclinedEmail(
 
   const body = `
     <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
-    <p style="margin:12px 0 0 0;">We're sorry â€” we weren't able to confirm the appointment you requested. The time slot is now released and no charges have been made.</p>
+    <p style="margin:12px 0 0 0;">We're sorry — we weren't able to confirm the appointment you requested. The time slot is now released and no charges have been made.</p>
     ${detailsTable(ctx)}
     ${reasonBlock}
     <p style="margin:16px 0 0 0;font-size:14px;">
@@ -356,7 +356,7 @@ export function patientCancelledEmail(
   opts?: { viaPatientPortal?: boolean },
 ): { subject: string; text: string; html: string } {
   const loc = LOCATIONS[ctx.locationId];
-  const subject = `Appointment cancelled â€” ${formatChicagoDateTimeShort(ctx.start)}`;
+  const subject = `Appointment cancelled — ${formatChicagoDateTimeShort(ctx.start)}`;
   const self = opts?.viaPatientPortal === true;
   const opener = self
     ? "This confirms we cancelled your appointment as you requested through our online link."
@@ -469,7 +469,7 @@ export function officeNotificationEmail(ctx: BookingEmailContext): {
     <p style="margin:12px 0 0 0;padding:12px 14px;background:#fdf6e0;border:1px solid #f19f1f;border-radius:6px;font-size:14px;color:${TEXT};">
       <strong>Action needed:</strong> Accept or decline this request in the admin portal.
       <br>
-      <a href="${escapeHtml(adminFocusUrl)}" style="display:inline-block;margin-top:6px;color:${PRIMARY};font-weight:700;">Open this booking in /admin â†’</a>
+      <a href="${escapeHtml(adminFocusUrl)}" style="display:inline-block;margin-top:6px;color:${PRIMARY};font-weight:700;">Open this booking in /admin →</a>
     </p>
     ${detailsTable(ctx)}
     <h2 style="margin:20px 0 6px 0;font-size:16px;color:${TEXT};">Patient</h2>
@@ -530,7 +530,7 @@ export function patientReminderEmail(ctx: BookingEmailContext): {
   html: string;
 } {
   const loc = LOCATIONS[ctx.locationId];
-  const subject = `Reminder â€” ${formatChicagoDateTimeShort(ctx.start)}`;
+  const subject = `Reminder — ${formatChicagoDateTimeShort(ctx.start)}`;
 
   const text = [
     `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
@@ -540,12 +540,12 @@ export function patientReminderEmail(ctx: BookingEmailContext): {
     `When: ${formatChicagoDateTimeLong(ctx.start)}`,
     `Service: ${serviceLineEmailLabel(ctx.serviceLine)} (${ctx.durationMin} min)`,
     `Provider: ${ctx.providerDisplayName || "First available"}`,
-    `Location: ${loc.name} â€” ${loc.addressLines.join(", ")}`,
+    `Location: ${loc.name} — ${loc.addressLines.join(", ")}`,
     "",
     "Before your visit:",
-    "â€¢ Arrive 10â€“15 minutes early for paperwork on a first visit (5 minutes for returning patients).",
-    "â€¢ Bring photo ID and your insurance card if you have one.",
-    "â€¢ Comfortable clothing is fine for both massage and chiropractic.",
+    "• Arrive 10–15 minutes early for paperwork on a first visit (5 minutes for returning patients).",
+    "• Bring photo ID and your insurance card if you have one.",
+    "• Comfortable clothing is fine for both massage and chiropractic.",
     "",
     `To reschedule or cancel: call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
     "",
@@ -558,7 +558,7 @@ export function patientReminderEmail(ctx: BookingEmailContext): {
     ${detailsTable(ctx)}
     <h2 style="margin:20px 0 6px 0;font-size:16px;color:${TEXT};">Before your visit</h2>
     <ul style="margin:0;padding-left:18px;color:${TEXT};font-size:14px;line-height:1.6;">
-      <li>Arrive 10â€“15 minutes early for paperwork on a first visit (5 minutes for returning patients).</li>
+      <li>Arrive 10–15 minutes early for paperwork on a first visit (5 minutes for returning patients).</li>
       <li>Bring photo ID and your insurance card if you have one.</li>
       <li>Comfortable clothing is fine for massage and chiropractic appointments.</li>
     </ul>
@@ -584,7 +584,7 @@ export function patientReminderEmail(ctx: BookingEmailContext): {
   return { subject, text, html };
 }
 
-/** Short follow-up after a completed visit â€” asks for a public review when configured. */
+/** Short follow-up after a completed visit — asks for a public review when configured. */
 export function postVisitSurveyEmail(ctx: BookingEmailContext): {
   subject: string;
   text: string;
@@ -592,12 +592,12 @@ export function postVisitSurveyEmail(ctx: BookingEmailContext): {
 } {
   const loc = LOCATIONS[ctx.locationId];
   const reviewUrl = reviewUrlForLocation(ctx.locationId);
-  const subject = `How was your visit? â€” ${loc.shortName}`;
+  const subject = `How was your visit? — ${loc.shortName}`;
 
   const text = [
     `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
     "",
-    "Thank you for choosing us for your care. If you have a moment, we would really appreciate a brief review â€” it helps other neighbors find quality care.",
+    "Thank you for choosing us for your care. If you have a moment, we would really appreciate a brief review — it helps other neighbors find quality care.",
     "",
     `Leave a review: ${reviewUrl}`,
     "",
@@ -610,10 +610,10 @@ export function postVisitSurveyEmail(ctx: BookingEmailContext): {
 
   const body = `
     <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
-    <p style="margin:12px 0 0 0;">Thank you for visiting ${escapeHtml(loc.shortName)}. If you have a moment, we would really appreciate a short public review â€” it helps others in the community find care.</p>
+    <p style="margin:12px 0 0 0;">Thank you for visiting ${escapeHtml(loc.shortName)}. If you have a moment, we would really appreciate a short public review — it helps others in the community find care.</p>
     ${detailsTable(ctx)}
     <p style="margin:16px 0 0 0;font-size:14px;">
-      <a href="${escapeHtml(reviewUrl)}" style="color:${PRIMARY};font-weight:700;">Share feedback on Google â†’</a>
+      <a href="${escapeHtml(reviewUrl)}" style="color:${PRIMARY};font-weight:700;">Share feedback on Google →</a>
     </p>
     <p style="margin:12px 0 0 0;font-size:12px;color:${MUTED};">Reference: ${escapeHtml(ctx.bookingId)}</p>
   `;
@@ -638,7 +638,7 @@ export function patientPaymentRequestEmail(
 ): { subject: string; text: string; html: string } {
   const loc = LOCATIONS[ctx.locationId];
   const dollars = (params.amountCents / 100).toFixed(2);
-  const subject = `Payment request â€” $${dollars}`;
+  const subject = `Payment request — $${dollars}`;
 
   const text = [
     `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
@@ -702,7 +702,7 @@ export function patientPaymentReceiptEmail(
 ): { subject: string; text: string; html: string } {
   const loc = LOCATIONS[ctx.locationId];
   const dollars = (params.amountCents / 100).toFixed(2);
-  const subject = `Payment received â€” $${dollars}`;
+  const subject = `Payment received — $${dollars}`;
 
   const text = [
     `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
@@ -727,7 +727,7 @@ export function patientPaymentReceiptEmail(
     <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
     <p style="margin:12px 0 0 0;">We received your payment. Thank you!</p>
     <p style="margin:12px 0 0 0;padding:14px 16px;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:6px;font-size:20px;font-weight:900;color:${TEXT};text-align:center;">
-      $${escapeHtml(dollars)} â€” Paid
+      $${escapeHtml(dollars)} — Paid
     </p>
     ${detailsTable(ctx)}
     ${txnBlock}
@@ -874,7 +874,7 @@ export function contactFormEmail(params: {
 export function contactFormAutoReplyEmail(params: {
   name: string;
 }): { subject: string; text: string; html: string } {
-  const subject = `We received your message â€” ${siteShortName}`;
+  const subject = `We received your message — ${siteShortName}`;
   const text = [
     `Hi ${params.name},`,
     "",

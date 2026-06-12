@@ -17,7 +17,7 @@ export function BookWhenDisabled({ message, locations }: Props) {
             Home
           </Link>
           <span aria-hidden className="mx-1">
-            â€º
+            ›
           </span>
           <span className="font-semibold text-stone-900">Book</span>
         </nav>
@@ -39,7 +39,7 @@ export function BookWhenDisabled({ message, locations }: Props) {
           <Link href="/contact" className="font-bold text-[#c0392b] underline">
             Contact form
           </Link>{" "}
-          Â·{" "}
+          ·{" "}
           <Link href="/services" className="font-bold text-[#c0392b] underline">
             Our services
           </Link>

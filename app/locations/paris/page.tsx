@@ -8,12 +8,12 @@ import { getParisOfficeHours } from "@/lib/office-hours";
 import { chiropractorJsonLd, massageJsonLd } from "@/lib/structured-data";
 
 export const metadata = buildPageMetadata({
-  title: "Paris, TX office â€” Chiropractic Associates & The Rub Club",
+  title: "Paris, TX office — Chiropractic Associates & The Rub Club",
   brandInTitle: true,
   description:
     "Visit our Paris main office at 3305 NE Loop 286, Suite A. Chiropractic Associates and The Rub Club massage share the same address. Free parking, weekday hours.",
   path: "/locations/paris",
-  ogTitle: "Paris, TX â€” Chiropractic & Massage Therapy",
+  ogTitle: "Paris, TX — Chiropractic & Massage Therapy",
   ogDescription:
     "Main office at 3305 NE Loop 286, Suite A, Paris, TX 75460. Chiropractic Associates and The Rub Club.",
 });
@@ -39,8 +39,8 @@ export default async function ParisLocationPage() {
         ]}
       />
       <PageHero
-        eyebrow="Main office Â· Paris, TX"
-        title={`Paris, TX â€” ${paris.streetAddress}`}
+        eyebrow="Main office · Paris, TX"
+        title={`Paris, TX — ${paris.streetAddress}`}
         lede="Both Chiropractic Associates and The Rub Club operate from this address. Easy parking, friendly front desk, weekday hours."
       />
       <LocationDetail location={paris} reviewUrl={reviewUrl} officeHours={officeHours} />
@@ -49,7 +49,7 @@ export default async function ParisLocationPage() {
           <Link href="/locations/paris/staff" className="font-bold text-[#c0392b] underline">
             Meet our Paris office team
           </Link>
-          {" Â· "}
+          {" · "}
           <Link href="/services/massage" className="font-bold text-[#c0392b] underline">
             Meet The Rub Club massage therapists
           </Link>

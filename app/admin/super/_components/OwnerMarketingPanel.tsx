@@ -302,7 +302,7 @@ export function OwnerMarketingPanel() {
   }
 
   if (bootstrapping) {
-    return <p className="px-4 py-16 text-center text-sm text-slate-600">Loading banners and promosâ€¦</p>;
+    return <p className="px-4 py-16 text-center text-sm text-slate-600">Loading banners and promos…</p>;
   }
 
   if (!config) {
@@ -435,7 +435,7 @@ export function OwnerMarketingPanel() {
               <input name="file" type="file" accept="video/mp4,video/quicktime,video/webm" required className="mt-1 block w-full text-sm" />
             </label>
             <label className="text-sm sm:col-span-2">
-              Massage therapist (optional â€” counts toward their {OWNER_MAX_VIDEOS_PER_MASSAGE_MEMBER}-video cap)
+              Massage therapist (optional — counts toward their {OWNER_MAX_VIDEOS_PER_MASSAGE_MEMBER}-video cap)
               <select name="massageMemberId" className="mt-1 w-full rounded border px-2 py-1" defaultValue="">
                 <option value="">Not tied to a therapist</option>
                 {massageTeamMembers.map((m) => {
@@ -450,11 +450,11 @@ export function OwnerMarketingPanel() {
               {massageTeamMembers.length === 0 ? (
                 <span className="mt-1 block text-xs text-amber-800">
                   No massage therapists found. Add bookable massage providers under Operations, or seed the website team
-                  in Website editor â†’ Massage page (team section).
+                  in Website editor → Massage page (team section).
                 </span>
               ) : massageTherapistSource === "providers" ? (
                 <span className="mt-1 block text-xs text-slate-600">
-                  Using bookable massage providers for now. In Website editor â†’ Massage page, open the team section and click &quot;Copy bookable
+                  Using bookable massage providers for now. In Website editor → Massage page, open the team section and click &quot;Copy bookable
                   massage providers into team&quot; to sync bios and the public Meet the team page.
                 </span>
               ) : null}
@@ -472,7 +472,7 @@ export function OwnerMarketingPanel() {
               disabled={loading}
               className="sm:col-span-2 rounded-full bg-[#c0392b] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
             >
-              {loading ? "Uploadingâ€¦" : "Upload"}
+              {loading ? "Uploading…" : "Upload"}
             </button>
           </form>
           <ul className="divide-y divide-slate-100 text-sm">
@@ -483,8 +483,8 @@ export function OwnerMarketingPanel() {
               return (
               <li key={v.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <span>
-                  {v.title || "Untitled"} â€” {v.label || "â€”"}
-                  {therapist ? ` Â· ${therapist}` : ""}
+                  {v.title || "Untitled"} — {v.label || "—"}
+                  {therapist ? ` · ${therapist}` : ""}
                 </span>
                 <button type="button" className="text-red-700 underline" onClick={() => void deleteVideo(v.id)}>
                   Delete
@@ -618,7 +618,7 @@ export function OwnerMarketingPanel() {
           <p className="text-sm text-slate-600">
             Edit everyday copy in{" "}
             <a href="/admin/super/page-builder?scope=home" className="font-semibold text-[#c0392b] underline">
-              Website â†’ Home
+              Website → Home
             </a>
             ,{" "}
             <a href="/admin/super/page-builder?scope=footer" className="font-semibold text-[#c0392b] underline">
@@ -678,7 +678,7 @@ export function OwnerMarketingPanel() {
               <p className="text-xs text-slate-500">
                 Prefer{" "}
                 <a href="/admin/super/page-builder?scope=navigation" className="underline">
-                  Website â†’ Navigation
+                  Website → Navigation
                 </a>
                 .
               </p>
@@ -698,7 +698,7 @@ export function OwnerMarketingPanel() {
               <p className="text-xs text-slate-500">
                 Prefer{" "}
                 <a href="/admin/super/page-builder?scope=home" className="underline">
-                  Website â†’ Home
+                  Website → Home
                 </a>{" "}
                 awards text.
               </p>
@@ -718,7 +718,7 @@ export function OwnerMarketingPanel() {
               <p className="text-xs text-slate-500">
                 Prefer{" "}
                 <a href="/admin/super/page-builder?scope=footer" className="underline">
-                  Website â†’ Footer
+                  Website → Footer
                 </a>
                 .
               </p>
@@ -812,15 +812,15 @@ function OnlineBookingSettingsBlock({
             })
           }
         />
-        Collect payment online after booking (Square) â€” leave unchecked for now
+        Collect payment online after booking (Square) — leave unchecked for now
       </label>
       <hr className="border-slate-200" />
       <h3 className="text-base font-bold text-slate-900">Google review links (optional)</h3>
       <p className="text-sm text-slate-600">
-        Google Maps â†’ your listing â†’ Share or &ldquo;Ask for reviews&rdquo; â†’ paste the HTTPS link for each office.
+        Google Maps → your listing → Share or &ldquo;Ask for reviews&rdquo; → paste the HTTPS link for each office.
       </p>
       <label className="block text-sm">
-        <span className="font-semibold">Paris â€” Google review URL</span>
+        <span className="font-semibold">Paris — Google review URL</span>
         <input
           className="mt-1 w-full rounded border border-slate-300 px-2 py-1 font-mono text-sm"
           placeholder="https://g.page/r/..."
@@ -834,7 +834,7 @@ function OnlineBookingSettingsBlock({
         />
       </label>
       <label className="block text-sm">
-        <span className="font-semibold">Sulphur Springs â€” Google review URL</span>
+        <span className="font-semibold">Sulphur Springs — Google review URL</span>
         <input
           className="mt-1 w-full rounded border border-slate-300 px-2 py-1 font-mono text-sm"
           placeholder="https://g.page/r/..."
@@ -964,7 +964,7 @@ function SpecialsPopupImageControls({
           disabled={busy}
           className="rounded-full bg-slate-800 px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
         >
-          {busy ? "â€¦" : "Upload image"}
+          {busy ? "…" : "Upload image"}
         </button>
       </form>
     </div>
@@ -1152,7 +1152,7 @@ function DoctorMediaTab({
           disabled={busy}
           className="sm:col-span-2 rounded-full bg-[#c0392b] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
         >
-          {busy ? "Uploadingâ€¦" : "Upload"}
+          {busy ? "Uploading…" : "Upload"}
         </button>
       </form>
       <ul className="text-sm">

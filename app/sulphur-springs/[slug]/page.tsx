@@ -63,7 +63,7 @@ export default async function SulphurSpringsSubpage({ params }: Props) {
           { name: page.title, url: `/sulphur-springs/${page.slug}` },
         ]}
       />
-      <PageHero eyebrow="Chiropractic Associates · Sulphur Springs" title={page.title} />
+      <PageHero variant="sulphur" eyebrow="Chiropractic Associates · Sulphur Springs" title={page.title} />
       <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
         <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
           <div className="prose prose-stone max-w-none">
@@ -72,6 +72,7 @@ export default async function SulphurSpringsSubpage({ params }: Props) {
         </section>
         <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
         <ScheduleCtaCard
+          variant="sulphur"
           title={ctaTitle}
           body={ctaBody}
           secondary={{ label: `Call ${ss.phonePrimary}`, href: telHref(ss.phonePrimary) }}

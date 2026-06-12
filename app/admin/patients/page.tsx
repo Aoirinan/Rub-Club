@@ -11,13 +11,13 @@ import type { PatientApiRow, PatientPaymentType } from "@/lib/patient-types";
 import { staffMeetsMin, type StaffRole } from "@/lib/staff-roles";
 
 function formatDate(ms: number | null): string {
-  if (!ms) return "â€”";
+  if (!ms) return "—";
   return DateTime.fromMillis(ms, { zone: TIME_ZONE }).toFormat("LLL d, yyyy");
 }
 
 export default function PatientsListPage() {
   return (
-    <Suspense fallback={<div className="px-4 py-16 text-center text-sm text-slate-600">Loadingâ€¦</div>}>
+    <Suspense fallback={<div className="px-4 py-16 text-center text-sm text-slate-600">Loading…</div>}>
       <PatientsListContent />
     </Suspense>
   );
@@ -191,7 +191,7 @@ function PatientsListContent() {
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          {loading ? <p className="px-4 py-8 text-sm text-slate-600">Loadingâ€¦</p> : null}
+          {loading ? <p className="px-4 py-8 text-sm text-slate-600">Loading…</p> : null}
           {!loading && patients.length === 0 ? (
             <p className="px-4 py-12 text-center text-sm text-slate-600">
               No patients yet. Import a CSV or add a patient manually.
@@ -221,7 +221,7 @@ function PatientsListContent() {
                       {p.firstName} {p.lastName}
                     </td>
                     <td className="px-4 py-3">{p.phone}</td>
-                    <td className="px-4 py-3 hidden sm:table-cell">{p.email || "â€”"}</td>
+                    <td className="px-4 py-3 hidden sm:table-cell">{p.email || "—"}</td>
                     <td className="px-4 py-3 capitalize">{p.paymentType}</td>
                     <td className="px-4 py-3">{p.totalVisits}</td>
                     <td className="px-4 py-3 hidden md:table-cell">{formatDate(p.lastVisitDateMs)}</td>
@@ -284,7 +284,7 @@ function PatientsListContent() {
               </div>
             </div>
             <button type="button" className="absolute right-4 top-4" onClick={() => setAddOpen(false)}>
-              âœ•
+              ✕
             </button>
           </aside>
         </div>

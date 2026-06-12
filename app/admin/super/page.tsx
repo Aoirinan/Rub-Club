@@ -115,7 +115,7 @@ function detectProviderIssues(rows: ProviderRow[]): ProviderIssue[] {
 
 function inviteEmailIssueHint(issue?: InviteStaffResponse["inviteEmailIssue"]): string {
   if (!issue) return "";
-  return " Email was not sent â€” ask your web person to fix outgoing email (see Email delivery section below).";
+  return " Email was not sent — ask your web person to fix outgoing email (see Email delivery section below).";
 }
 
 export default function SuperAdminPage() {
@@ -243,7 +243,7 @@ export default function SuperAdminPage() {
     const parts: string[] = [];
     const linkNote =
       data.linkedProviderId && role === "massage_therapist"
-        ? ` Linked to provider â€œ${data.linkedProviderDisplayName ?? providerLabelById(data.linkedProviderId) ?? data.linkedProviderId}â€.`
+        ? ` Linked to provider “${data.linkedProviderDisplayName ?? providerLabelById(data.linkedProviderId) ?? data.linkedProviderId}”.`
         : "";
     const issueNote = inviteEmailIssueHint(data.inviteEmailIssue);
     if (data.createdNewAuthUser) {
@@ -262,7 +262,7 @@ export default function SuperAdminPage() {
       );
     } else {
       parts.push(
-        `Staff access was saved${linkNote}, but no invitation email was sent.${issueNote} They can still use â€œForgot passwordâ€ on the staff login page with their work email once mail is working.`,
+        `Staff access was saved${linkNote}, but no invitation email was sent.${issueNote} They can still use “Forgot password” on the staff login page with their work email once mail is working.`,
       );
     }
     const joined = parts.join(" ");
@@ -278,7 +278,7 @@ export default function SuperAdminPage() {
     if (!auth?.currentUser) return;
     if (targetUid === auth.currentUser.uid) return;
     const label =
-      staff.find((s) => s.uid === targetUid)?.email ?? targetUid.slice(0, 8) + "â€¦";
+      staff.find((s) => s.uid === targetUid)?.email ?? targetUid.slice(0, 8) + "…";
     if (
       !window.confirm(
         `Remove ${label}? They will no longer be able to sign in. You can invite them again later.`,
@@ -532,7 +532,7 @@ export default function SuperAdminPage() {
 
   if (!meReady) {
     return (
-      <div className="px-4 py-16 text-center text-sm text-slate-600">Checking permissionsâ€¦</div>
+      <div className="px-4 py-16 text-center text-sm text-slate-600">Checking permissions…</div>
     );
   }
 
@@ -620,7 +620,7 @@ export default function SuperAdminPage() {
               <ul className="mt-2 list-disc space-y-1 pl-5">
                 {STAFF_ROLE_OPTIONS.map((opt) => (
                   <li key={opt.value}>
-                    <strong>{opt.label}</strong> â€” {opt.description}
+                    <strong>{opt.label}</strong> — {opt.description}
                   </li>
                 ))}
               </ul>
@@ -656,7 +656,7 @@ export default function SuperAdminPage() {
                     value={linkedProviderId}
                     onChange={(e) => setLinkedProviderId(e.target.value)}
                   >
-                    <option value="">Select providerâ€¦</option>
+                    <option value="">Select provider…</option>
                     {bookableProviders
                       .filter((p) => p.active)
                       .map((p) => (
@@ -708,7 +708,7 @@ export default function SuperAdminPage() {
                           onClick={() => deleteStaffRow(s.uid)}
                           className="shrink-0 rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          {deletingUid === s.uid ? "Removingâ€¦" : "Remove access"}
+                          {deletingUid === s.uid ? "Removing…" : "Remove access"}
                         </button>
                       ) : null}
                     </li>
@@ -725,7 +725,7 @@ export default function SuperAdminPage() {
             <section className="rounded-2xl border border-amber-300 bg-amber-50 p-5 shadow-sm space-y-4">
               <div>
                 <h2 className="text-base font-semibold text-amber-950">
-                  Booking calendar â€” {providerIssues.length}{" "}
+                  Booking calendar — {providerIssues.length}{" "}
                   {providerIssues.length === 1 ? "duplicate" : "duplicates"} found
                 </h2>
                 <p className="mt-1 text-sm text-amber-900/90">
@@ -742,7 +742,7 @@ export default function SuperAdminPage() {
                     <p className="font-semibold text-slate-900">
                       Duplicate: &ldquo;{issue.displayName}&rdquo;
                       <span className="ml-2 font-normal text-slate-600">
-                        â€” {issue.providers.length} active rows for{" "}
+                        — {issue.providers.length} active rows for{" "}
                         {issue.locationIds.join(", ")} / {issue.serviceLines.join(", ")}
                       </span>
                     </p>
@@ -755,11 +755,11 @@ export default function SuperAdminPage() {
                           <div className="min-w-0 flex-1 space-y-0.5">
                             <div className="font-mono text-xs text-slate-700">{p.id}</div>
                             <div className="text-[11px] text-slate-500">
-                              {idx === 0 ? "(oldest by id â€” usually keep)" : "(later duplicate)"}{" "}
-                              Â· sort {p.sortOrder}
+                              {idx === 0 ? "(oldest by id — usually keep)" : "(later duplicate)"}{" "}
+                              · sort {p.sortOrder}
                               {p.schedule
-                                ? ` Â· ${formatTime12h(p.schedule.openHour, p.schedule.openMinute)}â€“${formatTime12h(p.schedule.closeHour, p.schedule.closeMinute)}`
-                                : " Â· default hours"}
+                                ? ` · ${formatTime12h(p.schedule.openHour, p.schedule.openMinute)}–${formatTime12h(p.schedule.closeHour, p.schedule.closeMinute)}`
+                                : " · default hours"}
                             </div>
                           </div>
                           <div className="flex shrink-0 flex-wrap gap-2">
@@ -786,7 +786,7 @@ export default function SuperAdminPage() {
                               onClick={() => permanentlyDeleteBookableProvider(p.id, p.displayName)}
                               className="rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                              {deletingProviderId === p.id ? "Deletingâ€¦" : "Delete"}
+                              {deletingProviderId === p.id ? "Deleting…" : "Delete"}
                             </button>
                           </div>
                         </li>
@@ -828,12 +828,12 @@ export default function SuperAdminPage() {
             defaultOpen
           >
             <p className="text-sm text-slate-600">
-              Each person has their own calendar. Optional hours override the default 9:00 AMâ€“5:00 PM window.
+              Each person has their own calendar. Optional hours override the default 9:00 AM–5:00 PM window.
             </p>
             <p className="text-sm text-slate-600">
               Website bios and photos:{" "}
               <Link href="/admin/super/page-builder?page=massage" className="font-semibold text-[#c0392b] underline">
-                Website â†’ Massage page
+                Website → Massage page
               </Link>
               .
             </p>
@@ -890,7 +890,7 @@ export default function SuperAdminPage() {
                 onClick={createBookableProvider}
                 className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
               >
-                {savingProvider ? "Savingâ€¦" : "Add provider"}
+                {savingProvider ? "Saving…" : "Add provider"}
               </button>
             </div>
 
@@ -928,7 +928,7 @@ export default function SuperAdminPage() {
                             prev ? { ...prev, photoUrl: e.target.value } : prev,
                           );
                         }}
-                        placeholder="https://â€¦"
+                        placeholder="https://…"
                         disabled={!!editProviderPhoto}
                       />
                       <textarea
@@ -992,23 +992,23 @@ export default function SuperAdminPage() {
                       ) : (
                         <span className="text-amber-800">Hidden</span>
                       )}{" "}
-                      Â· sort {p.sortOrder}
+                      · sort {p.sortOrder}
                       {p.acceptsNewClients === false ? (
-                        <span className="text-amber-900"> Â· existing clients only</span>
+                        <span className="text-amber-900"> · existing clients only</span>
                       ) : null}{" "}
-                      Â· id <span className="font-mono">{p.id}</span>
+                      · id <span className="font-mono">{p.id}</span>
                     </div>
                     <div className="text-xs">
-                      Locations: {p.locationIds.join(", ") || "â€”"} Â· Services:{" "}
-                      {p.serviceLines.join(", ") || "â€”"}
+                      Locations: {p.locationIds.join(", ") || "—"} · Services:{" "}
+                      {p.serviceLines.join(", ") || "—"}
                     </div>
                     {p.schedule ? (
                       <div className="text-xs text-slate-600">
-                        Hours: {formatTime12h(p.schedule.openHour, p.schedule.openMinute)}â€“
+                        Hours: {formatTime12h(p.schedule.openHour, p.schedule.openMinute)}–
                         {formatTime12h(p.schedule.closeHour, p.schedule.closeMinute)}
                       </div>
                     ) : (
-                      <div className="text-xs text-slate-600">Hours: default 9:00 AMâ€“5:00 PM (Chicago)</div>
+                      <div className="text-xs text-slate-600">Hours: default 9:00 AM–5:00 PM (Chicago)</div>
                     )}
                   </div>
                   <div className="flex shrink-0 flex-wrap gap-2">
@@ -1037,13 +1037,13 @@ export default function SuperAdminPage() {
                       onClick={() => permanentlyDeleteBookableProvider(p.id, p.displayName)}
                       className="rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {deletingProviderId === p.id ? "Deletingâ€¦" : "Delete"}
+                      {deletingProviderId === p.id ? "Deleting…" : "Delete"}
                     </button>
                   </div>
                 </li>
               ))}
               {bookableProviders.length === 0 ? (
-                <li className="text-slate-600">No one on the calendar yet â€” add a provider above.</li>
+                <li className="text-slate-600">No one on the calendar yet — add a provider above.</li>
               ) : null}
             </ul>
           </OpsCollapsibleSection>

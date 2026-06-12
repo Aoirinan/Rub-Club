@@ -25,7 +25,7 @@ export function Breadcrumbs({ items }: { items: readonly Crumb[] }) {
                     {c.name}
                   </Link>
                 )}
-                {!last ? <span aria-hidden>â€º</span> : null}
+                {!last ? <span aria-hidden>›</span> : null}
               </li>
             );
           })}
@@ -35,21 +35,37 @@ export function Breadcrumbs({ items }: { items: readonly Crumb[] }) {
   );
 }
 
-/** Backpro-style full-width page-title banner: dark teal band, gold eyebrow + accent bar. */
+export type BrandVariant = "paris" | "sulphur";
+
+const HERO_BAND: Record<BrandVariant, { band: string; blob: string }> = {
+  paris: {
+    band: "bg-gradient-to-r from-[#4a1515] via-[#4a1515] to-[#c0392b]",
+    blob: "bg-[#962d22]/20",
+  },
+  sulphur: {
+    band: "bg-gradient-to-r from-[#0c2d3a] via-[#0c2d3a] to-[#2980b9]",
+    blob: "bg-[#1a6da3]/20",
+  },
+};
+
+/** Backpro-style full-width page-title banner: dark brand band, gold eyebrow + accent bar. */
 export function PageHero({
   eyebrow,
   title,
   lede,
+  variant = "paris",
 }: {
   eyebrow?: string;
   title: string;
   lede?: string;
+  variant?: BrandVariant;
 }) {
+  const colors = HERO_BAND[variant];
   return (
-    <header className="relative mb-8 mt-4 overflow-hidden bg-gradient-to-r from-[#4a1515] via-[#4a1515] to-[#c0392b]">
+    <header className={`relative mb-8 mt-4 overflow-hidden ${colors.band}`}>
       <div
         aria-hidden
-        className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-[#962d22]/20 blur-2xl"
+        className={`absolute -right-16 -top-20 h-64 w-64 rounded-full blur-2xl ${colors.blob}`}
       />
       <div className="relative mx-auto max-w-6xl px-4 py-10 sm:py-14">
         {eyebrow ? (

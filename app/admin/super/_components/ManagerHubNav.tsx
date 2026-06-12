@@ -94,7 +94,7 @@ export function ManagerHubNav() {
           href="/admin"
           className="ml-auto self-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100"
         >
-          â† Bookings
+          ← Bookings
         </Link>
       </div>
     </nav>

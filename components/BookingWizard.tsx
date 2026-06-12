@@ -320,7 +320,7 @@ export function BookingWizard({
       };
       if (res.status === 409) {
         setSubmitMessage(
-          "That time was just taken by someone else. We refreshed the slots â€” pick a new time and submit again.",
+          "That time was just taken by someone else. We refreshed the slots — pick a new time and submit again.",
         );
         track("booking_conflict", { service: serviceLine });
         await loadSlots();
@@ -349,7 +349,7 @@ export function BookingWizard({
       const tail =
         onlinePaymentsEnabled && data.paymentUrl
           ? " Use the secure Square link below to pay for this time. After checkout you will receive a receipt and a confirmed appointment email with a calendar attachment."
-          : " You will receive a confirmation email shortly â€” check spam if you don't see it. The office will follow up to confirm.";
+          : " You will receive a confirmation email shortly — check spam if you don't see it. The office will follow up to confirm.";
       setSubmitSuccess(true);
       setSubmitMessage(`Request received.${who}${repeat}${conflict} ${tail}`);
       track("booking_succeeded", {
@@ -400,7 +400,7 @@ export function BookingWizard({
               steps.
               {onlinePaymentsEnabled
                 ? " You may pay online with Square immediately after you submit."
-                : " No payment is collected on this website â€” the office will confirm your appointment."}
+                : " No payment is collected on this website — the office will confirm your appointment."}
             </p>
           </div>
           <ol className="mt-6 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 pt-0.5 [-webkit-overflow-scrolling:touch] sm:mt-10 sm:flex-wrap sm:overflow-visible sm:pb-0">
@@ -599,7 +599,7 @@ export function BookingWizard({
                 >
                   {catalogServices.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.name} â€” {s.durationMinutes} min
+                      {s.name} — {s.durationMinutes} min
                       {s.priceCents > 0 ? ` (${formatServicePrice(s.priceCents)})` : ""}
                     </option>
                   ))}
@@ -801,7 +801,7 @@ export function BookingWizard({
                       value={preferredProviderId}
                       onChange={(e) => setPreferredProviderId(e.target.value)}
                     >
-                      <option value="">No preference â€” truly first available</option>
+                      <option value="">No preference — truly first available</option>
                       {providers.map((p) => (
                         <option key={p.id} value={p.id}>
                           Prefer {p.displayName} if available (not guaranteed)
@@ -821,11 +821,11 @@ export function BookingWizard({
               onClick={loadSlots}
               disabled={loadingSlots || !canPickSlots}
             >
-              {loadingSlots ? "Loading timesâ€¦" : "See open times"}
+              {loadingSlots ? "Loading times…" : "See open times"}
             </button>
             {slots && slots.length > 0 ? (
               <p className="text-center text-xs text-stone-500 sm:text-left">
-                {slots.length} opening{slots.length === 1 ? "" : "s"} loaded â€” tap a time to continue.
+                {slots.length} opening{slots.length === 1 ? "" : "s"} loaded — tap a time to continue.
               </p>
             ) : null}
           </div>
@@ -958,7 +958,7 @@ export function BookingWizard({
             disabled={!selectedSlot || submitting || !name || !phone || !email || !canPickSlots}
             onClick={submitBooking}
           >
-            {submitting ? "Submittingâ€¦" : "Submit booking request"}
+            {submitting ? "Submitting…" : "Submit booking request"}
           </button>
 
           {submitMessage ? (

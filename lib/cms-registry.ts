@@ -76,15 +76,15 @@ export type ContentFieldMeta = {
 const CHIRO_TESTIMONIAL_DEFAULTS = [
   {
     text: "After a car accident I could barely turn my head. A few weeks with Dr. Welborn plus deep-tissue work from The Rub Club and I was back to normal.",
-    attr: "Sulphur Springs patient Â· Auto injury recovery",
+    attr: "Sulphur Springs patient · Auto injury recovery",
   },
   {
-    text: "Dr. Thompson and the team have kept me moving for years. I always leave feeling looked after â€” and they never push extra visits I do not need.",
-    attr: "Long-time Paris patient Â· Chiropractic",
+    text: "Dr. Thompson and the team have kept me moving for years. I always leave feeling looked after — and they never push extra visits I do not need.",
+    attr: "Long-time Paris patient · Chiropractic",
   },
   {
     text: "I had sciatica so bad I couldn't sit through a workday. Dr. Brandy Collins found the problem fast and had me feeling better within two weeks.",
-    attr: "Paris patient Â· Sciatica",
+    attr: "Paris patient · Sciatica",
   },
 ] as const;
 
@@ -146,8 +146,8 @@ Memberships are monthly and billed by auto-debit only. Tips are not included. Ca
 
 Prices are subject to change at any time.`;
 
-const SS_HOURS_DEFAULT = `Monday â€“ Friday: 9:00 AM â€“ 5:00 PM
-Saturday â€“ Sunday: Closed`;
+const SS_HOURS_DEFAULT = `Monday – Friday: 9:00 AM – 5:00 PM
+Saturday – Sunday: Closed`;
 
 const paris = LOCATIONS.paris;
 const ss = LOCATIONS.sulphur_springs;
@@ -216,7 +216,7 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
     id: "paris_hours",
     pageLabel: "Paris / main office",
     sectionLabel: "Hours",
-    fieldLabel: "Office hours (one line per day: Monday|9:00 AM â€“ 5:00 PM)",
+    fieldLabel: "Office hours (one line per day: Monday|9:00 AM – 5:00 PM)",
     type: "richtext",
   },
 
@@ -228,7 +228,7 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
     id: "ss_hours",
     pageLabel: "Sulphur Springs",
     sectionLabel: "Location",
-    fieldLabel: "Hours (one line per range: Monday â€“ Friday|9:00 AM â€“ 5:00 PM)",
+    fieldLabel: "Hours (one line per range: Monday – Friday|9:00 AM – 5:00 PM)",
     type: "richtext",
   },
   { id: "ss_massage_hero_heading", pageLabel: "Sulphur Springs", sectionLabel: "Massage page", fieldLabel: "Hero heading", type: "text" },
@@ -388,7 +388,7 @@ export const DEFAULTS: Record<string, string> = {
   home_hero_subheading: CHIRO.spineSub,
   home_hero_cta_label: "Book Now",
   home_awards_text:
-    "Voted Best Chiropractic Center & Best Massage â€” The Paris News reader polls.",
+    "Voted Best Chiropractic Center & Best Massage — The Paris News reader polls.",
   home_about_blurb: HOME_INTRO.body,
   home_testimonials_heading: "What our patients say",
   home_testimonials_intro:
@@ -469,7 +469,7 @@ Deep Tissue Massage — Slow, targeted pressure to release chronic tension in th
 Trigger Point & Lymphatic — Focused release of stubborn knots, plus gentle lymphatic drainage when appropriate.`,
 
   about_heading: "About our practice",
-  about_body: `Chiropractic Associates was founded in Paris, TX in 1998 by Dr. Greg Thompson. As the practice grew, Dr. Thompson opened The Rub Club so that licensed massage therapists could coordinate care directly with the chiropractic team â€” same building, same schedule, same standards.
+  about_body: `Chiropractic Associates was founded in Paris, TX in 1998 by Dr. Greg Thompson. As the practice grew, Dr. Thompson opened The Rub Club so that licensed massage therapists could coordinate care directly with the chiropractic team — same building, same schedule, same standards.
 
 Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office and a second chiropractic location in Sulphur Springs. Our doctors and therapists share charts and timelines so your massage and adjustment work together, not against each other.`,
 
@@ -500,7 +500,7 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
   header_paris_lockup_subtitle: "& The Rub Club · Paris, TX",
 
   footer_tagline:
-    "Family-owned wellness in Northeast Texas. Two practices, one address in Paris â€” plus chiropractic care in Sulphur Springs.",
+    "Family-owned wellness in Northeast Texas. Two practices, one address in Paris — plus chiropractic care in Sulphur Springs.",
   footer_paris_address: `${paris.streetAddress}, ${paris.addressLocality}, ${paris.addressRegion} ${paris.postalCode}`,
   footer_paris_phone: paris.phonePrimary,
   footer_massage_phone: paris.phoneSecondary ?? "903-739-9959",
@@ -511,7 +511,7 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
 
   location_section_heading: "Our Location",
   hours_section_heading: "Office Hours",
-  footer_copyright: `Â© ${new Date().getFullYear()} ${siteShortName}. All rights reserved.`,
+  footer_copyright: `© ${new Date().getFullYear()} ${siteShortName}. All rights reserved.`,
 
   nav_giftcard_url: GIFT_CARD_ORDER_URL,
   nav_book_url: "/contact",

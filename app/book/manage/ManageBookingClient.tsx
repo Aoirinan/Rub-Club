@@ -172,7 +172,7 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
   if (loading) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center text-stone-600">
-        <p>Loading your appointmentâ€¦</p>
+        <p>Loading your appointment…</p>
       </div>
     );
   }
@@ -207,14 +207,14 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
               <dl className="space-y-1 text-sm text-stone-800">
                 <div className="flex justify-between gap-2">
                   <dt className="text-stone-500">Patient</dt>
-                  <dd className="font-medium">{info.name || "â€”"}</dd>
+                  <dd className="font-medium">{info.name || "—"}</dd>
                 </div>
                 <div className="flex justify-between gap-2">
                   <dt className="text-stone-500">When</dt>
                   <dd className="text-right font-medium">
                     {DateTime.fromISO(info.startIso, { zone: "utc" })
                       .setZone(TIME_ZONE)
-                      .toFormat("ccc, LLL d Â· h:mm a")}
+                      .toFormat("ccc, LLL d · h:mm a")}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-2">
@@ -227,7 +227,7 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
                 </div>
                 <div className="flex justify-between gap-2">
                   <dt className="text-stone-500">Provider</dt>
-                  <dd className="text-right">{info.providerDisplayName || "â€”"}</dd>
+                  <dd className="text-right">{info.providerDisplayName || "—"}</dd>
                 </div>
                 <div className="flex justify-between gap-2">
                   <dt className="text-stone-500">Location</dt>
@@ -259,7 +259,7 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
                   onClick={() => void cancelAppointment()}
                   className="mt-3 w-full rounded-full bg-rose-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-rose-700 disabled:opacity-50"
                 >
-                  {working ? "Workingâ€¦" : "Cancel appointment"}
+                  {working ? "Working…" : "Cancel appointment"}
                 </button>
               </div>
 
@@ -283,7 +283,7 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
                       ))}
                     </select>
                   </label>
-                  {slotsLoading ? <p className="mt-2 text-xs text-stone-500">Loading timesâ€¦</p> : null}
+                  {slotsLoading ? <p className="mt-2 text-xs text-stone-500">Loading times…</p> : null}
                   {slotsError ? <p className="mt-2 text-xs text-rose-700">{slotsError}</p> : null}
                   {slots && slots.length === 0 && !slotsLoading ? (
                     <p className="mt-2 text-xs text-stone-600">No openings that day. Try another date.</p>
@@ -312,7 +312,7 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
                     onClick={() => void rescheduleAppointment()}
                     className="mt-3 w-full rounded-full bg-[#c0392b] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0c4d4b] disabled:opacity-50"
                   >
-                    {working ? "Workingâ€¦" : "Confirm new time"}
+                    {working ? "Working…" : "Confirm new time"}
                   </button>
                 </div>
               ) : null}

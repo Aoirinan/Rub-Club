@@ -18,7 +18,7 @@ import {
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "Contact us â€” Chiropractic Associates of Sulphur Springs",
+  title: "Contact us — Chiropractic Associates of Sulphur Springs",
   description:
     "Phone number, address, and hours for Chiropractic Associates of Sulphur Springs at 207 Jefferson St. E. Call 903-919-5020 or send us a message.",
   path: "/sulphur-springs/contact",
@@ -51,7 +51,8 @@ export default async function SulphurSpringsContactPage() {
         ]}
       />
       <PageHero
-        eyebrow="Chiropractic Associates Â· Sulphur Springs"
+        variant="sulphur"
+        eyebrow="Chiropractic Associates · Sulphur Springs"
         title={c.ss_contact_heading}
         lede={c.ss_contact_subtext}
       />

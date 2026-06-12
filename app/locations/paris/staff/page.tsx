@@ -12,11 +12,11 @@ import { resolveSiteStaffForBrand, type SiteStaffDisplayMember } from "@/lib/sit
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "Meet the Staff â€” Paris, TX Office",
+  title: "Meet the Staff — Paris, TX Office",
   description:
-    "Meet the Chiropractic Associates Paris office team â€” insurance, personal injury case management, front desk, therapy tech, rehab coaching, and marketing.",
+    "Meet the Chiropractic Associates Paris office team — insurance, personal injury case management, front desk, therapy tech, rehab coaching, and marketing.",
   path: "/locations/paris/staff",
-  ogTitle: "Meet the Staff â€” Paris, TX",
+  ogTitle: "Meet the Staff — Paris, TX",
   ogDescription:
     "Insurance coordinators, case managers, front desk, and support staff at our Paris main office.",
 });
@@ -91,7 +91,7 @@ export default async function ParisOfficeStaffPage() {
         ]}
       />
       <PageHero
-        eyebrow="Chiropractic Associates Â· Paris, TX"
+        eyebrow="Chiropractic Associates · Paris, TX"
         title={page.heroTitle}
         lede={page.heroLede}
       />

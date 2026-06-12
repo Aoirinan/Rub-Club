@@ -4,7 +4,7 @@ import { DOCTORS } from "@/lib/home-verbatim";
 
 type Props = {
   titleAs?: "h1" | "h2";
-  /** When false, omit the â€œOur Chiropractorsâ€ heading (use when the page already supplies an H1). */
+  /** When false, omit the “Our Chiropractors” heading (use when the page already supplies an H1). */
   showSectionTitle?: boolean;
 };
 

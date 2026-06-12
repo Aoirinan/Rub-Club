@@ -16,7 +16,7 @@ export const metadata = buildPageMetadata({
   description:
     "Answers about insurance, cancellation, what to bring, pricing, and what to expect at your first chiropractic or massage appointment in Paris, TX.",
   path: "/faq",
-  ogTitle: "FAQ â€” Chiropractic Associates",
+  ogTitle: "FAQ — Chiropractic Associates",
   ogDescription:
     "Insurance, scheduling, and first-visit answers for our Paris and Sulphur Springs offices.",
 });

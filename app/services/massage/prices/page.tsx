@@ -7,11 +7,11 @@ import { telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
 
 export const metadata = buildPageMetadata({
-  title: "Massage Prices â€” The Rub Club, Paris TX",
+  title: "Massage Prices — The Rub Club, Paris TX",
   description:
     "Massage session rates, add-ons, gift certificate packages, memberships, and Chiro-Fitness pricing at The Rub Club in Paris, TX.",
   path: "/services/massage/prices",
-  ogTitle: "Massage Prices â€” The Rub Club",
+  ogTitle: "Massage Prices — The Rub Club",
 });
 
 export const revalidate = 60;
@@ -33,7 +33,7 @@ export default async function MassagePricesPage() {
           { name: "Prices", url: "/services/massage/prices" },
         ]}
       />
-      <PageHero eyebrow="The Rub Club Â· Paris, TX" title="Massage Prices" />
+      <PageHero eyebrow="The Rub Club · Paris, TX" title="Massage Prices" />
       <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
         <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
           <div className="prose prose-stone max-w-none">

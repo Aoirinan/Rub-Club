@@ -18,7 +18,7 @@ import {
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "Meet the Staff â€” Sulphur Springs Chiropractic",
+  title: "Meet the Staff — Sulphur Springs Chiropractic",
   description:
     "Meet Dr. Conner Collins and the care team at Chiropractic Associates of Sulphur Springs. Chiropractor, massage therapists, rehab therapy, and front-desk staff serving Hopkins County, TX.",
   path: "/sulphur-springs/staff",
@@ -110,7 +110,8 @@ export default async function SulphurSpringsStaffPage() {
         ]}
       />
       <PageHero
-        eyebrow="Chiropractic Associates Â· Sulphur Springs"
+        variant="sulphur"
+        eyebrow="Chiropractic Associates · Sulphur Springs"
         title={page.heroTitle}
         lede={page.heroLede || undefined}
       />
@@ -157,6 +158,7 @@ export default async function SulphurSpringsStaffPage() {
         <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
 
         <ScheduleCtaCard
+          variant="sulphur"
           title={page.ctaTitle}
           body={page.ctaBody}
           secondary={{

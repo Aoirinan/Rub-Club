@@ -15,11 +15,11 @@ import { organizationJsonLd } from "@/lib/structured-data";
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "About Us â€” Family-owned wellness in Northeast Texas",
+  title: "About Us — Family-owned wellness in Northeast Texas",
   description:
     "Since 1998, Chiropractic Associates and The Rub Club have delivered family-owned chiropractic care and licensed massage therapy in Paris and Sulphur Springs, TX.",
   path: "/about",
-  ogTitle: "About â€” Chiropractic Associates",
+  ogTitle: "About — Chiropractic Associates",
   ogDescription:
     "Family-owned wellness in Paris and Sulphur Springs, TX. Best Chiropractic Center and Best Massage in The Paris News reader polls.",
 });

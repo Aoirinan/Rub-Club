@@ -14,9 +14,9 @@ export const metadata = buildPageMetadata({
   description:
     "Download chiropractic new patient and personal injury intake paperwork, massage new-client forms, or complete our online intake before your visit in Paris or Sulphur Springs, TX.",
   path: "/patient-forms",
-  ogTitle: "Patient Forms â€” Chiropractic Associates",
+  ogTitle: "Patient Forms — Chiropractic Associates",
   ogDescription:
-    "Chiropractic and massage intake forms for Paris and Sulphur Springs â€” online or printable PDF.",
+    "Chiropractic and massage intake forms for Paris and Sulphur Springs — online or printable PDF.",
 });
 
 export default async function PatientFormsPage() {

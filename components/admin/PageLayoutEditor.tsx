@@ -94,7 +94,7 @@ export function PageLayoutEditor({ getIdToken }: Props) {
     if (!res.ok) {
       setMessage(data.error ?? "Save failed.");
     } else {
-      setMessage("Saved â€” live within about a minute.");
+      setMessage("Saved — live within about a minute.");
       if (data.blockOrder) setOrder(data.blockOrder);
     }
     setSaving(false);
@@ -118,7 +118,7 @@ export function PageLayoutEditor({ getIdToken }: Props) {
         <h2 className="text-lg font-bold text-slate-900">Page layout</h2>
         <p className="mt-2 text-sm text-slate-600">
           Drag sections to change their order on the live page. Hero, breadcrumbs, and the site
-          header stay fixed â€” only the main content blocks below them move.
+          header stay fixed — only the main content blocks below them move.
         </p>
         <div className="mt-4 flex flex-wrap items-end gap-4">
           <label className="block text-sm">
@@ -142,7 +142,7 @@ export function PageLayoutEditor({ getIdToken }: Props) {
               rel="noopener noreferrer"
               className="text-sm font-semibold text-[#c0392b] underline"
             >
-              Preview live page â†—
+              Preview live page ↗
             </a>
           ) : null}
         </div>
@@ -155,7 +155,7 @@ export function PageLayoutEditor({ getIdToken }: Props) {
       ) : null}
 
       {loading ? (
-        <p className="text-sm text-slate-600">Loading sectionsâ€¦</p>
+        <p className="text-sm text-slate-600">Loading sections…</p>
       ) : (
         <ul className="space-y-2">
           {order.map((id, idx) => (
@@ -174,7 +174,7 @@ export function PageLayoutEditor({ getIdToken }: Props) {
               }`}
             >
               <span className="text-slate-400" aria-hidden>
-                â‹®â‹®
+                ⋮⋮
               </span>
               <span className="flex-1 text-sm font-semibold text-slate-900">
                 {labels[id] ?? id}
@@ -191,7 +191,7 @@ export function PageLayoutEditor({ getIdToken }: Props) {
         onClick={() => void save()}
         className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
       >
-        {saving ? "Savingâ€¦" : "Save layout"}
+        {saving ? "Saving…" : "Save layout"}
       </button>
     </div>
   );

@@ -86,11 +86,11 @@ const BADGE_CLASS: Record<string, string> = {
 
 function truncate(s: string, n = 60): string {
   const t = s.replace(/\s+/g, " ").trim();
-  return t.length <= n ? t : `${t.slice(0, n)}â€¦`;
+  return t.length <= n ? t : `${t.slice(0, n)}…`;
 }
 
 function timeAgo(iso: string | null): string {
-  if (!iso) return "â€”";
+  if (!iso) return "—";
   const ms = Date.now() - new Date(iso).getTime();
   const m = Math.floor(ms / 60000);
   if (m < 1) return "just now";
@@ -282,7 +282,7 @@ export function SiteContentEditor() {
         const data = (await res.json()) as { error?: string };
         if (!res.ok) throw new Error(data.error ?? "Save failed");
       }
-      showToast("ok", "Saved â€” live on site within 60 seconds");
+      showToast("ok", "Saved — live on site within 60 seconds");
       setEditingId(null);
       await loadAll();
     } catch (e) {
@@ -381,7 +381,7 @@ export function SiteContentEditor() {
         <h1 className="text-2xl font-semibold text-slate-900">Site content</h1>
         <p className="mt-1 text-sm text-slate-600">
           Managers can edit public page copy, staff and doctor names/titles/photos/bios, massage team, and FAQs. Use the
-          tabs below â€” changes appear on the live site within about 60 seconds. Adding or removing a team member still
+          tabs below — changes appear on the live site within about 60 seconds. Adding or removing a team member still
           requires a developer.
         </p>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#c0392b]/25 bg-[#c0392b]/5 px-4 py-3">
@@ -412,7 +412,7 @@ export function SiteContentEditor() {
       {selectedPage !== "Massage team" ? (
         <input
           type="search"
-          placeholder="Search fields across all pagesâ€¦"
+          placeholder="Search fields across all pages…"
           className="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -545,10 +545,10 @@ export function SiteContentEditor() {
                         Active
                       </label>
                       <button type="button" className="text-xs font-semibold underline" onClick={() => moveFaq(i, -1)}>
-                        â†‘
+                        ↑
                       </button>
                       <button type="button" className="text-xs font-semibold underline" onClick={() => moveFaq(i, 1)}>
-                        â†“
+                        ↓
                       </button>
                       <button
                         type="button"
@@ -703,7 +703,7 @@ export function SiteContentEditor() {
               <tr key={e.id} className="border-b border-slate-100">
                 <td className="py-2 pr-2 font-medium">{e.fieldLabel}</td>
                 <td className="py-2 pr-2">{e.pageLabel}</td>
-                <td className="py-2 pr-2 text-slate-600">{e.changedBy || "â€”"}</td>
+                <td className="py-2 pr-2 text-slate-600">{e.changedBy || "—"}</td>
                 <td className="py-2 text-slate-600">{timeAgo(e.changedAt)}</td>
               </tr>
             ))}

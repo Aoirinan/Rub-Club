@@ -259,7 +259,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
       await load();
       setSectionAlert({
         kind: "success",
-        text: "Team member added. They appear in â€œMeet the teamâ€ on the home page and on /services/massage.",
+        text: "Team member added. They appear in “Meet the team” on the home page and on /services/massage.",
       });
     } finally {
       setSaving(false);
@@ -402,7 +402,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           </div>
         ) : null}
         {loading ? (
-          <p className="mt-2 text-xs text-slate-500">Loading teamâ€¦</p>
+          <p className="mt-2 text-xs text-slate-500">Loading team…</p>
         ) : siteUsesCustomList ? (
           <p className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-950">
             Your team list is live ({members.length}{" "}
@@ -410,7 +410,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           </p>
         ) : (
           <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
-            Using the default team â€” sync from scheduling or import the built-in roster below.
+            Using the default team — sync from scheduling or import the built-in roster below.
           </p>
         )}
       </div>
@@ -422,7 +422,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           onClick={() => void syncFromBookableProviders()}
           className="rounded-full border border-[#c0392b] bg-[#c0392b] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0d524f] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {syncingProviders ? "Syncingâ€¦" : "Copy bookable massage providers into team"}
+          {syncingProviders ? "Syncing…" : "Copy bookable massage providers into team"}
         </button>
         <button
           type="button"
@@ -430,7 +430,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           onClick={() => void seedDefaults()}
           className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {seeding ? "Importingâ€¦" : "Import default team from website"}
+          {seeding ? "Importing…" : "Import default team from website"}
         </button>
         <button
           type="button"
@@ -438,7 +438,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           onClick={() => void clearAll()}
           className="rounded-full border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {clearing ? "Clearingâ€¦" : "Remove custom list (revert to built-in)"}
+          {clearing ? "Clearing…" : "Remove custom list (revert to built-in)"}
         </button>
       </div>
 
@@ -495,7 +495,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           onClick={() => void createMember()}
           className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
         >
-          {saving ? "Savingâ€¦" : "Add to website"}
+          {saving ? "Saving…" : "Add to website"}
         </button>
       </div>
 
@@ -582,7 +582,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
                 <div className="font-semibold text-slate-900">{m.name}</div>
                 <div className="text-xs text-slate-600">
                   sort {m.sortOrder}
-                  {m.role ? ` Â· ${m.role}` : ""} Â· id <span className="font-mono">{m.id}</span>
+                  {m.role ? ` · ${m.role}` : ""} · id <span className="font-mono">{m.id}</span>
                 </div>
               </div>
             </div>
@@ -600,7 +600,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
                 onClick={() => void deleteMember(m)}
                 className="rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
               >
-                {deletingId === m.id ? "Removingâ€¦" : "Delete"}
+                {deletingId === m.id ? "Removing…" : "Delete"}
               </button>
             </div>
           </li>

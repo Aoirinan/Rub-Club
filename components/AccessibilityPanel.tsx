@@ -158,7 +158,7 @@ export function AccessibilityPanel() {
               className="focus-ring h-8 w-8 rounded bg-stone-100 text-base font-black text-[#4a1515] hover:bg-stone-200 disabled:opacity-40"
               aria-label="Decrease text size"
             >
-              Aâˆ’
+              A−
             </button>
             <button
               type="button"

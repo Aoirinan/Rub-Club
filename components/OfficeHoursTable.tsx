@@ -18,7 +18,7 @@ export function OfficeHoursTable({
       {rows.map((row) => (
         <div key={`${row.day}-${row.hours}`} className={rowClassName}>
           <dt className={dayClassName}>{row.day}</dt>
-          <dd className={hoursClassName}>{row.hours || "â€”"}</dd>
+          <dd className={hoursClassName}>{row.hours || "—"}</dd>
         </div>
       ))}
     </dl>

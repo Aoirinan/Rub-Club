@@ -27,7 +27,7 @@ function headerBrandPhones(
   if (key === "chiro") {
     return {
       phone: paris.phonePrimary,
-      phoneLabel: "Chiropractic â€” Paris",
+      phoneLabel: "Chiropractic — Paris",
       href: "/services/chiropractic",
     };
   }
@@ -47,7 +47,7 @@ type LogoEntry = {
   height: number;
 };
 
-/** Wide lockups â€” side height; primary is ~30% taller. */
+/** Wide lockups — side height; primary is ~30% taller. */
 const SIDE_LOGO_HEIGHT =
   "h-8 w-auto max-w-[min(100%,200px)] sm:h-9 md:h-10 lg:max-w-[220px]";
 
@@ -55,7 +55,7 @@ const PRIMARY_LOGO_HEIGHT =
   "h-[2.6rem] w-auto max-w-[min(100%,320px)] sm:h-[2.925rem] md:h-[3.25rem] lg:h-[3.9rem] lg:max-w-[380px]";
 
 /**
- * Wide Paris lockup (~2.9:1) â€” height-led sizing (width follows aspect ratio).
+ * Wide Paris lockup (~2.9:1) — height-led sizing (width follows aspect ratio).
  * Primary uses a taller cap so the lockup has similar visual weight.
  */
 const CHIRO_SIDE_LOGO_HEIGHT =
@@ -69,7 +69,7 @@ function buildBrandEntries(branding?: HeaderBrandContent): LogoEntry[] {
     {
       key: "chiro",
       src: resolveChiroHeaderLogo(branding?.logos.chiro),
-      alt: "Chiropractic Associates â€” Paris, TX",
+      alt: "Chiropractic Associates — Paris, TX",
       href: "/services/chiropractic",
       width: CHIRO_LOGO_DIMENSIONS.width,
       height: CHIRO_LOGO_DIMENSIONS.height,
@@ -106,7 +106,7 @@ function logoAlignClass(brandKey: BrandKey, emphasize: boolean): string {
 }
 
 /**
- * Two-site header: only the current site's logo shows â€” Paris (chiro + massage)
+ * Two-site header: only the current site's logo shows — Paris (chiro + massage)
  * on Paris pages, the Sulphur Springs lockup on Sulphur Springs pages.
  */
 export function BrandLogoStrip({
@@ -192,7 +192,7 @@ export function BrandLogoStrip({
             <Link
               href={info.href}
               className="block w-fit max-w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c0392b]"
-              aria-label={`${entry.alt} â€” go to ${labelText}`}
+              aria-label={`${entry.alt} — go to ${labelText}`}
             >
               {logo}
             </Link>

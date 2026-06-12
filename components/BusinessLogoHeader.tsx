@@ -33,7 +33,7 @@ export function BusinessLogoHeader({
   const href = isParis ? "/services/chiropractic" : "/sulphur-springs";
   const cmsLabel = isParis ? branding?.labels.chiro : branding?.labels.ss;
   const phoneLabel =
-    cmsLabel || (isParis ? "Chiropractic â€” Paris" : "Chiro / Massage â€” Sulphur Springs");
+    cmsLabel || (isParis ? "Chiropractic — Paris" : "Chiro / Massage — Sulphur Springs");
   // Managers can upload a Sulphur Springs logo image; empty means use the icon + text lockup.
   const ssLogoSrc = branding?.logos.ss || undefined;
 
@@ -44,7 +44,7 @@ export function BusinessLogoHeader({
         className="block w-fit max-w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c0392b]"
         aria-label={
           isParis
-            ? "Chiropractic Associates â€” Paris, TX"
+            ? "Chiropractic Associates — Paris, TX"
             : "Chiropractic Associates of Sulphur Springs"
         }
       >
@@ -64,7 +64,7 @@ export function BusinessLogoHeader({
             ) : (
               <Image
                 src={resolveChiroHeaderLogo(branding?.logos.chiro)}
-                alt="Chiropractic Associates â€” Paris, TX"
+                alt="Chiropractic Associates — Paris, TX"
                 width={600}
                 height={200}
                 sizes="(max-width: 640px) 90vw, 600px"
