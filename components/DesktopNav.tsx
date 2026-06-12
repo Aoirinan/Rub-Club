@@ -362,7 +362,20 @@ export function DesktopNav({
           <div className="flex flex-1 items-center justify-end">
             {left.map((item, idx) => renderItem(item, idx))}
           </div>
-          <div className="shrink-0 px-5 py-2 xl:px-8">{centerSlot}</div>
+          {/* Backpro-style shrink: logo lands large, scales down once scrolled. */}
+          <div
+            className={`shrink-0 px-6 transition-[padding] duration-300 ease-out motion-reduce:transition-none xl:px-9 ${
+              compact ? "py-1" : "py-4"
+            }`}
+          >
+            <div
+              className={`origin-center transition-transform duration-300 ease-out motion-reduce:transition-none ${
+                compact ? "scale-100" : "scale-[1.3]"
+              }`}
+            >
+              {centerSlot}
+            </div>
+          </div>
           <div className="flex flex-1 items-center justify-start">
             {right.map((item, idx) => renderItem(item, mid + idx))}
             {bookCta}

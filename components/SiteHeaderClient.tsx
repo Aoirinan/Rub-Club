@@ -78,7 +78,7 @@ export function buildDefaultNavItems(
     { href: "/patient-forms", label: "Patient Forms" },
     {
       href: "/contact",
-      label: "Contact",
+      label: "Locations",
       clinics: [
         {
           name: "Paris",
