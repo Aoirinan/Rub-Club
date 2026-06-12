@@ -387,13 +387,13 @@ export function DesktopNav({
           </div>
           {/* Backpro-style shrink: logo lands large, scales down once scrolled. */}
           <div
-            className={`shrink-0 px-6 transition-[padding] duration-300 ease-out motion-reduce:transition-none xl:px-9 ${
-              compact ? "py-1" : "py-4"
+            className={`shrink-0 px-8 transition-[padding] duration-300 ease-out motion-reduce:transition-none xl:px-12 ${
+              compact ? "py-1" : "py-5"
             }`}
           >
             <div
               className={`origin-center transition-transform duration-300 ease-out motion-reduce:transition-none ${
-                compact ? "scale-100" : "scale-[1.3]"
+                compact ? "scale-100" : "scale-[1.35]"
               }`}
             >
               {centerSlot}

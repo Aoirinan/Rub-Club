@@ -19,6 +19,7 @@ export function BusinessLogoHeader({
   sulphur,
   branding,
   showContact = true,
+  large = false,
 }: {
   context: SiteBusinessContext;
   paris: LocationInfo;
@@ -26,6 +27,8 @@ export function BusinessLogoHeader({
   branding?: HeaderBrandContent;
   /** Hide the phone + label rows (logo-only, e.g. centered inside the nav bar). */
   showContact?: boolean;
+  /** Bigger logo for the desktop nav center slot. */
+  large?: boolean;
 }) {
   const compact = useHeaderCompact();
   const isParis = context === "paris_chiro";
@@ -50,13 +53,13 @@ export function BusinessLogoHeader({
       >
         <div
           className={`origin-top transition-transform duration-300 ease-out motion-reduce:transition-none ${
-            compact ? "scale-[0.78]" : "scale-100"
+            compact && !large ? "scale-[0.78]" : "scale-100"
           }`}
         >
           {isParis ? (
             isDefaultChiroLogo(branding?.logos.chiro) ? (
               <ParisLockup
-                heightPx={60}
+                heightPx={large ? (compact ? 56 : 80) : 60}
                 className="max-w-full"
                 title={branding?.parisLockup.title}
                 subtitle={branding?.parisLockup.subtitle}
@@ -68,7 +71,13 @@ export function BusinessLogoHeader({
                 width={600}
                 height={200}
                 sizes="(max-width: 640px) 90vw, 600px"
-                className="h-10 w-auto max-w-full object-contain mix-blend-multiply sm:h-12 md:h-14 lg:h-[3.75rem]"
+                className={`w-auto max-w-full object-contain mix-blend-multiply transition-[height] duration-300 ease-out ${
+                  large
+                    ? compact
+                      ? "h-14"
+                      : "h-[4.75rem] lg:h-[5.25rem]"
+                    : "h-10 sm:h-12 md:h-14 lg:h-[3.75rem]"
+                }`}
                 priority
               />
             )
@@ -79,13 +88,19 @@ export function BusinessLogoHeader({
               width={360}
               height={120}
               sizes="(max-width: 640px) 80vw, 360px"
-              className="h-10 w-auto max-w-full object-contain mix-blend-multiply sm:h-12 md:h-14"
+              className={`w-auto max-w-full object-contain mix-blend-multiply transition-[height] duration-300 ease-out ${
+                large
+                  ? compact
+                    ? "h-14"
+                    : "h-[4.75rem] lg:h-[5.25rem]"
+                  : "h-10 sm:h-12 md:h-14"
+              }`}
               priority
             />
           ) : (
             <SulphurSpringsLockup
               primary
-              heightPx={56}
+              heightPx={large ? (compact ? 52 : 72) : 56}
               className="max-w-full"
             />
           )}

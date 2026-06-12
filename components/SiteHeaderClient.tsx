@@ -233,6 +233,7 @@ export function SiteHeaderClient({
               sulphur={sulphur}
               branding={headerBranding}
               showContact={false}
+              large
             />
           ) : (
             <HeaderBrandLogoStrip
@@ -240,6 +241,7 @@ export function SiteHeaderClient({
               sulphur={sulphur}
               branding={headerBranding}
               showContact={false}
+              large
             />
           )
         }

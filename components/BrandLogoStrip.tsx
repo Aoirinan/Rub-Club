@@ -54,6 +54,9 @@ const SIDE_LOGO_HEIGHT =
 const PRIMARY_LOGO_HEIGHT =
   "h-[2.6rem] w-auto max-w-[min(100%,320px)] sm:h-[2.925rem] md:h-[3.25rem] lg:h-[3.9rem] lg:max-w-[380px]";
 
+const PRIMARY_LOGO_HEIGHT_LARGE =
+  "h-[4.75rem] w-auto max-w-[min(100%,420px)] lg:h-[5.25rem] lg:max-w-[460px]";
+
 /**
  * Wide Paris lockup (~2.9:1) — height-led sizing (width follows aspect ratio).
  * Primary uses a taller cap so the lockup has similar visual weight.
@@ -63,6 +66,9 @@ const CHIRO_SIDE_LOGO_HEIGHT =
 
 const CHIRO_PRIMARY_LOGO_HEIGHT =
   "h-10 w-auto max-w-[min(100%,min(100vw-1.5rem,520px)] sm:h-12 md:h-14 lg:h-[3.75rem] xl:max-w-[600px]";
+
+const CHIRO_PRIMARY_LOGO_HEIGHT_LARGE =
+  "h-[4.75rem] w-auto max-w-[min(100%,560px)] lg:h-[5.25rem] xl:max-w-[640px]";
 
 function buildBrandEntries(branding?: HeaderBrandContent): LogoEntry[] {
   return [
@@ -91,15 +97,17 @@ function primaryKeyForVariant(variant: BrandLogoVariant): BrandKey {
   return variant === "sulphur-springs" ? "ss" : "chiro";
 }
 
-function logoHeightClass(brandKey: BrandKey, emphasize: boolean): string {
+function logoHeightClass(brandKey: BrandKey, emphasize: boolean, large: boolean): string {
   if (brandKey === "chiro") {
-    return emphasize ? CHIRO_PRIMARY_LOGO_HEIGHT : CHIRO_SIDE_LOGO_HEIGHT;
+    if (emphasize) return large ? CHIRO_PRIMARY_LOGO_HEIGHT_LARGE : CHIRO_PRIMARY_LOGO_HEIGHT;
+    return CHIRO_SIDE_LOGO_HEIGHT;
   }
-  return emphasize ? PRIMARY_LOGO_HEIGHT : SIDE_LOGO_HEIGHT;
+  if (emphasize) return large ? PRIMARY_LOGO_HEIGHT_LARGE : PRIMARY_LOGO_HEIGHT;
+  return SIDE_LOGO_HEIGHT;
 }
 
-function logoAlignClass(brandKey: BrandKey, emphasize: boolean): string {
-  const base = logoHeightClass(brandKey, emphasize);
+function logoAlignClass(brandKey: BrandKey, emphasize: boolean, large: boolean): string {
+  const base = logoHeightClass(brandKey, emphasize, large);
   const opacity = emphasize ? "" : "opacity-90 transition-opacity hover:opacity-100";
   // mix-blend-multiply drops white logo-image backgrounds on the light header band.
   return `${base} object-contain mix-blend-multiply transition-[height,max-width,opacity] duration-300 ease-out ${opacity}`;
@@ -116,6 +124,7 @@ export function BrandLogoStrip({
   branding,
   compact = false,
   showContact = true,
+  large = false,
   className = "",
 }: {
   variant?: BrandLogoVariant;
@@ -126,6 +135,8 @@ export function BrandLogoStrip({
   compact?: boolean;
   /** Hide the phone + label rows (logo-only, e.g. centered inside the nav bar). */
   showContact?: boolean;
+  /** Bigger logo for the desktop nav center slot. */
+  large?: boolean;
   className?: string;
 }) {
   const primaryKey = primaryKeyForVariant(variant);
@@ -141,7 +152,7 @@ export function BrandLogoStrip({
         const info = headerBrandPhones(entry.key, paris, sulphur);
         const labelText = branding?.labels[entry.key] ?? info.phoneLabel;
 
-        const ssHeightPx = emphasize ? 48 : 36;
+        const ssHeightPx = emphasize ? (large ? 72 : 48) : 36;
         const ssCompact = !emphasize;
 
         // Sulphur Springs uses the icon + text lockup unless a manager uploaded a logo image.
@@ -159,7 +170,7 @@ export function BrandLogoStrip({
           />
         ) : useParisLockup ? (
           <ParisLockup
-            heightPx={emphasize ? 60 : 40}
+            heightPx={emphasize ? (large ? 80 : 60) : 40}
             className={`max-w-full transition-[height] duration-300 ease-out ${!emphasize ? "opacity-90 transition-opacity hover:opacity-100" : ""}`}
             title={branding?.parisLockup.title}
             subtitle={branding?.parisLockup.subtitle}
@@ -177,7 +188,7 @@ export function BrandLogoStrip({
                   : "(max-width: 640px) 40vw, 320px"
                 : undefined
             }
-            className={logoAlignClass(entry.key, emphasize)}
+            className={logoAlignClass(entry.key, emphasize, large)}
             priority={primary}
           />
         );
