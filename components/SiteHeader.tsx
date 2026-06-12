@@ -6,6 +6,13 @@ import type { LocationInfo } from "@/lib/constants";
 import type { HeaderColorConfig } from "@/lib/header-colors";
 import { parisChiroServiceSlugForName } from "@/lib/paris-chiro-services";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
+import { SS_SERVICES } from "@/lib/sulphur-springs-content";
+
+/** Services dropdown items for the Sulphur Springs section of the site. */
+const SS_SERVICES_NAV_CHILDREN: ServicesNavChild[] = SS_SERVICES.map((s) => ({
+  href: `/sulphur-springs/${s.slug}`,
+  label: s.title,
+}));
 
 /** Services dropdown items from the manager-edited treatments list (CMS). */
 async function getServicesNavChildren(): Promise<ServicesNavChild[] | undefined> {
@@ -53,6 +60,7 @@ export async function SiteHeader({
       headerColors={headerColors}
       initialBusinessContext={initialBusinessContext}
       servicesNavChildren={servicesNavChildren}
+      ssServicesNavChildren={SS_SERVICES_NAV_CHILDREN}
     />
   );
 }

@@ -27,23 +27,34 @@ export function buildDefaultNavItems(
   paris: LocationInfo,
   sulphur: LocationInfo,
   servicesNavChildren?: ServicesNavChild[],
+  ssServicesNavChildren?: ServicesNavChild[],
+  businessContext: SiteBusinessContext = "default",
 ): NavItem[] {
+  // On the Sulphur Springs section, the Services dropdown stays on SS pages.
+  const onSulphur = businessContext === "sulphur_springs";
   return [
-    {
-      href: "/services/chiropractic",
-      label: "Services",
-      mega: true,
-      // Manager-edited treatments list (CMS) when provided; static fallback.
-      children:
-        servicesNavChildren ??
-        CHIRO_TREATMENT_OFFERINGS.map((t) => {
-          const slug = parisChiroServiceSlugForName(t.name);
-          return {
-            href: slug ? `/services/chiropractic/${slug}` : "/services/chiropractic",
-            label: t.name,
-          };
-        }),
-    },
+    onSulphur && ssServicesNavChildren?.length
+      ? {
+          href: "/sulphur-springs",
+          label: "Services",
+          mega: true,
+          children: ssServicesNavChildren,
+        }
+      : {
+          href: "/services/chiropractic",
+          label: "Services",
+          mega: true,
+          // Manager-edited treatments list (CMS) when provided; static fallback.
+          children:
+            servicesNavChildren ??
+            CHIRO_TREATMENT_OFFERINGS.map((t) => {
+              const slug = parisChiroServiceSlugForName(t.name);
+              return {
+                href: slug ? `/services/chiropractic/${slug}` : "/services/chiropractic",
+                label: t.name,
+              };
+            }),
+        },
     {
       href: "/services/chiropractic",
       label: "Chiropractic",
@@ -138,6 +149,7 @@ export function SiteHeaderClient({
   headerColors,
   initialBusinessContext = "default",
   servicesNavChildren,
+  ssServicesNavChildren,
 }: {
   paris: LocationInfo;
   sulphur: LocationInfo;
@@ -147,13 +159,22 @@ export function SiteHeaderClient({
   headerColors: HeaderColorConfig;
   initialBusinessContext?: SiteBusinessContext;
   servicesNavChildren?: ServicesNavChild[];
+  ssServicesNavChildren?: ServicesNavChild[];
 }) {
   const businessContext = useSiteBusinessContext(initialBusinessContext);
   const isBusinessScoped =
     businessContext === "paris_chiro" || businessContext === "sulphur_springs";
 
-  // Same nav on every page; only the color theme changes with business context.
-  const navItems = buildDefaultNavItems(giftCardHref, paris, sulphur, servicesNavChildren);
+  // Same nav on every page except Services, which stays within the current
+  // section of the site (Paris vs. Sulphur Springs); colors follow context too.
+  const navItems = buildDefaultNavItems(
+    giftCardHref,
+    paris,
+    sulphur,
+    servicesNavChildren,
+    ssServicesNavChildren,
+    businessContext,
+  );
 
   const rub = paris.phoneSecondary?.trim();
 
