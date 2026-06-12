@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { usePathname } from "next/navigation";
 
 type VideoItem = {
   src: string;
@@ -9,6 +10,11 @@ type VideoItem = {
 
 export function DoctorCardVideoAccordion({ videos }: { videos: VideoItem[] }) {
   const refs = useRef<(HTMLVideoElement | null)[]>([]);
+  const pathname = usePathname() ?? "/";
+  // Brand-aware link color: page theme var if present, else red/blue by site section.
+  const summaryColor = pathname.startsWith("/sulphur-springs")
+    ? "text-[var(--pp-accent,var(--brand-ss-accent,#2980b9))] hover:text-[var(--pp-accent-hover,var(--brand-ss-accent-hover,#1a6da3))]"
+    : "text-[var(--pp-accent,var(--brand-paris-accent,#c0392b))] hover:text-[var(--pp-accent-hover,var(--brand-paris-accent-hover,#962d22))]";
 
   if (videos.length === 0) return null;
 
@@ -21,7 +27,9 @@ export function DoctorCardVideoAccordion({ videos }: { videos: VideoItem[] }) {
         }
       }}
     >
-      <summary className="focus-ring flex cursor-pointer list-none items-center gap-1 text-sm font-bold text-[#c0392b] hover:text-[#962d22] [&::-webkit-details-marker]:hidden">
+      <summary
+        className={`focus-ring flex cursor-pointer list-none items-center gap-1 text-sm font-bold ${summaryColor} [&::-webkit-details-marker]:hidden`}
+      >
         Video
         <svg
           width="10"

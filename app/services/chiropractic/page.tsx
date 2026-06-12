@@ -3,7 +3,7 @@ import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { getContentMany } from "@/lib/cms";
-import { DOCTOR_CMS_KEYS, getDoctorsForMarketing } from "@/lib/cms-doctors";
+import { DOCTOR_CMS_KEYS, doctorVideoItems, getDoctorsForMarketing } from "@/lib/cms-doctors";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import {
   getPublicBookingConfig,
@@ -72,6 +72,7 @@ export default async function ChiropracticServicePage() {
       name: d.name,
       credential: d.role,
       imageUrl: d.imageSrc,
+      videos: doctorVideoItems(d),
     })),
   };
 

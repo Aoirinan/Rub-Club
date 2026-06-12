@@ -2,6 +2,7 @@ import { buildPageMetadata } from "@/lib/page-metadata";
 import Image from "next/image";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
+import { DoctorCardVideoAccordion } from "@/components/DoctorCardVideoAccordion";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
@@ -55,6 +56,21 @@ function StaffPhoto({ member, className }: { member: SiteStaffDisplayMember; cla
         />
       </svg>
     </div>
+  );
+}
+
+function meetVideoLabel(fullName: string): string {
+  const without = fullName.replace(/^Dr\.\s*/i, "").trim();
+  const first = without.split(/\s+/)[0] ?? without;
+  return /^Dr\.\s*/i.test(fullName) ? `Meet Dr. ${first}` : `Meet ${first}`;
+}
+
+function StaffVideo({ member }: { member: SiteStaffDisplayMember }) {
+  if (!member.videoUrl) return null;
+  return (
+    <DoctorCardVideoAccordion
+      videos={[{ src: member.videoUrl, label: meetVideoLabel(member.name) }]}
+    />
   );
 }
 
@@ -117,6 +133,7 @@ export default async function ParisOfficeStaffPage() {
                 <div className="flex flex-1 flex-col p-5">
                   <h3 className="text-lg font-black text-[#4a1515]">{member.name}</h3>
                   <p className="text-sm font-bold text-stone-600">{member.role}</p>
+                  <StaffVideo member={member} />
                   <BioBlock bio={member.bio} />
                 </div>
               </article>

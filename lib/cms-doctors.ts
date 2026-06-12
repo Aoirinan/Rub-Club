@@ -57,6 +57,28 @@ function resolveDoctorVideo(
   return { videoUrl: null, videoFile: file || fallbackFile };
 }
 
+function meetVideoLabel(fullName: string): string {
+  const without = fullName.replace(/^Dr\.\s*/i, "").trim();
+  const first = without.split(/\s+/)[0] ?? without;
+  return `Meet Dr. ${first}`;
+}
+
+/** All of a doctor's videos (intro + action clips) as accordion items. */
+export function doctorVideoItems(d: DoctorCmsEntry): { src: string; label?: string }[] {
+  const introSrc = d.videoUrl?.trim()
+    ? d.videoUrl.trim()
+    : d.videoFile
+      ? `/media/doctors/${d.videoFile}`
+      : null;
+  return [
+    ...(introSrc ? [{ src: introSrc, label: meetVideoLabel(d.name) }] : []),
+    ...d.actionVideos.map((v) => ({
+      src: v.src,
+      label: v.caption?.trim() || "Adjustment in action",
+    })),
+  ];
+}
+
 export async function getDoctorsForMarketing(
   prefetched?: Record<string, string>,
   doctorMedia: DoctorMediaItem[] = [],

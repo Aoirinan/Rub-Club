@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { DoctorCardVideoAccordion } from "@/components/DoctorCardVideoAccordion";
 import { SectionHeading } from "@/components/practice/SectionHeading";
 import { renderRichText } from "@/lib/cms-registry";
 import type { PracticeTeamSection } from "@/lib/practice-pages-shared";
@@ -12,6 +13,8 @@ export type PracticeTeamMember = {
   bio?: string;
   /** Marks the spotlight member for the "expanded" variant (defaults to first with a bio). */
   featured?: boolean;
+  /** Optional videos (doctor intro / action clips) shown in an accordion on the card. */
+  videos?: { src: string; label?: string }[];
 };
 
 function FeaturedMember({ member }: { member: PracticeTeamMember }) {
@@ -40,6 +43,11 @@ function FeaturedMember({ member }: { member: PracticeTeamMember }) {
             </p>
           ) : null}
         </div>
+        {member.videos?.length ? (
+          <div className="max-w-md">
+            <DoctorCardVideoAccordion videos={member.videos} />
+          </div>
+        ) : null}
         {paragraphs.map((p, idx) => (
           <p key={`bio-${idx}`} className="leading-relaxed text-stone-700">
             {p}
@@ -100,7 +108,7 @@ export function TeamStrip({
                   />
                 ) : null}
               </div>
-              <div className="p-4">
+              <div className="p-4 pb-0">
                 <h3 className="text-base font-black text-[var(--pp-heading)] group-hover:text-[var(--pp-accent)]">
                   {m.name}
                 </h3>
@@ -110,20 +118,27 @@ export function TeamStrip({
               </div>
             </>
           );
-          return data.linkUrl.trim() ? (
-            <Link
-              key={m.name}
-              href={data.linkUrl}
-              className="group overflow-hidden border border-stone-200 bg-stone-50 shadow-sm transition hover:shadow-md"
-            >
-              {card}
-            </Link>
+          // Video accordion lives outside the link so play clicks don't navigate.
+          const videoBlock = m.videos?.length ? (
+            <div className="px-4 pb-4">
+              <DoctorCardVideoAccordion videos={m.videos} />
+            </div>
           ) : (
+            <div className="pb-4" />
+          );
+          return (
             <div
               key={m.name}
-              className="overflow-hidden border border-stone-200 bg-stone-50 shadow-sm"
+              className="overflow-hidden border border-stone-200 bg-stone-50 shadow-sm transition hover:shadow-md"
             >
-              {card}
+              {data.linkUrl.trim() ? (
+                <Link key={m.name} href={data.linkUrl} className="group block">
+                  {card}
+                </Link>
+              ) : (
+                card
+              )}
+              {videoBlock}
             </div>
           );
         })}

@@ -65,6 +65,7 @@ export default async function SulphurSpringsPage() {
             imageUrl: m.image ?? "",
             bio: m.bio,
             featured: m.featured,
+            videos: m.videoUrl ? [{ src: m.videoUrl, label: `Meet ${m.name}` }] : [],
           }))
         : [SS_DOCTOR_FALLBACK],
   };

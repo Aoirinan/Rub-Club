@@ -14,7 +14,7 @@ import {
   massageJsonLd,
 } from "@/lib/structured-data";
 import { getContentMany, renderRichText } from "@/lib/cms";
-import { DOCTOR_CMS_KEYS, getDoctorsForMarketing } from "@/lib/cms-doctors";
+import { DOCTOR_CMS_KEYS, doctorVideoItems, getDoctorsForMarketing } from "@/lib/cms-doctors";
 import { CHIRO, CHIRO_INTRO_VIDEO_SRC } from "@/lib/home-verbatim";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { getLayoutCmsContent } from "@/lib/cms-display";
@@ -85,6 +85,7 @@ export default async function Home() {
       name: d.name,
       credential: d.role,
       imageUrl: d.imageSrc,
+      videos: doctorVideoItems(d),
     })),
     "rub-club-team": massageTeam.map((m) => ({
       name: m.name,
