@@ -49,6 +49,7 @@ import {
   parseBusinessContextValue,
 } from "@/lib/site-business-context";
 import { getParisOfficeHours, getSulphurOfficeHours } from "@/lib/office-hours";
+import { getBrandThemeStyle } from "@/lib/brand-theme";
 
 export const revalidate = 60;
 
@@ -115,11 +116,12 @@ export default async function RootLayout({
     cookieStore.get(BUSINESS_CTX_COOKIE)?.value,
   );
 
-  const [cms, bookingConfig, parisHours, sulphurHours] = await Promise.all([
+  const [cms, bookingConfig, parisHours, sulphurHours, brandThemeStyle] = await Promise.all([
     getLayoutCmsContent(),
     getPublicBookingConfig(),
     getParisOfficeHours(),
     getSulphurOfficeHours(),
+    getBrandThemeStyle(),
   ]);
   const onlineBookingEnabled = isPublicBookingEnabled(bookingConfig);
   let displayLocs = mergedDisplayLocations(undefined, cms);
@@ -164,6 +166,7 @@ export default async function RootLayout({
     <html lang="en">
       <body
         className={`${openSans.variable} ${geistMono.variable} min-h-screen bg-[#f5f3ee] text-stone-900 antialiased`}
+        style={brandThemeStyle}
       >
         <a
           href="#main"

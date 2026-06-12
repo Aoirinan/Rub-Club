@@ -12,16 +12,19 @@ type Props = {
   variant?: "paris" | "sulphur";
 };
 
+// Colors come from CSS vars set on <body> (lib/brand-theme.ts) — manager-editable.
 const SECTION_CLASS = {
-  paris: "border-t-4 border-[#c0392b] bg-[#4a1515]",
-  sulphur: "border-t-4 border-[#2980b9] bg-[#0c2d3a]",
+  paris:
+    "border-t-4 border-[var(--brand-paris-accent,#c0392b)] bg-[var(--brand-paris-heading,#4a1515)]",
+  sulphur:
+    "border-t-4 border-[var(--brand-ss-accent,#2980b9)] bg-[var(--brand-ss-heading,#0c2d3a)]",
 } as const;
 
 const SECONDARY_CLASS = {
   paris:
-    "focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#4a1515]",
+    "focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[var(--brand-paris-heading,#4a1515)]",
   sulphur:
-    "focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#0c2d3a]",
+    "focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[var(--brand-ss-heading,#0c2d3a)]",
 } as const;
 
 /** Bottom CTA. Online booking is retired — the primary button pops the office phone number. */

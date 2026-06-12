@@ -62,7 +62,7 @@ export default async function ContactPage() {
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-10">
         {/* Backpro-style contact header */}
         <section>
-          <SectionHeading>Contact Us</SectionHeading>
+          <SectionHeading>{c.contact_heading?.trim() || "Contact Us"}</SectionHeading>
           {c.contact_subtext?.trim() ? (
             <p className="mx-auto mt-5 max-w-3xl text-center leading-relaxed text-stone-500">
               {c.contact_subtext}

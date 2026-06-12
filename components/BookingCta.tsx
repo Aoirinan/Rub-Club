@@ -13,17 +13,24 @@ const VARIANT_BASE = {
   ss: "focus-ring px-6 py-3 text-sm font-black uppercase tracking-wide text-white shadow",
 } as const;
 
-/** Brand colors by site section: Paris red, Sulphur Springs blue. */
+/**
+ * Brand colors by site section: Paris red, Sulphur Springs blue.
+ * Driven by CSS vars set on <body> (lib/brand-theme.ts) — manager-editable
+ * via Practice pages -> Theme colors; hex fallbacks match the defaults.
+ */
 const BRAND_COLORS = {
   paris: {
-    button: "bg-[#4a1515] hover:bg-[#341010]",
-    heading: "text-[#4a1515]",
-    phone: "bg-[#c0392b] hover:bg-[#962d22]",
+    button:
+      "bg-[var(--brand-paris-cta,#4a1515)] hover:bg-[var(--brand-paris-cta-hover,#341010)]",
+    heading: "text-[var(--brand-paris-heading,#4a1515)]",
+    phone:
+      "bg-[var(--brand-paris-accent,#c0392b)] hover:bg-[var(--brand-paris-accent-hover,#962d22)]",
   },
   sulphur: {
-    button: "bg-[#0c2d3a] hover:bg-[#081f29]",
-    heading: "text-[#0c2d3a]",
-    phone: "bg-[#2980b9] hover:bg-[#1a6da3]",
+    button: "bg-[var(--brand-ss-cta,#0c2d3a)] hover:bg-[var(--brand-ss-cta-hover,#081f29)]",
+    heading: "text-[var(--brand-ss-heading,#0c2d3a)]",
+    phone:
+      "bg-[var(--brand-ss-accent,#2980b9)] hover:bg-[var(--brand-ss-accent-hover,#1a6da3)]",
   },
 } as const;
 

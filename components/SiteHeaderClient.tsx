@@ -20,23 +20,29 @@ import type { HeaderColorConfig } from "@/lib/header-colors";
 import { useSiteBusinessContext } from "@/lib/use-site-business-context";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
 
+export type ServicesNavChild = { href: string; label: string };
+
 export function buildDefaultNavItems(
   giftCardHref: string,
   paris: LocationInfo,
   sulphur: LocationInfo,
+  servicesNavChildren?: ServicesNavChild[],
 ): NavItem[] {
   return [
     {
       href: "/services/chiropractic",
       label: "Services",
       mega: true,
-      children: CHIRO_TREATMENT_OFFERINGS.map((t) => {
-        const slug = parisChiroServiceSlugForName(t.name);
-        return {
-          href: slug ? `/services/chiropractic/${slug}` : "/services/chiropractic",
-          label: t.name,
-        };
-      }),
+      // Manager-edited treatments list (CMS) when provided; static fallback.
+      children:
+        servicesNavChildren ??
+        CHIRO_TREATMENT_OFFERINGS.map((t) => {
+          const slug = parisChiroServiceSlugForName(t.name);
+          return {
+            href: slug ? `/services/chiropractic/${slug}` : "/services/chiropractic",
+            label: t.name,
+          };
+        }),
     },
     {
       href: "/services/chiropractic",
@@ -131,6 +137,7 @@ export function SiteHeaderClient({
   headerBranding,
   headerColors,
   initialBusinessContext = "default",
+  servicesNavChildren,
 }: {
   paris: LocationInfo;
   sulphur: LocationInfo;
@@ -139,13 +146,14 @@ export function SiteHeaderClient({
   headerBranding?: HeaderBrandContent;
   headerColors: HeaderColorConfig;
   initialBusinessContext?: SiteBusinessContext;
+  servicesNavChildren?: ServicesNavChild[];
 }) {
   const businessContext = useSiteBusinessContext(initialBusinessContext);
   const isBusinessScoped =
     businessContext === "paris_chiro" || businessContext === "sulphur_springs";
 
   // Same nav on every page; only the color theme changes with business context.
-  const navItems = buildDefaultNavItems(giftCardHref, paris, sulphur);
+  const navItems = buildDefaultNavItems(giftCardHref, paris, sulphur, servicesNavChildren);
 
   const rub = paris.phoneSecondary?.trim();
 

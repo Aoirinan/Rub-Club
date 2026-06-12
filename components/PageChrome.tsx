@@ -37,14 +37,16 @@ export function Breadcrumbs({ items }: { items: readonly Crumb[] }) {
 
 export type BrandVariant = "paris" | "sulphur";
 
+// Colors come from CSS vars set on <body> (lib/brand-theme.ts), which managers
+// edit in Practice pages -> Theme colors. Hex fallbacks match the defaults.
 const HERO_BAND: Record<BrandVariant, { band: string; blob: string }> = {
   paris: {
-    band: "bg-gradient-to-r from-[#4a1515] via-[#4a1515] to-[#c0392b]",
-    blob: "bg-[#962d22]/20",
+    band: "linear-gradient(to right, var(--brand-paris-heading,#4a1515), var(--brand-paris-heading,#4a1515), var(--brand-paris-accent,#c0392b))",
+    blob: "bg-[var(--brand-paris-accent-hover,#962d22)] opacity-20",
   },
   sulphur: {
-    band: "bg-gradient-to-r from-[#0c2d3a] via-[#0c2d3a] to-[#2980b9]",
-    blob: "bg-[#1a6da3]/20",
+    band: "linear-gradient(to right, var(--brand-ss-heading,#0c2d3a), var(--brand-ss-heading,#0c2d3a), var(--brand-ss-accent,#2980b9))",
+    blob: "bg-[var(--brand-ss-accent-hover,#1a6da3)] opacity-20",
   },
 };
 
@@ -62,7 +64,10 @@ export function PageHero({
 }) {
   const colors = HERO_BAND[variant];
   return (
-    <header className={`relative mb-8 mt-4 overflow-hidden ${colors.band}`}>
+    <header
+      className="relative mb-8 mt-4 overflow-hidden"
+      style={{ backgroundImage: colors.band }}
+    >
       <div
         aria-hidden
         className={`absolute -right-16 -top-20 h-64 w-64 rounded-full blur-2xl ${colors.blob}`}
@@ -95,9 +100,9 @@ function CtaButton({
   variant: "primary" | "secondary";
 }) {
   const primaryClass =
-    "focus-ring bg-[#4a1515] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#341010]";
+    "focus-ring bg-[var(--brand-paris-cta,#4a1515)] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[var(--brand-paris-cta-hover,#341010)]";
   const secondaryClass =
-    "focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#4a1515]";
+    "focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[var(--brand-paris-heading,#4a1515)]";
 
   if (!href) {
     return (
@@ -138,7 +143,7 @@ export function CtaCard({
   secondary?: { label: string; href: string | null };
 }) {
   return (
-    <section className="border-t-4 border-[#c0392b] bg-[#4a1515] px-6 py-10 text-white shadow-md sm:px-10">
+    <section className="border-t-4 border-[var(--brand-paris-accent,#c0392b)] bg-[var(--brand-paris-heading,#4a1515)] px-6 py-10 text-white shadow-md sm:px-10">
       <h2 className="text-2xl font-black">{title}</h2>
       {body ? <p className="mt-3 max-w-2xl text-white/90">{body}</p> : null}
       <div className="mt-6 flex flex-wrap gap-3">

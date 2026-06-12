@@ -297,7 +297,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
             {/* 0. Theme colors */}
             <SectionCard
               title="0 · Theme colors"
-              hint="Colors for this page's headings, circles, buttons, and hero panel. Leave a field empty to use the location default (red for Paris, blue for Sulphur Springs). Hero panel colors accept 8-digit hex for transparency (e.g. #8e2f23e6). Header/nav bar colors are edited in Website settings."
+              hint="Colors for this page's headings, circles, buttons, and hero panel. The Paris home and Sulphur Springs colors also drive the matching site-wide brand colors (page banners, Book Now buttons, contact forms). Leave a field empty to use the location default (red for Paris, blue for Sulphur Springs). Hero panel colors accept 8-digit hex for transparency (e.g. #8e2f23e6). Header/nav bar colors are edited in Website settings."
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <ColorField

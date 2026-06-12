@@ -7,10 +7,13 @@ import { track } from "@/lib/analytics";
 export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
   const pathname = usePathname() ?? "/";
   const sulphur = pathname.startsWith("/sulphur-springs");
-  const labelColor = sulphur ? "text-[#0c2d3a]" : "text-[#4a1515]";
+  // Brand colors from CSS vars on <body> (lib/brand-theme.ts) — manager-editable.
+  const labelColor = sulphur
+    ? "text-[var(--brand-ss-heading,#0c2d3a)]"
+    : "text-[var(--brand-paris-heading,#4a1515)]";
   const submitColor = sulphur
-    ? "bg-[#0c2d3a] hover:bg-[#081f29]"
-    : "bg-[#4a1515] hover:bg-[#341010]";
+    ? "bg-[var(--brand-ss-cta,#0c2d3a)] hover:bg-[var(--brand-ss-cta-hover,#081f29)]"
+    : "bg-[var(--brand-paris-cta,#4a1515)] hover:bg-[var(--brand-paris-cta-hover,#341010)]";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
