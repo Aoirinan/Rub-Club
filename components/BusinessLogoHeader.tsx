@@ -18,11 +18,14 @@ export function BusinessLogoHeader({
   paris,
   sulphur,
   branding,
+  showContact = true,
 }: {
   context: SiteBusinessContext;
   paris: LocationInfo;
   sulphur: LocationInfo;
   branding?: HeaderBrandContent;
+  /** Hide the phone + label rows (logo-only, e.g. centered inside the nav bar). */
+  showContact?: boolean;
 }) {
   const compact = useHeaderCompact();
   const isParis = context === "paris_chiro";
@@ -88,21 +91,25 @@ export function BusinessLogoHeader({
           )}
         </div>
       </Link>
-      <a
-        href={telHref(location.phonePrimary)}
-        className={`max-w-full truncate font-black text-[#c0392b] hover:underline transition-all duration-300 ease-out motion-reduce:transition-none ${
-          compact ? "text-xs md:text-sm" : "text-sm md:text-base"
-        }`}
-      >
-        {location.phonePrimary}
-      </a>
-      <span
-        className={`max-w-full truncate text-[10px] font-bold uppercase tracking-wide text-stone-500 md:text-xs ${
-          compact ? "hidden" : ""
-        }`}
-      >
-        {phoneLabel}
-      </span>
+      {showContact ? (
+        <>
+          <a
+            href={telHref(location.phonePrimary)}
+            className={`max-w-full truncate font-black text-[#c0392b] hover:underline transition-all duration-300 ease-out motion-reduce:transition-none ${
+              compact ? "text-xs md:text-sm" : "text-sm md:text-base"
+            }`}
+          >
+            {location.phonePrimary}
+          </a>
+          <span
+            className={`max-w-full truncate text-[10px] font-bold uppercase tracking-wide text-stone-500 md:text-xs ${
+              compact ? "hidden" : ""
+            }`}
+          >
+            {phoneLabel}
+          </span>
+        </>
+      ) : null}
     </div>
   );
 }

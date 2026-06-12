@@ -114,6 +114,7 @@ export function BrandLogoStrip({
   sulphur,
   branding,
   compact = false,
+  showContact = true,
   className = "",
 }: {
   variant?: BrandLogoVariant;
@@ -122,6 +123,8 @@ export function BrandLogoStrip({
   branding?: HeaderBrandContent;
   /** When true (e.g. after scroll), the centered page logo uses side-column sizing. */
   compact?: boolean;
+  /** Hide the phone + label rows (logo-only, e.g. centered inside the nav bar). */
+  showContact?: boolean;
   className?: string;
 }) {
   const primaryKey = primaryKeyForVariant(variant);
@@ -192,21 +195,25 @@ export function BrandLogoStrip({
             >
               {logo}
             </Link>
-            <a
-              href={telHref(info.phone)}
-              className={`max-w-full truncate font-black text-[#c0392b] transition-[font-size] duration-300 ease-out hover:underline ${
-                emphasize ? "text-[11px] sm:text-sm md:text-base" : "text-[9px] sm:text-xs md:text-sm"
-              }`}
-            >
-              {info.phone}
-            </a>
-            <span
-              className={`max-w-full truncate font-bold uppercase tracking-wide text-stone-500 transition-[font-size] duration-300 ease-out ${
-                emphasize ? "text-[9px] sm:text-[10px] md:text-xs" : "text-[8px] sm:text-[10px]"
-              }`}
-            >
-              {labelText}
-            </span>
+            {showContact ? (
+              <>
+                <a
+                  href={telHref(info.phone)}
+                  className={`max-w-full truncate font-black text-[#c0392b] transition-[font-size] duration-300 ease-out hover:underline ${
+                    emphasize ? "text-[11px] sm:text-sm md:text-base" : "text-[9px] sm:text-xs md:text-sm"
+                  }`}
+                >
+                  {info.phone}
+                </a>
+                <span
+                  className={`max-w-full truncate font-bold uppercase tracking-wide text-stone-500 transition-[font-size] duration-300 ease-out ${
+                    emphasize ? "text-[9px] sm:text-[10px] md:text-xs" : "text-[8px] sm:text-[10px]"
+                  }`}
+                >
+                  {labelText}
+                </span>
+              </>
+            ) : null}
           </div>
         );
       })}

@@ -11,10 +11,13 @@ export function HeaderBrandLogoStrip({
   paris,
   sulphur,
   branding,
+  showContact = true,
 }: {
   paris: LocationInfo;
   sulphur: LocationInfo;
   branding?: HeaderBrandContent;
+  /** Hide the phone + label rows (logo-only, e.g. centered inside the nav bar). */
+  showContact?: boolean;
 }) {
   const pathname = usePathname() ?? "/";
   const variant = brandVariantFromPathname(pathname);
@@ -27,6 +30,7 @@ export function HeaderBrandLogoStrip({
       sulphur={sulphur}
       branding={branding}
       compact={compact}
+      showContact={showContact}
     />
   );
 }

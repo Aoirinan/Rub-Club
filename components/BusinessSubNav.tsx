@@ -1,16 +1,19 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { NavItem } from "@/components/DesktopNav";
 import { DesktopNav } from "@/components/DesktopNav";
 
-/** Blue dropdown navigation bar for a scoped business site. */
+/** Dropdown navigation bar; pass `centerSlot` for the Backpro centered-logo layout. */
 export function BusinessSubNav({
   items,
   showBookCta = false,
+  centerSlot,
 }: {
   items: readonly NavItem[];
   showBookCta?: boolean;
+  centerSlot?: ReactNode;
 }) {
   if (items.length === 0) return null;
-  return <DesktopNav items={items} showBookCta={showBookCta} />;
+  return <DesktopNav items={items} showBookCta={showBookCta} centerSlot={centerSlot} />;
 }

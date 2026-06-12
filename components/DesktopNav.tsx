@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BookingCta } from "@/components/BookingCta";
 import { useHeaderCompact } from "@/components/HeaderThemeProvider";
 import { telHref } from "@/lib/constants";
@@ -208,18 +209,22 @@ function MegaPanel({
 export function DesktopNav({
   items,
   showBookCta = true,
+  centerSlot,
 }: {
   items: readonly NavItem[];
   showBookCta?: boolean;
+  /** Backpro-style centered logo: nav links split around this node. */
+  centerSlot?: ReactNode;
 }) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const navRef = useRef<HTMLElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const giftCardExpanded = useMassageGiftCardNavExpandedContext();
   const compact = useHeaderCompact();
+  const pathname = usePathname() ?? "/";
   // Backpro-style shrink: nav links lose vertical padding once scrolled.
   const itemPad = `transition-[padding] duration-300 ease-out motion-reduce:transition-none ${
-    compact ? "px-4 py-1.5" : "px-4 py-2"
+    compact ? "px-2 py-1.5" : "px-2 py-2"
   }`;
 
   useEffect(() => {
@@ -250,6 +255,123 @@ export function DesktopNav({
     timerRef.current = setTimeout(() => setOpenIdx(null), 150);
   };
 
+  // Backpro look: the current page's link sits in a solid color box.
+  const itemColors = (active: boolean) =>
+    active
+      ? "bg-[var(--header-nav-hover)] text-white"
+      : "text-[var(--header-nav-hover)] hover:bg-[var(--header-nav-hover)] hover:text-white";
+
+  const renderItem = (item: NavItem, idx: number) => {
+    const hasChildren = !!item.children?.length || !!item.clinics?.length;
+    const isOpen = openIdx === idx;
+    const active = pathname === item.href;
+
+    return (
+      <div
+        key={`${idx}-${item.href}`}
+        className="relative"
+        onMouseEnter={() => handleEnter(idx, hasChildren)}
+        onMouseLeave={handleLeave}
+      >
+        {hasChildren ? (
+          <button
+            type="button"
+            className={`focus-ring inline-flex items-center gap-1 ${itemPad} text-xs font-bold uppercase tracking-wide ${itemColors(active)} xl:px-4 xl:text-sm`}
+            onClick={() => setOpenIdx(isOpen ? null : idx)}
+            aria-expanded={isOpen}
+          >
+            {item.label}
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 10 10"
+              className={`ml-0.5 transition-transform ${isOpen ? "rotate-180" : ""}`}
+              aria-hidden
+            >
+              <path
+                d="M2 4l3 3 3-3"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        ) : item.external && item.label === "Gift cards" ? (
+          <a
+            className={`focus-ring block shrink-0 font-black uppercase tracking-wide transition-all duration-300 ease-out motion-reduce:transition-none ${
+              giftCardExpanded
+                ? GIFT_CARD_DESKTOP_EXPANDED
+                : `${compact ? "px-3 py-1.5" : "px-3 py-2"} text-xs ${itemColors(active)} xl:px-4 xl:text-sm`
+            }`}
+            href={item.href}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {item.label}
+          </a>
+        ) : item.external ? (
+          <a
+            className={`focus-ring block ${itemPad} text-xs font-bold uppercase tracking-wide ${itemColors(active)} xl:px-4 xl:text-sm`}
+            href={item.href}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {item.label}
+          </a>
+        ) : (
+          <Link
+            className={`focus-ring block ${itemPad} text-xs font-bold uppercase tracking-wide ${itemColors(active)} xl:px-4 xl:text-sm`}
+            href={item.href}
+          >
+            {item.label}
+          </Link>
+        )}
+
+        {hasChildren && isOpen ? (
+          <DropdownItem
+            item={item}
+            onClose={() => setOpenIdx(null)}
+          />
+        ) : null}
+      </div>
+    );
+  };
+
+  const bookCta = showBookCta ? (
+    <BookingCta
+      label="Book Now"
+      className="focus-ring ml-2 flex items-center self-stretch bg-[var(--header-nav-hover)] px-3 text-xs font-black uppercase tracking-wide text-white shadow-sm transition-all duration-300 brightness-100 hover:brightness-90 xl:px-5 xl:text-sm"
+    />
+  ) : null;
+
+  if (centerSlot) {
+    // Backpro layout: nav links split around the centered logo.
+    const mid = Math.ceil(items.length / 2);
+    const left = items.slice(0, mid);
+    const right = items.slice(mid);
+
+    return (
+      <nav
+        ref={navRef}
+        aria-label="Primary"
+        className="hidden bg-[var(--header-nav-bg)] shadow-md lg:block"
+      >
+        <div className="mx-auto flex max-w-7xl items-center justify-center px-4">
+          <div className="flex flex-1 items-center justify-end">
+            {left.map((item, idx) => renderItem(item, idx))}
+          </div>
+          <div className="shrink-0 px-5 py-2 xl:px-8">{centerSlot}</div>
+          <div className="flex flex-1 items-center justify-start">
+            {right.map((item, idx) => renderItem(item, mid + idx))}
+            {bookCta}
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
   return (
     <nav
       ref={navRef}
@@ -257,88 +379,8 @@ export function DesktopNav({
       className="hidden bg-[var(--header-nav-bg)] shadow-md lg:block"
     >
       <div className="mx-auto flex max-w-6xl items-center justify-center">
-        {items.map((item, idx) => {
-          const hasChildren = !!item.children?.length || !!item.clinics?.length;
-          const isOpen = openIdx === idx;
-
-          return (
-            <div
-              key={`${idx}-${item.href}`}
-              className="relative"
-              onMouseEnter={() => handleEnter(idx, hasChildren)}
-              onMouseLeave={handleLeave}
-            >
-              {hasChildren ? (
-                <button
-                  type="button"
-                  className={`focus-ring inline-flex items-center gap-1 ${itemPad} text-xs font-bold uppercase tracking-wide text-[var(--header-nav-hover)] hover:bg-[var(--header-nav-hover)] hover:text-white xl:px-5 xl:text-sm`}
-                  onClick={() => setOpenIdx(isOpen ? null : idx)}
-                  aria-expanded={isOpen}
-                >
-                  {item.label}
-                  <svg
-                    width="10"
-                    height="10"
-                    viewBox="0 0 10 10"
-                    className={`ml-0.5 transition-transform ${isOpen ? "rotate-180" : ""}`}
-                    aria-hidden
-                  >
-                    <path
-                      d="M2 4l3 3 3-3"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              ) : item.external && item.label === "Gift cards" ? (
-                <a
-                  className={`focus-ring block shrink-0 font-black uppercase tracking-wide transition-all duration-300 ease-out motion-reduce:transition-none ${
-                    giftCardExpanded
-                      ? GIFT_CARD_DESKTOP_EXPANDED
-                      : `${compact ? "px-4 py-1.5" : "px-4 py-2"} text-xs text-[var(--header-nav-hover)] hover:bg-[var(--header-nav-hover)] hover:text-white xl:px-5 xl:text-sm`
-                  }`}
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {item.label}
-                </a>
-              ) : item.external ? (
-                <a
-                  className={`focus-ring block ${itemPad} text-xs font-bold uppercase tracking-wide text-[var(--header-nav-hover)] hover:bg-[var(--header-nav-hover)] hover:text-white xl:px-5 xl:text-sm`}
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {item.label}
-                </a>
-              ) : (
-                <Link
-                  className={`focus-ring block ${itemPad} text-xs font-bold uppercase tracking-wide text-[var(--header-nav-hover)] hover:bg-[var(--header-nav-hover)] hover:text-white xl:px-5 xl:text-sm`}
-                  href={item.href}
-                >
-                  {item.label}
-                </Link>
-              )}
-
-              {hasChildren && isOpen ? (
-                <DropdownItem
-                  item={item}
-                  onClose={() => setOpenIdx(null)}
-                />
-              ) : null}
-            </div>
-          );
-        })}
-        {showBookCta ? (
-          <BookingCta
-            label="Book Now"
-            className="focus-ring ml-2 flex items-center self-stretch bg-[var(--header-nav-hover)] px-5 text-xs font-black uppercase tracking-wide text-white shadow-sm transition-all duration-300 brightness-100 hover:brightness-90 xl:text-sm"
-          />
-        ) : null}
+        {items.map((item, idx) => renderItem(item, idx))}
+        {bookCta}
       </div>
     </nav>
   );
