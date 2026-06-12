@@ -44,23 +44,34 @@ function groupChildren(children: NavChild[]): Map<string, NavChild[]> {
   return map;
 }
 
+type PanelAlign = "left" | "center" | "right";
+
+/** Keep wide dropdown panels on-screen: anchor by the item's side of the bar. */
+function panelAlignClass(align: PanelAlign): string {
+  if (align === "left") return "left-0";
+  if (align === "right") return "right-0";
+  return "left-1/2 -translate-x-1/2";
+}
+
 function DropdownItem({
   item,
   onClose,
+  align = "center",
 }: {
   item: NavItem;
   onClose: () => void;
+  align?: PanelAlign;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
   return (
     <div ref={ref} className="relative">
       {item.clinics?.length ? (
-        <ContactPanel item={item} onClose={onClose} />
+        <ContactPanel item={item} onClose={onClose} align={align} />
       ) : item.mega ? (
-        <MegaPanel item={item} onClose={onClose} />
+        <MegaPanel item={item} onClose={onClose} align={align} />
       ) : (
-        <StandardPanel item={item} onClose={onClose} />
+        <StandardPanel item={item} onClose={onClose} align={align} />
       )}
     </div>
   );
@@ -69,12 +80,14 @@ function DropdownItem({
 function ContactPanel({
   item,
   onClose,
+  align = "center",
 }: {
   item: NavItem;
   onClose: () => void;
+  align?: PanelAlign;
 }) {
   return (
-    <div className="absolute left-1/2 top-full z-50 w-[460px] -translate-x-1/2 pt-1 lg:w-[540px]">
+    <div className={`absolute top-full z-50 w-[460px] pt-1 lg:w-[540px] ${panelAlignClass(align)}`}>
       <div className="bg-[var(--header-nav-hover)] p-5 shadow-xl">
         <div className="grid grid-cols-2 gap-x-6">
           {item.clinics!.map((clinic) => (
@@ -138,12 +151,16 @@ function ContactPanel({
 function StandardPanel({
   item,
   onClose,
+  align = "left",
 }: {
   item: NavItem;
   onClose: () => void;
+  align?: PanelAlign;
 }) {
   return (
-    <div className="absolute left-0 top-full z-50 min-w-[220px] pt-1">
+    <div
+      className={`absolute top-full z-50 min-w-[220px] pt-1 ${align === "right" ? "right-0" : "left-0"}`}
+    >
       <div className="bg-white shadow-xl">
         {item.children!.map((c) => (
           <Link
@@ -163,18 +180,23 @@ function StandardPanel({
 function MegaPanel({
   item,
   onClose,
+  align = "center",
 }: {
   item: NavItem;
   onClose: () => void;
+  align?: PanelAlign;
 }) {
   const groups = groupChildren(item.children!);
   return (
-    <div className="absolute left-1/2 top-full z-50 w-[600px] -translate-x-1/2 pt-1 lg:w-[720px]">
-      <div className="bg-[var(--header-nav-hover)] p-5 shadow-xl">
-        <div className="mb-3 border-b border-white/20 pb-3">
+    <div
+      className={`absolute top-full z-50 w-[600px] max-w-[calc(100vw-2rem)] pt-1 lg:w-[720px] ${panelAlignClass(align)}`}
+    >
+      {/* Backpro-style white services panel with dark uppercase links. */}
+      <div className="bg-white p-5 shadow-xl">
+        <div className="mb-3 border-b border-stone-200 pb-3">
           <Link
             href={item.href}
-            className="text-xs font-black uppercase tracking-widest text-white hover:underline"
+            className="text-xs font-black uppercase tracking-widest text-[var(--header-nav-hover)] hover:underline"
             onClick={onClose}
           >
             Overview &rarr;
@@ -184,7 +206,7 @@ function MegaPanel({
           {Array.from(groups.entries()).map(([group, items]) => (
             <div key={group || "__default"} className="mb-3">
               {group && (
-                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
+                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-stone-400">
                   {group}
                 </p>
               )}
@@ -192,7 +214,7 @@ function MegaPanel({
                 <Link
                   key={c.href}
                   href={c.href}
-                  className="block py-1 text-xs font-bold text-white hover:underline"
+                  className="block py-1.5 text-xs font-bold uppercase tracking-wide text-[#4a5a58] hover:text-[var(--header-nav-hover)]"
                   onClick={onClose}
                 >
                   {c.label}
@@ -261,7 +283,7 @@ export function DesktopNav({
       ? "bg-[var(--header-nav-hover)] text-white"
       : "text-[var(--header-nav-hover)] hover:bg-[var(--header-nav-hover)] hover:text-white";
 
-  const renderItem = (item: NavItem, idx: number) => {
+  const renderItem = (item: NavItem, idx: number, align: PanelAlign = "center") => {
     const hasChildren = !!item.children?.length || !!item.clinics?.length;
     const isOpen = openIdx === idx;
     const active = pathname === item.href;
@@ -333,6 +355,7 @@ export function DesktopNav({
           <DropdownItem
             item={item}
             onClose={() => setOpenIdx(null)}
+            align={align}
           />
         ) : null}
       </div>
@@ -360,7 +383,7 @@ export function DesktopNav({
       >
         <div className="mx-auto flex max-w-7xl items-center justify-center px-4">
           <div className="flex flex-1 items-center justify-end">
-            {left.map((item, idx) => renderItem(item, idx))}
+            {left.map((item, idx) => renderItem(item, idx, "left"))}
           </div>
           {/* Backpro-style shrink: logo lands large, scales down once scrolled. */}
           <div
@@ -377,7 +400,7 @@ export function DesktopNav({
             </div>
           </div>
           <div className="flex flex-1 items-center justify-start">
-            {right.map((item, idx) => renderItem(item, mid + idx))}
+            {right.map((item, idx) => renderItem(item, mid + idx, "right"))}
             {bookCta}
           </div>
         </div>

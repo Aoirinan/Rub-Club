@@ -68,7 +68,7 @@ export function BusinessLogoHeader({
                 width={600}
                 height={200}
                 sizes="(max-width: 640px) 90vw, 600px"
-                className="h-10 w-auto max-w-full object-contain sm:h-12 md:h-14 lg:h-[3.75rem]"
+                className="h-10 w-auto max-w-full object-contain mix-blend-multiply sm:h-12 md:h-14 lg:h-[3.75rem]"
                 priority
               />
             )
@@ -79,7 +79,7 @@ export function BusinessLogoHeader({
               width={360}
               height={120}
               sizes="(max-width: 640px) 80vw, 360px"
-              className="h-10 w-auto max-w-full object-contain sm:h-12 md:h-14"
+              className="h-10 w-auto max-w-full object-contain mix-blend-multiply sm:h-12 md:h-14"
               priority
             />
           ) : (

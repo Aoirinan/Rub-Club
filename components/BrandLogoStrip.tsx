@@ -101,7 +101,8 @@ function logoHeightClass(brandKey: BrandKey, emphasize: boolean): string {
 function logoAlignClass(brandKey: BrandKey, emphasize: boolean): string {
   const base = logoHeightClass(brandKey, emphasize);
   const opacity = emphasize ? "" : "opacity-90 transition-opacity hover:opacity-100";
-  return `${base} object-contain transition-[height,max-width,opacity] duration-300 ease-out ${opacity}`;
+  // mix-blend-multiply drops white logo-image backgrounds on the light header band.
+  return `${base} object-contain mix-blend-multiply transition-[height,max-width,opacity] duration-300 ease-out ${opacity}`;
 }
 
 /**
