@@ -40,9 +40,9 @@ function escapeHtml(s: string): string {
     .replaceAll("'", "&#39;");
 }
 
-const PRIMARY = "#015949";
+const PRIMARY = "#c0392b";
 const ACCENT = "#f19f1f";
-const TEXT = "#013a30";
+const TEXT = "#4a1515";
 const MUTED = "#5b6360";
 
 function brandedShell(params: {

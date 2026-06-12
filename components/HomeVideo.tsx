@@ -32,7 +32,7 @@ export function HomeVideo({ src, heading }: { src: string; heading: string }) {
 
   return (
     <div ref={ref} className="mx-auto max-w-[750px] text-center">
-      <p className="text-sm font-bold text-[#013a30] sm:text-base">{heading}</p>
+      <p className="text-sm font-bold text-[#4a1515] sm:text-base">{heading}</p>
       <div className="relative mt-4 aspect-video overflow-hidden bg-black shadow-lg ring-1 ring-stone-200">
         {shouldLoad ? (
           <video
@@ -50,11 +50,11 @@ export function HomeVideo({ src, heading }: { src: string; heading: string }) {
           <button
             type="button"
             onClick={() => setShouldLoad(true)}
-            className="focus-ring absolute inset-0 flex items-center justify-center bg-[#015949] text-white"
+            className="focus-ring absolute inset-0 flex items-center justify-center bg-[#c0392b] text-white"
             aria-label="Play introduction video"
           >
             <span className="flex flex-col items-center gap-2">
-              <span className="grid h-16 w-16 place-items-center rounded-full bg-[#f19f1f] text-[#013a30]">
+              <span className="grid h-16 w-16 place-items-center rounded-full bg-[#f19f1f] text-[#4a1515]">
                 <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden>
                   <path d="M8 5v14l11-7-11-7z" fill="currentColor" />
                 </svg>

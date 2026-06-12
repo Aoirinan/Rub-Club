@@ -28,6 +28,7 @@ import {
 import {
   PRACTICE_PAGES_COLLECTION,
   PRACTICE_TESTIMONIALS_SUBCOLLECTION,
+  EMPTY_PRACTICE_THEME,
   mergePracticePageDoc,
   parsePracticeTestimonialDoc,
   type PracticeLocationId,
@@ -136,6 +137,7 @@ async function buildParisChiroDefaults(): Promise<PracticePageDoc> {
 
   return {
     id: "paris-chiro",
+    theme: EMPTY_PRACTICE_THEME,
     utilityBar: {
       published: true,
       phones: [
@@ -273,6 +275,7 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
 
   return {
     id: "paris-home",
+    theme: EMPTY_PRACTICE_THEME,
     utilityBar: {
       published: true,
       phones: [
@@ -462,6 +465,7 @@ async function buildSulphurSpringsDefaults(): Promise<PracticePageDoc> {
 
   return {
     id: "sulphur-springs",
+    theme: EMPTY_PRACTICE_THEME,
     utilityBar: {
       published: true,
       phones: [{ label: "Sulphur Springs", number: ssPhone }],

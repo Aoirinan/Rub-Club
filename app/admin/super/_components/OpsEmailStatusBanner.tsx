@@ -30,7 +30,7 @@ export function OpsEmailStatusBanner({ emailStatus }: { emailStatus: EmailStatus
       </p>
       <a
         href="https://github.com/Aoirinan/Rub-Club/blob/main/docs/production-env-checklist.md"
-        className="inline-block text-sm font-semibold text-[#015949] underline"
+        className="inline-block text-sm font-semibold text-[#c0392b] underline"
         target="_blank"
         rel="noopener noreferrer"
       >

@@ -70,10 +70,10 @@ export default async function SulphurSpringsPage() {
   };
 
   return (
-    <div className="bg-[#f4f2ea]" style={practiceThemeStyle("sulphur-springs")}>
+    <div className="bg-[#f4f2ea]" style={practiceThemeStyle("sulphur-springs", page.theme)}>
       <JsonLd data={chiropractorJsonLd(ss)} />
       <UtilityBar data={page.utilityBar} />
-      <PracticeHero data={page.hero} />
+      <PracticeHero data={page.hero} utility={page.utilityBar} />
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
         <QuickActionsRow data={page.quickActions} />
         <ServicesGrid data={page.servicesGrid} derivedCards={ssServiceCards} />

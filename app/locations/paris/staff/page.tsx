@@ -99,14 +99,14 @@ export default async function ParisOfficeStaffPage() {
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
         <p className="text-center text-sm text-stone-600">
           Looking for massage therapists?{" "}
-          <Link href="/services/massage" className="font-bold text-[#015949] underline">
+          <Link href="/services/massage" className="font-bold text-[#c0392b] underline">
             Meet The Rub Club team
           </Link>
           .
         </p>
 
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#013a30]">{page.sectionHeading}</h2>
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-2xl font-black text-[#4a1515]">{page.sectionHeading}</h2>
           <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {staff.map((member) => (
               <article
@@ -115,7 +115,7 @@ export default async function ParisOfficeStaffPage() {
               >
                 <StaffPhoto member={member} />
                 <div className="flex flex-1 flex-col p-5">
-                  <h3 className="text-lg font-black text-[#013a30]">{member.name}</h3>
+                  <h3 className="text-lg font-black text-[#4a1515]">{member.name}</h3>
                   <p className="text-sm font-bold text-stone-600">{member.role}</p>
                   <BioBlock bio={member.bio} />
                 </div>

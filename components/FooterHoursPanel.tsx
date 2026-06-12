@@ -75,7 +75,7 @@ export function FooterHoursPanel({
       <BookingCta
         label="Book Now"
         variant="compact"
-        className="focus-ring mt-4 inline-flex bg-[#25455e] px-4 py-2 text-xs font-black uppercase tracking-wide text-white hover:bg-[#1b3649]"
+        className="focus-ring mt-4 inline-flex bg-[#4a1515] px-4 py-2 text-xs font-black uppercase tracking-wide text-white hover:bg-[#341010]"
       />
     </div>
   );

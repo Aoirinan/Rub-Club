@@ -60,7 +60,7 @@ export function QuickActionsRow({ data }: { data: PracticeQuickActionsSection })
         <Link
           key={`${item.label}-${item.url}`}
           href={item.url}
-          className="group flex h-40 w-40 flex-col items-center justify-center gap-2 rounded-full border-4 border-white bg-[#015949] p-4 text-center text-white shadow-lg transition group-hover:shadow-xl hover:scale-105 hover:bg-[#0b7a64] sm:h-52 sm:w-52 sm:gap-3"
+          className="group flex h-40 w-40 flex-col items-center justify-center gap-2 rounded-full border-4 border-white bg-[var(--pp-accent)] p-4 text-center text-white shadow-lg transition group-hover:shadow-xl hover:scale-105 hover:bg-[var(--pp-accent-hover)] sm:h-52 sm:w-52 sm:gap-3"
         >
           <QuickActionIcon icon={item.icon} />
           <span className="text-xs font-bold uppercase leading-snug tracking-wide sm:text-sm">

@@ -379,7 +379,7 @@ export function BookingWizard({
   };
 
   const fieldLabel =
-    "block text-[0.7rem] font-bold uppercase tracking-[0.1em] text-[#015949] sm:text-[0.65rem] sm:tracking-[0.12em]";
+    "block text-[0.7rem] font-bold uppercase tracking-[0.1em] text-[#c0392b] sm:text-[0.65rem] sm:tracking-[0.12em]";
   /** 16px+ on small screens avoids iOS input zoom; 48px min height for comfortable taps. */
   const fieldControl =
     "touch-manipulation focus-ring w-full min-h-[48px] rounded-xl border border-stone-300 bg-white px-4 py-3 text-base text-stone-900 shadow-sm transition placeholder:text-stone-400 hover:border-stone-400 sm:min-h-0 sm:rounded-lg sm:px-3 sm:py-2.5 sm:text-sm";
@@ -388,11 +388,11 @@ export function BookingWizard({
     <div className="min-h-screen overflow-x-hidden bg-[#f4f2ea] pb-[max(1.25rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto w-full max-w-6xl px-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] py-8 sm:px-6 sm:py-14">
         <header className="rounded-2xl border border-stone-200/90 bg-white p-5 shadow-sm sm:p-8 sm:p-10">
-          <div className="border-l-4 border-[#015949] pl-3 sm:pl-5">
-            <p className="text-[0.7rem] font-black uppercase tracking-[0.18em] text-[#015949] sm:text-sm sm:tracking-[0.2em]">
+          <div className="border-l-4 border-[#c0392b] pl-3 sm:pl-5">
+            <p className="text-[0.7rem] font-black uppercase tracking-[0.18em] text-[#c0392b] sm:text-sm sm:tracking-[0.2em]">
               Online scheduling
             </p>
-            <h1 className="mt-2 text-[1.65rem] font-black leading-tight tracking-tight text-[#013a30] min-[400px]:text-3xl sm:text-4xl md:text-[2.5rem] md:leading-tight">
+            <h1 className="mt-2 text-[1.65rem] font-black leading-tight tracking-tight text-[#4a1515] min-[400px]:text-3xl sm:text-4xl md:text-[2.5rem] md:leading-tight">
               Book an appointment
             </h1>
             <p className="mt-3 max-w-2xl text-[0.9375rem] leading-relaxed text-stone-600 sm:text-base">
@@ -415,7 +415,7 @@ export function BookingWizard({
                 key={step.n}
                 className={`flex min-h-[48px] shrink-0 snap-start items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-[0.7rem] font-bold uppercase tracking-wide transition min-[400px]:text-xs sm:min-h-0 sm:px-3 sm:py-2 sm:text-[0.7rem] ${
                   step.done
-                    ? "border-[#015949]/40 bg-[#015949] text-white shadow-sm"
+                    ? "border-[#c0392b]/40 bg-[#c0392b] text-white shadow-sm"
                     : "border-stone-200 bg-stone-50 text-stone-500"
                 }`}
               >
@@ -441,7 +441,7 @@ export function BookingWizard({
               className="rounded-2xl border border-stone-200/90 bg-white p-4 shadow-sm sm:p-8"
             >
               <div className="flex flex-col gap-1 border-b border-stone-100 pb-4 sm:pb-6">
-                <h2 id="step-one" className="text-lg font-black leading-tight text-[#013a30] sm:text-2xl">
+                <h2 id="step-one" className="text-lg font-black leading-tight text-[#4a1515] sm:text-2xl">
                   What, where, and when
                 </h2>
                 <p className="text-[0.9375rem] leading-snug text-stone-600 sm:text-sm">
@@ -457,8 +457,8 @@ export function BookingWizard({
                       type="button"
                       className={`focus-ring min-h-[48px] flex-1 rounded-xl border px-4 py-3 text-sm font-bold ${
                         visitKind === "chiropractic"
-                          ? "border-[#015949] bg-[#015949] text-white"
-                          : "border-stone-300 bg-white text-[#013a30]"
+                          ? "border-[#c0392b] bg-[#c0392b] text-white"
+                          : "border-stone-300 bg-white text-[#4a1515]"
                       }`}
                       onClick={() => {
                         setVisitKind("chiropractic");
@@ -472,8 +472,8 @@ export function BookingWizard({
                       type="button"
                       className={`focus-ring min-h-[48px] flex-1 rounded-xl border px-4 py-3 text-sm font-bold ${
                         visitKind === "massage"
-                          ? "border-[#015949] bg-[#015949] text-white"
-                          : "border-stone-300 bg-white text-[#013a30]"
+                          ? "border-[#c0392b] bg-[#c0392b] text-white"
+                          : "border-stone-300 bg-white text-[#4a1515]"
                       }`}
                       onClick={() => {
                         setVisitKind("massage");
@@ -487,8 +487,8 @@ export function BookingWizard({
                       type="button"
                       className={`focus-ring min-h-[48px] flex-1 rounded-xl border px-4 py-3 text-sm font-bold ${
                         visitKind === "stretch"
-                          ? "border-[#015949] bg-[#015949] text-white"
-                          : "border-stone-300 bg-white text-[#013a30]"
+                          ? "border-[#c0392b] bg-[#c0392b] text-white"
+                          : "border-stone-300 bg-white text-[#4a1515]"
                       }`}
                       onClick={() => {
                         setVisitKind("stretch");
@@ -512,8 +512,8 @@ export function BookingWizard({
                       type="button"
                       className={`focus-ring min-h-[48px] flex-1 rounded-xl border px-4 py-3 text-sm font-bold ${
                         payMode === "cash"
-                          ? "border-[#015949] bg-[#015949] text-white"
-                          : "border-stone-300 bg-white text-[#013a30]"
+                          ? "border-[#c0392b] bg-[#c0392b] text-white"
+                          : "border-stone-300 bg-white text-[#4a1515]"
                       }`}
                       onClick={() => {
                         setPayMode("cash");
@@ -528,7 +528,7 @@ export function BookingWizard({
                       className={`focus-ring min-h-[48px] flex-1 rounded-xl border px-4 py-3 text-sm font-bold ${
                         payMode === "insurance"
                           ? "border-amber-600 bg-amber-600 text-white"
-                          : "border-stone-300 bg-white text-[#013a30]"
+                          : "border-stone-300 bg-white text-[#4a1515]"
                       }`}
                       onClick={() => {
                         setPayMode("insurance");
@@ -650,7 +650,7 @@ export function BookingWizard({
             <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className={fieldLabel}>Provider matching</p>
-                <p className="mt-1 text-[1.05rem] font-black leading-snug text-[#013a30] sm:text-base">
+                <p className="mt-1 text-[1.05rem] font-black leading-snug text-[#4a1515] sm:text-base">
                   How should we match you?
                 </p>
               </div>
@@ -679,7 +679,7 @@ export function BookingWizard({
                       type="button"
                       className={`focus-ring touch-manipulation min-h-[52px] rounded-lg px-4 py-3.5 text-left text-[0.9375rem] transition active:bg-stone-100 sm:min-h-0 sm:py-2.5 sm:text-sm ${
                         providerMode === "any"
-                          ? "bg-[#015949] text-white shadow-sm sm:px-5"
+                          ? "bg-[#c0392b] text-white shadow-sm sm:px-5"
                           : "text-stone-800 hover:bg-stone-50 sm:bg-transparent"
                       }`}
                       onClick={() => {
@@ -698,7 +698,7 @@ export function BookingWizard({
                       type="button"
                       className={`focus-ring touch-manipulation min-h-[52px] rounded-lg px-4 py-3.5 text-left text-[0.9375rem] transition active:bg-stone-100 sm:min-h-0 sm:py-2.5 sm:text-sm ${
                         providerMode === "specific"
-                          ? "bg-[#015949] text-white shadow-sm sm:px-5"
+                          ? "bg-[#c0392b] text-white shadow-sm sm:px-5"
                           : "text-stone-800 hover:bg-stone-50 sm:bg-transparent"
                       }`}
                       onClick={() => {
@@ -741,12 +741,12 @@ export function BookingWizard({
                       </select>
                     </label>
                     {selectedProvider ? (
-                      <div className="overflow-hidden rounded-2xl border border-[#015949]/20 bg-white shadow-sm">
+                      <div className="overflow-hidden rounded-2xl border border-[#c0392b]/20 bg-white shadow-sm">
                         <div className="border-b border-stone-100 bg-[#f0faf8] px-4 py-3 sm:px-5">
-                          <p className="text-[0.65rem] font-bold uppercase tracking-[0.15em] text-[#015949]">
+                          <p className="text-[0.65rem] font-bold uppercase tracking-[0.15em] text-[#c0392b]">
                             About this provider
                           </p>
-                          <p className="mt-0.5 text-lg font-black text-[#013a30]">{selectedProvider.displayName}</p>
+                          <p className="mt-0.5 text-lg font-black text-[#4a1515]">{selectedProvider.displayName}</p>
                         </div>
                         <div className="flex flex-col gap-5 p-4 sm:flex-row sm:items-start sm:gap-6 sm:p-6">
                           <div className="mx-auto w-full max-w-[200px] shrink-0 sm:mx-0 sm:max-w-[220px]">
@@ -817,7 +817,7 @@ export function BookingWizard({
           <div className="mt-6 flex flex-col gap-3 border-t border-stone-100 pt-6 sm:mt-8 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:pt-8">
             <button
               type="button"
-              className="focus-ring touch-manipulation inline-flex min-h-[52px] w-full items-center justify-center rounded-xl bg-[#25455e] px-6 py-3.5 text-base font-black uppercase tracking-wide text-white shadow-sm transition hover:bg-[#1b3649] active:bg-[#0c4d4a] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-0 sm:w-auto sm:min-w-[200px] sm:py-3.5 sm:text-sm"
+              className="focus-ring touch-manipulation inline-flex min-h-[52px] w-full items-center justify-center rounded-xl bg-[#4a1515] px-6 py-3.5 text-base font-black uppercase tracking-wide text-white shadow-sm transition hover:bg-[#341010] active:bg-[#0c4d4a] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-0 sm:w-auto sm:min-w-[200px] sm:py-3.5 sm:text-sm"
               onClick={loadSlots}
               disabled={loadingSlots || !canPickSlots}
             >
@@ -852,8 +852,8 @@ export function BookingWizard({
                       key={s.startIso}
                       className={`focus-ring touch-manipulation flex min-h-[54px] w-full items-center justify-center rounded-xl border px-2 py-2.5 text-center text-[0.8125rem] font-semibold leading-tight transition min-[400px]:px-3 min-[400px]:text-sm sm:min-h-[52px] sm:justify-start sm:text-left sm:text-sm ${
                         selectedSlot?.startIso === s.startIso
-                          ? "border-[#015949] bg-[#015949] text-white shadow-md"
-                          : "border-stone-200 bg-stone-50/90 text-[#013a30] hover:border-[#015949]/50 hover:bg-white"
+                          ? "border-[#c0392b] bg-[#c0392b] text-white shadow-md"
+                          : "border-stone-200 bg-stone-50/90 text-[#4a1515] hover:border-[#c0392b]/50 hover:bg-white"
                       }`}
                       onClick={() => {
                         setSelectedSlot(s);
@@ -877,7 +877,7 @@ export function BookingWizard({
           className="rounded-2xl border border-stone-200/90 bg-white p-4 shadow-sm sm:p-8"
         >
           <div className="border-b border-stone-100 pb-4 sm:pb-6">
-            <h2 id="step-three" className="text-lg font-black leading-tight text-[#013a30] sm:text-2xl">
+            <h2 id="step-three" className="text-lg font-black leading-tight text-[#4a1515] sm:text-2xl">
               Your contact details
             </h2>
             <p className="mt-1.5 text-[0.9375rem] leading-snug text-stone-600 sm:text-sm">
@@ -954,7 +954,7 @@ export function BookingWizard({
 
           <button
             type="button"
-            className="focus-ring touch-manipulation mt-5 inline-flex min-h-[52px] w-full items-center justify-center rounded-xl bg-[#25455e] px-6 py-3.5 text-base font-black uppercase tracking-wide text-white shadow-sm transition hover:bg-[#1b3649] active:bg-[#d9b635] disabled:cursor-not-allowed disabled:opacity-50 sm:mt-6 sm:min-h-0 sm:w-auto sm:min-w-[240px] sm:text-sm"
+            className="focus-ring touch-manipulation mt-5 inline-flex min-h-[52px] w-full items-center justify-center rounded-xl bg-[#4a1515] px-6 py-3.5 text-base font-black uppercase tracking-wide text-white shadow-sm transition hover:bg-[#341010] active:bg-[#d9b635] disabled:cursor-not-allowed disabled:opacity-50 sm:mt-6 sm:min-h-0 sm:w-auto sm:min-w-[240px] sm:text-sm"
             disabled={!selectedSlot || submitting || !name || !phone || !email || !canPickSlots}
             onClick={submitBooking}
           >
@@ -981,7 +981,7 @@ export function BookingWizard({
                     href={squarePayUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="focus-ring touch-manipulation inline-flex min-h-[52px] w-full items-center justify-center rounded-xl bg-[#25455e] px-5 py-3.5 text-center text-sm font-black uppercase tracking-wide text-white shadow-sm transition hover:bg-[#1b3649] active:bg-[#0c4d4a] sm:min-h-0 sm:w-auto"
+                    className="focus-ring touch-manipulation inline-flex min-h-[52px] w-full items-center justify-center rounded-xl bg-[#4a1515] px-5 py-3.5 text-center text-sm font-black uppercase tracking-wide text-white shadow-sm transition hover:bg-[#341010] active:bg-[#0c4d4a] sm:min-h-0 sm:w-auto"
                   >
                     Pay with Square (new tab)
                   </a>
@@ -993,17 +993,17 @@ export function BookingWizard({
       </div>
 
         {selectedSlot ? (
-          <aside className="mt-6 h-fit rounded-2xl border border-[#015949]/25 bg-gradient-to-b from-[#eaf6f4] to-[#e2f0ec] p-4 text-sm shadow-sm sm:p-5 lg:sticky lg:top-24 lg:mt-0">
-            <p className="text-[0.65rem] font-bold uppercase tracking-[0.15em] text-[#015949]">Your selection</p>
-            <p className="mt-2 text-[1.35rem] font-black leading-snug text-[#013a30] sm:text-xl">{selectedSlot.label}</p>
-            <dl className="mt-4 space-y-2.5 border-t border-[#015949]/10 pt-4 text-[0.9375rem] text-stone-700 sm:text-sm">
+          <aside className="mt-6 h-fit rounded-2xl border border-[#c0392b]/25 bg-gradient-to-b from-[#eaf6f4] to-[#e2f0ec] p-4 text-sm shadow-sm sm:p-5 lg:sticky lg:top-24 lg:mt-0">
+            <p className="text-[0.65rem] font-bold uppercase tracking-[0.15em] text-[#c0392b]">Your selection</p>
+            <p className="mt-2 text-[1.35rem] font-black leading-snug text-[#4a1515] sm:text-xl">{selectedSlot.label}</p>
+            <dl className="mt-4 space-y-2.5 border-t border-[#c0392b]/10 pt-4 text-[0.9375rem] text-stone-700 sm:text-sm">
               <div className="flex justify-between gap-3">
                 <dt className="text-stone-500">Duration</dt>
-                <dd className="font-semibold text-[#013a30]">{durationMin} min</dd>
+                <dd className="font-semibold text-[#4a1515]">{durationMin} min</dd>
               </div>
               <div className="flex justify-between gap-3">
                 <dt className="text-stone-500">Service</dt>
-                <dd className="font-semibold text-[#013a30]">
+                <dd className="font-semibold text-[#4a1515]">
                   {visitKind === "chiropractic"
                     ? "Chiropractic"
                     : visitKind === "stretch"
@@ -1013,7 +1013,7 @@ export function BookingWizard({
               </div>
               <div className="flex justify-between gap-3">
                 <dt className="text-stone-500">Location</dt>
-                <dd className="text-right font-semibold text-[#013a30]">{loc.shortName}</dd>
+                <dd className="text-right font-semibold text-[#4a1515]">{loc.shortName}</dd>
               </div>
             </dl>
           </aside>

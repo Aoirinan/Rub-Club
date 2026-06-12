@@ -452,7 +452,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
               onClick={() => setBrandFilter(key)}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                 brandFilter === key
-                  ? "bg-[#015949] text-white"
+                  ? "bg-[#c0392b] text-white"
                   : "border border-slate-300 bg-white text-slate-800"
               }`}
             >
@@ -696,7 +696,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
                       <span className="ml-2 text-xs font-normal text-amber-800">(hidden)</span>
                     ) : null}
                     {m.featured ? (
-                      <span className="ml-2 text-xs font-normal text-[#015949]">(featured)</span>
+                      <span className="ml-2 text-xs font-normal text-[#c0392b]">(featured)</span>
                     ) : null}
                   </div>
                   <div className="text-xs text-slate-600">

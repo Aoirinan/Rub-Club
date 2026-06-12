@@ -168,7 +168,7 @@ export function PracticeTestimonialsPanel({ location, getIdToken }: Props) {
             <button
               type="button"
               disabled={busy || !form.quote.trim()}
-              className="rounded-full bg-[#015949] px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+              className="rounded-full bg-[#c0392b] px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
               onClick={() => void save()}
             >
               Save review
@@ -207,7 +207,7 @@ export function PracticeTestimonialsPanel({ location, getIdToken }: Props) {
             </button>
             <button
               type="button"
-              className="text-xs font-semibold text-[#015949] underline"
+              className="text-xs font-semibold text-[#c0392b] underline"
               onClick={() =>
                 setForm({
                   mode: "edit",

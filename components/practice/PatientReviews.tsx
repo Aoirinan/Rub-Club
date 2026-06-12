@@ -32,10 +32,10 @@ export function PatientReviews({
             {t.context.trim() ? (
               <p className="mt-1 text-xs text-stone-400">{t.context}</p>
             ) : null}
-            <span aria-hidden className="mt-4 text-5xl font-black leading-none text-[#015949]">
+            <span aria-hidden className="mt-4 text-5xl font-black leading-none text-[var(--pp-accent)]">
               &ldquo;
             </span>
-            <p className="mt-2 flex-1 text-sm font-bold leading-relaxed text-[#015949]">
+            <p className="mt-2 flex-1 text-sm font-bold leading-relaxed text-[var(--pp-accent)]">
               {t.quote}
             </p>
           </blockquote>

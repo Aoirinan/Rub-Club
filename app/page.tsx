@@ -104,7 +104,7 @@ export default async function Home() {
   ];
 
   return (
-    <div className="bg-[#f4f2ea]" style={practiceThemeStyle("paris-home")}>
+    <div className="bg-[#f4f2ea]" style={practiceThemeStyle("paris-home", page.theme)}>
       <JsonLd
         data={[
           chiropractorJsonLd(paris),
@@ -114,7 +114,7 @@ export default async function Home() {
         ]}
       />
       <UtilityBar data={page.utilityBar} />
-      <PracticeHero data={page.hero} headingTag="h1" />
+      <PracticeHero data={page.hero} utility={page.utilityBar} headingTag="h1" />
 
       <div className="bg-[#fff7d7] py-3 text-center text-sm text-[#5a4a15]">
         {awardsHtml ? (

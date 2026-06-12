@@ -34,7 +34,7 @@ function CardBody({ card }: { card: PracticeServiceCard }) {
         <p className="mt-3 flex-1 text-sm leading-relaxed text-stone-500">{card.blurb}</p>
       ) : null}
       {card.href.trim() ? (
-        <span className="mx-auto mt-5 inline-flex bg-[#25455e] px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-white transition group-hover:bg-[#1b3649]">
+        <span className="mx-auto mt-5 inline-flex bg-[var(--pp-cta)] px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-white transition group-hover:bg-[var(--pp-cta-hover)]">
           Read More
         </span>
       ) : null}

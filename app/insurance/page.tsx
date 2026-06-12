@@ -32,8 +32,8 @@ export default async function InsurancePage() {
       />
       <PageHero eyebrow="Insurance & billing" title={c.heroTitle} lede={c.heroLede} />
       <div className="mx-auto max-w-4xl space-y-8 px-4 pb-16">
-        <section className="space-y-4 border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-xl font-black text-[#013a30]">{c.chiroHeading}</h2>
+        <section className="space-y-4 border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-xl font-black text-[#4a1515]">{c.chiroHeading}</h2>
           {c.chiroBody.split("\n\n").map((block, i) =>
             block.trim().startsWith("- ") ? (
               <MarkdownBulletList key={i} text={block} />
@@ -45,22 +45,22 @@ export default async function InsurancePage() {
           )}
           <p className="text-sm text-stone-600">
             Auto-injury and personal-injury paperwork:{" "}
-            <Link href="/locations/paris/staff" className="font-bold text-[#015949] underline">
+            <Link href="/locations/paris/staff" className="font-bold text-[#c0392b] underline">
               meet our Paris office team
             </Link>{" "}
             (including our personal injury case manager).
           </p>
         </section>
 
-        <section className="space-y-4 border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-xl font-black text-[#013a30]">{c.massageHeading}</h2>
+        <section className="space-y-4 border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-xl font-black text-[#4a1515]">{c.massageHeading}</h2>
           <p className="text-stone-700">{c.massageBody}</p>
         </section>
 
-        <section className="space-y-4 border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-xl font-black text-[#013a30]">{c.verifyHeading}</h2>
+        <section className="space-y-4 border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-xl font-black text-[#4a1515]">{c.verifyHeading}</h2>
           <p className="text-stone-700">{c.verifyBody}</p>
-          <p className="text-sm font-bold text-[#015949]">
+          <p className="text-sm font-bold text-[#c0392b]">
             <a className="focus-ring underline" href={telHref(displayLocs.paris.phonePrimary)}>
               Call Paris: {displayLocs.paris.phonePrimary}
             </a>{" "}

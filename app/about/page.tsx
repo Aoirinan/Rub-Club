@@ -45,9 +45,9 @@ export default async function AboutPage() {
         lede="Chiropractic Associates leads our family-owned care in Paris and Sulphur Springs, with licensed massage therapy at The Rub Club in Paris."
       />
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
-        <section className="grid gap-10 border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-2">
+        <section className="grid gap-10 border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-2">
           <div className="space-y-4 leading-relaxed text-stone-700">
-            <h2 className="text-2xl font-black text-[#013a30]">Two practices, one address</h2>
+            <h2 className="text-2xl font-black text-[#4a1515]">Two practices, one address</h2>
             {bodyParagraphs.map((p, idx) => (
               <p
                 key={`about-${idx}`}
@@ -70,15 +70,15 @@ export default async function AboutPage() {
           </div>
         </section>
 
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#013a30]">Our Paris chiropractors</h2>
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-2xl font-black text-[#4a1515]">Our Paris chiropractors</h2>
           <p className="mt-2 max-w-2xl text-sm text-stone-600">
             Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins practice in Paris.{" "}
-            <Link href="/locations/paris/staff" className="font-bold text-[#015949] underline">
+            <Link href="/locations/paris/staff" className="font-bold text-[#c0392b] underline">
               Meet our Paris office team
             </Link>
             .{" "}
-            <Link href="/sulphur-springs/staff" className="font-bold text-[#015949] underline">
+            <Link href="/sulphur-springs/staff" className="font-bold text-[#c0392b] underline">
               Dr. Conner Collins
             </Link>{" "}
             serves patients at our Sulphur Springs office.

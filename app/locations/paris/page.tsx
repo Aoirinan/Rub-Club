@@ -46,11 +46,11 @@ export default async function ParisLocationPage() {
       <LocationDetail location={paris} reviewUrl={reviewUrl} officeHours={officeHours} />
       <div className="mx-auto max-w-6xl px-4 pb-16">
         <p className="text-center text-sm text-stone-600">
-          <Link href="/locations/paris/staff" className="font-bold text-[#015949] underline">
+          <Link href="/locations/paris/staff" className="font-bold text-[#c0392b] underline">
             Meet our Paris office team
           </Link>
           {" Â· "}
-          <Link href="/services/massage" className="font-bold text-[#015949] underline">
+          <Link href="/services/massage" className="font-bold text-[#c0392b] underline">
             Meet The Rub Club massage therapists
           </Link>
         </p>

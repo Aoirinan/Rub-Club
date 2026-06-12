@@ -43,13 +43,13 @@ export default async function ReviewsPage() {
           {content.testimonials.map((t) => (
             <figure
               key={`${t.author}-${t.quote.slice(0, 24)}`}
-              className="flex h-full flex-col justify-between border-t-4 border-[#015949] bg-white p-6 shadow-md"
+              className="flex h-full flex-col justify-between border-t-4 border-[#c0392b] bg-white p-6 shadow-md"
             >
               <blockquote className="text-base italic leading-relaxed text-stone-700">
                 &ldquo;{t.quote}&rdquo;
               </blockquote>
               <figcaption className="mt-4 border-t border-stone-200 pt-3 text-sm">
-                <span className="font-bold text-[#013a30]">{t.author}</span>
+                <span className="font-bold text-[#4a1515]">{t.author}</span>
                 {t.context ? (
                   <span className="block text-stone-600">{t.context}</span>
                 ) : null}
@@ -58,7 +58,7 @@ export default async function ReviewsPage() {
           ))}
         </section>
 
-        <section className="border-t-4 border-[#015949] bg-[#013a30] p-6 text-white shadow-md sm:p-10">
+        <section className="border-t-4 border-[#c0392b] bg-[#4a1515] p-6 text-white shadow-md sm:p-10">
           <h2 className="text-2xl font-black">{content.ctaHeading}</h2>
           <p className="mt-3 max-w-2xl text-white/90">{content.ctaBody}</p>
           <div className="mt-6 flex flex-wrap gap-3">
@@ -68,7 +68,7 @@ export default async function ReviewsPage() {
                 href={loc.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="focus-ring bg-[#25455e] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#1b3649]"
+                className="focus-ring bg-[#4a1515] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#341010]"
               >
                 Review {loc.shortName}
               </a>

@@ -187,14 +187,14 @@ export function BrandLogoStrip({
           >
             <Link
               href={info.href}
-              className="block w-fit max-w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#015949]"
+              className="block w-fit max-w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c0392b]"
               aria-label={`${entry.alt} â€” go to ${labelText}`}
             >
               {logo}
             </Link>
             <a
               href={telHref(info.phone)}
-              className={`max-w-full truncate font-black text-[#015949] transition-[font-size] duration-300 ease-out hover:underline ${
+              className={`max-w-full truncate font-black text-[#c0392b] transition-[font-size] duration-300 ease-out hover:underline ${
                 emphasize ? "text-[11px] sm:text-sm md:text-base" : "text-[9px] sm:text-xs md:text-sm"
               }`}
             >

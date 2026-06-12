@@ -46,10 +46,10 @@ export function PageHero({
   lede?: string;
 }) {
   return (
-    <header className="relative mb-8 mt-4 overflow-hidden bg-gradient-to-r from-[#01302a] via-[#013a30] to-[#015949]">
+    <header className="relative mb-8 mt-4 overflow-hidden bg-gradient-to-r from-[#4a1515] via-[#4a1515] to-[#c0392b]">
       <div
         aria-hidden
-        className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-[#0b7a64]/20 blur-2xl"
+        className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-[#962d22]/20 blur-2xl"
       />
       <div className="relative mx-auto max-w-6xl px-4 py-10 sm:py-14">
         {eyebrow ? (
@@ -79,9 +79,9 @@ function CtaButton({
   variant: "primary" | "secondary";
 }) {
   const primaryClass =
-    "focus-ring bg-[#25455e] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#1b3649]";
+    "focus-ring bg-[#4a1515] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#341010]";
   const secondaryClass =
-    "focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#013a30]";
+    "focus-ring border-2 border-white px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-white hover:text-[#4a1515]";
 
   if (!href) {
     return (
@@ -122,7 +122,7 @@ export function CtaCard({
   secondary?: { label: string; href: string | null };
 }) {
   return (
-    <section className="border-t-4 border-[#015949] bg-[#013a30] px-6 py-10 text-white shadow-md sm:px-10">
+    <section className="border-t-4 border-[#c0392b] bg-[#4a1515] px-6 py-10 text-white shadow-md sm:px-10">
       <h2 className="text-2xl font-black">{title}</h2>
       {body ? <p className="mt-3 max-w-2xl text-white/90">{body}</p> : null}
       <div className="mt-6 flex flex-wrap gap-3">

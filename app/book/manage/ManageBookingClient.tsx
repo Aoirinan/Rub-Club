@@ -180,9 +180,9 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
   return (
     <div className="min-h-screen bg-[#f4f2ea] px-4 py-12">
       <div className="mx-auto max-w-lg">
-        <header className="border-t-4 border-[#015949] bg-white p-6 shadow-md">
-          <p className="text-sm font-black uppercase tracking-[0.22em] text-[#015949]">Manage appointment</p>
-          <h1 className="mt-2 text-2xl font-black tracking-tight text-[#013a30]">Cancel or reschedule</h1>
+        <header className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md">
+          <p className="text-sm font-black uppercase tracking-[0.22em] text-[#c0392b]">Manage appointment</p>
+          <h1 className="mt-2 text-2xl font-black tracking-tight text-[#4a1515]">Cancel or reschedule</h1>
           <p className="mt-2 text-sm text-stone-700">
             Use the secure link from your confirmation email. For help, call the office.
           </p>
@@ -203,7 +203,7 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
 
           {info ? (
             <section className="space-y-3 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-              <h2 className="text-sm font-bold uppercase tracking-wide text-[#015949]">Current appointment</h2>
+              <h2 className="text-sm font-bold uppercase tracking-wide text-[#c0392b]">Current appointment</h2>
               <dl className="space-y-1 text-sm text-stone-800">
                 <div className="flex justify-between gap-2">
                   <dt className="text-stone-500">Patient</dt>
@@ -265,7 +265,7 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
 
               {info.canReschedule ? (
                 <div className="border-t border-stone-100 pt-4">
-                  <h3 className="text-sm font-bold text-[#013a30]">Reschedule</h3>
+                  <h3 className="text-sm font-bold text-[#4a1515]">Reschedule</h3>
                   <p className="mt-1 text-xs text-stone-600">
                     Pick a new date, then a time. Your provider stays the same.
                   </p>
@@ -297,7 +297,7 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
                           onClick={() => setSelectedSlot(s)}
                           className={`rounded-md px-2 py-1.5 text-left text-sm ${
                             selectedSlot?.startIso === s.startIso
-                              ? "bg-[#015949] font-semibold text-white"
+                              ? "bg-[#c0392b] font-semibold text-white"
                               : "bg-stone-50 text-stone-800 hover:bg-stone-100"
                           }`}
                         >
@@ -310,7 +310,7 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
                     type="button"
                     disabled={working || !selectedSlot}
                     onClick={() => void rescheduleAppointment()}
-                    className="mt-3 w-full rounded-full bg-[#015949] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0c4d4b] disabled:opacity-50"
+                    className="mt-3 w-full rounded-full bg-[#c0392b] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0c4d4b] disabled:opacity-50"
                   >
                     {working ? "Workingâ€¦" : "Confirm new time"}
                   </button>
@@ -320,7 +320,7 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
           ) : null}
 
           <p className="text-center text-sm">
-            <Link href="/book" className="font-semibold text-[#015949] underline">
+            <Link href="/book" className="font-semibold text-[#c0392b] underline">
               Book a new appointment
             </Link>
           </p>

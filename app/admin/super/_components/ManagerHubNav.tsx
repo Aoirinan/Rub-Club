@@ -82,7 +82,7 @@ export function ManagerHubNav() {
               href={tab.href}
               className={`rounded-lg px-4 py-2.5 transition ${
                 active
-                  ? "bg-[#015949] text-white shadow-sm"
+                  ? "bg-[#c0392b] text-white shadow-sm"
                   : "text-slate-700 hover:bg-slate-100"
               }`}
             >

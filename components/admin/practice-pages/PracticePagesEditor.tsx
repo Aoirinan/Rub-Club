@@ -14,6 +14,7 @@ import {
   type PracticeServiceCard,
   type PracticeTeamSection,
 } from "@/lib/practice-pages-shared";
+import { PRACTICE_THEMES } from "@/components/practice/theme";
 import { PracticeTestimonialsPanel } from "./PracticeTestimonialsPanel";
 
 type Props = {
@@ -78,6 +79,39 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
     <label className="block space-y-1 text-sm">
       <span className="font-medium text-slate-800">{label}</span>
       {children}
+    </label>
+  );
+}
+
+function ColorField({
+  label,
+  value,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  /** Default hex shown when the field is empty. */
+  placeholder: string;
+  onChange: (v: string) => void;
+}) {
+  const shown = value.trim() || placeholder;
+  return (
+    <label className="block space-y-1 text-sm">
+      <span className="font-medium text-slate-800">{label}</span>
+      <span className="flex items-center gap-2">
+        <span
+          aria-hidden
+          className="h-8 w-8 shrink-0 rounded-lg border border-slate-300"
+          style={{ backgroundColor: shown }}
+        />
+        <input
+          className={INPUT}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </span>
     </label>
   );
 }
@@ -225,7 +259,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
         <Link
           href={PRACTICE_PAGE_PATHS[location]}
           target="_blank"
-          className="text-sm font-semibold text-[#015949] underline"
+          className="text-sm font-semibold text-[#c0392b] underline"
         >
           View page â†—
         </Link>
@@ -242,7 +276,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
             }}
             className={`rounded-full px-4 py-2 text-sm font-bold ${
               location === loc
-                ? "bg-[#015949] text-white shadow-sm"
+                ? "bg-[#c0392b] text-white shadow-sm"
                 : "border border-slate-300 bg-white text-slate-700 hover:border-slate-400"
             }`}
           >
@@ -260,6 +294,63 @@ export function PracticePagesEditor({ getIdToken }: Props) {
       ) : (
         <>
           <div className="space-y-4">
+            {/* 0. Theme colors */}
+            <SectionCard
+              title="0 Â· Theme colors"
+              hint="Colors for this page's headings, circles, buttons, and hero panel. Leave a field empty to use the location default (red for Paris, blue for Sulphur Springs). Hero panel colors accept 8-digit hex for transparency (e.g. #8e2f23e6). Header/nav bar colors are edited in Website settings."
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <ColorField
+                  label="Accent (headings, circles, quotes)"
+                  value={doc.theme.accent}
+                  placeholder={PRACTICE_THEMES[location].accent}
+                  onChange={(v) => update((p) => ({ ...p, theme: { ...p.theme, accent: v } }))}
+                />
+                <ColorField
+                  label="Accent hover"
+                  value={doc.theme.accentHover}
+                  placeholder={PRACTICE_THEMES[location].accentHover}
+                  onChange={(v) =>
+                    update((p) => ({ ...p, theme: { ...p.theme, accentHover: v } }))
+                  }
+                />
+                <ColorField
+                  label="Heading text"
+                  value={doc.theme.heading}
+                  placeholder={PRACTICE_THEMES[location].heading}
+                  onChange={(v) => update((p) => ({ ...p, theme: { ...p.theme, heading: v } }))}
+                />
+                <ColorField
+                  label="Button color"
+                  value={doc.theme.ctaBg}
+                  placeholder={PRACTICE_THEMES[location].ctaBg}
+                  onChange={(v) => update((p) => ({ ...p, theme: { ...p.theme, ctaBg: v } }))}
+                />
+                <ColorField
+                  label="Button hover"
+                  value={doc.theme.ctaHover}
+                  placeholder={PRACTICE_THEMES[location].ctaHover}
+                  onChange={(v) => update((p) => ({ ...p, theme: { ...p.theme, ctaHover: v } }))}
+                />
+                <ColorField
+                  label="Hero panel gradient start"
+                  value={doc.theme.heroPanelFrom}
+                  placeholder={PRACTICE_THEMES[location].heroPanelFrom}
+                  onChange={(v) =>
+                    update((p) => ({ ...p, theme: { ...p.theme, heroPanelFrom: v } }))
+                  }
+                />
+                <ColorField
+                  label="Hero panel gradient middle"
+                  value={doc.theme.heroPanelVia}
+                  placeholder={PRACTICE_THEMES[location].heroPanelVia}
+                  onChange={(v) =>
+                    update((p) => ({ ...p, theme: { ...p.theme, heroPanelVia: v } }))
+                  }
+                />
+              </div>
+            </SectionCard>
+
             {/* 1. Utility bar */}
             <SectionCard
               title="1 Â· Utility bar"
@@ -1494,7 +1585,7 @@ export function PracticePagesEditor({ getIdToken }: Props) {
               type="button"
               disabled={saving || !dirty}
               onClick={() => void save()}
-              className="rounded-full bg-[#015949] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#0b7a64] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full bg-[#c0392b] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#962d22] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? "Savingâ€¦" : dirty ? "Save changes" : "Saved"}
             </button>

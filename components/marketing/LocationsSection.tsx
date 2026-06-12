@@ -13,7 +13,7 @@ export function LocationsSection({ titleAs = "h2", compact = false }: Props) {
   const TitleTag = titleAs;
 
   return (
-    <section id="locations" className="scroll-mt-32 space-y-8 bg-[#013a30] p-6 text-white shadow-xl sm:p-10">
+    <section id="locations" className="scroll-mt-32 space-y-8 bg-[#4a1515] p-6 text-white shadow-xl sm:p-10">
       <TitleTag className="text-2xl font-black">{MASSAGE.contactTitle}</TitleTag>
 
       {compact ? (

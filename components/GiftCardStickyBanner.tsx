@@ -60,7 +60,7 @@ export function GiftCardStickyBanner({
     <div
       role="region"
       aria-label="Gift card promotion"
-      className="fixed bottom-0 left-0 right-0 z-50 flex min-h-[52px] items-stretch bg-[#015949] shadow-[0_-4px_20px_rgba(0,0,0,0.2)]"
+      className="fixed bottom-0 left-0 right-0 z-50 flex min-h-[52px] items-stretch bg-[#c0392b] shadow-[0_-4px_20px_rgba(0,0,0,0.2)]"
     >
       <a
         href={href}

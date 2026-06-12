@@ -33,7 +33,7 @@ export function ParisLockup({
         priority
       />
       <span className="flex min-w-0 flex-col justify-center text-left leading-tight">
-        <span className="whitespace-nowrap text-base font-black tracking-tight text-[#013a30] sm:text-lg md:text-xl lg:text-2xl">
+        <span className="whitespace-nowrap text-base font-black tracking-tight text-[#4a1515] sm:text-lg md:text-xl lg:text-2xl">
           {title}
         </span>
         {subtitle ? (

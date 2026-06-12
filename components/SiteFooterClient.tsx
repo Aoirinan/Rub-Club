@@ -72,7 +72,7 @@ export function SiteFooterClient({
     footerCopyright?.trim() || `Â© ${year} ${siteShortName}. All rights reserved.`;
 
   return (
-    <footer className="mt-12 border-t-4 border-[#015949] bg-[#23312e] text-white/85">
+    <footer className="mt-12 border-t-4 border-[#c0392b] bg-[#23312e] text-white/85">
       <div className="mx-auto grid max-w-6xl gap-x-8 gap-y-6 px-4 py-8 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <p className="text-base font-black tracking-tight text-white">{siteShortName}</p>

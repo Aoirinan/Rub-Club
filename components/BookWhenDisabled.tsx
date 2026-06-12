@@ -22,13 +22,13 @@ export function BookWhenDisabled({ message, locations }: Props) {
           <span className="font-semibold text-stone-900">Book</span>
         </nav>
         <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-6 shadow-sm sm:p-8">
-          <h1 className="text-2xl font-black text-[#013a30] sm:text-3xl">Online booking is off</h1>
+          <h1 className="text-2xl font-black text-[#4a1515] sm:text-3xl">Online booking is off</h1>
           <p className="mt-4 leading-relaxed text-stone-700">{message}</p>
           <ul className="mt-6 space-y-3">
             {phones.map((p) => (
               <li key={p.label}>
-                <span className="block text-sm font-bold text-[#013a30]">{p.label}</span>
-                <a className="text-lg font-black text-[#015949] underline" href={p.href}>
+                <span className="block text-sm font-bold text-[#4a1515]">{p.label}</span>
+                <a className="text-lg font-black text-[#c0392b] underline" href={p.href}>
                   {p.phone}
                 </a>
               </li>
@@ -36,11 +36,11 @@ export function BookWhenDisabled({ message, locations }: Props) {
           </ul>
         </div>
         <p className="mt-6 text-center text-sm">
-          <Link href="/contact" className="font-bold text-[#015949] underline">
+          <Link href="/contact" className="font-bold text-[#c0392b] underline">
             Contact form
           </Link>{" "}
           Â·{" "}
-          <Link href="/services" className="font-bold text-[#015949] underline">
+          <Link href="/services" className="font-bold text-[#c0392b] underline">
             Our services
           </Link>
         </p>

@@ -15,11 +15,11 @@ export function ChiropracticAssociatesSection({ chooseTitleAs = "h2" }: Props) {
   return (
     <section
       id="chiropractic-associates"
-      className="scroll-mt-32 space-y-10 border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10"
+      className="scroll-mt-32 space-y-10 border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10"
     >
       <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
         <div className="space-y-5">
-          <TitleTag className="text-3xl font-black text-[#013a30]">{CHIRO.chooseTitle}</TitleTag>
+          <TitleTag className="text-3xl font-black text-[#4a1515]">{CHIRO.chooseTitle}</TitleTag>
           <p className="leading-relaxed text-stone-700">{CHIRO.chooseLead}</p>
           <p className="leading-relaxed text-stone-700">{CHIRO.chooseP2}</p>
           <p className="leading-relaxed text-stone-700">{CHIRO.chooseP3}</p>
@@ -49,7 +49,7 @@ export function ChiropracticAssociatesSection({ chooseTitleAs = "h2" }: Props) {
 
       <IntroVideoBlock />
 
-      <div className="bg-[#013a30] px-6 py-8 text-white shadow-inner sm:px-10">
+      <div className="bg-[#4a1515] px-6 py-8 text-white shadow-inner sm:px-10">
         <h2 className="text-2xl font-black">{CHIRO.contactUsTitle}</h2>
         <p className="mt-4 leading-relaxed text-white/90">{CHIRO.mission}</p>
         <p className="mt-4 leading-relaxed text-white/90">{CHIRO.bookCta}</p>
@@ -58,7 +58,7 @@ export function ChiropracticAssociatesSection({ chooseTitleAs = "h2" }: Props) {
       <div className="border border-[#d8c061] bg-[#fff7d7] p-6 text-center shadow-sm">
         <p className="font-bold text-[#5a4a15]">{CHIRO.stretchP1}</p>
         <p className="mt-2 text-[#5a4a15]">{CHIRO.stretchP2}</p>
-        <p className="mt-4 text-lg font-black uppercase tracking-wide text-[#015949]">
+        <p className="mt-4 text-lg font-black uppercase tracking-wide text-[#c0392b]">
           <strong>{CHIRO.stretchCallPart1}</strong> <strong>{CHIRO.stretchCallPart2}</strong>
         </p>
       </div>
@@ -68,7 +68,7 @@ export function ChiropracticAssociatesSection({ chooseTitleAs = "h2" }: Props) {
           <Link
             key={card.title}
             href="/chiropractic"
-            className="flex flex-col items-center justify-center bg-[#015949] px-4 py-10 text-center text-lg font-black text-white shadow-md hover:bg-[#0b7a64]"
+            className="flex flex-col items-center justify-center bg-[#c0392b] px-4 py-10 text-center text-lg font-black text-white shadow-md hover:bg-[#962d22]"
           >
             {card.title}
           </Link>
@@ -76,24 +76,24 @@ export function ChiropracticAssociatesSection({ chooseTitleAs = "h2" }: Props) {
       </div>
 
       <div>
-        <h2 className="text-2xl font-black text-[#013a30]">{CHIRO.betterTitle}</h2>
+        <h2 className="text-2xl font-black text-[#4a1515]">{CHIRO.betterTitle}</h2>
         <div className="mt-8 grid gap-8 md:grid-cols-2">
           <div className="bg-stone-50 p-6 ring-1 ring-stone-200">
-            <h3 className="text-lg font-black text-[#013a30]">{CHIRO.teamHelpTitle}</h3>
+            <h3 className="text-lg font-black text-[#4a1515]">{CHIRO.teamHelpTitle}</h3>
             <p className="mt-3 leading-relaxed text-stone-700">{CHIRO.teamHelpBody}</p>
           </div>
           <div className="bg-stone-50 p-6 ring-1 ring-stone-200">
-            <h3 className="text-lg font-black text-[#013a30]">{CHIRO.qualityTitle}</h3>
+            <h3 className="text-lg font-black text-[#4a1515]">{CHIRO.qualityTitle}</h3>
             <p className="mt-3 leading-relaxed text-stone-700">{CHIRO.qualityBody}</p>
           </div>
         </div>
         <div className="mt-8 grid gap-6 md:grid-cols-2">
-          <div className="bg-white p-6 shadow ring-1 ring-[#015949]/15">
-            <h3 className="text-base font-black uppercase tracking-wide text-[#013a30]">{CHIRO.mainOfficeTitle}</h3>
+          <div className="bg-white p-6 shadow ring-1 ring-[#c0392b]/15">
+            <h3 className="text-base font-black uppercase tracking-wide text-[#4a1515]">{CHIRO.mainOfficeTitle}</h3>
             <p className="mt-3 leading-relaxed text-stone-700">{CHIRO.mainOfficeBody}</p>
           </div>
-          <div className="bg-white p-6 shadow ring-1 ring-[#015949]/15">
-            <h3 className="text-base font-black uppercase tracking-wide text-[#013a30]">{CHIRO.secondLocationTitle}</h3>
+          <div className="bg-white p-6 shadow ring-1 ring-[#c0392b]/15">
+            <h3 className="text-base font-black uppercase tracking-wide text-[#4a1515]">{CHIRO.secondLocationTitle}</h3>
             <p className="mt-3 leading-relaxed text-stone-700">{CHIRO.secondLocationBody}</p>
           </div>
         </div>

@@ -199,7 +199,7 @@ export function PatientProfileBody({ patientId, getIdToken, isSuperadmin, compac
             <div>
               <dt className="text-xs text-slate-500">Phone</dt>
               <dd>
-                <a href={`tel:${patient.phone}`} className="font-medium text-[#015949]">
+                <a href={`tel:${patient.phone}`} className="font-medium text-[#c0392b]">
                   {patient.phone}
                 </a>
               </dd>

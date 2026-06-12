@@ -108,7 +108,7 @@ export function PatientCsvImportModal({ open, getIdToken, onDismiss, onBusy }: P
           <p className="text-sm">
             <button
               type="button"
-              className="font-semibold text-[#015949] underline"
+              className="font-semibold text-[#c0392b] underline"
               onClick={async () => {
                 const token = await getIdToken();
                 if (!token) return;

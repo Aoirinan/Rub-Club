@@ -177,7 +177,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
               href={livePath}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-semibold text-[#015949] underline"
+              className="text-sm font-semibold text-[#c0392b] underline"
             >
               View live â†—
             </a>
@@ -227,7 +227,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
                 href={livePath}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-semibold text-[#015949] underline"
+                className="text-xs font-semibold text-[#c0392b] underline"
               >
                 Open â†—
               </a>

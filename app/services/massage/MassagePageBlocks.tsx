@@ -32,9 +32,9 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
   switch (id) {
     case "intro":
       return (
-        <section className="grid gap-10 border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="grid gap-10 border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-5">
-            <h2 className="text-3xl font-black text-[#013a30]">{MASSAGE.stressTitle}</h2>
+            <h2 className="text-3xl font-black text-[#4a1515]">{MASSAGE.stressTitle}</h2>
             {data.introParagraphs.map((p) => (
               <p
                 key={p.slice(0, 40)}
@@ -56,8 +56,8 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
       );
     case "services":
       return (
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#013a30]">Services we offer</h2>
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-2xl font-black text-[#4a1515]">Services we offer</h2>
           {data.serviceLines.length > 0 ? (
             <div className="mt-6 space-y-4 text-sm leading-relaxed text-stone-700">
               {data.serviceLines.map((line) => (
@@ -71,7 +71,7 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
             <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {SERVICES.map((s) => (
                 <article key={s.name} className="border border-stone-200 bg-stone-50 p-5 shadow-sm">
-                  <h3 className="text-lg font-black text-[#013a30]">{s.name}</h3>
+                  <h3 className="text-lg font-black text-[#4a1515]">{s.name}</h3>
                   <p className="mt-3 text-sm leading-relaxed text-stone-700">{s.body}</p>
                 </article>
               ))}
@@ -79,7 +79,7 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
           )}
           <p className="mt-6 text-sm leading-relaxed text-stone-700">
             Need more than soft-tissue work?{" "}
-            <Link href="/services/chiropractic" className="font-bold text-[#015949] underline">
+            <Link href="/services/chiropractic" className="font-bold text-[#c0392b] underline">
               Explore our chiropractic care
             </Link>{" "}
             â€” our massage and chiropractic teams coordinate care under one roof.
@@ -88,8 +88,8 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
       );
     case "when_to":
       return (
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#013a30]">When to get a massage</h2>
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-2xl font-black text-[#4a1515]">When to get a massage</h2>
           <p className="mt-4 max-w-3xl leading-relaxed text-stone-700">{MASSAGE.whenBody}</p>
         </section>
       );
@@ -104,7 +104,7 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
             <>
               For insurance coordination, personal injury case management, and other Paris office
               roles, see{" "}
-              <Link href="/locations/paris/staff" className="font-bold text-[#015949] underline">
+              <Link href="/locations/paris/staff" className="font-bold text-[#c0392b] underline">
                 Meet our Paris office team
               </Link>
               .
@@ -114,15 +114,15 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
       );
     case "visit":
       return (
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#013a30]">Visit us in Paris</h2>
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-2xl font-black text-[#4a1515]">Visit us in Paris</h2>
           <p className="mt-3 leading-relaxed text-stone-700">
             {data.paris.streetAddress} Â· Paris, TX
           </p>
           <p className="mt-2 text-stone-700">
             Massage desk:{" "}
             <a
-              className="font-bold text-[#015949] underline"
+              className="font-bold text-[#c0392b] underline"
               href={telHref(data.paris.phoneSecondary ?? data.paris.phonePrimary)}
             >
               {data.paris.phoneSecondary ?? data.paris.phonePrimary}
@@ -132,13 +132,13 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
             <BookingCta label="Book massage" query="service=massage&location=paris" variant="teal" />
             <Link
               href="/services/massage/prices"
-              className="focus-ring border-2 border-[#015949] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#015949] hover:bg-[#25455e]/5"
+              className="focus-ring border-2 border-[#c0392b] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#c0392b] hover:bg-[#4a1515]/5"
             >
               View prices
             </Link>
             <Link
               href="/patient-forms"
-              className="focus-ring border-2 border-[#015949] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#015949] hover:bg-[#25455e]/5"
+              className="focus-ring border-2 border-[#c0392b] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#c0392b] hover:bg-[#4a1515]/5"
             >
               New-client form
             </Link>

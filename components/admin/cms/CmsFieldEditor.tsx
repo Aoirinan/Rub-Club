@@ -58,7 +58,7 @@ export function CmsFieldEditor({ field, busy, onSave, onReset, compact }: Props)
             <label className="flex items-center gap-2 text-sm text-slate-800">
               <input
                 type="checkbox"
-                className="h-4 w-4 rounded border-slate-300 text-[#015949] focus:ring-[#015949]"
+                className="h-4 w-4 rounded border-slate-300 text-[#c0392b] focus:ring-[#c0392b]"
                 checked={isTopPhoneBarEnabled(draft)}
                 onChange={(e) => setDraft(e.target.checked ? "true" : "false")}
               />
@@ -124,7 +124,7 @@ export function CmsFieldEditor({ field, busy, onSave, onReset, compact }: Props)
               <button
                 type="button"
                 disabled={busy}
-                className="rounded-lg bg-[#015949] px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+                className="rounded-lg bg-[#c0392b] px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
                 onClick={() => void onSave(field.id, draft)}
               >
                 Save

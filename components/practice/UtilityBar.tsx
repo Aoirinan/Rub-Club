@@ -1,7 +1,7 @@
 import { telHref } from "@/lib/constants";
 import type { PracticeUtilityBar } from "@/lib/practice-pages-shared";
 
-function SocialIcon({ platform }: { platform: string }) {
+export function SocialIcon({ platform }: { platform: string }) {
   const p = platform.trim().toLowerCase();
   if (p === "facebook") {
     return (

@@ -127,7 +127,7 @@ function NavItemEditor({
         ))}
         <button
           type="button"
-          className="text-xs font-semibold text-[#015949] underline"
+          className="text-xs font-semibold text-[#c0392b] underline"
           onClick={() =>
             onChange({
               ...item,
@@ -186,7 +186,7 @@ export function BusinessNavigationEditor({
             type="button"
             onClick={() => setActiveBusiness(key)}
             className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
-              activeBusiness === key ? "bg-[#015949] text-white" : "bg-slate-100 text-slate-800"
+              activeBusiness === key ? "bg-[#c0392b] text-white" : "bg-slate-100 text-slate-800"
             }`}
           >
             {BUSINESS_LABELS[key]}
@@ -225,7 +225,7 @@ export function BusinessNavigationEditor({
         <button
           type="button"
           disabled={saving}
-          className="rounded-lg bg-[#015949] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+          className="rounded-lg bg-[#c0392b] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
           onClick={onSave}
         >
           {saving ? "Savingâ€¦" : "Save business navigation"}

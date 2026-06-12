@@ -5,7 +5,7 @@ export function SsMarkdownBody({ body }: { body: string }) {
       {body.split("\n\n").map((block, i) => {
         if (block.startsWith("## ")) {
           return (
-            <h2 key={i} className="mt-8 text-xl font-black text-[#013a30] first:mt-0">
+            <h2 key={i} className="mt-8 text-xl font-black text-[#4a1515] first:mt-0">
               {block.replace("## ", "")}
             </h2>
           );

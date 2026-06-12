@@ -46,7 +46,7 @@ export function AboutWelcome({
             {phone.trim() && data.phoneCtaLabel.trim() ? (
               <a
                 href={telHref(phone)}
-                className="focus-ring inline-flex flex-col items-center gap-0.5 bg-[#25455e] px-5 py-3 text-center text-sm font-bold uppercase tracking-wide text-white hover:bg-[#1b3649]"
+                className="focus-ring inline-flex flex-col items-center gap-0.5 bg-[var(--pp-cta)] px-5 py-3 text-center text-sm font-bold uppercase tracking-wide text-white hover:bg-[var(--pp-cta-hover)]"
               >
                 <span>{data.phoneCtaLabel}</span>
                 <span className="text-sm font-bold normal-case tracking-normal">{phone}</span>
@@ -55,7 +55,7 @@ export function AboutWelcome({
             {data.ctaLabel.trim() && data.ctaUrl.trim() ? (
               <Link
                 href={data.ctaUrl}
-                className="focus-ring inline-flex bg-[#25455e] px-5 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-[#1b3649]"
+                className="focus-ring inline-flex bg-[var(--pp-cta)] px-5 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-[var(--pp-cta-hover)]"
               >
                 {data.ctaLabel}
               </Link>

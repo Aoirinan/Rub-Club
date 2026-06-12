@@ -55,7 +55,7 @@ function HeaderPreview({ colors }: { colors: HeaderBandColors }) {
         Phone bar preview
       </div>
       <div
-        className="px-3 py-3 text-center text-[10px] font-semibold text-[#013a30]"
+        className="px-3 py-3 text-center text-[10px] font-semibold text-[#4a1515]"
         style={{ backgroundColor: colors.logoRowBg }}
       >
         Logo row preview
@@ -139,7 +139,7 @@ export function HeaderColorsEditor({
         type="button"
         disabled={saving}
         onClick={onSave}
-        className="rounded-lg bg-[#015949] px-4 py-2 text-sm font-bold text-white hover:bg-[#0d524f] disabled:opacity-60"
+        className="rounded-lg bg-[#c0392b] px-4 py-2 text-sm font-bold text-white hover:bg-[#0d524f] disabled:opacity-60"
       >
         {saving ? "Savingâ€¦" : "Save header colors"}
       </button>

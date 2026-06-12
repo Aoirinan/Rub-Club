@@ -13,9 +13,9 @@ export async function TestimonialVideosSection() {
   return (
     <section
       aria-labelledby="patient-videos"
-      className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10"
+      className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10"
     >
-      <h2 id="patient-videos" className="text-3xl font-black text-[#013a30]">
+      <h2 id="patient-videos" className="text-3xl font-black text-[#4a1515]">
         What our patients say
       </h2>
       <p className="mt-2 text-sm text-stone-600">Video testimonials from real visits.</p>
@@ -37,7 +37,7 @@ export async function TestimonialVideosSection() {
               </video>
             </div>
             <div className="space-y-1 p-4">
-              {v.title ? <h3 className="font-bold text-[#013a30]">{v.title}</h3> : null}
+              {v.title ? <h3 className="font-bold text-[#4a1515]">{v.title}</h3> : null}
               {v.label ? <p className="text-xs text-stone-600">{v.label}</p> : null}
             </div>
           </article>

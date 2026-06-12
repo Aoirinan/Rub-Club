@@ -141,7 +141,7 @@ export function PatientLookupPanel({ open, getIdToken, isSuperadmin, onClose }: 
             />
             <Link
               href={`/admin/patients/${selectedId}`}
-              className="mt-4 inline-block text-sm font-semibold text-[#015949] underline"
+              className="mt-4 inline-block text-sm font-semibold text-[#c0392b] underline"
             >
               Open full profile
             </Link>

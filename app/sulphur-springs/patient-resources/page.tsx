@@ -40,11 +40,11 @@ export default async function PatientResourcesPage() {
         title="Patient Resources"
       />
       <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
+        <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
           <div className="prose prose-stone max-w-none">
             <p className="leading-relaxed text-stone-700">{intro}</p>
 
-            <h2 className="mt-8 text-xl font-black text-[#013a30]">
+            <h2 className="mt-8 text-xl font-black text-[#0c2d3a]">
               About Chiropractic
             </h2>
             <p className="leading-relaxed text-stone-700">
@@ -55,7 +55,7 @@ export default async function PatientResourcesPage() {
                 <li key={article.slug}>
                   <Link
                     href={`/sulphur-springs/${article.slug}`}
-                    className="font-bold text-[#015949] underline hover:text-[#013a30]"
+                    className="font-bold text-[#2980b9] underline hover:text-[#0c2d3a]"
                   >
                     {article.title}
                   </Link>
@@ -63,7 +63,7 @@ export default async function PatientResourcesPage() {
               ))}
             </ul>
 
-            <h2 className="mt-8 text-xl font-black text-[#013a30]">
+            <h2 className="mt-8 text-xl font-black text-[#0c2d3a]">
               Helpful Links
             </h2>
             <ul className="list-disc space-y-2 pl-6">
@@ -73,7 +73,7 @@ export default async function PatientResourcesPage() {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-bold text-[#015949] underline hover:text-[#013a30]"
+                    className="font-bold text-[#2980b9] underline hover:text-[#0c2d3a]"
                   >
                     {link.label}
                   </a>
@@ -82,7 +82,7 @@ export default async function PatientResourcesPage() {
             </ul>
           </div>
         </section>
-        <LocationHoursSection location={ss} hours={ssHours} accent="#015949" />
+        <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
         <ScheduleCtaCard
           title="Have questions?"
           body="Contact our Sulphur Springs office â€” we're happy to help."

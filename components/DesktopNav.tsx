@@ -74,7 +74,7 @@ function ContactPanel({
 }) {
   return (
     <div className="absolute left-1/2 top-full z-50 w-[460px] -translate-x-1/2 pt-1 lg:w-[540px]">
-      <div className="bg-[#25455e] p-5 shadow-xl">
+      <div className="bg-[var(--header-nav-hover)] p-5 shadow-xl">
         <div className="grid grid-cols-2 gap-x-6">
           {item.clinics!.map((clinic) => (
             <div key={clinic.name} className="text-white">
@@ -148,7 +148,7 @@ function StandardPanel({
           <Link
             key={c.href}
             href={c.href}
-            className="block px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-[#4a5a58] hover:bg-stone-100 hover:text-[#25455e]"
+            className="block px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-[#4a5a58] hover:bg-stone-100 hover:text-[var(--header-nav-hover)]"
             onClick={onClose}
           >
             {c.label}
@@ -169,7 +169,7 @@ function MegaPanel({
   const groups = groupChildren(item.children!);
   return (
     <div className="absolute left-1/2 top-full z-50 w-[600px] -translate-x-1/2 pt-1 lg:w-[720px]">
-      <div className="bg-[#25455e] p-5 shadow-xl">
+      <div className="bg-[var(--header-nav-hover)] p-5 shadow-xl">
         <div className="mb-3 border-b border-white/20 pb-3">
           <Link
             href={item.href}
@@ -271,7 +271,7 @@ export function DesktopNav({
               {hasChildren ? (
                 <button
                   type="button"
-                  className={`focus-ring inline-flex items-center gap-1 ${itemPad} text-xs font-bold uppercase tracking-wide text-[#25455e] hover:bg-[#25455e] hover:text-white xl:px-5 xl:text-sm`}
+                  className={`focus-ring inline-flex items-center gap-1 ${itemPad} text-xs font-bold uppercase tracking-wide text-[var(--header-nav-hover)] hover:bg-[var(--header-nav-hover)] hover:text-white xl:px-5 xl:text-sm`}
                   onClick={() => setOpenIdx(isOpen ? null : idx)}
                   aria-expanded={isOpen}
                 >
@@ -298,7 +298,7 @@ export function DesktopNav({
                   className={`focus-ring block shrink-0 font-black uppercase tracking-wide transition-all duration-300 ease-out motion-reduce:transition-none ${
                     giftCardExpanded
                       ? GIFT_CARD_DESKTOP_EXPANDED
-                      : `${compact ? "px-4 py-1.5" : "px-4 py-2"} text-xs text-[#25455e] hover:bg-[#25455e] hover:text-white xl:px-5 xl:text-sm`
+                      : `${compact ? "px-4 py-1.5" : "px-4 py-2"} text-xs text-[var(--header-nav-hover)] hover:bg-[var(--header-nav-hover)] hover:text-white xl:px-5 xl:text-sm`
                   }`}
                   href={item.href}
                   target="_blank"
@@ -308,7 +308,7 @@ export function DesktopNav({
                 </a>
               ) : item.external ? (
                 <a
-                  className={`focus-ring block ${itemPad} text-xs font-bold uppercase tracking-wide text-[#25455e] hover:bg-[#25455e] hover:text-white xl:px-5 xl:text-sm`}
+                  className={`focus-ring block ${itemPad} text-xs font-bold uppercase tracking-wide text-[var(--header-nav-hover)] hover:bg-[var(--header-nav-hover)] hover:text-white xl:px-5 xl:text-sm`}
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -317,7 +317,7 @@ export function DesktopNav({
                 </a>
               ) : (
                 <Link
-                  className={`focus-ring block ${itemPad} text-xs font-bold uppercase tracking-wide text-[#25455e] hover:bg-[#25455e] hover:text-white xl:px-5 xl:text-sm`}
+                  className={`focus-ring block ${itemPad} text-xs font-bold uppercase tracking-wide text-[var(--header-nav-hover)] hover:bg-[var(--header-nav-hover)] hover:text-white xl:px-5 xl:text-sm`}
                   href={item.href}
                 >
                   {item.label}
@@ -336,7 +336,7 @@ export function DesktopNav({
         {showBookCta ? (
           <BookingCta
             label="Book Now"
-            className="focus-ring ml-2 flex items-center self-stretch bg-[#25455e] px-5 text-xs font-black uppercase tracking-wide text-white shadow-sm transition-all duration-300 hover:bg-[#1b3649] xl:text-sm"
+            className="focus-ring ml-2 flex items-center self-stretch bg-[var(--header-nav-hover)] px-5 text-xs font-black uppercase tracking-wide text-white shadow-sm transition-all duration-300 brightness-100 hover:brightness-90 xl:text-sm"
           />
         ) : null}
       </div>

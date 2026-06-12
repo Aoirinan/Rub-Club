@@ -34,7 +34,7 @@ export function SalesBannerBar({ payload }: { payload: SalesBannerPayload }) {
     <div
       role="region"
       aria-label="Announcement"
-      className="relative z-30 border-b border-white/20 bg-[#015949] px-4 py-3 text-center text-sm text-white shadow-md"
+      className="relative z-30 border-b border-white/20 bg-[#c0392b] px-4 py-3 text-center text-sm text-white shadow-md"
     >
       <div
         className="mx-auto max-w-5xl pr-10 [&_a]:font-bold [&_a]:text-[#f19f1f] [&_a]:underline"

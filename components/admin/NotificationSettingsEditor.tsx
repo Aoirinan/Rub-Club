@@ -167,7 +167,7 @@ export function NotificationSettingsEditor({ getIdToken }: Props) {
             key={c}
             type="button"
             onClick={() => setChannel(c)}
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${channel === c ? "bg-[#015949] text-white" : "bg-slate-100 text-slate-700"}`}
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${channel === c ? "bg-[#c0392b] text-white" : "bg-slate-100 text-slate-700"}`}
           >
             {c === "sms" ? "Text" : "Email"}
           </button>

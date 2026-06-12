@@ -100,12 +100,12 @@ export default async function ChiropracticServicePage() {
           }),
         ]}
       />
-      <div style={practiceThemeStyle("paris-chiro")}>
+      <div style={practiceThemeStyle("paris-chiro", page.theme)}>
         <UtilityBar data={page.utilityBar} />
         <Breadcrumbs
           items={serviceBreadcrumbs({ name: "Chiropractic", url: "/services/chiropractic" })}
         />
-        <PracticeHero data={page.hero} />
+        <PracticeHero data={page.hero} utility={page.utilityBar} />
         <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
           <QuickActionsRow data={page.quickActions} />
           <ServicesGrid data={page.servicesGrid} />

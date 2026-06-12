@@ -61,17 +61,17 @@ export default function AdminLoginPage() {
   return (
     <div className="bg-[#f4f2ea]">
       <div className="mx-auto max-w-md space-y-6 px-4 py-16">
-      <div className="border-t-4 border-[#015949] bg-white p-6 text-center shadow-md">
-        <p className="text-sm font-black uppercase tracking-[0.22em] text-[#015949]">Staff Login</p>
-        <h1 className="mt-2 text-2xl font-black text-[#013a30]">Staff sign-in</h1>
+      <div className="border-t-4 border-[#c0392b] bg-white p-6 text-center shadow-md">
+        <p className="text-sm font-black uppercase tracking-[0.22em] text-[#c0392b]">Staff Login</p>
+        <h1 className="mt-2 text-2xl font-black text-[#4a1515]">Staff sign-in</h1>
         <p className="mt-2 text-sm text-stone-700">
           Use the email and password your administrator created for you.
         </p>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-4 border-t-4 border-[#015949] bg-white p-6 shadow-md">
+      <form onSubmit={onSubmit} className="space-y-4 border-t-4 border-[#c0392b] bg-white p-6 shadow-md">
         <label className="block space-y-1 text-sm">
-          <span className="font-bold text-[#013a30]">Email</span>
+          <span className="font-bold text-[#4a1515]">Email</span>
           <input
             className="w-full border border-stone-300 px-3 py-2"
             value={email}
@@ -80,7 +80,7 @@ export default function AdminLoginPage() {
           />
         </label>
         <label className="block space-y-1 text-sm">
-          <span className="font-bold text-[#013a30]">Password</span>
+          <span className="font-bold text-[#4a1515]">Password</span>
           <input
             type="password"
             className="w-full border border-stone-300 px-3 py-2"
@@ -93,7 +93,7 @@ export default function AdminLoginPage() {
         <button
           type="submit"
           disabled={busy}
-          className="w-full bg-[#015949] py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#0b7a64] disabled:opacity-50"
+          className="w-full bg-[#c0392b] py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#962d22] disabled:opacity-50"
         >
           {busy ? "Signing inâ€¦" : "Sign in"}
         </button>

@@ -228,7 +228,7 @@ function PatientsListContent() {
                     <td className="px-4 py-3 hidden md:table-cell">{formatDate(p.nextAppointmentDateMs)}</td>
                     {isManagerPlus ? (
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <Link href={`/admin/patients/${p.id}`} className="mr-2 text-xs font-semibold text-[#015949]">
+                        <Link href={`/admin/patients/${p.id}`} className="mr-2 text-xs font-semibold text-[#c0392b]">
                           View
                         </Link>
                         <button
@@ -241,7 +241,7 @@ function PatientsListContent() {
                       </td>
                     ) : (
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <Link href={`/admin/patients/${p.id}`} className="text-xs font-semibold text-[#015949]">
+                        <Link href={`/admin/patients/${p.id}`} className="text-xs font-semibold text-[#c0392b]">
                           View
                         </Link>
                       </td>

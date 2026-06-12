@@ -34,23 +34,23 @@ export default function TermsPage() {
       <div className="mx-auto max-w-3xl space-y-6 px-4 pb-16">
         <p className="text-xs text-stone-600">Effective {LEGAL_EFFECTIVE_DATE}</p>
 
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-8">
-          <h2 className="text-lg font-black text-[#013a30]">Not medical advice or emergency care</h2>
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-8">
+          <h2 className="text-lg font-black text-[#4a1515]">Not medical advice or emergency care</h2>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-stone-700">
             <li>
               Content on this website is for general information only and is not a substitute for
               professional medical advice, diagnosis, or treatment.
             </li>
             <li>
-              <strong className="text-[#013a30]">Do not use this site for emergencies.</strong> Call
+              <strong className="text-[#4a1515]">Do not use this site for emergencies.</strong> Call
               911 or go to the nearest emergency room.
             </li>
             <li>Always seek the advice of your physician or qualified provider with questions about a medical condition.</li>
           </ul>
         </section>
 
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-8">
-          <h2 className="text-lg font-black text-[#013a30]">Appointments and forms</h2>
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-8">
+          <h2 className="text-lg font-black text-[#4a1515]">Appointments and forms</h2>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-stone-700">
             <li>
               Appointment requests are subject to availability and confirmation by our office. We may
@@ -63,11 +63,11 @@ export default function TermsPage() {
             </li>
             <li>
               Online intake and patient forms are described in our{" "}
-              <Link className="font-bold text-[#015949] underline" href={PRIVACY_PRACTICES_PATH}>
+              <Link className="font-bold text-[#c0392b] underline" href={PRIVACY_PRACTICES_PATH}>
                 Notice of Privacy Practices
               </Link>{" "}
               and{" "}
-              <Link className="font-bold text-[#015949] underline" href={WEBSITE_PRIVACY_PATH}>
+              <Link className="font-bold text-[#c0392b] underline" href={WEBSITE_PRIVACY_PATH}>
                 website privacy policy
               </Link>
               .
@@ -75,8 +75,8 @@ export default function TermsPage() {
           </ul>
         </section>
 
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-8">
-          <h2 className="text-lg font-black text-[#013a30]">Acceptable use</h2>
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-8">
+          <h2 className="text-lg font-black text-[#4a1515]">Acceptable use</h2>
           <p className="mt-3 text-sm leading-relaxed text-stone-700">
             You may not use this website to transmit unlawful, harmful, or abusive material; attempt
             to gain unauthorized access to our systems; interfere with the site&apos;s operation; or
@@ -84,8 +84,8 @@ export default function TermsPage() {
           </p>
         </section>
 
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-8">
-          <h2 className="text-lg font-black text-[#013a30]">Intellectual property</h2>
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-8">
+          <h2 className="text-lg font-black text-[#4a1515]">Intellectual property</h2>
           <p className="mt-3 text-sm leading-relaxed text-stone-700">
             Text, images, logos, and design on this site are owned by or licensed to{" "}
             {LEGAL_PRACTICE_NAME} unless otherwise noted. You may view and print pages for personal,
@@ -95,7 +95,7 @@ export default function TermsPage() {
         </section>
 
         <section className="border-t-4 border-stone-300 bg-stone-50 p-6 shadow-md sm:p-8">
-          <h2 className="text-lg font-black text-[#013a30]">Disclaimer of warranties</h2>
+          <h2 className="text-lg font-black text-[#4a1515]">Disclaimer of warranties</h2>
           <p className="mt-3 text-sm leading-relaxed text-stone-700">
             This website is provided &ldquo;as is&rdquo; and &ldquo;as available.&rdquo; To the fullest
             extent permitted by law, we disclaim warranties of merchantability, fitness for a
@@ -105,7 +105,7 @@ export default function TermsPage() {
         </section>
 
         <section className="border-t-4 border-stone-300 bg-stone-50 p-6 shadow-md sm:p-8">
-          <h2 className="text-lg font-black text-[#013a30]">Limitation of liability</h2>
+          <h2 className="text-lg font-black text-[#4a1515]">Limitation of liability</h2>
           <p className="mt-3 text-sm leading-relaxed text-stone-700">
             To the fullest extent permitted by Texas law, {LEGAL_PRACTICE_NAME} and its owners,
             employees, and agents will not be liable for any indirect, incidental, special, or
@@ -115,8 +115,8 @@ export default function TermsPage() {
           </p>
         </section>
 
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-8">
-          <h2 className="text-lg font-black text-[#013a30]">Links to other sites</h2>
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-8">
+          <h2 className="text-lg font-black text-[#4a1515]">Links to other sites</h2>
           <p className="mt-3 text-sm leading-relaxed text-stone-700">
             Links to third-party websites (for example, gift cards, maps, or social media) are
             provided for convenience. We do not control and are not responsible for those sites or
@@ -124,8 +124,8 @@ export default function TermsPage() {
           </p>
         </section>
 
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-8">
-          <h2 className="text-lg font-black text-[#013a30]">Governing law</h2>
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-8">
+          <h2 className="text-lg font-black text-[#4a1515]">Governing law</h2>
           <p className="mt-3 text-sm leading-relaxed text-stone-700">
             These terms are governed by the laws of the State of Texas, without regard to conflict-of-law
             rules. Exclusive venue for disputes relating to this website shall be in Lamar County,
@@ -133,8 +133,8 @@ export default function TermsPage() {
           </p>
         </section>
 
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-8">
-          <h2 className="text-lg font-black text-[#013a30]">Changes</h2>
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-8">
+          <h2 className="text-lg font-black text-[#4a1515]">Changes</h2>
           <p className="mt-3 text-sm leading-relaxed text-stone-700">
             We may revise these terms by posting an updated effective date. Your continued use of the
             website after changes constitutes acceptance of the revised terms.
@@ -144,7 +144,7 @@ export default function TermsPage() {
         <section className="rounded border border-stone-200 bg-stone-50 p-4 text-sm text-stone-700">
           <p>
             Questions?{" "}
-            <Link className="font-bold text-[#015949] underline" href="/contact">
+            <Link className="font-bold text-[#c0392b] underline" href="/contact">
               Contact us
             </Link>
             .

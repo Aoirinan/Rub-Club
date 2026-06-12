@@ -35,7 +35,7 @@ export default async function MassagePricesPage() {
       />
       <PageHero eyebrow="The Rub Club Â· Paris, TX" title="Massage Prices" />
       <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
           <div className="prose prose-stone max-w-none">
             <SsMarkdownBody body={body} />
           </div>

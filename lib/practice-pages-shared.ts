@@ -144,8 +144,35 @@ export type PracticeStickyBarSection = {
   bookUrl: string;
 };
 
+/**
+ * CMS-editable theme colors for a practice page. Empty string = use the
+ * built-in default for the location (red for Paris, blue for Sulphur Springs).
+ * Hero panel stops may be 8-digit hex (alpha).
+ */
+export type PracticeThemeColors = {
+  accent: string;
+  accentHover: string;
+  heading: string;
+  heroPanelFrom: string;
+  heroPanelVia: string;
+  ctaBg: string;
+  ctaHover: string;
+};
+
+export const EMPTY_PRACTICE_THEME: PracticeThemeColors = {
+  accent: "",
+  accentHover: "",
+  heading: "",
+  heroPanelFrom: "",
+  heroPanelVia: "",
+  ctaBg: "",
+  ctaHover: "",
+};
+
 export type PracticePageDoc = {
   id: PracticeLocationId;
+  /** Color overrides; empty values fall back to the location defaults. */
+  theme: PracticeThemeColors;
   utilityBar: PracticeUtilityBar;
   hero: PracticeHeroSection;
   quickActions: PracticeQuickActionsSection;
@@ -416,10 +443,32 @@ function mergeStickyBar(raw: unknown, d: PracticeStickyBarSection): PracticeStic
   };
 }
 
+const THEME_HEX_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
+
+function themeHex(v: unknown, fallback: string): string {
+  return typeof v === "string" && (v.trim() === "" || THEME_HEX_RE.test(v.trim()))
+    ? v.trim().toLowerCase()
+    : fallback;
+}
+
+function mergeTheme(raw: unknown, d: PracticeThemeColors): PracticeThemeColors {
+  if (!isRecord(raw)) return d;
+  return {
+    accent: themeHex(raw.accent, d.accent),
+    accentHover: themeHex(raw.accentHover, d.accentHover),
+    heading: themeHex(raw.heading, d.heading),
+    heroPanelFrom: themeHex(raw.heroPanelFrom, d.heroPanelFrom),
+    heroPanelVia: themeHex(raw.heroPanelVia, d.heroPanelVia),
+    ctaBg: themeHex(raw.ctaBg, d.ctaBg),
+    ctaHover: themeHex(raw.ctaHover, d.ctaHover),
+  };
+}
+
 export function mergePracticePageDoc(raw: unknown, defaults: PracticePageDoc): PracticePageDoc {
   if (!isRecord(raw)) return defaults;
   return {
     id: defaults.id,
+    theme: mergeTheme(raw.theme, defaults.theme),
     utilityBar: mergeUtilityBar(raw.utilityBar, defaults.utilityBar),
     hero: mergeHero(raw.hero, defaults.hero),
     quickActions: mergeQuickActions(raw.quickActions, defaults.quickActions),

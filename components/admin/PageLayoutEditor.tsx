@@ -140,7 +140,7 @@ export function PageLayoutEditor({ getIdToken }: Props) {
               href={activePage.path}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-semibold text-[#015949] underline"
+              className="text-sm font-semibold text-[#c0392b] underline"
             >
               Preview live page â†—
             </a>
@@ -170,7 +170,7 @@ export function PageLayoutEditor({ getIdToken }: Props) {
               }}
               onDragEnd={() => setDragIdx(null)}
               className={`flex cursor-grab items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm active:cursor-grabbing ${
-                dragIdx === idx ? "ring-2 ring-[#015949]" : ""
+                dragIdx === idx ? "ring-2 ring-[#c0392b]" : ""
               }`}
             >
               <span className="text-slate-400" aria-hidden>

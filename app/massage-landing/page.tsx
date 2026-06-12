@@ -20,7 +20,7 @@ export default function MassageLandingPage() {
       />
       <div className="mx-auto max-w-3xl space-y-8 px-4 pb-16">
         <section className="rounded-2xl border border-stone-200 bg-white p-8 shadow-md">
-          <h2 className="text-xl font-black text-[#013a30]">Book your next session</h2>
+          <h2 className="text-xl font-black text-[#4a1515]">Book your next session</h2>
           <p className="mt-3 text-sm leading-relaxed text-stone-700">
             Stretch sessions are by appointment only. Walk-ins are welcome for massage when we have
             availability â€” call ahead if you are unsure.
@@ -29,11 +29,11 @@ export default function MassageLandingPage() {
             <BookingCta label="Book Now" variant="teal" />
             <Link
               href="/services/massage"
-              className="focus-ring inline-flex border-2 border-[#015949] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#015949] hover:bg-[#25455e]/5"
+              className="focus-ring inline-flex border-2 border-[#c0392b] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#c0392b] hover:bg-[#4a1515]/5"
             >
               Massage services
             </Link>
-            <Link href="/" className="focus-ring inline-flex text-sm font-bold text-[#015949] underline">
+            <Link href="/" className="focus-ring inline-flex text-sm font-bold text-[#c0392b] underline">
               Main site home
             </Link>
           </div>

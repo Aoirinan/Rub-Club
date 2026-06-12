@@ -15,6 +15,8 @@ import { HeaderThemeProvider, useHeaderCompact } from "@/components/HeaderThemeP
 import { SiteHeaderLogoRow } from "@/components/SiteHeaderLogoRow";
 import { MobileNav } from "@/components/MobileNav";
 import type { NavItem } from "@/components/DesktopNav";
+import { CHIRO_TREATMENT_OFFERINGS } from "@/lib/chiro-treatments";
+import { parisChiroServiceSlugForName } from "@/lib/paris-chiro-services";
 import type { HeaderBrandContent } from "@/lib/brand-logos";
 import type { HeaderColorConfig } from "@/lib/header-colors";
 import { useSiteBusinessContext } from "@/lib/use-site-business-context";
@@ -26,6 +28,18 @@ export function buildDefaultNavItems(
   sulphur: LocationInfo,
 ): NavItem[] {
   return [
+    {
+      href: "/services/chiropractic",
+      label: "Services",
+      mega: true,
+      children: CHIRO_TREATMENT_OFFERINGS.map((t) => {
+        const slug = parisChiroServiceSlugForName(t.name);
+        return {
+          href: slug ? `/services/chiropractic/${slug}` : "/services/chiropractic",
+          label: t.name,
+        };
+      }),
+    },
     {
       href: "/services/chiropractic",
       label: "Chiropractic",
@@ -120,7 +134,7 @@ function HeaderSocialIcons() {
   return (
     <div className="hidden shrink-0 flex-col items-end gap-2 text-sm sm:text-base lg:flex">
       <span
-        className={`font-bold text-[#013a30] transition-all duration-300 ease-out motion-reduce:transition-none ${
+        className={`font-bold text-[#4a1515] transition-all duration-300 ease-out motion-reduce:transition-none ${
           compact ? "sr-only" : ""
         }`}
       >
@@ -131,7 +145,7 @@ function HeaderSocialIcons() {
           href={FACEBOOK_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex shrink-0 text-[#013a30] transition-colors hover:text-[#015949] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#015949]"
+          className="inline-flex shrink-0 text-[#4a1515] transition-colors hover:text-[#c0392b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c0392b]"
           aria-label="Chiropractic Associates on Facebook (opens in a new tab)"
         >
           <svg
@@ -148,7 +162,7 @@ function HeaderSocialIcons() {
           href={INSTAGRAM_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex shrink-0 text-[#013a30] transition-colors hover:text-[#015949] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#015949]"
+          className="inline-flex shrink-0 text-[#4a1515] transition-colors hover:text-[#c0392b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c0392b]"
           aria-label="The Rub Club on Instagram (opens in a new tab)"
         >
           <svg
@@ -253,15 +267,15 @@ export function SiteHeaderClient({
         </div>
 
         <HeaderSocialIcons />
-
-        <MobileNav
-          items={navItems}
-          giftCardHref={giftCardHref}
-          paris={paris}
-          sulphur={sulphur}
-          businessContext={businessContext}
-        />
       </SiteHeaderLogoRow>
+
+      <MobileNav
+        items={navItems}
+        giftCardHref={giftCardHref}
+        paris={paris}
+        sulphur={sulphur}
+        businessContext={businessContext}
+      />
 
       <BusinessSubNav items={navItems} showBookCta />
     </HeaderThemeProvider>

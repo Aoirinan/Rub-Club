@@ -72,9 +72,9 @@ function ServiceCard({
   links: { label: string; href: string }[];
 }) {
   return (
-    <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-8">
-      <h2 className="text-xl font-black text-[#013a30]">
-        <Link href={href} className="hover:text-[#015949]">
+    <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-8">
+      <h2 className="text-xl font-black text-[#4a1515]">
+        <Link href={href} className="hover:text-[#c0392b]">
           {title}
         </Link>
       </h2>
@@ -84,7 +84,7 @@ function ServiceCard({
           <li key={l.href}>
             <Link
               href={l.href}
-              className="text-sm font-bold text-[#015949] underline hover:text-[#013a30]"
+              className="text-sm font-bold text-[#c0392b] underline hover:text-[#4a1515]"
             >
               {l.label}
             </Link>
@@ -93,7 +93,7 @@ function ServiceCard({
       </ul>
       <Link
         href={href}
-        className="focus-ring mt-6 inline-flex bg-[#25455e] px-5 py-2.5 text-sm font-black uppercase tracking-wide text-white hover:bg-[#1b3649]"
+        className="focus-ring mt-6 inline-flex bg-[#4a1515] px-5 py-2.5 text-sm font-black uppercase tracking-wide text-white hover:bg-[#341010]"
       >
         Learn more
       </Link>

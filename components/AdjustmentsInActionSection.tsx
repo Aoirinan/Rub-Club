@@ -25,9 +25,9 @@ export async function AdjustmentsInActionSection() {
   return (
     <section
       aria-labelledby="adjustments-action-heading"
-      className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10"
+      className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10"
     >
-      <h2 id="adjustments-action-heading" className="text-3xl font-black text-[#013a30]">
+      <h2 id="adjustments-action-heading" className="text-3xl font-black text-[#4a1515]">
         Adjustments in Action
       </h2>
       <p className="mt-2 max-w-2xl text-sm text-stone-600">
@@ -55,7 +55,7 @@ export async function AdjustmentsInActionSection() {
                 />
               </div>
               <figcaption className="space-y-1 p-3 text-xs">
-                {m.caption ? <p className="italic text-[#015949]">{m.caption}</p> : null}
+                {m.caption ? <p className="italic text-[#c0392b]">{m.caption}</p> : null}
                 <p className="font-semibold uppercase tracking-wide text-stone-500">
                   Adjustment by Dr. {doctorFull}
                 </p>

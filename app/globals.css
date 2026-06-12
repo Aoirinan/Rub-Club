@@ -15,19 +15,19 @@ body {
 
 ::selection {
   background: #f19f1f;
-  color: #013a30;
+  color: #4a1515;
 }
 
 @layer base {
   :focus-visible {
-    outline: 2px solid #015949;
+    outline: 2px solid #c0392b;
     outline-offset: 2px;
   }
 }
 
 @layer utilities {
   .focus-ring {
-    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#015949];
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c0392b];
   }
 }
 

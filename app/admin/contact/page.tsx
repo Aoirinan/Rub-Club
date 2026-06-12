@@ -124,7 +124,7 @@ function ContactInbox() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 text-center text-sm text-slate-600">
         <p>Sign in on the scheduler page first.</p>
-        <Link href="/admin/login" className="mt-4 inline-block font-semibold text-[#015949] underline">
+        <Link href="/admin/login" className="mt-4 inline-block font-semibold text-[#c0392b] underline">
           Staff sign in
         </Link>
       </div>
@@ -202,7 +202,7 @@ function ContactInbox() {
               type="button"
               onClick={() => setFilter(s)}
               className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
-                filter === s ? "bg-[#015949] text-white" : "bg-white text-slate-700 ring-1 ring-slate-200"
+                filter === s ? "bg-[#c0392b] text-white" : "bg-white text-slate-700 ring-1 ring-slate-200"
               }`}
             >
               {s}
@@ -270,7 +270,7 @@ function ContactInbox() {
                   <div className="flex flex-wrap gap-2">
                     <a
                       href={`mailto:${encodeURIComponent(selected.email)}?subject=${encodeURIComponent(`Re: ${selected.topic ?? "Your message"}`)}`}
-                      className="rounded-full bg-[#015949] px-4 py-2 text-xs font-bold text-white"
+                      className="rounded-full bg-[#c0392b] px-4 py-2 text-xs font-bold text-white"
                     >
                       Reply by email
                     </a>
@@ -297,7 +297,7 @@ function ContactInbox() {
                   <div>
                     <dt className="font-semibold text-slate-500">Email</dt>
                     <dd>
-                      <a className="text-[#015949] underline" href={`mailto:${selected.email}`}>
+                      <a className="text-[#c0392b] underline" href={`mailto:${selected.email}`}>
                         {selected.email}
                       </a>
                     </dd>
@@ -306,7 +306,7 @@ function ContactInbox() {
                     <div>
                       <dt className="font-semibold text-slate-500">Phone</dt>
                       <dd>
-                        <a className="text-[#015949] underline" href={`tel:${selected.phone}`}>
+                        <a className="text-[#c0392b] underline" href={`tel:${selected.phone}`}>
                           {selected.phone}
                         </a>
                       </dd>

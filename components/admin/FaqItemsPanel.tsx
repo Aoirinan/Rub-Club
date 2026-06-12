@@ -169,7 +169,7 @@ export function FaqItemsPanel({ getIdToken }: Props) {
             <button
               type="button"
               disabled={busy}
-              className="rounded-full bg-[#015949] px-4 py-2 text-xs font-bold text-white"
+              className="rounded-full bg-[#c0392b] px-4 py-2 text-xs font-bold text-white"
               onClick={() => void saveFaq()}
             >
               Save FAQ
@@ -196,7 +196,7 @@ export function FaqItemsPanel({ getIdToken }: Props) {
               </button>
               <button
                 type="button"
-                className="text-xs font-semibold text-[#015949] underline"
+                className="text-xs font-semibold text-[#c0392b] underline"
                 onClick={() =>
                   setFaqForm({
                     mode: "edit",

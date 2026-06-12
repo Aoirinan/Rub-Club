@@ -420,7 +420,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           type="button"
           disabled={syncingProviders || loading}
           onClick={() => void syncFromBookableProviders()}
-          className="rounded-full border border-[#015949] bg-[#015949] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0d524f] disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-[#c0392b] bg-[#c0392b] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0d524f] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {syncingProviders ? "Syncingâ€¦" : "Copy bookable massage providers into team"}
         </button>

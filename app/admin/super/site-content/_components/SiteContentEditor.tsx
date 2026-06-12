@@ -384,15 +384,15 @@ export function SiteContentEditor() {
           tabs below â€” changes appear on the live site within about 60 seconds. Adding or removing a team member still
           requires a developer.
         </p>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#015949]/25 bg-[#015949]/5 px-4 py-3">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#c0392b]/25 bg-[#c0392b]/5 px-4 py-3">
           <p className="text-sm text-slate-700">
-            <span className="font-bold text-[#013a30]">Page layout?</span> Reorder or hide whole sections on Massage,
+            <span className="font-bold text-[#4a1515]">Page layout?</span> Reorder or hide whole sections on Massage,
             Chiropractic, and Sulphur pages in the{" "}
             <span className="font-semibold">Page builder</span> tab above (not here).
           </p>
           <Link
             href="/admin/super/page-builder"
-            className="shrink-0 rounded-lg bg-[#015949] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0c4e4b]"
+            className="shrink-0 rounded-lg bg-[#c0392b] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0c4e4b]"
           >
             Open page builder
           </Link>
@@ -506,7 +506,7 @@ export function SiteContentEditor() {
                     <button
                       type="button"
                       disabled={busy}
-                      className="rounded-full bg-[#015949] px-4 py-2 text-xs font-bold text-white"
+                      className="rounded-full bg-[#c0392b] px-4 py-2 text-xs font-bold text-white"
                       onClick={() => void saveFaq()}
                     >
                       Save FAQ
@@ -552,7 +552,7 @@ export function SiteContentEditor() {
                       </button>
                       <button
                         type="button"
-                        className="text-xs font-semibold text-[#015949] underline"
+                        className="text-xs font-semibold text-[#c0392b] underline"
                         onClick={() =>
                           setFaqForm({
                             mode: "edit",
@@ -597,7 +597,7 @@ export function SiteContentEditor() {
                   <span className="ml-auto max-w-[40%] truncate text-xs text-slate-500">{truncate(field.value)}</span>
                   <button
                     type="button"
-                    className="text-xs font-bold text-[#015949] underline"
+                    className="text-xs font-bold text-[#c0392b] underline"
                     onClick={() => {
                       setEditingId(field.id);
                       setDraft(field.value);
@@ -669,7 +669,7 @@ export function SiteContentEditor() {
                       <button
                         type="button"
                         disabled={busy}
-                        className="rounded-full bg-[#015949] px-5 py-2 text-sm font-bold text-white"
+                        className="rounded-full bg-[#c0392b] px-5 py-2 text-sm font-bold text-white"
                         onClick={() => void saveField(field.id, draft)}
                       >
                         Save

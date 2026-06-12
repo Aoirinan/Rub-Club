@@ -20,17 +20,17 @@ export type PartialHeaderColorConfig = {
 };
 
 export const DEFAULT_PARIS_HEADER_COLORS: HeaderBandColors = {
-  phoneBarBg: "#01302a",
+  phoneBarBg: "#4a1515",
   logoRowBg: "#ffffff",
   navBg: "#eceae5",
-  navHover: "#25455e",
+  navHover: "#c0392b",
 };
 
 export const DEFAULT_SULPHUR_HEADER_COLORS: HeaderBandColors = {
-  phoneBarBg: "#01302a",
+  phoneBarBg: "#0c2d3a",
   logoRowBg: "#ffffff",
   navBg: "#eceae5",
-  navHover: "#25455e",
+  navHover: "#2980b9",
 };
 
 export const DEFAULT_HEADER_COLORS: HeaderColorConfig = {

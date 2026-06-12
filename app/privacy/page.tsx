@@ -31,15 +31,15 @@ export default async function PrivacyPage() {
         lede="This page summarizes what information we collect through this website and how we protect health information collected during your in-office visits."
       />
       <div className="mx-auto max-w-3xl space-y-6 px-4 pb-16">
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-8">
-          <h2 className="text-lg font-black text-[#013a30]">What this website is used for</h2>
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-8">
+          <h2 className="text-lg font-black text-[#4a1515]">What this website is used for</h2>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-stone-700">
             <li>
               This website is used for <strong>scheduling and general information</strong>. We use
               it to take appointment requests, share office details, and answer general questions.
             </li>
             <li>
-              <strong className="text-[#013a30]">Do not submit health information online.</strong>{" "}
+              <strong className="text-[#4a1515]">Do not submit health information online.</strong>{" "}
               Please bring your printable patient forms, insurance card, and photo ID with you to
               your appointment. Do not email or text card photos.
             </li>
@@ -49,14 +49,14 @@ export default async function PrivacyPage() {
               &mdash; the same information the front desk would write down over the phone.
             </li>
             <li>
-              <strong className="text-[#013a30]">Not for emergencies.</strong> If you have a
+              <strong className="text-[#4a1515]">Not for emergencies.</strong> If you have a
               medical emergency, call 911 or go to the nearest emergency room.
             </li>
           </ul>
         </section>
 
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-8">
-          <h2 className="text-lg font-black text-[#013a30]">How we protect information in the office</h2>
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-8">
+          <h2 className="text-lg font-black text-[#4a1515]">How we protect information in the office</h2>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-stone-700">
             <li>
               Health and insurance information that you provide in person is kept in our clinical
@@ -84,7 +84,7 @@ export default async function PrivacyPage() {
             href={nppDownload.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="focus-ring mt-4 inline-flex bg-[#25455e] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#1b3649]"
+            className="focus-ring mt-4 inline-flex bg-[#4a1515] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#341010]"
           >
             {nppDownload.label}
           </a>
@@ -105,15 +105,15 @@ export default async function PrivacyPage() {
         </section>
 
         <section className="border-t-4 border-stone-300 bg-stone-50 p-6 shadow-md sm:p-8">
-          <h2 className="text-lg font-black text-[#013a30]">Website, contact forms &amp; cookies</h2>
+          <h2 className="text-lg font-black text-[#4a1515]">Website, contact forms &amp; cookies</h2>
           <p className="mt-3 text-sm leading-relaxed text-stone-700">
             For how we handle contact form messages, booking requests, cookies, and general website
             usage data, see our{" "}
-            <Link className="font-bold text-[#015949] underline" href="/website-privacy">
+            <Link className="font-bold text-[#c0392b] underline" href="/website-privacy">
               website privacy policy
             </Link>{" "}
             and{" "}
-            <Link className="font-bold text-[#015949] underline" href="/terms">
+            <Link className="font-bold text-[#c0392b] underline" href="/terms">
               terms of use
             </Link>
             .
@@ -123,7 +123,7 @@ export default async function PrivacyPage() {
         <section className="rounded border border-stone-200 bg-stone-50 p-4 text-sm text-stone-700">
           <p>
             Questions about privacy or a request to access or amend your records?{" "}
-            <Link className="font-bold text-[#015949] underline" href="/contact">
+            <Link className="font-bold text-[#c0392b] underline" href="/contact">
               Contact us
             </Link>{" "}
             or call the office you plan to visit.

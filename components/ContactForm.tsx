@@ -70,7 +70,7 @@ export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1 text-sm sm:col-span-2">
-          <span className="font-bold text-[#013a30]">Topic</span>
+          <span className="font-bold text-[#4a1515]">Topic</span>
           <select
             className="focus-ring w-full border border-stone-300 bg-white px-3 py-2"
             value={topic}
@@ -85,7 +85,7 @@ export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-bold text-[#013a30]">Full name</span>
+          <span className="font-bold text-[#4a1515]">Full name</span>
           <input
             className="focus-ring w-full border border-stone-300 px-3 py-2"
             value={name}
@@ -95,7 +95,7 @@ export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-bold text-[#013a30]">Email</span>
+          <span className="font-bold text-[#4a1515]">Email</span>
           <input
             type="email"
             className="focus-ring w-full border border-stone-300 px-3 py-2"
@@ -106,7 +106,7 @@ export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
           />
         </label>
         <label className="space-y-1 text-sm sm:col-span-2">
-          <span className="font-bold text-[#013a30]">Phone (optional)</span>
+          <span className="font-bold text-[#4a1515]">Phone (optional)</span>
           <input
             className="focus-ring w-full border border-stone-300 px-3 py-2"
             value={phone}
@@ -115,7 +115,7 @@ export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
           />
         </label>
         <label className="space-y-1 text-sm sm:col-span-2">
-          <span className="font-bold text-[#013a30]">Message</span>
+          <span className="font-bold text-[#4a1515]">Message</span>
           <textarea
             className="focus-ring min-h-[140px] w-full border border-stone-300 px-3 py-2"
             value={message}
@@ -132,7 +132,7 @@ export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
 
       <button
         type="submit"
-        className="focus-ring bg-[#25455e] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#1b3649] disabled:opacity-50"
+        className="focus-ring bg-[#4a1515] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#341010] disabled:opacity-50"
         disabled={submitting}
       >
         {submitting ? "Sendingâ€¦" : "Send message"}

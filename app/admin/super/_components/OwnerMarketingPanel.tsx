@@ -345,7 +345,7 @@ export function OwnerMarketingPanel() {
             type="button"
             onClick={() => setTab(t.id)}
             className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
-              tab === t.id ? "bg-[#015949] text-white" : "bg-slate-100 text-slate-800"
+              tab === t.id ? "bg-[#c0392b] text-white" : "bg-slate-100 text-slate-800"
             }`}
           >
             {t.label}
@@ -470,7 +470,7 @@ export function OwnerMarketingPanel() {
             <button
               type="submit"
               disabled={loading}
-              className="sm:col-span-2 rounded-full bg-[#015949] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+              className="sm:col-span-2 rounded-full bg-[#c0392b] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
             >
               {loading ? "Uploadingâ€¦" : "Upload"}
             </button>
@@ -617,17 +617,17 @@ export function OwnerMarketingPanel() {
           <h2 className="text-lg font-bold">Gift card bar</h2>
           <p className="text-sm text-slate-600">
             Edit everyday copy in{" "}
-            <a href="/admin/super/page-builder?scope=home" className="font-semibold text-[#015949] underline">
+            <a href="/admin/super/page-builder?scope=home" className="font-semibold text-[#c0392b] underline">
               Website â†’ Home
             </a>
             ,{" "}
-            <a href="/admin/super/page-builder?scope=footer" className="font-semibold text-[#015949] underline">
+            <a href="/admin/super/page-builder?scope=footer" className="font-semibold text-[#c0392b] underline">
               Footer
             </a>
             , and{" "}
             <a
               href="/admin/super/page-builder?scope=navigation"
-              className="font-semibold text-[#015949] underline"
+              className="font-semibold text-[#c0392b] underline"
             >
               Navigation
             </a>{" "}
@@ -768,8 +768,8 @@ function OnlineBookingSettingsBlock({
   };
 
   return (
-    <section className="space-y-4 rounded-2xl border-2 border-[#015949]/30 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-bold text-[#013a30]">Online booking &amp; Google reviews</h2>
+    <section className="space-y-4 rounded-2xl border-2 border-[#c0392b]/30 bg-white p-6 shadow-sm">
+      <h2 className="text-lg font-bold text-[#4a1515]">Online booking &amp; Google reviews</h2>
       <p className="text-sm text-slate-600">
         Uncheck <strong className="font-semibold">Online booking enabled</strong> to shut down the public{" "}
         <code className="rounded bg-slate-100 px-1">/book</code> page. Visitors will see your off message and phone
@@ -851,7 +851,7 @@ function OnlineBookingSettingsBlock({
         <button
           type="button"
           onClick={onSaveBooking}
-          className="rounded-full bg-[#015949] px-5 py-2 text-sm font-bold text-white"
+          className="rounded-full bg-[#c0392b] px-5 py-2 text-sm font-bold text-white"
         >
           Save booking on/off
         </button>
@@ -1150,7 +1150,7 @@ function DoctorMediaTab({
         <button
           type="submit"
           disabled={busy}
-          className="sm:col-span-2 rounded-full bg-[#015949] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+          className="sm:col-span-2 rounded-full bg-[#c0392b] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
         >
           {busy ? "Uploadingâ€¦" : "Upload"}
         </button>

@@ -40,10 +40,10 @@ export default async function QAndAPage() {
         title="Questions & Answers"
       />
       <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
+        <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
           <FaqList entries={faqs} />
         </section>
-        <LocationHoursSection location={ss} hours={ssHours} accent="#015949" />
+        <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
         <ScheduleCtaCard
           title="Still have questions?"
           body="Contact our Sulphur Springs office â€” we're happy to help."

@@ -39,7 +39,7 @@ export default async function FaqPage() {
         lede={c.faq_intro}
       />
       <div className="mx-auto max-w-3xl space-y-8 px-4 pb-16">
-        <section className="border-t-4 border-[#015949] bg-white p-6 shadow-md sm:p-10">
+        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
           <FaqList entries={faqs} />
         </section>
         <ScheduleCtaCard

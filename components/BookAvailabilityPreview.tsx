@@ -16,7 +16,7 @@ type Slot = { startIso: string; label: string };
 
 const fieldLabel = "block text-xs font-bold uppercase tracking-wide text-stone-600";
 const fieldControl =
-  "w-full min-h-[48px] rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-base text-[#013a30] shadow-sm";
+  "w-full min-h-[48px] rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-base text-[#4a1515] shadow-sm";
 
 function todayIso(): string {
   return DateTime.now().setZone(TIME_ZONE).toFormat("yyyy-LL-dd");
@@ -87,8 +87,8 @@ export function BookAvailabilityPreview({
 
   return (
     <div className="space-y-8">
-      <div className="rounded-2xl border border-[#015949]/25 bg-[#f0faf8] p-5 sm:p-6">
-        <p className="text-lg font-black text-[#013a30]">
+      <div className="rounded-2xl border border-[#c0392b]/25 bg-[#f0faf8] p-5 sm:p-6">
+        <p className="text-lg font-black text-[#4a1515]">
           Select a time and call us to confirm your appointment
         </p>
         <p className="mt-2 text-sm leading-relaxed text-stone-700">
@@ -97,7 +97,7 @@ export function BookAvailabilityPreview({
         </p>
         <a
           href={telHref(phone)}
-          className="mt-4 inline-flex min-h-[48px] items-center rounded-xl bg-[#015949] px-6 py-3 text-lg font-black text-white hover:bg-[#0c4a48]"
+          className="mt-4 inline-flex min-h-[48px] items-center rounded-xl bg-[#c0392b] px-6 py-3 text-lg font-black text-white hover:bg-[#0c4a48]"
         >
           Call {phone}
         </a>
@@ -160,7 +160,7 @@ export function BookAvailabilityPreview({
         ) : slots && slots.length === 0 ? (
           <p className="mt-3 text-sm text-stone-700">
             No openings on this day â€” try another date or call{" "}
-            <a className="font-bold text-[#015949] underline" href={telHref(phone)}>
+            <a className="font-bold text-[#c0392b] underline" href={telHref(phone)}>
               {phone}
             </a>
             .
@@ -173,8 +173,8 @@ export function BookAvailabilityPreview({
                   type="button"
                   className={`focus-ring min-h-[44px] rounded-xl border px-4 py-2.5 text-sm font-bold ${
                     selectedSlot?.startIso === slot.startIso
-                      ? "border-[#015949] bg-[#015949] text-white"
-                      : "border-stone-300 bg-white text-[#013a30] hover:border-[#015949]"
+                      ? "border-[#c0392b] bg-[#c0392b] text-white"
+                      : "border-stone-300 bg-white text-[#4a1515] hover:border-[#c0392b]"
                   }`}
                   onClick={() => setSelectedSlot(slot)}
                 >
@@ -185,9 +185,9 @@ export function BookAvailabilityPreview({
           </ul>
         )}
         {selectedSlot ? (
-          <p className="mt-4 text-sm font-semibold text-[#013a30]">
+          <p className="mt-4 text-sm font-semibold text-[#4a1515]">
             Selected: {selectedSlot.label} â€” call{" "}
-            <a className="font-black text-[#015949] underline" href={telHref(phone)}>
+            <a className="font-black text-[#c0392b] underline" href={telHref(phone)}>
               {phone}
             </a>{" "}
             to confirm.
@@ -196,7 +196,7 @@ export function BookAvailabilityPreview({
       </div>
 
       <p className="text-center text-sm">
-        <Link href="/contact" className="font-bold text-[#015949] underline">
+        <Link href="/contact" className="font-bold text-[#c0392b] underline">
           Contact form
         </Link>
       </p>

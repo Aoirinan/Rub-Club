@@ -12,11 +12,11 @@ import type { OfficeHoursRow } from "@/lib/office-hours";
 export async function LocationHoursSection({
   location,
   hours,
-  accent = "#015949",
+  accent = "#c0392b",
 }: {
   location: LocationInfo;
   hours: readonly OfficeHoursRow[];
-  /** Border/link accent â€” SS blue (#015949) or Paris green (#015949). */
+  /** Border/link accent â€” SS blue (#c0392b) or Paris green (#c0392b). */
   accent?: string;
 }) {
   const cms = await getContentMany(["location_section_heading", "hours_section_heading"]);
@@ -32,7 +32,7 @@ export async function LocationHoursSection({
       style={{ borderTopColor: accent }}
     >
       <div className="space-y-4">
-        <h2 className="text-xl font-black uppercase tracking-wide text-[#013a30]">{locationHeading}</h2>
+        <h2 className="text-xl font-black uppercase tracking-wide text-[#4a1515]">{locationHeading}</h2>
         <address className="not-italic text-stone-700">{location.addressLines.join(" | ")}</address>
         <div className="overflow-hidden border border-stone-200">
           <div className="aspect-[4/3] w-full">
@@ -48,7 +48,7 @@ export async function LocationHoursSection({
         </div>
       </div>
       <div className="space-y-4">
-        <h2 className="text-xl font-black uppercase tracking-wide text-[#013a30]">{hoursHeading}</h2>
+        <h2 className="text-xl font-black uppercase tracking-wide text-[#4a1515]">{hoursHeading}</h2>
         <p className="text-sm text-stone-600">Our General Schedule</p>
         <OfficeHoursTable rows={hours} />
         <a

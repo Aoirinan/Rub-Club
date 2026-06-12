@@ -832,7 +832,7 @@ export default function SuperAdminPage() {
             </p>
             <p className="text-sm text-slate-600">
               Website bios and photos:{" "}
-              <Link href="/admin/super/page-builder?page=massage" className="font-semibold text-[#015949] underline">
+              <Link href="/admin/super/page-builder?page=massage" className="font-semibold text-[#c0392b] underline">
                 Website â†’ Massage page
               </Link>
               .

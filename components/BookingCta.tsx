@@ -5,15 +5,15 @@ import { usePathname } from "next/navigation";
 import { LOCATIONS, telHref } from "@/lib/constants";
 
 const PRIMARY =
-  "focus-ring bg-[#25455e] px-6 py-3 text-sm font-black uppercase tracking-wide text-white shadow hover:bg-[#1b3649]";
+  "focus-ring bg-[#4a1515] px-6 py-3 text-sm font-black uppercase tracking-wide text-white shadow hover:bg-[#341010]";
 const PRIMARY_COMPACT =
-  "focus-ring bg-[#25455e] px-4 py-2 text-xs font-black uppercase tracking-wide text-white hover:bg-[#1b3649]";
+  "focus-ring bg-[#4a1515] px-4 py-2 text-xs font-black uppercase tracking-wide text-white hover:bg-[#341010]";
 const PRIMARY_NAV =
-  "focus-ring ml-2 bg-[#25455e] px-5 py-2 text-xs font-black uppercase tracking-wide text-white shadow-sm hover:bg-[#1b3649] xl:text-sm";
+  "focus-ring ml-2 bg-[#4a1515] px-5 py-2 text-xs font-black uppercase tracking-wide text-white shadow-sm hover:bg-[#341010] xl:text-sm";
 const PRIMARY_TEAL =
-  "focus-ring bg-[#25455e] px-5 py-3 text-sm font-black uppercase tracking-wide text-white shadow hover:bg-[#1b3649]";
+  "focus-ring bg-[#4a1515] px-5 py-3 text-sm font-black uppercase tracking-wide text-white shadow hover:bg-[#341010]";
 const PRIMARY_SS =
-  "focus-ring bg-[#25455e] px-6 py-3 text-sm font-black uppercase tracking-wide text-white shadow hover:bg-[#1b3649]";
+  "focus-ring bg-[#4a1515] px-6 py-3 text-sm font-black uppercase tracking-wide text-white shadow hover:bg-[#341010]";
 
 const VARIANT_CLASS = {
   default: PRIMARY,
@@ -89,11 +89,11 @@ export function BookingCta({ label, className, variant = "default" }: Props) {
             onClick={() => setOpen(false)}
           />
           <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl">
-            <h2 className="text-lg font-black text-[#013a30]">Call to book your visit</h2>
+            <h2 className="text-lg font-black text-[#4a1515]">Call to book your visit</h2>
             <p className="mt-1 text-sm text-stone-600">{business}</p>
             <a
               href={telHref(phone)}
-              className="focus-ring mt-4 block rounded-lg bg-[#015949] px-4 py-4 text-2xl font-black tracking-wide text-white hover:bg-[#0b7a64]"
+              className="focus-ring mt-4 block rounded-lg bg-[#c0392b] px-4 py-4 text-2xl font-black tracking-wide text-white hover:bg-[#962d22]"
             >
               {phone}
             </a>

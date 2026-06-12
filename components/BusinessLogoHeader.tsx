@@ -38,7 +38,7 @@ export function BusinessLogoHeader({
     <div className="flex w-full flex-col items-center gap-1 text-center">
       <Link
         href={href}
-        className="block w-fit max-w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#015949]"
+        className="block w-fit max-w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c0392b]"
         aria-label={
           isParis
             ? "Chiropractic Associates â€” Paris, TX"
@@ -90,7 +90,7 @@ export function BusinessLogoHeader({
       </Link>
       <a
         href={telHref(location.phonePrimary)}
-        className={`max-w-full truncate font-black text-[#015949] hover:underline transition-all duration-300 ease-out motion-reduce:transition-none ${
+        className={`max-w-full truncate font-black text-[#c0392b] hover:underline transition-all duration-300 ease-out motion-reduce:transition-none ${
           compact ? "text-xs md:text-sm" : "text-sm md:text-base"
         }`}
       >
