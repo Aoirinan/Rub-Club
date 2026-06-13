@@ -42,13 +42,15 @@ type Props = {
   query?: string;
   className?: string;
   variant?: keyof typeof VARIANT_BASE;
+  /** Force a brand (color + phone) instead of inferring it from the path. */
+  brand?: "paris" | "sulphur";
 };
 
 type ContextPhone = { business: string; phone: string };
 
-/** Phone number for the business the visitor has landed on, by URL path. */
-function contextPhone(pathname: string): ContextPhone {
-  if (pathname.startsWith("/sulphur-springs")) {
+/** Phone number for the business the visitor has landed on, by brand + URL path. */
+function contextPhone(pathname: string, brand: "paris" | "sulphur"): ContextPhone {
+  if (brand === "sulphur" || pathname.startsWith("/sulphur-springs")) {
     return {
       business: "Chiropractic Associates of Sulphur Springs",
       phone: LOCATIONS.sulphur_springs.phonePrimary,
@@ -66,13 +68,14 @@ function contextPhone(pathname: string): ContextPhone {
   };
 }
 
-export function BookingCta({ label, className, variant = "default" }: Props) {
+export function BookingCta({ label, className, variant = "default", brand }: Props) {
   const pathname = usePathname() ?? "/";
   const [open, setOpen] = useState(false);
-  const brand = pathname.startsWith("/sulphur-springs") ? "sulphur" : "paris";
-  const colors = BRAND_COLORS[brand];
+  const resolvedBrand =
+    brand ?? (pathname.startsWith("/sulphur-springs") ? "sulphur" : "paris");
+  const colors = BRAND_COLORS[resolvedBrand];
   const classes = className ?? `${VARIANT_BASE[variant]} ${colors.button}`;
-  const { business, phone } = contextPhone(pathname);
+  const { business, phone } = contextPhone(pathname, resolvedBrand);
 
   useEffect(() => {
     if (!open) return;

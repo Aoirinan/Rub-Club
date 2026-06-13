@@ -42,7 +42,7 @@ export function ScheduleCtaCard({
       <h2 className="text-2xl font-black">{title}</h2>
       {body ? <p className="mt-3 max-w-2xl text-white/90">{body}</p> : null}
       <div className="mt-6 flex flex-wrap gap-3">
-        <BookingCta label={bookLabel} variant="default" />
+        <BookingCta label={bookLabel} variant="default" brand={variant} />
         {secondary ? (
           <a className={SECONDARY_CLASS[variant]} href={secondary.href}>
             {secondary.label}

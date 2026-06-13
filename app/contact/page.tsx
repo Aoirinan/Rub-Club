@@ -5,6 +5,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { ContactForm } from "@/components/ContactForm";
 import { SectionHeading } from "@/components/practice/SectionHeading";
 import { practiceThemeStyle } from "@/components/practice/theme";
+import { getPageBrand } from "@/lib/page-business-theme";
 import { telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
 import { organizationJsonLd } from "@/lib/structured-data";
@@ -46,16 +47,17 @@ function PinIcon() {
 }
 
 export default async function ContactPage() {
-  const [c, bookingConfig, parisHours, displayLocs] = await Promise.all([
+  const [c, bookingConfig, parisHours, displayLocs, brand] = await Promise.all([
     getContentMany(["contact_heading", "contact_subtext"]),
     getPublicBookingConfig(),
     getParisOfficeHours(),
     getDisplayLocations(),
+    getPageBrand(),
   ]);
   const locationList = [displayLocs.paris, displayLocs.sulphur_springs];
 
   return (
-    <div className="bg-[#f4f2ea]" style={practiceThemeStyle("paris-home")}>
+    <div className="bg-[#f4f2ea]" style={practiceThemeStyle(brand.loc)}>
       <JsonLd data={organizationJsonLd(locationList)} />
       <Breadcrumbs items={[{ name: "Home", url: "/" }, { name: "Locations", url: "/contact" }]} />
 
@@ -156,7 +158,7 @@ export default async function ContactPage() {
                 {contactAppointmentCopy(isPublicBookingEnabled(bookingConfig))}
               </p>
               <div className="mt-6">
-                <ContactForm />
+                <ContactForm variant={brand.variant} />
               </div>
             </div>
             <aside className="space-y-4 text-sm">

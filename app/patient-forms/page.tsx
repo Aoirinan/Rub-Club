@@ -2,6 +2,8 @@ import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { MarkdownBulletList } from "@/components/SsMarkdownBody";
+import { practiceThemeStyle } from "@/components/practice/theme";
+import { getPageBrand } from "@/lib/page-business-theme";
 import { WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
 import { CHIRO_INTAKE_PACKET_PDF, MASSAGE_NEW_CLIENT_PDF } from "@/lib/privacy";
@@ -20,23 +22,29 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function PatientFormsPage() {
-  const [c, displayLocs] = await Promise.all([
+  const [c, displayLocs, brand] = await Promise.all([
     getPatientFormsContent(),
     getDisplayLocations(),
+    getPageBrand(),
   ]);
 
   return (
-    <>
+    <div style={practiceThemeStyle(brand.loc)}>
       <Breadcrumbs
         items={[
           { name: "Home", url: "/" },
           { name: "Patient Forms", url: "/patient-forms" },
         ]}
       />
-      <PageHero eyebrow={c.heroEyebrow} title={c.heroTitle} lede={c.heroLede} />
+      <PageHero
+        eyebrow={c.heroEyebrow}
+        title={c.heroTitle}
+        lede={c.heroLede}
+        variant={brand.variant}
+      />
       <div className="mx-auto max-w-3xl space-y-6 px-4 pb-16">
-        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-8">
-          <h2 className="text-xl font-black text-[#4a1515]">{c.chiroHeading}</h2>
+        <section className="border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-8">
+          <h2 className="text-xl font-black text-[var(--pp-heading)]">{c.chiroHeading}</h2>
           <p className="mt-2 text-sm leading-relaxed text-stone-700">{c.chiroIntro}</p>
           <MarkdownBulletList text={c.chiroBullets} />
           <a
@@ -44,7 +52,7 @@ export default async function PatientFormsPage() {
             download="chiropractic-new-patient-packet.pdf"
             target="_blank"
             rel="noopener noreferrer"
-            className="focus-ring mt-6 inline-flex bg-[#4a1515] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#341010]"
+            className="focus-ring mt-6 inline-flex bg-[var(--pp-cta)] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[var(--pp-cta-hover)]"
           >
             Download 9-page chiropractic intake packet (PDF)
           </a>
@@ -52,7 +60,7 @@ export default async function PatientFormsPage() {
             Interested in ongoing chiropractic wellness options? See our{" "}
             <Link
               href={WELLNESS_CARE_PLANS_PATH}
-              className="font-bold text-[#c0392b] underline hover:text-[#4a1515]"
+              className="font-bold text-[var(--pp-accent)] underline hover:text-[var(--pp-heading)]"
             >
               wellness care plans overview
             </Link>
@@ -60,18 +68,18 @@ export default async function PatientFormsPage() {
           </p>
         </section>
 
-        <section className="border-t-4 border-[#c0392b] bg-white p-8 text-center shadow-md sm:p-12">
+        <section className="border-t-4 border-[var(--pp-accent)] bg-white p-8 text-center shadow-md sm:p-12">
           <p className="text-sm font-bold uppercase tracking-wide text-stone-600">
             Massage (The Rub Club)
           </p>
-          <h2 className="mt-2 text-xl font-black text-[#4a1515]">{c.massageHeading}</h2>
+          <h2 className="mt-2 text-xl font-black text-[var(--pp-heading)]">{c.massageHeading}</h2>
           <p className="mt-3 text-stone-700">{c.massageBody}</p>
           <a
             href={MASSAGE_NEW_CLIENT_PDF}
             download="rub-club-new-client-form.pdf"
             target="_blank"
             rel="noopener noreferrer"
-            className="focus-ring mt-6 inline-flex bg-[#4a1515] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#341010]"
+            className="focus-ring mt-6 inline-flex bg-[var(--pp-cta)] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[var(--pp-cta-hover)]"
           >
             Download massage new-client form (PDF)
           </a>
@@ -87,7 +95,7 @@ export default async function PatientFormsPage() {
               <p className="text-xs font-bold uppercase tracking-wide text-amber-900">Paris, TX</p>
               <a
                 href={telHref(displayLocs.paris.phonePrimary)}
-                className="mt-1 block text-lg font-black text-[#4a1515] hover:underline"
+                className="mt-1 block text-lg font-black text-[var(--pp-heading)] hover:underline"
               >
                 {displayLocs.paris.phonePrimary}
               </a>
@@ -98,7 +106,7 @@ export default async function PatientFormsPage() {
               </p>
               <a
                 href={telHref(displayLocs.sulphur_springs.phonePrimary)}
-                className="mt-1 block text-lg font-black text-[#4a1515] hover:underline"
+                className="mt-1 block text-lg font-black text-[var(--pp-heading)] hover:underline"
               >
                 {displayLocs.sulphur_springs.phonePrimary}
               </a>
@@ -106,6 +114,6 @@ export default async function PatientFormsPage() {
           </div>
         </section>
       </div>
-    </>
+    </div>
   );
 }

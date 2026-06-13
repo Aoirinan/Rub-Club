@@ -32,17 +32,20 @@ export type PracticeThemeVars = {
 };
 
 export const PRACTICE_THEMES: Record<PracticeLocationId, PracticeThemeVars> = {
-  // Paris locations share the red palette.
+  // Paris locations share the red palette. The hero base/panel use a cleaner,
+  // brighter brick red (mirroring the Sulphur Springs blue) so the hero reads
+  // as vivid red instead of muddy maroon; body headings/buttons keep the deep
+  // brand red (#4a1515) for contrast and readability.
   "paris-home": {
     accent: "#c0392b",
     accentHover: "#962d22",
     heading: "#4a1515",
     eyebrow: "#f3c1ba",
-    heroOverlay: "#4a1515",
-    heroFrom: "#4a1515e6",
-    heroVia: "#4a15158c",
-    heroPanelFrom: "#8e2f23e6",
-    heroPanelVia: "#8e2f23cc",
+    heroOverlay: "#6e1a1a",
+    heroFrom: "#6e1a1ad9",
+    heroVia: "#6e1a1a80",
+    heroPanelFrom: "#b5301fe6",
+    heroPanelVia: "#b5301fcc",
     ctaBg: "#4a1515",
     ctaHover: "#341010",
   },
@@ -51,11 +54,11 @@ export const PRACTICE_THEMES: Record<PracticeLocationId, PracticeThemeVars> = {
     accentHover: "#962d22",
     heading: "#4a1515",
     eyebrow: "#f3c1ba",
-    heroOverlay: "#4a1515",
-    heroFrom: "#4a1515e6",
-    heroVia: "#4a151580",
-    heroPanelFrom: "#8e2f23e6",
-    heroPanelVia: "#8e2f23cc",
+    heroOverlay: "#6e1a1a",
+    heroFrom: "#6e1a1ad9",
+    heroVia: "#6e1a1a80",
+    heroPanelFrom: "#b5301fe6",
+    heroPanelVia: "#b5301fcc",
     ctaBg: "#4a1515",
     ctaHover: "#341010",
   },

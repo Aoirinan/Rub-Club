@@ -14,6 +14,9 @@ export function parseBusinessContextValue(raw: string | undefined | null): SiteB
 /** Derive business context from URL pathname (ignores query string). */
 export function businessContextFromPathname(pathname: string): SiteBusinessContext {
   const p = pathname.split("?")[0] ?? "/";
+  // Shared single pages (reachable from both sites) must not be classified as a
+  // business route, so the visitor's current site context (cookie) is kept.
+  if (isSharedPathname(p)) return "default";
   if (p.startsWith("/sulphur-springs") || p.startsWith("/locations/sulphur-springs")) {
     return "sulphur_springs";
   }
@@ -41,6 +44,10 @@ const SHARED_PATH_PREFIXES = [
   "/terms",
   "/website-privacy",
   "/auth",
+  // Single pages with one URL but relevant to both sites — keep the visitor's
+  // current brand color instead of forcing Paris.
+  "/services/chiropractic/wellness-care-plans",
+  "/services/massage/prices",
 ] as const;
 
 export function isSharedPathname(pathname: string): boolean {

@@ -2,6 +2,8 @@ import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
+import { practiceThemeStyle } from "@/components/practice/theme";
+import { getPageBrand } from "@/lib/page-business-theme";
 import { WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
 import { chiropracticWellnessBreadcrumbs } from "@/lib/service-breadcrumbs";
@@ -25,21 +27,23 @@ export const metadata = buildPageMetadata({
 export const revalidate = 60;
 
 export default async function WellnessCarePlansPage() {
-  const [raw, displayLocs] = await Promise.all([
+  const [raw, displayLocs, brand] = await Promise.all([
     getContentMany([...WELLNESS_PAGE_CMS_FIELD_IDS]),
     getDisplayLocations(),
+    getPageBrand(),
   ]);
   const content = buildWellnessCarePlansContent(raw);
   const parisPhone = displayLocs.paris.phonePrimary;
 
   return (
-    <>
+    <div style={practiceThemeStyle(brand.loc)}>
       <Breadcrumbs items={chiropracticWellnessBreadcrumbs(WELLNESS_CARE_PLANS_PATH)} />
 
       <PageHero
         eyebrow={content.heroEyebrow}
         title="Wellness care plans"
         lede={content.pageLede}
+        variant={brand.variant}
       />
 
       <div className="mx-auto max-w-6xl space-y-8 px-4 pb-16">
@@ -47,9 +51,9 @@ export default async function WellnessCarePlansPage() {
           {content.sections.map((section) => (
             <section
               key={section.id}
-              className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-8"
+              className="border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-8"
             >
-              <h2 className="text-xl font-black text-[#4a1515]">{section.title}</h2>
+              <h2 className="text-xl font-black text-[var(--pp-heading)]">{section.title}</h2>
               {section.subtitle ? (
                 <p className="mt-1 text-xs font-black uppercase tracking-wide text-stone-500">
                   {section.subtitle}
@@ -58,7 +62,7 @@ export default async function WellnessCarePlansPage() {
               <ul className="mt-4 space-y-2.5 text-sm leading-relaxed text-stone-700">
                 {section.lines.map((line) => (
                   <li key={line} className="flex gap-2">
-                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#c0392b]" aria-hidden />
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--pp-accent)]" aria-hidden />
                     <span>{line}</span>
                   </li>
                 ))}
@@ -67,8 +71,8 @@ export default async function WellnessCarePlansPage() {
           ))}
         </div>
 
-        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-xl font-black text-[#4a1515]">{content.closingHeadline}</h2>
+        <section className="border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-xl font-black text-[var(--pp-heading)]">{content.closingHeadline}</h2>
           <ul className="mt-4 list-disc space-y-2 pl-5 text-stone-700">
             {content.closingLines.map((line) => (
               <li key={line}>{line}</li>
@@ -78,12 +82,12 @@ export default async function WellnessCarePlansPage() {
             Questions about which tier fits you?{" "}
             <Link
               href="/services/chiropractic"
-              className="font-bold text-[#c0392b] underline hover:text-[#4a1515]"
+              className="font-bold text-[var(--pp-accent)] underline hover:text-[var(--pp-heading)]"
             >
               Back to chiropractic services
             </Link>{" "}
             or call{" "}
-            <a className="font-bold text-[#c0392b] underline" href={telHref(parisPhone)}>
+            <a className="font-bold text-[var(--pp-accent)] underline" href={telHref(parisPhone)}>
               {parisPhone}
             </a>
             .
@@ -96,8 +100,9 @@ export default async function WellnessCarePlansPage() {
           bookLabel="Book chiropractic"
           query="service=chiropractic"
           secondary={{ label: `Call Paris ${parisPhone}`, href: telHref(parisPhone) }}
+          variant={brand.variant}
         />
       </div>
-    </>
+    </div>
   );
 }

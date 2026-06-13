@@ -4,9 +4,14 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { track } from "@/lib/analytics";
 
-export function ContactForm({ locationTag }: { locationTag?: string } = {}) {
+export function ContactForm({
+  locationTag,
+  variant,
+}: { locationTag?: string; variant?: "paris" | "sulphur" } = {}) {
   const pathname = usePathname() ?? "/";
-  const sulphur = pathname.startsWith("/sulphur-springs");
+  // Explicit variant (from the page's business context) wins; otherwise infer
+  // from the path so Sulphur Springs pages stay blue.
+  const sulphur = variant ? variant === "sulphur" : pathname.startsWith("/sulphur-springs");
   // Brand colors from CSS vars on <body> (lib/brand-theme.ts) — manager-editable.
   const labelColor = sulphur
     ? "text-[var(--brand-ss-heading,#0c2d3a)]"
