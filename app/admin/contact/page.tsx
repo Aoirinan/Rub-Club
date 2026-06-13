@@ -6,6 +6,9 @@ import { onAuthStateChanged, signOut, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import { staffRoleLabel, type StaffRole } from "@/lib/staff-roles";
 
+type LocationId = "paris" | "sulphur_springs";
+type LocationScope = LocationId | "both";
+
 type Submission = {
   id: string;
   name: string;
@@ -13,6 +16,7 @@ type Submission = {
   phone?: string;
   topic?: string;
   message: string;
+  location?: LocationId;
   status: "new" | "read" | "archived";
   officeEmailSent: boolean;
   autoReplySent: boolean;
@@ -26,7 +30,14 @@ type DeliveryStatus = {
 
 type Me = {
   role?: StaffRole | null;
+  locationScope?: LocationScope;
 };
+
+function locationLabel(loc: LocationId | undefined): string {
+  if (loc === "paris") return "Paris";
+  if (loc === "sulphur_springs") return "Sulphur Springs";
+  return "Unspecified";
+}
 
 function formatWhen(iso: string | null): string {
   if (!iso) return "—";
@@ -40,10 +51,114 @@ function formatWhen(iso: string | null): string {
   }
 }
 
+/** Superadmin-only: set the per-location office notification email addresses. */
+function ContactRoutingCard({ auth }: { auth: Auth | null }) {
+  const [paris, setParis] = useState("");
+  const [sulphur, setSulphur] = useState("");
+  const [fallback, setFallback] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    const user = auth?.currentUser;
+    if (!user) return;
+    let active = true;
+    void (async () => {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/admin/contact-routing", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok || !active) return;
+      const data = (await res.json()) as {
+        emails?: { parisEmail?: string; sulphurEmail?: string };
+        fallbackEmail?: string | null;
+      };
+      setParis(data.emails?.parisEmail ?? "");
+      setSulphur(data.emails?.sulphurEmail ?? "");
+      setFallback(data.fallbackEmail ?? null);
+      setLoaded(true);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [auth]);
+
+  async function save() {
+    const user = auth?.currentUser;
+    if (!user) return;
+    setSaving(true);
+    setMsg(null);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/admin/contact-routing", {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ parisEmail: paris.trim(), sulphurEmail: sulphur.trim() }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      setMsg(res.ok ? "Saved." : data.error ?? "Could not save.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <details className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">
+      <summary className="cursor-pointer font-semibold text-slate-900">
+        Notification email routing (superadmin)
+      </summary>
+      <p className="mt-2 text-xs text-slate-600">
+        Where contact-form notifications are emailed for each location. Leave blank to fall back to
+        the server default{fallback ? ` (${fallback})` : ""}. The in-app inbox always works
+        regardless.
+      </p>
+      {loaded ? (
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="space-y-1">
+            <span className="font-medium text-slate-800">Paris notification email</span>
+            <input
+              type="email"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              value={paris}
+              onChange={(e) => setParis(e.target.value)}
+              placeholder="paris-office@example.com"
+            />
+          </label>
+          <label className="space-y-1">
+            <span className="font-medium text-slate-800">Sulphur Springs notification email</span>
+            <input
+              type="email"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              value={sulphur}
+              onChange={(e) => setSulphur(e.target.value)}
+              placeholder="sulphur-office@example.com"
+            />
+          </label>
+          <div className="sm:col-span-2 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => void save()}
+              disabled={saving}
+              className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+            >
+              {saving ? "Saving…" : "Save addresses"}
+            </button>
+            {msg ? <span className="text-xs text-slate-600">{msg}</span> : null}
+          </div>
+        </div>
+      ) : (
+        <p className="mt-3 text-xs text-slate-500">Loading…</p>
+      )}
+    </details>
+  );
+}
+
 function ContactInbox() {
   const [auth, setAuth] = useState<Auth | null>(null);
   const [me, setMe] = useState<Me | null>(null);
   const [filter, setFilter] = useState<"new" | "read" | "archived" | "all">("new");
+  const [locationFilter, setLocationFilter] = useState<LocationId | "all">("all");
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [newCount, setNewCount] = useState(0);
   const [delivery, setDelivery] = useState<DeliveryStatus | null>(null);
@@ -77,8 +192,12 @@ function ContactInbox() {
     setError(null);
     try {
       const token = await user.getIdToken();
+      const locationParam =
+        me?.locationScope === "both" && locationFilter !== "all"
+          ? `&location=${encodeURIComponent(locationFilter)}`
+          : "";
       const res = await fetch(
-        `/api/admin/contact-submissions?status=${encodeURIComponent(filter)}&limit=80`,
+        `/api/admin/contact-submissions?status=${encodeURIComponent(filter)}&limit=80${locationParam}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       const data = (await res.json()) as {
@@ -99,7 +218,7 @@ function ContactInbox() {
     } finally {
       setLoading(false);
     }
-  }, [auth, filter, selectedId]);
+  }, [auth, filter, locationFilter, me?.locationScope, selectedId]);
 
   useEffect(() => {
     if (me?.role) void load();
@@ -174,6 +293,7 @@ function ContactInbox() {
       </header>
 
       <main className="mx-auto max-w-6xl space-y-4 px-4 py-6">
+        {me.role === "superadmin" ? <ContactRoutingCard auth={auth} /> : null}
         {delivery && !delivery.sendgridConfigured ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
             <p className="font-semibold">Visitor auto-reply email needs attention</p>
@@ -210,6 +330,32 @@ function ContactInbox() {
             </button>
           ))}
         </div>
+
+        {me.locationScope === "both" ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Location:
+            </span>
+            {(["all", "paris", "sulphur_springs"] as const).map((loc) => (
+              <button
+                key={loc}
+                type="button"
+                onClick={() => setLocationFilter(loc)}
+                className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+                  locationFilter === loc
+                    ? "bg-slate-900 text-white"
+                    : "bg-white text-slate-700 ring-1 ring-slate-200"
+                }`}
+              >
+                {loc === "all" ? "All" : locationLabel(loc)}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-slate-500">
+            Showing {locationLabel(me.locationScope as LocationId)} messages only.
+          </p>
+        )}
 
         {error ? (
           <p className="rounded-lg bg-rose-100 px-4 py-2 text-sm text-rose-900">{error}</p>
@@ -250,7 +396,11 @@ function ContactInbox() {
                         {s.status}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-xs text-slate-500">{s.topic ?? "General"} · {formatWhen(s.createdAt)}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      <span className="font-semibold text-slate-600">{locationLabel(s.location)}</span>
+                      {" · "}
+                      {s.topic ?? "General"} · {formatWhen(s.createdAt)}
+                    </p>
                     {!s.officeEmailSent ? (
                       <p className="mt-1 text-xs text-slate-500">Optional office email copy not sent</p>
                     ) : null}
@@ -265,7 +415,9 @@ function ContactInbox() {
                   <div>
                     <h2 className="text-lg font-semibold text-slate-900">{selected.name}</h2>
                     <p className="text-sm text-slate-600">{selected.topic ?? "General inquiry"}</p>
-                    <p className="mt-1 text-xs text-slate-500">{formatWhen(selected.createdAt)}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {locationLabel(selected.location)} · {formatWhen(selected.createdAt)}
+                    </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <a

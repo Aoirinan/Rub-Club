@@ -5,13 +5,19 @@ import { usePathname } from "next/navigation";
 import { track } from "@/lib/analytics";
 
 export function ContactForm({
-  locationTag,
+  location,
   variant,
-}: { locationTag?: string; variant?: "paris" | "sulphur" } = {}) {
+}: {
+  /** Which office this message belongs to; routes the inbox + notification. */
+  location: "paris" | "sulphur_springs";
+  variant?: "paris" | "sulphur";
+}) {
   const pathname = usePathname() ?? "/";
   // Explicit variant (from the page's business context) wins; otherwise infer
-  // from the path so Sulphur Springs pages stay blue.
-  const sulphur = variant ? variant === "sulphur" : pathname.startsWith("/sulphur-springs");
+  // from the location/path so Sulphur Springs pages stay blue.
+  const sulphur = variant
+    ? variant === "sulphur"
+    : location === "sulphur_springs" || pathname.startsWith("/sulphur-springs");
   // Brand colors from CSS vars on <body> (lib/brand-theme.ts) — manager-editable.
   const labelColor = sulphur
     ? "text-[var(--brand-ss-heading,#0c2d3a)]"
@@ -35,13 +41,12 @@ export function ContactForm({
       return;
     }
     setSubmitting(true);
-    const sentTopic = locationTag ? `${topic} — ${locationTag}` : topic;
-    track("contact_submitted", { topic: sentTopic });
+    track("contact_submitted", { topic, location });
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, email, phone, topic: sentTopic, message, website }),
+        body: JSON.stringify({ name, email, phone, topic, message, website, location }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {

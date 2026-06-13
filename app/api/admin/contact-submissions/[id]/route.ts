@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
+  getContactSubmission,
   updateContactSubmissionStatus,
   type ContactSubmissionStatus,
 } from "@/lib/contact-submissions";
@@ -32,6 +33,16 @@ export async function PATCH(
   const parsed = patchSchema.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
+
+  // Enforce location scope: single-location staff can only touch their office's
+  // messages (and never location-less legacy rows).
+  const existing = await getContactSubmission(id);
+  if (!existing) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  if (staff.locationScope !== "both" && existing.location !== staff.locationScope) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const ok = await updateContactSubmissionStatus(

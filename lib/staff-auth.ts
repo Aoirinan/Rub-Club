@@ -2,19 +2,24 @@ import type { DecodedIdToken } from "firebase-admin/auth";
 import { getAuth, getFirestore } from "./firebase-admin";
 import {
   normalizeStaffRole,
+  normalizeStaffLocationScope,
+  effectiveLocationScope,
   staffMeetsMin,
   staffCapabilities,
   type StaffRole,
   type StaffCapabilities,
+  type StaffLocationScope,
 } from "./staff-roles";
 
-export type { StaffRole, StaffCapabilities };
+export type { StaffRole, StaffCapabilities, StaffLocationScope };
 export { staffCapabilities, staffMeetsMin, normalizeStaffRole };
 
 export type StaffProfile = {
   role: StaffRole;
   email?: string;
   linkedProviderId?: string;
+  /** Stored location access; superadmins always behave as "both". */
+  locationScope: StaffLocationScope;
 };
 
 export async function verifyBearerUid(
@@ -44,6 +49,7 @@ export async function getStaffProfile(uid: string): Promise<StaffProfile | null>
       typeof linkedProviderId === "string" && linkedProviderId.trim()
         ? linkedProviderId.trim()
         : undefined,
+    locationScope: normalizeStaffLocationScope(snap.get("locationScope")),
   };
 }
 
@@ -61,6 +67,8 @@ export async function requireStaff(
   role: StaffRole;
   linkedProviderId?: string;
   capabilities: StaffCapabilities;
+  /** Effective location access (superadmins always "both"). */
+  locationScope: StaffLocationScope;
 } | null> {
   const decoded = await verifyBearerUid(authorization);
   if (!decoded?.uid) return null;
@@ -73,5 +81,6 @@ export async function requireStaff(
     role: profile.role,
     linkedProviderId: profile.linkedProviderId,
     capabilities: staffCapabilities(profile.role),
+    locationScope: effectiveLocationScope(profile.role, profile.locationScope),
   };
 }

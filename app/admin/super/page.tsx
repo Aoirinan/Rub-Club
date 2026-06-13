@@ -7,9 +7,12 @@ import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import {
   STAFF_ROLE_OPTIONS,
+  STAFF_LOCATION_SCOPE_OPTIONS,
   staffMeetsMin,
   staffRoleLabel,
+  staffLocationScopeLabel,
   type StaffRole,
+  type StaffLocationScope,
 } from "@/lib/staff-roles";
 import type { ProviderRow } from "@/lib/provider-types";
 import {
@@ -34,7 +37,13 @@ type Me = {
   };
 };
 
-type StaffRow = { uid: string; role?: string; email?: string; linkedProviderId?: string };
+type StaffRow = {
+  uid: string;
+  role?: string;
+  email?: string;
+  linkedProviderId?: string;
+  locationScope?: string;
+};
 
 type EmailStatus = {
   sendgridConfigured: boolean;
@@ -127,6 +136,7 @@ export default function SuperAdminPage() {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<StaffRole>("front_desk");
   const [linkedProviderId, setLinkedProviderId] = useState("");
+  const [locationScope, setLocationScope] = useState<StaffLocationScope>("both");
   const [bootstrapSecret, setBootstrapSecret] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [deletingUid, setDeletingUid] = useState<string | null>(null);
@@ -232,6 +242,7 @@ export default function SuperAdminPage() {
       body: JSON.stringify({
         email: email.trim(),
         role,
+        locationScope: role === "superadmin" ? "both" : locationScope,
         ...(role === "massage_therapist" ? { linkedProviderId: linkedProviderId.trim() } : {}),
       }),
     });
@@ -667,6 +678,25 @@ export default function SuperAdminPage() {
                   </select>
                 </label>
               ) : null}
+              {role === "front_desk" || role === "manager" ? (
+                <label className="space-y-1 text-sm">
+                  <span className="font-medium text-slate-800">Location access</span>
+                  <select
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                    value={locationScope}
+                    onChange={(e) => setLocationScope(e.target.value as StaffLocationScope)}
+                  >
+                    {STAFF_LOCATION_SCOPE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="block text-xs text-slate-500">
+                    Which location’s contact messages they can see. Superadmins always see both.
+                  </span>
+                </label>
+              ) : null}
             </div>
             <button
               type="button"
@@ -693,6 +723,11 @@ export default function SuperAdminPage() {
                         {s.role === "massage_therapist" && s.linkedProviderId ? (
                           <div className="text-xs text-slate-500">
                             Calendar: {providerLabelById(s.linkedProviderId) ?? s.linkedProviderId}
+                          </div>
+                        ) : null}
+                        {s.role === "front_desk" || s.role === "manager" ? (
+                          <div className="text-xs text-slate-500">
+                            Contact inbox: {staffLocationScopeLabel(s.locationScope)}
                           </div>
                         ) : null}
                         {isSelf ? (

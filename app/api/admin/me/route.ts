@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyBearerUid, getStaffProfile } from "@/lib/staff-auth";
-import { staffCapabilities } from "@/lib/staff-roles";
+import { staffCapabilities, effectiveLocationScope } from "@/lib/staff-roles";
 
 export const runtime = "nodejs";
 
@@ -25,5 +25,6 @@ export async function GET(req: Request) {
     role: profile.role,
     linkedProviderId: profile.linkedProviderId ?? null,
     capabilities: staffCapabilities(profile.role),
+    locationScope: effectiveLocationScope(profile.role, profile.locationScope),
   });
 }

@@ -7,7 +7,14 @@ import { getPublicAppOriginForRequest } from "@/lib/app-origin";
 import { fetchProviderById } from "@/lib/providers-db";
 import { requireStaff } from "@/lib/staff-auth";
 import { sendStaffInviteEmail } from "@/lib/sendgrid";
-import { STAFF_ROLES, canAssignRole, type StaffRole } from "@/lib/staff-roles";
+import {
+  STAFF_ROLES,
+  STAFF_LOCATION_SCOPES,
+  canAssignRole,
+  normalizeStaffLocationScope,
+  type StaffRole,
+  type StaffLocationScope,
+} from "@/lib/staff-roles";
 
 export const runtime = "nodejs";
 
@@ -16,6 +23,9 @@ const bodySchema = z
     email: z.string().email(),
     role: z.enum(STAFF_ROLES as [StaffRole, ...StaffRole[]]),
     linkedProviderId: z.string().min(1).max(200).optional(),
+    locationScope: z
+      .enum(STAFF_LOCATION_SCOPES as [StaffLocationScope, ...StaffLocationScope[]])
+      .optional(),
   })
   .superRefine((data, ctx) => {
     if (data.role === "massage_therapist" && !data.linkedProviderId?.trim()) {
@@ -66,6 +76,7 @@ export async function POST(req: Request) {
 
   const linkedProviderId =
     role === "massage_therapist" ? parsed.data.linkedProviderId!.trim() : undefined;
+  const locationScope = normalizeStaffLocationScope(parsed.data.locationScope);
 
   const auth = getAuth();
   const db = getFirestore();
@@ -123,6 +134,7 @@ export async function POST(req: Request) {
       {
         role,
         email,
+        locationScope,
         updatedAt: FieldValue.serverTimestamp(),
         updatedByUid: actor.uid,
         ...(createdNewAuthUser ? { invitedAt: FieldValue.serverTimestamp() } : {}),

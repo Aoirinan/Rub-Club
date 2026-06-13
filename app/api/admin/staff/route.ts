@@ -5,10 +5,13 @@ import { getAuth, getFirestore } from "@/lib/firebase-admin";
 import { requireStaff } from "@/lib/staff-auth";
 import {
   STAFF_ROLES,
+  STAFF_LOCATION_SCOPES,
   canAssignRole,
   normalizeStaffRole,
+  normalizeStaffLocationScope,
   staffMeetsMin,
   type StaffRole,
+  type StaffLocationScope,
 } from "@/lib/staff-roles";
 
 export const runtime = "nodejs";
@@ -18,6 +21,9 @@ const bodySchema = z
     email: z.string().email(),
     role: z.enum(STAFF_ROLES as [StaffRole, ...StaffRole[]]),
     linkedProviderId: z.string().min(1).max(200).optional(),
+    locationScope: z
+      .enum(STAFF_LOCATION_SCOPES as [StaffLocationScope, ...StaffLocationScope[]])
+      .optional(),
   })
   .superRefine((data, ctx) => {
     if (data.role === "massage_therapist" && !data.linkedProviderId?.trim()) {
@@ -71,6 +77,7 @@ export async function POST(req: Request) {
 
   const linkedProviderId =
     parsed.data.role === "massage_therapist" ? parsed.data.linkedProviderId!.trim() : undefined;
+  const locationScope = normalizeStaffLocationScope(parsed.data.locationScope);
 
   await getFirestore()
     .collection("staff")
@@ -79,6 +86,7 @@ export async function POST(req: Request) {
       {
         role: parsed.data.role,
         email,
+        locationScope,
         updatedAt: FieldValue.serverTimestamp(),
         updatedByUid: staff.uid,
         ...(linkedProviderId ? { linkedProviderId } : {}),

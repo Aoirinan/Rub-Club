@@ -112,7 +112,7 @@ export default async function SulphurSpringsContactPage() {
               {contactAppointmentCopy(isPublicBookingEnabled(bookingConfig))}
             </p>
             <div className="mt-6">
-              <ContactForm locationTag="Sulphur Springs" />
+              <ContactForm location="sulphur_springs" />
             </div>
           </div>
           <aside className="space-y-4 text-sm">

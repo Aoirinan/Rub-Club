@@ -21,13 +21,13 @@ import {
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "Locations — Paris & Sulphur Springs offices",
+  title: "Contact — Chiropractic Associates, Paris, TX",
   description:
-    "Phone numbers, addresses, and hours for The Rub Club and Chiropractic Associates in Paris and Sulphur Springs, TX. Send a message or call us directly.",
+    "Phone number, address, and hours for The Rub Club and Chiropractic Associates in Paris, TX. Send a message or call us directly.",
   path: "/contact",
-  ogTitle: "Locations — Chiropractic Associates",
+  ogTitle: "Contact — Chiropractic Associates, Paris",
   ogDescription:
-    "Phone, hours, and contact form for our Paris and Sulphur Springs, TX offices.",
+    "Phone, hours, and contact form for our Paris, TX office. Sulphur Springs has its own contact page.",
 });
 
 function PhoneIcon() {
@@ -54,7 +54,8 @@ export default async function ContactPage() {
     getDisplayLocations(),
     getPageBrand(),
   ]);
-  const locationList = [displayLocs.paris, displayLocs.sulphur_springs];
+  // Paris-only contact page; Sulphur Springs has its own at /sulphur-springs/contact.
+  const locationList = [displayLocs.paris];
 
   return (
     <div className="bg-[#f4f2ea]" style={practiceThemeStyle(brand.loc)}>
@@ -74,7 +75,7 @@ export default async function ContactPage() {
           <h2 className="mt-10 text-center text-2xl font-semibold text-[var(--pp-accent)]">
             Information
           </h2>
-          <div className="mx-auto mt-6 grid max-w-4xl gap-8 sm:grid-cols-2">
+          <div className="mx-auto mt-6 grid max-w-md gap-8">
             {locationList.map((loc) => {
               // Brand each office by location so the Sulphur Springs side reads
               // as blue and the Paris side as red. Falls back to the defaults.
@@ -176,7 +177,7 @@ export default async function ContactPage() {
                 {contactAppointmentCopy(isPublicBookingEnabled(bookingConfig))}
               </p>
               <div className="mt-6">
-                <ContactForm variant={brand.variant} />
+                <ContactForm location="paris" variant={brand.variant} />
               </div>
             </div>
             <aside className="space-y-4 text-sm">

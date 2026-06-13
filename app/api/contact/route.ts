@@ -5,6 +5,7 @@ import {
   createContactSubmission,
   updateContactSubmissionDelivery,
 } from "@/lib/contact-submissions";
+import { resolveOfficeNotificationEmail } from "@/lib/contact-routing";
 import { assertRateLimitOk } from "@/lib/rate-limit";
 import { sendOutboundEmail } from "@/lib/sendgrid";
 
@@ -17,6 +18,7 @@ const bodySchema = z.object({
   topic: z.string().max(80).optional(),
   message: z.string().min(5).max(4000),
   website: z.string().max(200).optional(),
+  location: z.enum(["paris", "sulphur_springs"]).optional(),
 });
 
 export async function POST(req: Request) {
@@ -51,6 +53,7 @@ export async function POST(req: Request) {
     phone: body.phone?.trim(),
     topic: body.topic?.trim(),
     message: body.message.trim(),
+    location: body.location,
   };
 
   let submissionId: string;
@@ -68,7 +71,7 @@ export async function POST(req: Request) {
   }
 
   let officeEmailSent = false;
-  const officeTo = process.env.OFFICE_NOTIFICATION_EMAIL?.trim();
+  const officeTo = await resolveOfficeNotificationEmail(payload.location);
   if (officeTo) {
     const { subject, text, html } = contactFormEmail({
       name: payload.name,
@@ -83,7 +86,7 @@ export async function POST(req: Request) {
       console.warn("[contact] office notification not sent:", officeResult.reason);
     }
   } else {
-    console.warn("[contact] OFFICE_NOTIFICATION_EMAIL is not set — message saved; staff use Admin → Contact inbox");
+    console.warn("[contact] no office notification email configured — message saved; staff use Admin → Contact inbox");
   }
 
   const autoReply = contactFormAutoReplyEmail({ name: payload.name });

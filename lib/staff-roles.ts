@@ -86,3 +86,41 @@ export function staffRoleLabel(raw: unknown): string {
   if (!role) return typeof raw === "string" ? raw : "Unknown";
   return STAFF_ROLE_OPTIONS.find((o) => o.value === role)?.label ?? role;
 }
+
+/**
+ * Which location(s) a staff login can see contact messages for.
+ * "both" (default) keeps existing behavior; superadmins are always "both".
+ */
+export type StaffLocationScope = "paris" | "sulphur_springs" | "both";
+
+export const STAFF_LOCATION_SCOPES: StaffLocationScope[] = [
+  "both",
+  "paris",
+  "sulphur_springs",
+];
+
+export function normalizeStaffLocationScope(raw: unknown): StaffLocationScope {
+  return raw === "paris" || raw === "sulphur_springs" ? raw : "both";
+}
+
+/** Effective scope: superadmins always see both, regardless of stored value. */
+export function effectiveLocationScope(
+  role: StaffRole,
+  stored: StaffLocationScope,
+): StaffLocationScope {
+  return role === "superadmin" ? "both" : stored;
+}
+
+export const STAFF_LOCATION_SCOPE_OPTIONS: {
+  value: StaffLocationScope;
+  label: string;
+}[] = [
+  { value: "both", label: "Both locations" },
+  { value: "paris", label: "Paris only" },
+  { value: "sulphur_springs", label: "Sulphur Springs only" },
+];
+
+export function staffLocationScopeLabel(raw: unknown): string {
+  const scope = normalizeStaffLocationScope(raw);
+  return STAFF_LOCATION_SCOPE_OPTIONS.find((o) => o.value === scope)?.label ?? "Both locations";
+}

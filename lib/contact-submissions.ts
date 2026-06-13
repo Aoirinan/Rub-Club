@@ -5,6 +5,9 @@ export const CONTACT_SUBMISSIONS_COLLECTION = "contact_submissions";
 
 export type ContactSubmissionStatus = "new" | "read" | "archived";
 
+/** Which office a contact message belongs to. */
+export type ContactLocationId = "paris" | "sulphur_springs";
+
 export type ContactSubmissionRecord = {
   id: string;
   name: string;
@@ -12,6 +15,8 @@ export type ContactSubmissionRecord = {
   phone?: string;
   topic?: string;
   message: string;
+  /** Office the message was sent to. Older rows may not have this. */
+  location?: ContactLocationId;
   status: ContactSubmissionStatus;
   officeEmailSent: boolean;
   autoReplySent: boolean;
@@ -24,7 +29,12 @@ export type ContactSubmissionInput = {
   phone?: string;
   topic?: string;
   message: string;
+  location?: ContactLocationId;
 };
+
+function parseLocation(value: unknown): ContactLocationId | undefined {
+  return value === "paris" || value === "sulphur_springs" ? value : undefined;
+}
 
 function timestampToIso(value: Timestamp | Date | string | null | undefined): string | null {
   if (!value) return null;
@@ -54,6 +64,7 @@ function parseDoc(id: string, data: DocumentData | undefined): ContactSubmission
     phone: typeof data.phone === "string" && data.phone.trim() ? data.phone.trim() : undefined,
     topic: typeof data.topic === "string" && data.topic.trim() ? data.topic.trim() : undefined,
     message,
+    location: parseLocation(data.location),
     status,
     officeEmailSent: data.officeEmailSent === true,
     autoReplySent: data.autoReplySent === true,
@@ -72,6 +83,7 @@ export async function createContactSubmission(
     ...(input.phone ? { phone: input.phone } : {}),
     ...(input.topic ? { topic: input.topic } : {}),
     message: input.message,
+    ...(input.location ? { location: input.location } : {}),
     status: "new",
     officeEmailSent: false,
     autoReplySent: false,
@@ -97,13 +109,32 @@ export async function updateContactSubmissionDelivery(
     );
 }
 
+/**
+ * Location scope for reading submissions:
+ * - "paris" / "sulphur_springs": only that office's messages.
+ * - "all": every message (used by superadmins / both-access staff).
+ * Rows with no stored `location` (older messages) are only visible to "all".
+ */
+export type ContactLocationScope = ContactLocationId | "all";
+
+function rowMatchesScope(
+  row: ContactSubmissionRecord,
+  scope: ContactLocationScope,
+): boolean {
+  if (scope === "all") return true;
+  return row.location === scope;
+}
+
 export async function listContactSubmissions(options?: {
   status?: ContactSubmissionStatus | "all";
+  location?: ContactLocationScope;
   limit?: number;
 }): Promise<ContactSubmissionRecord[]> {
   const db = getFirestore();
   const limit = Math.min(Math.max(options?.limit ?? 100, 1), 200);
-  const fetchLimit = options?.status && options.status !== "all" ? Math.min(limit * 4, 200) : limit;
+  const scope = options?.location ?? "all";
+  const filtered = (options?.status && options.status !== "all") || scope !== "all";
+  const fetchLimit = filtered ? 200 : limit;
 
   const snap = await db
     .collection(CONTACT_SUBMISSIONS_COLLECTION)
@@ -116,6 +147,7 @@ export async function listContactSubmissions(options?: {
     const row = parseDoc(doc.id, doc.data());
     if (!row) continue;
     if (options?.status && options.status !== "all" && row.status !== options.status) continue;
+    if (!rowMatchesScope(row, scope)) continue;
     rows.push(row);
     if (rows.length >= limit) break;
   }
@@ -134,12 +166,30 @@ export async function updateContactSubmissionStatus(
   return true;
 }
 
-export async function countNewContactSubmissions(): Promise<number> {
+export async function countNewContactSubmissions(
+  location: ContactLocationScope = "all",
+): Promise<number> {
   const db = getFirestore();
   const snap = await db
     .collection(CONTACT_SUBMISSIONS_COLLECTION)
     .where("status", "==", "new")
     .limit(200)
     .get();
-  return snap.size;
+  if (location === "all") return snap.size;
+  let count = 0;
+  for (const doc of snap.docs) {
+    const row = parseDoc(doc.id, doc.data());
+    if (row && rowMatchesScope(row, location)) count += 1;
+  }
+  return count;
+}
+
+/** Read a single submission (for scope checks before mutating). */
+export async function getContactSubmission(
+  id: string,
+): Promise<ContactSubmissionRecord | null> {
+  const db = getFirestore();
+  const snap = await db.collection(CONTACT_SUBMISSIONS_COLLECTION).doc(id).get();
+  if (!snap.exists) return null;
+  return parseDoc(snap.id, snap.data());
 }
