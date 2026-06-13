@@ -127,21 +127,12 @@ function ContactPanel({
                     className="inline-block text-xs font-bold underline hover:text-white/80"
                     onClick={onClose}
                   >
-                    Contact page &rarr;
+                    Send a message &rarr;
                   </Link>
                 ) : null}
               </div>
             </div>
           ))}
-        </div>
-        <div className="mt-4 border-t border-white/20 pt-3">
-          <Link
-            href={item.href}
-            className="text-xs font-black uppercase tracking-widest text-white hover:underline"
-            onClick={onClose}
-          >
-            Send us a message &rarr;
-          </Link>
         </div>
       </div>
     </div>

@@ -214,7 +214,7 @@ export function MobileNav({
                                       className="inline-block text-xs font-bold text-[#c0392b] underline"
                                       onClick={close}
                                     >
-                                      Contact page
+                                      Send a message
                                     </Link>
                                   ) : null}
                                 </div>
@@ -230,15 +230,6 @@ export function MobileNav({
                                 {c.label}
                               </Link>
                             ))}
-                        {item.clinics?.length ? (
-                          <Link
-                            href={item.href}
-                            className="focus-ring block px-8 py-2 text-xs font-black uppercase tracking-wide text-[#c0392b] underline"
-                            onClick={close}
-                          >
-                            Send us a message
-                          </Link>
-                        ) : null}
                       </div>
                     ) : null}
                   </div>
