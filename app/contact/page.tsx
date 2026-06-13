@@ -75,11 +75,22 @@ export default async function ContactPage() {
             Information
           </h2>
           <div className="mx-auto mt-6 grid max-w-4xl gap-8 sm:grid-cols-2">
-            {locationList.map((loc) => (
+            {locationList.map((loc) => {
+              // Brand each office by location so the Sulphur Springs side reads
+              // as blue and the Paris side as red. Falls back to the defaults.
+              const isSs = loc.slug === "sulphur-springs";
+              const accent = isSs
+                ? "text-[var(--brand-ss-accent,#2980b9)]"
+                : "text-[var(--brand-paris-accent,#c0392b)]";
+              const cta = isSs
+                ? "bg-[var(--brand-ss-cta,#0c2d3a)] hover:bg-[var(--brand-ss-cta-hover,#081f29)]"
+                : "bg-[var(--brand-paris-cta,#4a1515)] hover:bg-[var(--brand-paris-cta-hover,#341010)]";
+              const contactHref = isSs ? "/sulphur-springs/contact" : "#send-message";
+              return (
               <article key={loc.id} className="space-y-3 text-center sm:text-left">
-                <h3 className="text-lg font-bold text-[var(--pp-accent)]">{loc.name}</h3>
+                <h3 className={`text-lg font-bold ${accent}`}>{loc.name}</h3>
                 <p className="flex items-center justify-center gap-2 text-sm text-stone-700 sm:justify-start">
-                  <span className="text-[var(--pp-accent)]">
+                  <span className={accent}>
                     <PhoneIcon />
                   </span>
                   <a className="focus-ring font-bold hover:underline" href={telHref(loc.phonePrimary)}>
@@ -88,7 +99,7 @@ export default async function ContactPage() {
                 </p>
                 {loc.phoneSecondary ? (
                   <p className="flex items-center justify-center gap-2 text-sm text-stone-700 sm:justify-start">
-                    <span className="text-[var(--pp-accent)]">
+                    <span className={accent}>
                       <PhoneIcon />
                     </span>
                     <a
@@ -101,7 +112,7 @@ export default async function ContactPage() {
                   </p>
                 ) : null}
                 <p className="flex items-start justify-center gap-2 text-sm text-stone-700 sm:justify-start">
-                  <span className="mt-0.5 text-[var(--pp-accent)]">
+                  <span className={`mt-0.5 ${accent}`}>
                     <PinIcon />
                   </span>
                   <a
@@ -118,23 +129,30 @@ export default async function ContactPage() {
                   </a>
                 </p>
                 <div className="flex flex-wrap justify-center gap-3 pt-1 sm:justify-start">
+                  <Link
+                    href={contactHref}
+                    className={`focus-ring inline-flex px-4 py-2 text-xs font-bold uppercase tracking-wide text-white ${cta}`}
+                  >
+                    Contact Us
+                  </Link>
                   <a
                     href={loc.mapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="focus-ring inline-flex bg-[var(--pp-cta)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-[var(--pp-cta-hover)]"
+                    className={`focus-ring inline-flex px-4 py-2 text-xs font-bold uppercase tracking-wide text-white ${cta}`}
                   >
                     Get Directions
                   </a>
                   <Link
                     href={`/locations/${loc.slug}`}
-                    className="focus-ring inline-flex bg-[var(--pp-cta)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-[var(--pp-cta-hover)]"
+                    className={`focus-ring inline-flex px-4 py-2 text-xs font-bold uppercase tracking-wide text-white ${cta}`}
                   >
                     Location Details
                   </Link>
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         </section>
 
@@ -150,7 +168,7 @@ export default async function ContactPage() {
         </section>
 
         {/* Message form */}
-        <section>
+        <section id="send-message" className="scroll-mt-24">
           <SectionHeading>Send Us a Message</SectionHeading>
           <div className="mx-auto mt-8 grid max-w-4xl gap-8 rounded-xl bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
