@@ -55,15 +55,16 @@ export default async function ContactPage() {
     getPageBrand(),
   ]);
   // Paris-only contact page; Sulphur Springs has its own at /sulphur-springs/contact.
-  const locationList = [displayLocs.paris];
+  const paris = displayLocs.paris;
+  const locationList = [paris];
 
   return (
     <div className="bg-[#f4f2ea]" style={practiceThemeStyle(brand.loc)}>
       <JsonLd data={organizationJsonLd(locationList)} />
       <Breadcrumbs items={[{ name: "Home", url: "/" }, { name: "Locations", url: "/contact" }]} />
 
-      <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-10">
-        {/* Backpro-style contact header */}
+      <div className="mx-auto max-w-6xl space-y-10 px-4 pb-16 pt-10">
+        {/* Header */}
         <section>
           <SectionHeading>{c.contact_heading?.trim() || "Contact Us"}</SectionHeading>
           {c.contact_subtext?.trim() ? (
@@ -71,130 +72,105 @@ export default async function ContactPage() {
               {c.contact_subtext}
             </p>
           ) : null}
+        </section>
 
-          <h2 className="mt-10 text-center text-2xl font-semibold text-[var(--pp-accent)]">
-            Information
-          </h2>
-          <div className="mx-auto mt-6 grid max-w-md gap-8">
-            {locationList.map((loc) => {
-              // Brand each office by location so the Sulphur Springs side reads
-              // as blue and the Paris side as red. Falls back to the defaults.
-              const isSs = loc.slug === "sulphur-springs";
-              const accent = isSs
-                ? "text-[var(--brand-ss-accent,#2980b9)]"
-                : "text-[var(--brand-paris-accent,#c0392b)]";
-              const cta = isSs
-                ? "bg-[var(--brand-ss-cta,#0c2d3a)] hover:bg-[var(--brand-ss-cta-hover,#081f29)]"
-                : "bg-[var(--brand-paris-cta,#4a1515)] hover:bg-[var(--brand-paris-cta-hover,#341010)]";
-              const contactHref = isSs ? "/sulphur-springs/contact" : "#send-message";
-              return (
-              <article key={loc.id} className="space-y-3 text-center sm:text-left">
-                <h3 className={`text-lg font-bold ${accent}`}>{loc.name}</h3>
-                <p className="flex items-center justify-center gap-2 text-sm text-stone-700 sm:justify-start">
-                  <span className={accent}>
+        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+          {/* Left column: office info + hours */}
+          <div className="space-y-6">
+            <section className="rounded-xl border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-8">
+              <h2 className="text-xl font-black text-[var(--pp-heading)]">{paris.name}</h2>
+              <div className="mt-4 space-y-3 text-sm text-stone-700">
+                <p className="flex items-center gap-2">
+                  <span className="text-[var(--pp-accent)]">
                     <PhoneIcon />
                   </span>
-                  <a className="focus-ring font-bold hover:underline" href={telHref(loc.phonePrimary)}>
-                    {loc.phonePrimary}
+                  <a className="focus-ring font-bold hover:underline" href={telHref(paris.phonePrimary)}>
+                    {paris.phonePrimary}
                   </a>
                 </p>
-                {loc.phoneSecondary ? (
-                  <p className="flex items-center justify-center gap-2 text-sm text-stone-700 sm:justify-start">
-                    <span className={accent}>
+                {paris.phoneSecondary ? (
+                  <p className="flex items-center gap-2">
+                    <span className="text-[var(--pp-accent)]">
                       <PhoneIcon />
                     </span>
-                    <a
-                      className="focus-ring font-bold hover:underline"
-                      href={telHref(loc.phoneSecondary)}
-                    >
-                      {loc.phoneSecondary}
+                    <a className="focus-ring font-bold hover:underline" href={telHref(paris.phoneSecondary)}>
+                      {paris.phoneSecondary}
                     </a>
                     <span className="text-xs text-stone-500">(massage desk)</span>
                   </p>
                 ) : null}
-                <p className="flex items-start justify-center gap-2 text-sm text-stone-700 sm:justify-start">
-                  <span className={`mt-0.5 ${accent}`}>
+                <p className="flex items-start gap-2">
+                  <span className="mt-0.5 text-[var(--pp-accent)]">
                     <PinIcon />
                   </span>
                   <a
-                    href={loc.mapsUrl}
+                    href={paris.mapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="focus-ring hover:underline"
                   >
-                    {loc.addressLines.map((line) => (
+                    {paris.addressLines.map((line) => (
                       <span key={line} className="block">
                         {line}
                       </span>
                     ))}
                   </a>
                 </p>
-                <div className="flex flex-wrap justify-center gap-3 pt-1 sm:justify-start">
-                  <Link
-                    href={contactHref}
-                    className={`focus-ring inline-flex px-4 py-2 text-xs font-bold uppercase tracking-wide text-white ${cta}`}
-                  >
-                    Contact Us
-                  </Link>
-                  <a
-                    href={loc.mapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`focus-ring inline-flex px-4 py-2 text-xs font-bold uppercase tracking-wide text-white ${cta}`}
-                  >
-                    Get Directions
-                  </a>
-                  <Link
-                    href={`/locations/${loc.slug}`}
-                    className={`focus-ring inline-flex px-4 py-2 text-xs font-bold uppercase tracking-wide text-white ${cta}`}
-                  >
-                    Location Details
-                  </Link>
-                </div>
-              </article>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Hours */}
-        <section>
-          <SectionHeading>Hours</SectionHeading>
-          <div className="mx-auto mt-8 max-w-xl rounded-xl bg-white p-6 shadow-md">
-            <OfficeHoursTable
-              rows={parisHours}
-              rowClassName="flex justify-between gap-3 border-b border-stone-200 py-1.5"
-            />
-          </div>
-        </section>
-
-        {/* Message form */}
-        <section id="send-message" className="scroll-mt-24">
-          <SectionHeading>Send Us a Message</SectionHeading>
-          <div className="mx-auto mt-8 grid max-w-4xl gap-8 rounded-xl bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[1.2fr_0.8fr]">
-            <div>
-              <p className="text-sm text-stone-700">
-                {contactAppointmentCopy(isPublicBookingEnabled(bookingConfig))}
-              </p>
-              <div className="mt-6">
-                <ContactForm location="paris" variant={brand.variant} />
               </div>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <a
+                  href={paris.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="focus-ring inline-flex bg-[var(--pp-cta)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-[var(--pp-cta-hover)]"
+                >
+                  Get Directions
+                </a>
+                <Link
+                  href={`/locations/${paris.slug}`}
+                  className="focus-ring inline-flex border-2 border-[var(--pp-accent)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-[var(--pp-accent)] hover:bg-[var(--pp-accent)]/5"
+                >
+                  Location Details
+                </Link>
+              </div>
+            </section>
+
+            <section className="rounded-xl border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-8">
+              <h2 className="text-xl font-black text-[var(--pp-heading)]">Hours</h2>
+              <div className="mt-4">
+                <OfficeHoursTable
+                  rows={parisHours}
+                  rowClassName="flex justify-between gap-3 border-b border-stone-200 py-1.5 text-sm"
+                />
+              </div>
+            </section>
+          </div>
+
+          {/* Right column: message form */}
+          <section
+            id="send-message"
+            className="scroll-mt-24 rounded-xl border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-8"
+          >
+            <h2 className="text-xl font-black text-[var(--pp-heading)]">Send Us a Message</h2>
+            <p className="mt-2 text-sm text-stone-700">
+              {contactAppointmentCopy(isPublicBookingEnabled(bookingConfig))}
+            </p>
+            <div className="mt-5">
+              <ContactForm location="paris" variant={brand.variant} />
             </div>
-            <aside className="space-y-4 text-sm">
-              <div className="rounded border border-amber-200 bg-amber-50 p-4 text-amber-900">
-                <p className="text-sm font-bold">Privacy notice</p>
-                <p className="mt-1 text-sm">
-                  Please don&rsquo;t share sensitive health information through this form. For
-                  anything medical, please call us directly. See our{" "}
-                  <Link className="font-bold underline" href="/website-privacy">
-                    website privacy policy
-                  </Link>
-                  .
-                </p>
-              </div>
-            </aside>
-          </div>
-        </section>
+            <div className="mt-5 rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              <p className="font-bold">Privacy notice</p>
+              <p className="mt-1">
+                Please don&rsquo;t share sensitive health information through this form. For
+                anything medical, please call us directly. See our{" "}
+                <Link className="font-bold underline" href="/website-privacy">
+                  website privacy policy
+                </Link>
+                .
+              </p>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );

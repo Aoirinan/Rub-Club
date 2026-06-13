@@ -102,10 +102,12 @@ export function buildDefaultNavItems(
     },
     { href: "/patient-forms", label: "Patient Forms" },
     {
-      href: "/contact",
+      // On the Sulphur Springs side, the Locations tab + "Send us a message"
+      // link go to the Sulphur Springs contact page; Paris/default -> /contact.
+      href: onSulphur ? "/sulphur-springs/contact" : "/contact",
       label: "Locations",
-      clinics: [
-        {
+      clinics: (() => {
+        const parisClinic = {
           name: "Paris",
           addressLines: paris.addressLines,
           phones: [
@@ -116,15 +118,17 @@ export function buildDefaultNavItems(
           ],
           mapsUrl: paris.mapsUrl,
           contactHref: "/contact",
-        },
-        {
+        };
+        const ssClinic = {
           name: "Sulphur Springs",
           addressLines: sulphur.addressLines,
           phones: [{ label: "Office", number: sulphur.phonePrimary }],
           mapsUrl: sulphur.mapsUrl,
           contactHref: "/sulphur-springs/contact",
-        },
-      ],
+        };
+        // Put the visitor's current location first.
+        return onSulphur ? [ssClinic, parisClinic] : [parisClinic, ssClinic];
+      })(),
     },
   ];
 }
