@@ -1,9 +1,5 @@
 import type { PageBuilderScopeId } from "@/lib/page-builder-content-scopes";
-import {
-  isFaqItemsScope,
-  isPageBuilderScopeId,
-  isPracticePagesScope,
-} from "@/lib/page-builder-content-scopes";
+import { isFaqItemsScope, isPageBuilderScopeId } from "@/lib/page-builder-content-scopes";
 import type { ContentFieldMeta } from "@/lib/cms-registry";
 import { getContentFieldMeta } from "@/lib/cms-registry";
 
@@ -51,15 +47,10 @@ export type VisualPageLayout = {
   layers: VisualLayer[];
 };
 
-export type VisualScopeId = Exclude<
-  PageBuilderScopeId,
-  "faq-items" | "practice-pages"
->;
+export type VisualScopeId = Exclude<PageBuilderScopeId, "faq-items">;
 
 export function isVisualScopeId(v: string): v is VisualScopeId {
-  return (
-    isPageBuilderScopeId(v) && !isFaqItemsScope(v) && !isPracticePagesScope(v)
-  );
+  return isPageBuilderScopeId(v) && !isFaqItemsScope(v);
 }
 
 const BOX_W_MIN = 4;

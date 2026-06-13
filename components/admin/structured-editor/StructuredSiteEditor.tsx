@@ -10,10 +10,10 @@ import {
   CONTENT_SCOPES,
   isContentScopeId,
   isFaqItemsScope,
-  isPracticePagesScope,
 } from "@/lib/page-builder-content-scopes";
 import { isPageLayoutId, PAGE_LAYOUT_PAGES } from "@/lib/page-layout";
 import type { PageBuilderScopeId } from "@/lib/page-builder-content-scopes";
+import type { PracticeLocationId } from "@/lib/practice-pages-shared";
 import { FaqItemsPanel } from "@/components/admin/FaqItemsPanel";
 import { ScopeFieldForm } from "./ScopeFieldForm";
 
@@ -27,7 +27,6 @@ function parseInitialScope(raw?: string): PageBuilderScopeId {
   if (raw === "header-branding") return "footer";
   if (raw && isPageLayoutId(raw)) return raw;
   if (raw && isFaqItemsScope(raw)) return raw;
-  if (raw && isPracticePagesScope(raw)) return raw;
   if (raw && isContentScopeId(raw)) return raw;
   return "home";
 }
@@ -68,9 +67,76 @@ function scopeLabel(scope: PageBuilderScopeId, pages: { id: string; label: strin
     return pages.find((p) => p.id === scope)?.label ?? scope;
   }
   if (scope === "faq-items") return "FAQ items";
-  if (scope === "practice-pages") return "Practice pages";
   return CONTENT_SCOPES.find((s) => s.id === scope)?.label ?? scope;
 }
+
+/**
+ * Landing pages whose layout/content is driven by the `practice_pages` docs.
+ * These scopes embed the PracticePagesEditor for the mapped page and hide the
+ * legacy site_content fields it replaced.
+ */
+const SCOPE_TO_PRACTICE_LOCATION: Record<string, PracticeLocationId> = {
+  home: "paris-home",
+  chiropractic: "paris-chiro",
+  "sulphur-springs": "sulphur-springs",
+};
+
+function practiceLocationForScope(scope: PageBuilderScopeId): PracticeLocationId | null {
+  return SCOPE_TO_PRACTICE_LOCATION[scope] ?? null;
+}
+
+/**
+ * Legacy fields superseded by the practice editor for each landing scope.
+ * Kept (not listed) where still consumed elsewhere: home_awards_text (awards
+ * strip), chiro_treatments_list (Services nav), and the SS hours / massage /
+ * contact fields used by other Sulphur Springs pages.
+ */
+const SUPERSEDED_FIELD_IDS: Record<string, string[]> = {
+  home: [
+    "home_hero_heading",
+    "home_hero_subheading",
+    "home_hero_cta_label",
+    "home_about_blurb",
+    "home_testimonials_heading",
+    "home_testimonials_intro",
+  ],
+  chiropractic: [
+    "chiro_hero_heading",
+    "chiro_hero_subheading",
+    "chiro_choose_title",
+    "chiro_intro_body",
+    "chiro_conditions_list",
+    "chiro_doctors_heading",
+    "chiro_doctors_intro",
+    "chiro_treatments_heading",
+    "chiro_treatments_intro",
+    "chiro_testimonials_heading",
+    "chiro_cta_heading",
+    "chiro_cta_subtext",
+    "chiro_cta_paris_label",
+    "chiro_cta_ss_label",
+    "chiro_cta_massage_link",
+    "chiro_cta_stretch_link",
+    "chiro_cta_forms_link",
+    "chiro_schedule_cta_title",
+    "chiro_schedule_cta_body",
+    "chiro_schedule_cta_secondary",
+    "chiro_testimonial_1_text",
+    "chiro_testimonial_1_attr",
+    "chiro_testimonial_2_text",
+    "chiro_testimonial_2_attr",
+    "chiro_testimonial_3_text",
+    "chiro_testimonial_3_attr",
+    "chiro_wellness_teaser_heading",
+    "chiro_wellness_teaser_body",
+  ],
+  "sulphur-springs": [
+    "ss_hero_heading",
+    "ss_intro_body",
+    "ss_doctor_heading",
+    "ss_doctor_intro",
+  ],
+};
 
 export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
   const [scope, setScope] = useState<PageBuilderScopeId>(() => parseInitialScope(initialScope));
@@ -110,13 +176,31 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
 
   const staffFocus = officeStaffLocationFocus(scope);
 
-  const isPracticePages = scope === "practice-pages";
+  const practiceLocation = practiceLocationForScope(scope);
+  const widePane = Boolean(practiceLocation) || Boolean(staffFocus);
 
   let main: React.ReactNode = null;
   if (scope === "faq-items") {
     main = <FaqItemsPanel getIdToken={getIdToken} />;
-  } else if (isPracticePages) {
-    main = <PracticePagesEditor getIdToken={getIdToken} />;
+  } else if (practiceLocation) {
+    main = (
+      <div className="space-y-6">
+        <PracticePagesEditor
+          getIdToken={getIdToken}
+          initialLocation={practiceLocation}
+          embedded
+        />
+        <ScopeFieldForm
+          scope={scope}
+          fields={cms.fields}
+          busy={cms.busy}
+          message={cms.message}
+          onSave={cms.saveField}
+          onReset={cms.resetField}
+          excludeFieldIds={SUPERSEDED_FIELD_IDS[scope]}
+        />
+      </div>
+    );
   } else if (staffFocus) {
     main = (
       <div className="space-y-6">
@@ -178,9 +262,6 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
                 ))}
                 <option value="faq-items">FAQ items</option>
               </optgroup>
-              <optgroup label="Practice pages">
-                <option value="practice-pages">Layout, theme &amp; hero</option>
-              </optgroup>
             </select>
           </label>
           {livePath ? (
@@ -206,7 +287,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
       <div className="flex flex-1 flex-col gap-0 lg:flex-row">
         <main
           className={`min-w-0 flex-1 p-4 lg:p-6 ${
-            isPracticePages ? "" : staffFocus ? "lg:max-w-3xl" : "lg:max-w-2xl"
+            widePane ? "lg:max-w-3xl" : "lg:max-w-2xl"
           }`}
         >
           <div className="mb-3 flex items-center justify-between">

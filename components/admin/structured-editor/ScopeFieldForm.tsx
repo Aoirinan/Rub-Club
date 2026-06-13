@@ -24,6 +24,8 @@ type Props = {
   message: { kind: "ok" | "err"; text: string } | null;
   onSave: (id: string, value: string, file?: File) => Promise<void>;
   onReset: (id: string, label: string) => Promise<void>;
+  /** Field ids to hide (e.g. legacy fields superseded by the practice editor). */
+  excludeFieldIds?: string[];
 };
 
 type SectionDef = {
@@ -97,12 +99,27 @@ function pickFields(
   return { rows: present, missing };
 }
 
-export function ScopeFieldForm({ scope, fields, busy, message, onSave, onReset }: Props) {
+export function ScopeFieldForm({
+  scope,
+  fields,
+  busy,
+  message,
+  onSave,
+  onReset,
+  excludeFieldIds,
+}: Props) {
   const sections = useMemo<SectionDef[]>(() => {
-    if (isPageLayoutId(scope)) return sectionsForLayoutPage(scope);
-    if (isContentScopeId(scope)) return sectionsForContentScope(scope);
-    return [];
-  }, [scope]);
+    const base = isPageLayoutId(scope)
+      ? sectionsForLayoutPage(scope)
+      : isContentScopeId(scope)
+        ? sectionsForContentScope(scope)
+        : [];
+    if (!excludeFieldIds?.length) return base;
+    const hidden = new Set(excludeFieldIds);
+    return base
+      .map((s) => ({ ...s, fieldIds: s.fieldIds.filter((id) => !hidden.has(id)) }))
+      .filter((s) => s.fieldIds.length > 0);
+  }, [scope, excludeFieldIds]);
 
   if (sections.length === 0) {
     return (

@@ -19,6 +19,10 @@ import { PracticeTestimonialsPanel } from "./PracticeTestimonialsPanel";
 
 type Props = {
   getIdToken: () => Promise<string | null>;
+  /** Lock the editor to a single practice page (used when embedded per-scope). */
+  initialLocation?: PracticeLocationId;
+  /** Embedded in the Website editor: hide the page tabs, heading, and outer padding. */
+  embedded?: boolean;
 };
 
 const INPUT = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm";
@@ -168,13 +172,20 @@ function ImageField({
   );
 }
 
-export function PracticePagesEditor({ getIdToken }: Props) {
-  const [location, setLocation] = useState<PracticeLocationId>("paris-chiro");
+export function PracticePagesEditor({ getIdToken, initialLocation, embedded = false }: Props) {
+  const [location, setLocation] = useState<PracticeLocationId>(
+    initialLocation ?? "paris-chiro",
+  );
   const [doc, setDoc] = useState<PracticePageDoc | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  // Keep the locked page in sync when the embedding scope changes.
+  useEffect(() => {
+    if (initialLocation) setLocation(initialLocation);
+  }, [initialLocation]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -248,42 +259,46 @@ export function PracticePagesEditor({ getIdToken }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Practice pages</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            One layout, three pages. Pick a page, edit its sections in page order, and save.
-          </p>
-        </div>
-        <Link
-          href={PRACTICE_PAGE_PATHS[location]}
-          target="_blank"
-          className="text-sm font-semibold text-[#c0392b] underline"
-        >
-          View page ↗
-        </Link>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {PRACTICE_LOCATION_IDS.map((loc) => (
-          <button
-            key={loc}
-            type="button"
-            onClick={() => {
-              if (dirty && !window.confirm("Discard unsaved changes?")) return;
-              setLocation(loc);
-            }}
-            className={`rounded-full px-4 py-2 text-sm font-bold ${
-              location === loc
-                ? "bg-[#c0392b] text-white shadow-sm"
-                : "border border-slate-300 bg-white text-slate-700 hover:border-slate-400"
-            }`}
+    <div className={embedded ? "space-y-6" : "mx-auto max-w-4xl space-y-6 px-4 py-8"}>
+      {embedded ? null : (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">Practice pages</h1>
+            <p className="mt-1 text-sm text-slate-600">
+              One layout, three pages. Pick a page, edit its sections in page order, and save.
+            </p>
+          </div>
+          <Link
+            href={PRACTICE_PAGE_PATHS[location]}
+            target="_blank"
+            className="text-sm font-semibold text-[#c0392b] underline"
           >
-            {PRACTICE_LOCATION_LABELS[loc]}
-          </button>
-        ))}
-      </div>
+            View page ↗
+          </Link>
+        </div>
+      )}
+
+      {embedded ? null : (
+        <div className="flex flex-wrap gap-2">
+          {PRACTICE_LOCATION_IDS.map((loc) => (
+            <button
+              key={loc}
+              type="button"
+              onClick={() => {
+                if (dirty && !window.confirm("Discard unsaved changes?")) return;
+                setLocation(loc);
+              }}
+              className={`rounded-full px-4 py-2 text-sm font-bold ${
+                location === loc
+                  ? "bg-[#c0392b] text-white shadow-sm"
+                  : "border border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+              }`}
+            >
+              {PRACTICE_LOCATION_LABELS[loc]}
+            </button>
+          ))}
+        </div>
+      )}
 
       {message ? (
         <p className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-800">{message}</p>
