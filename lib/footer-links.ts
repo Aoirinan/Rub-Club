@@ -14,14 +14,14 @@ export const FOOTER_LINKS_FIELDS: Record<SiteBusinessContext, string> = {
 
 export type FooterLink = { label: string; href: string; external: boolean };
 
+// Shared links (no Contact — that one is location-specific, appended per list).
 const SHARED_LINK_LINES = `FAQ — /faq
 Insurance & billing — /insurance
 Patient forms — /patient-forms
 Patient reviews — /reviews
 Privacy practices — /privacy
 Website privacy — /website-privacy
-Terms of use — /terms
-Contact — /contact`;
+Terms of use — /terms`;
 
 export const FOOTER_LINKS_DEFAULT_TEXT = `Massage therapy — /services/massage
 Chiropractic care — /services/chiropractic
@@ -31,19 +31,22 @@ Sulphur Springs office — /locations/sulphur-springs
 Sulphur Springs services — /sulphur-springs
 Sulphur Springs staff — /sulphur-springs/staff
 About us — /about
-${SHARED_LINK_LINES}`;
+${SHARED_LINK_LINES}
+Contact — /contact`;
 
 export const FOOTER_LINKS_PARIS_TEXT = `Chiropractic care — /services/chiropractic
 Wellness care plans — /services/chiropractic/wellness-care-plans
 Meet the staff — /locations/paris/staff
 Office & hours — /locations/paris
-${SHARED_LINK_LINES}`;
+${SHARED_LINK_LINES}
+Contact — /contact`;
 
 export const FOOTER_LINKS_SS_TEXT = `Home — /sulphur-springs
 Meet the staff — /sulphur-springs/staff
 About chiropractic — /sulphur-springs/patient-resources
 Q & A — /sulphur-springs/q-and-a
-${SHARED_LINK_LINES}`;
+${SHARED_LINK_LINES}
+Contact — /sulphur-springs/contact`;
 
 const CONTEXT_DEFAULTS: Record<SiteBusinessContext, string> = {
   default: FOOTER_LINKS_DEFAULT_TEXT,
