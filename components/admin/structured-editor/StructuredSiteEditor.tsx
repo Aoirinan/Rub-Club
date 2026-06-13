@@ -4,11 +4,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import { SiteStaffAdminSection } from "@/app/admin/super/_components/SiteStaffAdminSection";
+import { PracticePagesEditor } from "@/components/admin/practice-pages/PracticePagesEditor";
 import { useSiteContentFields } from "@/components/admin/cms/useSiteContentFields";
 import {
   CONTENT_SCOPES,
   isContentScopeId,
   isFaqItemsScope,
+  isPracticePagesScope,
 } from "@/lib/page-builder-content-scopes";
 import { isPageLayoutId, PAGE_LAYOUT_PAGES } from "@/lib/page-layout";
 import type { PageBuilderScopeId } from "@/lib/page-builder-content-scopes";
@@ -25,6 +27,7 @@ function parseInitialScope(raw?: string): PageBuilderScopeId {
   if (raw === "header-branding") return "footer";
   if (raw && isPageLayoutId(raw)) return raw;
   if (raw && isFaqItemsScope(raw)) return raw;
+  if (raw && isPracticePagesScope(raw)) return raw;
   if (raw && isContentScopeId(raw)) return raw;
   return "home";
 }
@@ -65,6 +68,7 @@ function scopeLabel(scope: PageBuilderScopeId, pages: { id: string; label: strin
     return pages.find((p) => p.id === scope)?.label ?? scope;
   }
   if (scope === "faq-items") return "FAQ items";
+  if (scope === "practice-pages") return "Practice pages";
   return CONTENT_SCOPES.find((s) => s.id === scope)?.label ?? scope;
 }
 
@@ -106,9 +110,13 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
 
   const staffFocus = officeStaffLocationFocus(scope);
 
+  const isPracticePages = scope === "practice-pages";
+
   let main: React.ReactNode = null;
   if (scope === "faq-items") {
     main = <FaqItemsPanel getIdToken={getIdToken} />;
+  } else if (isPracticePages) {
+    main = <PracticePagesEditor getIdToken={getIdToken} />;
   } else if (staffFocus) {
     main = (
       <div className="space-y-6">
@@ -170,6 +178,9 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
                 ))}
                 <option value="faq-items">FAQ items</option>
               </optgroup>
+              <optgroup label="Practice pages">
+                <option value="practice-pages">Layout, theme &amp; hero</option>
+              </optgroup>
             </select>
           </label>
           {livePath ? (
@@ -194,7 +205,9 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
 
       <div className="flex flex-1 flex-col gap-0 lg:flex-row">
         <main
-          className={`min-w-0 flex-1 p-4 lg:p-6 ${staffFocus ? "lg:max-w-3xl" : "lg:max-w-2xl"}`}
+          className={`min-w-0 flex-1 p-4 lg:p-6 ${
+            isPracticePages ? "" : staffFocus ? "lg:max-w-3xl" : "lg:max-w-2xl"
+          }`}
         >
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">

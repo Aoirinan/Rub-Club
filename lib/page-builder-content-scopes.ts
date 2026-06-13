@@ -23,7 +23,11 @@ export type ContentScopeId =
   | "navigation"
   | "doctors-global";
 
-export type PageBuilderScopeId = PageLayoutId | ContentScopeId | "faq-items";
+export type PageBuilderScopeId =
+  | PageLayoutId
+  | ContentScopeId
+  | "faq-items"
+  | "practice-pages";
 
 export function isContentScopeId(v: string): v is ContentScopeId {
   return (
@@ -51,8 +55,17 @@ export function isFaqItemsScope(v: string): v is "faq-items" {
   return v === "faq-items";
 }
 
+export function isPracticePagesScope(v: string): v is "practice-pages" {
+  return v === "practice-pages";
+}
+
 export function isPageBuilderScopeId(v: string): v is PageBuilderScopeId {
-  return isPageLayoutId(v) || isContentScopeId(v) || isFaqItemsScope(v);
+  return (
+    isPageLayoutId(v) ||
+    isContentScopeId(v) ||
+    isFaqItemsScope(v) ||
+    isPracticePagesScope(v)
+  );
 }
 
 const CONTENT_SCOPE_PAGES: Record<ContentScopeId, ContentPageKey[]> = {
