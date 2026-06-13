@@ -14,6 +14,12 @@ const SS_SERVICES_NAV_CHILDREN: ServicesNavChild[] = SS_SERVICES.map((s) => ({
   label: s.title,
 }));
 
+/** Wellness Plan dropdown items for the Sulphur Springs section of the site. */
+const SS_WELLNESS_NAV_CHILDREN: ServicesNavChild[] = [
+  { href: "/sulphur-springs/wellness-care-plans", label: "Wellness Plan" },
+  { href: "/sulphur-springs/massage/prices", label: "Massage Prices" },
+];
+
 /** Services dropdown items from the manager-edited treatments list (CMS). */
 async function getServicesNavChildren(): Promise<ServicesNavChild[] | undefined> {
   try {
@@ -61,6 +67,7 @@ export async function SiteHeader({
       initialBusinessContext={initialBusinessContext}
       servicesNavChildren={servicesNavChildren}
       ssServicesNavChildren={SS_SERVICES_NAV_CHILDREN}
+      ssWellnessNavChildren={SS_WELLNESS_NAV_CHILDREN}
     />
   );
 }

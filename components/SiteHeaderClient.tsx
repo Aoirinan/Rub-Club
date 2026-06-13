@@ -29,8 +29,10 @@ export function buildDefaultNavItems(
   servicesNavChildren?: ServicesNavChild[],
   ssServicesNavChildren?: ServicesNavChild[],
   businessContext: SiteBusinessContext = "default",
+  ssWellnessNavChildren?: ServicesNavChild[],
 ): NavItem[] {
-  // On the Sulphur Springs section, the Services dropdown stays on SS pages.
+  // On the Sulphur Springs section, the Services / Wellness Plan dropdowns stay
+  // on SS pages instead of jumping to the Paris equivalents.
   const onSulphur = businessContext === "sulphur_springs";
   return [
     onSulphur && ssServicesNavChildren?.length
@@ -79,14 +81,20 @@ export function buildDefaultNavItems(
         { href: "/sulphur-springs/staff", label: "Sulphur Springs" },
       ],
     },
-    {
-      href: WELLNESS_CARE_PLANS_PATH,
-      label: "Wellness Plan",
-      children: [
-        { href: WELLNESS_CARE_PLANS_PATH, label: "Wellness Plan" },
-        { href: "/services/massage/prices", label: "Massage Prices" },
-      ],
-    },
+    onSulphur && ssWellnessNavChildren?.length
+      ? {
+          href: "/sulphur-springs/wellness-care-plans",
+          label: "Wellness Plan",
+          children: ssWellnessNavChildren,
+        }
+      : {
+          href: WELLNESS_CARE_PLANS_PATH,
+          label: "Wellness Plan",
+          children: [
+            { href: WELLNESS_CARE_PLANS_PATH, label: "Wellness Plan" },
+            { href: "/services/massage/prices", label: "Massage Prices" },
+          ],
+        },
     {
       href: giftCardHref,
       label: "Gift cards",
@@ -150,6 +158,7 @@ export function SiteHeaderClient({
   initialBusinessContext = "default",
   servicesNavChildren,
   ssServicesNavChildren,
+  ssWellnessNavChildren,
 }: {
   paris: LocationInfo;
   sulphur: LocationInfo;
@@ -160,6 +169,7 @@ export function SiteHeaderClient({
   initialBusinessContext?: SiteBusinessContext;
   servicesNavChildren?: ServicesNavChild[];
   ssServicesNavChildren?: ServicesNavChild[];
+  ssWellnessNavChildren?: ServicesNavChild[];
 }) {
   const businessContext = useSiteBusinessContext(initialBusinessContext);
   const isBusinessScoped =
@@ -174,6 +184,7 @@ export function SiteHeaderClient({
     servicesNavChildren,
     ssServicesNavChildren,
     businessContext,
+    ssWellnessNavChildren,
   );
 
   const rub = paris.phoneSecondary?.trim();

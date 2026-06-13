@@ -1,4 +1,9 @@
 import type { ContentFieldMeta } from "@/lib/cms-registry";
+import { MASSAGE_PRICES_DEFAULT } from "@/lib/massage-prices-content";
+import {
+  buildSSWellnessCmsRegistry,
+  ssWellnessCarePlansDefaults,
+} from "@/lib/ss-wellness-care-plans-content";
 import {
   SS_INJURIES,
   SS_PATIENT_RESOURCES,
@@ -119,6 +124,16 @@ export function buildSSCmsRegistry(): ContentFieldMeta[] {
     type: "richtext",
   });
 
+  fields.push(...buildSSWellnessCmsRegistry());
+
+  fields.push({
+    id: "ss_massage_prices_body",
+    pageLabel: "SS subpages",
+    sectionLabel: "Massage prices",
+    fieldLabel: "Prices page body (markdown)",
+    type: "richtext",
+  });
+
   return fields;
 }
 
@@ -143,6 +158,10 @@ export function buildSSCmsDefaults(): Record<string, string> {
     defaults[ssPageBodyId(a.slug)] = a.body;
     defaults[ssPageMetaId(a.slug)] = a.metaDescription;
   }
+
+  Object.assign(defaults, ssWellnessCarePlansDefaults());
+  defaults.ss_massage_prices_body = MASSAGE_PRICES_DEFAULT;
+
   return defaults;
 }
 

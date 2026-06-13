@@ -31,6 +31,8 @@ const ENTRIES: { path: string; changeFrequency: ChangeFrequency; priority: numbe
   { path: "/terms", changeFrequency: "yearly", priority: 0.42 },
   { path: "/sulphur-springs", changeFrequency: "monthly", priority: 0.8 },
   { path: "/sulphur-springs/massage", changeFrequency: "monthly", priority: 0.7 },
+  { path: "/sulphur-springs/massage/prices", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/sulphur-springs/wellness-care-plans", changeFrequency: "monthly", priority: 0.7 },
   { path: "/sulphur-springs/staff", changeFrequency: "monthly", priority: 0.7 },
   { path: "/sulphur-springs/acupuncture", changeFrequency: "monthly", priority: 0.6 },
   { path: "/sulphur-springs/adjustments-and-manipulation", changeFrequency: "monthly", priority: 0.6 },
