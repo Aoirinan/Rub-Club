@@ -225,6 +225,14 @@ function FormRow({
           >
             {open ? "Close" : "Edit copy"}
           </button>
+          <a
+            href={`/online-forms/${form.slug}?preview=1`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          >
+            Preview
+          </a>
           <Link
             href={`/admin/super/online-forms/${form.slug}/submissions`}
             className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700"

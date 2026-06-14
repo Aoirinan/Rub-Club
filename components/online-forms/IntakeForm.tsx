@@ -46,10 +46,13 @@ export function IntakeForm({
   config,
   definition,
   legalText,
+  preview = false,
 }: {
   config: IntakeFormConfig;
   definition: IntakeFormDefinition;
   legalText: Record<string, IntakeLegalText>;
+  /** Staff preview of a disabled form: render everything but block submission. */
+  preview?: boolean;
 }) {
   const [started, setStarted] = useState(false);
   const [accepted, setAccepted] = useState(false);
@@ -73,6 +76,10 @@ export function IntakeForm({
 
   async function handleSubmit() {
     setFormError(null);
+    if (preview) {
+      setFormError("Preview mode — enable this form in Admin → Online forms to accept submissions.");
+      return;
+    }
     const state: IntakeFormState = { answers, signatures, diagrams, consentAccepted: accepted };
     const pruned = pruneHiddenValues(definition, state);
     const result = validateForm(definition, pruned);
@@ -186,10 +193,11 @@ export function IntakeForm({
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={submitting}
+          disabled={submitting || preview}
+          title={preview ? "Submissions are disabled in preview mode" : undefined}
           className="focus-ring inline-flex bg-[var(--pp-cta)] px-8 py-3 text-sm font-black uppercase tracking-wide text-white shadow-sm transition hover:bg-[var(--pp-cta-hover)] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {submitting ? "Submitting…" : "Submit"}
+          {submitting ? "Submitting…" : preview ? "Submit (disabled in preview)" : "Submit"}
         </button>
         <p className="text-xs text-stone-500">
           Please review your answers before submitting. Required fields are marked with{" "}
