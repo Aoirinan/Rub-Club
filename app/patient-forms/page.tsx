@@ -43,6 +43,20 @@ export default async function PatientFormsPage() {
         variant={brand.variant}
       />
       <div className="mx-auto max-w-3xl space-y-6 px-4 pb-16">
+        <section className="border-t-4 border-[var(--pp-cta)] bg-[var(--pp-heading)] p-6 text-white shadow-md sm:p-8">
+          <h2 className="text-xl font-black">Complete your forms online</h2>
+          <p className="mt-2 text-sm leading-relaxed text-white/90">
+            Prefer to fill everything out from your phone or computer? Complete your intake and
+            consent forms online before your visit — no printing required.
+          </p>
+          <Link
+            href="/online-forms"
+            className="focus-ring mt-5 inline-flex bg-[#f19f1f] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#3a2a06] hover:bg-[#d98c12]"
+          >
+            Go to online patient forms
+          </Link>
+        </section>
+
         <section className="border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-8">
           <h2 className="text-xl font-black text-[var(--pp-heading)]">{c.chiroHeading}</h2>
           <p className="mt-2 text-sm leading-relaxed text-stone-700">{c.chiroIntro}</p>

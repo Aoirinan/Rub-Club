@@ -2,6 +2,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // All reads/writes go through Next.js API routes using the Admin SDK.
+    //
+    // This includes the online patient forms (intake_forms_config,
+    // intake_submissions, intake_legal_text): public visitors create
+    // submissions via POST /api/online-forms/submit, and only authenticated
+    // staff read them via /api/admin/online-forms/**. Enabled-gating, required-
+    // key validation, and PHI access control are enforced in those handlers —
+    // never relax these rules to allow direct client access to PHI.
     match /{document=**} {
       allow read, write: if false;
     }

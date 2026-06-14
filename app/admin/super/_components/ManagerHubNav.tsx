@@ -30,6 +30,12 @@ const TABS = [
     match: (path: string) => path.startsWith("/admin/super/marketing"),
     capability: "marketing" as const,
   },
+  {
+    href: "/admin/super/online-forms",
+    label: "Online forms",
+    match: (path: string) => path.startsWith("/admin/super/online-forms"),
+    capability: "siteContent" as const,
+  },
 ] as const;
 
 type Capabilities = {

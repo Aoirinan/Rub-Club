@@ -1,6 +1,6 @@
 {
   "name": "chiropractic-paris-tx",
-  "version": "0.43.3",
+  "version": "0.44.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -16,10 +16,12 @@
     "storage:apply-cors": "npx tsx scripts/apply-storage-cors.ts",
     "seed:content": "npx tsx scripts/seedContentBlocks.ts",
     "seed:practice-pages": "npx tsx scripts/seed-practice-pages.ts",
+    "seed:online-forms": "npx tsx scripts/seed-online-forms.ts",
     "purge:insurance-uploads": "npx tsx scripts/purge-insurance-uploads.ts",
     "generate:baa-pdf": "npx tsx scripts/generate-baa-pdf.ts",
     "generate:sow-pdf": "npx tsx scripts/generate-sow-pdf.ts",
     "build:chiro-packet": "node scripts/build-chiro-packet.mjs",
+    "build:body-diagrams": "node scripts/build-body-diagrams.mjs",
     "build:chiro-logo": "node scripts/build-wide-chiro-logo.mjs",
     "vercel:login": "npx vercel@50 login",
     "vercel:link": "npx vercel@50 link",
