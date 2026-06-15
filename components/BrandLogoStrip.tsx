@@ -113,6 +113,7 @@ export function BrandLogoStrip({
     >
       {entries.map((entry) => {
         const primary = entry.key === primaryKey;
+        const isCenterNav = large && primary;
         const emphasize = primary && !compact;
         const info = headerBrandPhones(entry.key, paris, sulphur);
         const labelText = branding?.labels[entry.key] ?? info.phoneLabel;
@@ -130,7 +131,12 @@ export function BrandLogoStrip({
 
         const parisHeights = branding?.logoHeights?.chiro ?? DEFAULT_HEADER_LOGO_HEIGHTS.chiro;
         let parisSlot: HeaderLogoSlot = "side";
-        if (emphasize) parisSlot = large ? "nav" : "mobile";
+        if (isCenterNav) {
+          // Desktop nav center: keep the circular mark only (match BusinessLogoHeader).
+          parisSlot = compact ? "navCompact" : "nav";
+        } else if (emphasize) {
+          parisSlot = large ? "nav" : "mobile";
+        }
 
         // Sulphur Springs uses the icon + text lockup unless a manager uploaded a logo image.
         const useSsLockup = entry.key === "ss" && !entry.src;
@@ -149,7 +155,7 @@ export function BrandLogoStrip({
           <ParisLockup
             heightPx={headerLogoHeightPx(parisHeights, parisSlot)}
             className={`max-w-full transition-[height] duration-300 ease-out ${!emphasize ? "opacity-90 transition-opacity hover:opacity-100" : ""}`}
-            markOnly={large && emphasize}
+            markOnly={isCenterNav || (large && emphasize)}
             title={branding?.parisLockup.title}
             subtitle={branding?.parisLockup.subtitle}
           />
