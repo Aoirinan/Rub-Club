@@ -10,12 +10,15 @@ export function ParisLockup({
   className = "",
   title = "Chiropractic Associates",
   subtitle = "& The Rub Club · Paris, TX",
+  /** Nav center: show only the circular mark (image already includes curved type). */
+  markOnly = false,
 }: {
   heightPx?: number;
   className?: string;
   /** CMS-editable lockup text (Footer → Header in site content). */
   title?: string;
   subtitle?: string;
+  markOnly?: boolean;
 }) {
   return (
     <span
@@ -29,20 +32,23 @@ export function ParisLockup({
           width={160}
           height={120}
           aria-hidden
+          unoptimized
           className="h-full w-auto object-contain"
           priority
         />
       </span>
-      <span className="flex min-w-0 flex-col justify-center text-left leading-tight">
-        <span className="whitespace-nowrap text-base font-black tracking-tight text-[#4a1515] sm:text-lg md:text-xl lg:text-2xl">
-          {title}
-        </span>
-        {subtitle ? (
-          <span className="whitespace-nowrap text-[0.7rem] font-bold text-[#b03a2e] sm:text-xs md:text-sm">
-            {subtitle}
+      {markOnly ? null : (
+        <span className="flex min-w-0 flex-col justify-center text-left leading-tight">
+          <span className="whitespace-nowrap text-base font-black tracking-tight text-[#4a1515] sm:text-lg md:text-xl lg:text-2xl">
+            {title}
           </span>
-        ) : null}
-      </span>
+          {subtitle ? (
+            <span className="whitespace-nowrap text-[0.7rem] font-bold text-[#b03a2e] sm:text-xs md:text-sm">
+              {subtitle}
+            </span>
+          ) : null}
+        </span>
+      )}
     </span>
   );
 }

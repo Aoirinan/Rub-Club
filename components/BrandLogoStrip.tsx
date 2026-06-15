@@ -4,7 +4,6 @@ import { ParisLockup } from "@/components/ParisLockup";
 import { SulphurSpringsLockup } from "@/components/SulphurSpringsLockup";
 import {
   CHIRO_LOGO_DIMENSIONS,
-  isDefaultChiroLogo,
   resolveChiroHeaderLogo,
   type BrandLogoVariant,
   type HeaderBrandContent,
@@ -157,9 +156,9 @@ export function BrandLogoStrip({
 
         // Sulphur Springs uses the icon + text lockup unless a manager uploaded a logo image.
         const useSsLockup = entry.key === "ss" && !entry.src;
-        // Paris does the same: icon + text lockup unless a manager uploaded a custom logo.
-        const useParisLockup =
-          entry.key === "chiro" && isDefaultChiroLogo(branding?.logos.chiro);
+        // Paris always uses the transparent circular mark + type lockup (CMS flat
+        // logo uploads are white-backed JPGs and do not blend into the header band).
+        const useParisLockup = entry.key === "chiro";
 
         const logo = useSsLockup ? (
           <SulphurSpringsLockup
@@ -172,6 +171,7 @@ export function BrandLogoStrip({
           <ParisLockup
             heightPx={emphasize ? (large ? 80 : 60) : 40}
             className={`max-w-full transition-[height] duration-300 ease-out ${!emphasize ? "opacity-90 transition-opacity hover:opacity-100" : ""}`}
+            markOnly={large && emphasize}
             title={branding?.parisLockup.title}
             subtitle={branding?.parisLockup.subtitle}
           />

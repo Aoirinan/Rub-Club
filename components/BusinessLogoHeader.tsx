@@ -5,8 +5,6 @@ import Link from "next/link";
 import { ParisLockup } from "@/components/ParisLockup";
 import { SulphurSpringsLockup } from "@/components/SulphurSpringsLockup";
 import {
-  isDefaultChiroLogo,
-  resolveChiroHeaderLogo,
   type HeaderBrandContent,
 } from "@/lib/brand-logos";
 import { telHref, type LocationInfo } from "@/lib/constants";
@@ -57,30 +55,13 @@ export function BusinessLogoHeader({
           }`}
         >
           {isParis ? (
-            isDefaultChiroLogo(branding?.logos.chiro) ? (
-              <ParisLockup
-                heightPx={large ? (compact ? 56 : 80) : 60}
-                className="max-w-full"
-                title={branding?.parisLockup.title}
-                subtitle={branding?.parisLockup.subtitle}
-              />
-            ) : (
-              <Image
-                src={resolveChiroHeaderLogo(branding?.logos.chiro)}
-                alt="Chiropractic Associates — Paris, TX"
-                width={600}
-                height={200}
-                sizes="(max-width: 640px) 90vw, 600px"
-                className={`w-auto max-w-full object-contain mix-blend-multiply transition-[height] duration-300 ease-out ${
-                  large
-                    ? compact
-                      ? "h-14"
-                      : "h-[4.75rem] lg:h-[5.25rem]"
-                    : "h-10 sm:h-12 md:h-14 lg:h-[3.75rem]"
-                }`}
-                priority
-              />
-            )
+            <ParisLockup
+              heightPx={large ? (compact ? 56 : 80) : 60}
+              className="max-w-full"
+              markOnly={large}
+              title={branding?.parisLockup.title}
+              subtitle={branding?.parisLockup.subtitle}
+            />
           ) : ssLogoSrc ? (
             <Image
               src={ssLogoSrc}
