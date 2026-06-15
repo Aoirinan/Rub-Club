@@ -7,6 +7,11 @@ import { SulphurSpringsLockup } from "@/components/SulphurSpringsLockup";
 import {
   type HeaderBrandContent,
 } from "@/lib/brand-logos";
+import {
+  DEFAULT_HEADER_LOGO_HEIGHTS,
+  headerLogoHeightPx,
+  type HeaderLogoSlot,
+} from "@/lib/header-logo-sizes";
 import { telHref, type LocationInfo } from "@/lib/constants";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
 import { useHeaderCompact } from "@/components/HeaderThemeProvider";
@@ -37,6 +42,14 @@ export function BusinessLogoHeader({
     cmsLabel || (isParis ? "Chiropractic — Paris" : "Chiro / Massage — Sulphur Springs");
   // Managers can upload a Sulphur Springs logo image; empty means use the icon + text lockup.
   const ssLogoSrc = branding?.logos.ss || undefined;
+  const parisHeights = branding?.logoHeights?.chiro ?? DEFAULT_HEADER_LOGO_HEIGHTS.chiro;
+  const ssHeights = branding?.logoHeights?.ss ?? DEFAULT_HEADER_LOGO_HEIGHTS.ss;
+  const parisHeightSlot: HeaderLogoSlot = large
+    ? compact
+      ? "navCompact"
+      : "nav"
+    : "mobile";
+  const ssHeightSlot = parisHeightSlot;
 
   return (
     <div className="flex w-full flex-col items-center gap-1 text-center">
@@ -56,7 +69,7 @@ export function BusinessLogoHeader({
         >
           {isParis ? (
             <ParisLockup
-              heightPx={large ? (compact ? 56 : 80) : 60}
+              heightPx={headerLogoHeightPx(parisHeights, parisHeightSlot)}
               className="max-w-full"
               markOnly={large}
               title={branding?.parisLockup.title}
@@ -69,19 +82,14 @@ export function BusinessLogoHeader({
               width={360}
               height={120}
               sizes="(max-width: 640px) 80vw, 360px"
-              className={`w-auto max-w-full object-contain mix-blend-multiply transition-[height] duration-300 ease-out ${
-                large
-                  ? compact
-                    ? "h-14"
-                    : "h-[4.75rem] lg:h-[5.25rem]"
-                  : "h-10 sm:h-12 md:h-14"
-              }`}
+              className="w-auto max-w-full object-contain mix-blend-multiply transition-[height] duration-300 ease-out"
+              style={{ height: `${headerLogoHeightPx(ssHeights, ssHeightSlot)}px` }}
               priority
             />
           ) : (
             <SulphurSpringsLockup
               primary
-              heightPx={large ? (compact ? 52 : 72) : 56}
+              heightPx={headerLogoHeightPx(ssHeights, ssHeightSlot)}
               className="max-w-full"
             />
           )}

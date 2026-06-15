@@ -87,6 +87,12 @@ export async function setGlobalEnabled(
     );
 }
 
+/** True when the master switch is on and at least one form is enabled for patients. */
+export async function isOnlineFormsPubliclyAvailable(): Promise<boolean> {
+  const [global, forms] = await Promise.all([getGlobalConfig(), listFormConfigs()]);
+  return global.enabled && forms.some((f) => f.enabled);
+}
+
 // ---------------------------------------------------------------------------
 // Per-form config
 // ---------------------------------------------------------------------------

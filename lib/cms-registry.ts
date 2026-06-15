@@ -223,6 +223,34 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "header_paris_lockup_title", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Paris lockup title (next to logo)", type: "text" },
   { id: "header_paris_lockup_subtitle", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Paris lockup subtitle (next to logo)", type: "text" },
   {
+    id: "header_paris_logo_nav_height_px",
+    pageLabel: "Footer",
+    sectionLabel: "Header",
+    fieldLabel: "Paris logo height — desktop nav center (pixels)",
+    type: "text",
+  },
+  {
+    id: "header_paris_logo_mobile_height_px",
+    pageLabel: "Footer",
+    sectionLabel: "Header",
+    fieldLabel: "Paris logo height — mobile header (pixels)",
+    type: "text",
+  },
+  {
+    id: "header_ss_logo_nav_height_px",
+    pageLabel: "Footer",
+    sectionLabel: "Header",
+    fieldLabel: "Sulphur Springs logo height — desktop nav center (pixels)",
+    type: "text",
+  },
+  {
+    id: "header_ss_logo_mobile_height_px",
+    pageLabel: "Footer",
+    sectionLabel: "Header",
+    fieldLabel: "Sulphur Springs logo height — mobile header (pixels)",
+    type: "text",
+  },
+  {
     id: "sticky_call_bar_paris",
     pageLabel: "Footer",
     sectionLabel: "Mobile sticky bar",
@@ -459,6 +487,10 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
   header_ss_logo: "",
   header_paris_lockup_title: "Chiropractic Associates",
   header_paris_lockup_subtitle: "& The Rub Club · Paris, TX",
+  header_paris_logo_nav_height_px: "96",
+  header_paris_logo_mobile_height_px: "72",
+  header_ss_logo_nav_height_px: "72",
+  header_ss_logo_mobile_height_px: "56",
 
   footer_tagline:
     "Family-owned wellness in Northeast Texas. Two practices, one address in Paris — plus chiropractic care in Sulphur Springs.",

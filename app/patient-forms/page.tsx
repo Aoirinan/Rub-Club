@@ -6,6 +6,7 @@ import { practiceThemeStyle } from "@/components/practice/theme";
 import { getPageBrand } from "@/lib/page-business-theme";
 import { WELLNESS_CARE_PLANS_PATH, telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
+import { isOnlineFormsPubliclyAvailable } from "@/lib/intakeForms/config-db";
 import { CHIRO_INTAKE_PACKET_PDF, MASSAGE_NEW_CLIENT_PDF } from "@/lib/privacy";
 import { getPatientFormsContent } from "@/lib/static-pages-content";
 
@@ -14,18 +15,19 @@ export const revalidate = 60;
 export const metadata = buildPageMetadata({
   title: "Patient Forms",
   description:
-    "Download chiropractic new patient and personal injury intake paperwork, massage new-client forms, or complete our online intake before your visit in Paris or Sulphur Springs, TX.",
+    "Download chiropractic new patient and personal injury intake paperwork and massage new-client forms for your visit in Paris or Sulphur Springs, TX.",
   path: "/patient-forms",
   ogTitle: "Patient Forms — Chiropractic Associates",
   ogDescription:
-    "Chiropractic and massage intake forms for Paris and Sulphur Springs — online or printable PDF.",
+    "Chiropractic and massage intake forms for Paris and Sulphur Springs — printable PDF downloads.",
 });
 
 export default async function PatientFormsPage() {
-  const [c, displayLocs, brand] = await Promise.all([
+  const [c, displayLocs, brand, showOnlineForms] = await Promise.all([
     getPatientFormsContent(),
     getDisplayLocations(),
     getPageBrand(),
+    isOnlineFormsPubliclyAvailable(),
   ]);
 
   return (
@@ -43,19 +45,21 @@ export default async function PatientFormsPage() {
         variant={brand.variant}
       />
       <div className="mx-auto max-w-3xl space-y-6 px-4 pb-16">
-        <section className="border-t-4 border-[var(--pp-cta)] bg-[var(--pp-heading)] p-6 text-white shadow-md sm:p-8">
-          <h2 className="text-xl font-black">Complete your forms online</h2>
-          <p className="mt-2 text-sm leading-relaxed text-white/90">
-            Prefer to fill everything out from your phone or computer? Complete your intake and
-            consent forms online before your visit — no printing required.
-          </p>
-          <Link
-            href="/online-forms"
-            className="focus-ring mt-5 inline-flex bg-[#f19f1f] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#3a2a06] hover:bg-[#d98c12]"
-          >
-            Go to online patient forms
-          </Link>
-        </section>
+        {showOnlineForms ? (
+          <section className="border-t-4 border-[var(--pp-cta)] bg-[var(--pp-heading)] p-6 text-white shadow-md sm:p-8">
+            <h2 className="text-xl font-black">Complete your forms online</h2>
+            <p className="mt-2 text-sm leading-relaxed text-white/90">
+              Prefer to fill everything out from your phone or computer? Complete your intake and
+              consent forms online before your visit — no printing required.
+            </p>
+            <Link
+              href="/online-forms"
+              className="focus-ring mt-5 inline-flex bg-[#f19f1f] px-6 py-3 text-sm font-black uppercase tracking-wide text-[#3a2a06] hover:bg-[#d98c12]"
+            >
+              Go to online patient forms
+            </Link>
+          </section>
+        ) : null}
 
         <section className="border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-8">
           <h2 className="text-xl font-black text-[var(--pp-heading)]">{c.chiroHeading}</h2>

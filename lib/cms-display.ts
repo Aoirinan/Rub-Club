@@ -14,6 +14,12 @@ import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
 
 import {
+  DEFAULT_HEADER_LOGO_HEIGHTS,
+  HEADER_LOGO_HEIGHT_FIELDS,
+  headerLogoHeightsFromValues,
+  parseHeaderLogoHeightPx,
+} from "@/lib/header-logo-sizes";
+import {
   HEADER_SHOW_TOP_PHONE_BAR_FIELD,
   parseHeaderShowTopPhoneBar,
 } from "@/lib/header-top-phone-bar";
@@ -34,6 +40,10 @@ const LAYOUT_CMS_IDS = [
   "header_ss_logo",
   "header_paris_lockup_title",
   "header_paris_lockup_subtitle",
+  "header_paris_logo_nav_height_px",
+  "header_paris_logo_mobile_height_px",
+  "header_ss_logo_nav_height_px",
+  "header_ss_logo_mobile_height_px",
   "footer_tagline",
   "footer_paris_address",
   "footer_paris_phone",
@@ -80,7 +90,21 @@ export function headerBrandContentFromCms(
       DEFAULTS.header_paris_lockup_subtitle ||
       "",
   };
-  return { labels, logos, parisLockup };
+  const logoHeights = {} as HeaderBrandContent["logoHeights"];
+  for (const key of HEADER_BRAND_KEYS) {
+    const fields = HEADER_LOGO_HEIGHT_FIELDS[key];
+    const defaults = DEFAULT_HEADER_LOGO_HEIGHTS[key];
+    const nav = parseHeaderLogoHeightPx(
+      cms[fields.nav] ?? DEFAULTS[fields.nav],
+      defaults.nav,
+    );
+    const mobile = parseHeaderLogoHeightPx(
+      cms[fields.mobile] ?? DEFAULTS[fields.mobile],
+      defaults.mobile,
+    );
+    logoHeights[key] = headerLogoHeightsFromValues(nav, mobile);
+  }
+  return { labels, logos, parisLockup, logoHeights };
 }
 
 export async function getScopeVisualLayout(

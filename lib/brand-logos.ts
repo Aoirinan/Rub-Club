@@ -1,3 +1,5 @@
+import type { HeaderLogoHeights } from "@/lib/header-logo-sizes";
+
 /** Local brand assets under /public/logos. */
 
 export const BRAND_LOGOS = {
@@ -68,4 +70,6 @@ export type HeaderBrandContent = {
   logos: Record<HeaderBrandKey, string>;
   /** Text lines rendered next to the Paris circular mark (icon + text lockup). */
   parisLockup: { title: string; subtitle: string };
+  /** Editable logo heights per brand (Footer → Header in site editor). */
+  logoHeights: Record<HeaderBrandKey, HeaderLogoHeights>;
 };
