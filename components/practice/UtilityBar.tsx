@@ -35,7 +35,7 @@ export function UtilityBar({ data }: { data: PracticeUtilityBar }) {
   if (!hasContent) return null;
 
   return (
-    <div className="bg-[var(--pp-heading)] text-white">
+    <div className="hidden bg-[var(--pp-heading)] text-white sm:block">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-1.5 px-4 py-2 text-xs sm:text-sm">
         {data.phones.map((p) => (
           <a

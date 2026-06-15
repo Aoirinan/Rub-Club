@@ -44,12 +44,21 @@ export function BusinessLogoHeader({
   const ssLogoSrc = branding?.logos.ss || undefined;
   const parisHeights = branding?.logoHeights?.chiro ?? DEFAULT_HEADER_LOGO_HEIGHTS.chiro;
   const ssHeights = branding?.logoHeights?.ss ?? DEFAULT_HEADER_LOGO_HEIGHTS.ss;
+  // Mobile (non-large) uses a big, centered, vertically-stacked logo.
+  const stacked = !large;
   const parisHeightSlot: HeaderLogoSlot = large
     ? compact
       ? "navCompact"
       : "nav"
     : "mobile";
   const ssHeightSlot = parisHeightSlot;
+  // Bump the mark size for the stacked mobile presentation.
+  const parisMarkPx = stacked
+    ? Math.round(headerLogoHeightPx(parisHeights, parisHeightSlot) * 1.25)
+    : headerLogoHeightPx(parisHeights, parisHeightSlot);
+  const ssMarkPx = stacked
+    ? Math.round(headerLogoHeightPx(ssHeights, ssHeightSlot) * 1.35)
+    : headerLogoHeightPx(ssHeights, ssHeightSlot);
 
   return (
     <div className="flex w-full flex-col items-center gap-1 text-center">
@@ -64,14 +73,15 @@ export function BusinessLogoHeader({
       >
         <div
           className={`origin-top transition-transform duration-300 ease-out motion-reduce:transition-none ${
-            compact && !large ? "scale-[0.78]" : "scale-100"
+            compact && !large ? "scale-[0.85]" : "scale-100"
           }`}
         >
           {isParis ? (
             <ParisLockup
-              heightPx={headerLogoHeightPx(parisHeights, parisHeightSlot)}
+              heightPx={parisMarkPx}
               className="max-w-full"
               markOnly={large}
+              stacked={stacked}
               title={branding?.parisLockup.title}
               subtitle={branding?.parisLockup.subtitle}
             />
@@ -83,13 +93,14 @@ export function BusinessLogoHeader({
               height={120}
               sizes="(max-width: 640px) 80vw, 360px"
               className="w-auto max-w-full object-contain mix-blend-multiply transition-[height] duration-300 ease-out"
-              style={{ height: `${headerLogoHeightPx(ssHeights, ssHeightSlot)}px` }}
+              style={{ height: `${ssMarkPx}px` }}
               priority
             />
           ) : (
             <SulphurSpringsLockup
               primary
-              heightPx={headerLogoHeightPx(ssHeights, ssHeightSlot)}
+              heightPx={ssMarkPx}
+              stacked={stacked}
               className="max-w-full"
             />
           )}

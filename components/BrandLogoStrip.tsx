@@ -115,10 +115,12 @@ export function BrandLogoStrip({
         const primary = entry.key === primaryKey;
         const isCenterNav = large && primary;
         const emphasize = primary && !compact;
+        // Mobile (non-large) emphasized logo uses a big, centered, stacked layout.
+        const stacked = !large && emphasize;
         const info = headerBrandPhones(entry.key, paris, sulphur);
         const labelText = branding?.labels[entry.key] ?? info.phoneLabel;
 
-        const ssHeightPx = emphasize
+        const ssBaseHeightPx = emphasize
           ? headerLogoHeightPx(
               branding?.logoHeights?.ss ?? DEFAULT_HEADER_LOGO_HEIGHTS.ss,
               large ? "nav" : "mobile",
@@ -127,6 +129,7 @@ export function BrandLogoStrip({
               branding?.logoHeights?.ss ?? DEFAULT_HEADER_LOGO_HEIGHTS.ss,
               "side",
             );
+        const ssHeightPx = stacked ? Math.round(ssBaseHeightPx * 1.35) : ssBaseHeightPx;
         const ssCompact = !emphasize;
 
         const parisHeights = branding?.logoHeights?.chiro ?? DEFAULT_HEADER_LOGO_HEIGHTS.chiro;
@@ -137,6 +140,10 @@ export function BrandLogoStrip({
         } else if (emphasize) {
           parisSlot = large ? "nav" : "mobile";
         }
+        const parisBaseHeightPx = headerLogoHeightPx(parisHeights, parisSlot);
+        const parisHeightPx = stacked
+          ? Math.round(parisBaseHeightPx * 1.25)
+          : parisBaseHeightPx;
 
         // Sulphur Springs uses the icon + text lockup unless a manager uploaded a logo image.
         const useSsLockup = entry.key === "ss" && !entry.src;
@@ -148,14 +155,16 @@ export function BrandLogoStrip({
           <SulphurSpringsLockup
             primary={emphasize}
             compact={ssCompact}
+            stacked={stacked}
             heightPx={ssHeightPx}
             className={`max-w-full transition-[height] duration-300 ease-out ${!emphasize ? "opacity-90 transition-opacity hover:opacity-100" : ""}`}
           />
         ) : useParisLockup ? (
           <ParisLockup
-            heightPx={headerLogoHeightPx(parisHeights, parisSlot)}
+            heightPx={parisHeightPx}
             className={`max-w-full transition-[height] duration-300 ease-out ${!emphasize ? "opacity-90 transition-opacity hover:opacity-100" : ""}`}
             markOnly={isCenterNav || (large && emphasize)}
+            stacked={stacked}
             title={branding?.parisLockup.title}
             subtitle={branding?.parisLockup.subtitle}
           />
@@ -175,12 +184,7 @@ export function BrandLogoStrip({
             className={`w-auto max-w-full object-contain mix-blend-multiply transition-[height,opacity] duration-300 ease-out ${
               !emphasize ? "opacity-90 transition-opacity hover:opacity-100" : ""
             }`}
-            style={{
-              height: `${headerLogoHeightPx(
-                branding?.logoHeights?.ss ?? DEFAULT_HEADER_LOGO_HEIGHTS.ss,
-                emphasize ? (large ? "nav" : "mobile") : "side",
-              )}px`,
-            }}
+            style={{ height: `${ssHeightPx}px` }}
             priority={primary}
           />
         );

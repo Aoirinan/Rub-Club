@@ -8,6 +8,8 @@ export function SulphurSpringsLockup({
   heightPx,
   iconScalePercent = 88,
   className = "",
+  /** Mobile/header hero: icon centered on top, type centered below. */
+  stacked = false,
 }: {
   primary?: boolean;
   /** Icon only — for side columns on narrow screens. */
@@ -15,8 +17,34 @@ export function SulphurSpringsLockup({
   heightPx?: number;
   iconScalePercent?: number;
   className?: string;
+  stacked?: boolean;
 }) {
   const iconPct = Math.min(100, Math.max(60, iconScalePercent));
+
+  if (stacked) {
+    return (
+      <span className={`inline-flex max-w-full flex-col items-center gap-1.5 ${className}`}>
+        <Image
+          src={BRAND_LOGOS.sulphurSpringsIcon}
+          alt=""
+          width={120}
+          height={120}
+          aria-hidden
+          className="aspect-square w-auto shrink-0 object-contain"
+          style={heightPx ? { height: `${heightPx}px` } : undefined}
+        />
+        <span className="flex flex-col items-center text-center leading-tight text-[#243447]">
+          <span className="text-lg font-semibold tracking-tight sm:text-xl">
+            Chiropractic Associates
+          </span>
+          <span className="text-xs font-medium text-[#243447]/90 sm:text-sm">
+            Of Sulphur Springs
+          </span>
+        </span>
+      </span>
+    );
+  }
+
   return (
     <span
       className={`inline-flex max-w-full items-center gap-1.5 sm:gap-2 ${className}`}

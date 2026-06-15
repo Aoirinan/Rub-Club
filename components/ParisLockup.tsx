@@ -12,6 +12,8 @@ export function ParisLockup({
   subtitle = "& The Rub Club · Paris, TX",
   /** Nav center: show only the circular mark (image already includes curved type). */
   markOnly = false,
+  /** Mobile/header hero: mark centered on top, type centered below. */
+  stacked = false,
 }: {
   heightPx?: number;
   className?: string;
@@ -19,7 +21,44 @@ export function ParisLockup({
   title?: string;
   subtitle?: string;
   markOnly?: boolean;
+  stacked?: boolean;
 }) {
+  const mark = (
+    <span
+      className="inline-flex shrink-0 mix-blend-multiply"
+      style={{ height: `${heightPx}px` }}
+    >
+      <Image
+        src={BRAND_LOGOS.chiropracticMark}
+        alt=""
+        width={160}
+        height={120}
+        aria-hidden
+        unoptimized
+        className="h-full w-auto object-contain"
+        priority
+      />
+    </span>
+  );
+
+  if (stacked) {
+    return (
+      <span className={`inline-flex max-w-full flex-col items-center gap-1.5 ${className}`}>
+        {mark}
+        {markOnly ? null : (
+          <span className="flex min-w-0 flex-col items-center text-center leading-tight">
+            <span className="text-lg font-black tracking-tight text-[#4a1515] sm:text-xl">
+              {title}
+            </span>
+            {subtitle ? (
+              <span className="text-xs font-bold text-[#b03a2e] sm:text-sm">{subtitle}</span>
+            ) : null}
+          </span>
+        )}
+      </span>
+    );
+  }
+
   return (
     <span
       className={`inline-flex max-w-full items-center gap-2 sm:gap-2.5 ${className}`}

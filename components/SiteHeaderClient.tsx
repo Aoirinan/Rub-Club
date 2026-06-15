@@ -239,7 +239,8 @@ export function SiteHeaderClient({
         </HeaderTier1Collapse>
       ) : null}
 
-      {/* Mobile: centered logo row over a full-width MENU bar. */}
+      {/* Mobile: big centered logo over a full-width MENU bar (no redundant
+          phone/label — contact lives in the sticky bottom Call/Book bar). */}
       <div className="lg:hidden">
         <SiteHeaderLogoRow>
           <div className="min-w-0 flex-1">
@@ -249,9 +250,15 @@ export function SiteHeaderClient({
                 paris={paris}
                 sulphur={sulphur}
                 branding={headerBranding}
+                showContact={false}
               />
             ) : (
-              <HeaderBrandLogoStrip paris={paris} sulphur={sulphur} branding={headerBranding} />
+              <HeaderBrandLogoStrip
+                paris={paris}
+                sulphur={sulphur}
+                branding={headerBranding}
+                showContact={false}
+              />
             )}
           </div>
         </SiteHeaderLogoRow>

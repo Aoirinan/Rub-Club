@@ -459,8 +459,15 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
 }
 
 async function buildSulphurSpringsDefaults(): Promise<PracticePageDoc> {
-  const c = await getContentMany([...SS_DEFAULT_CMS_IDS]);
+  const c = await getContentMany([
+    ...SS_DEFAULT_CMS_IDS,
+    "footer_paris_phone",
+    "footer_massage_phone",
+  ]);
+  const paris = LOCATIONS.paris;
   const ss = LOCATIONS.sulphur_springs;
+  const parisPhone = c.footer_paris_phone?.trim() || paris.phonePrimary;
+  const massagePhone = c.footer_massage_phone?.trim() || paris.phoneSecondary || "";
   const ssPhone = c.footer_ss_phone?.trim() || ss.phonePrimary;
 
   return {
@@ -468,12 +475,19 @@ async function buildSulphurSpringsDefaults(): Promise<PracticePageDoc> {
     theme: EMPTY_PRACTICE_THEME,
     utilityBar: {
       published: true,
-      phones: [{ label: "Sulphur Springs", number: ssPhone }],
+      phones: [
+        { label: "Chiropractic", number: parisPhone },
+        ...(massagePhone ? [{ label: "Massage — The Rub Club", number: massagePhone }] : []),
+        { label: "Sulphur Springs", number: ssPhone },
+      ],
       address:
         c.footer_ss_address?.trim() ||
         `${ss.streetAddress}, ${ss.addressLocality}, ${ss.addressRegion} ${ss.postalCode}`,
       mapsUrl: c.footer_ss_maps_url?.trim() || ss.mapsUrl,
-      socialLinks: [],
+      socialLinks: [
+        { platform: "facebook", url: FACEBOOK_URL },
+        { platform: "instagram", url: INSTAGRAM_URL },
+      ],
     },
     hero: {
       published: true,
