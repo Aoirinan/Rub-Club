@@ -5,6 +5,8 @@ export const BRAND_LOGOS = {
   chiropractic: "/logos/chiropractic-associates-wide.png",
   /** Original circular lockup (source for `npm run build:chiro-logo`). */
   chiropracticSource: "/logos/chiropractic-associates.png",
+  /** Circular mark with white flooded to transparency (header lockup display). */
+  chiropracticMark: "/logos/chiropractic-associates-transparent.png",
   /** Spine-in-circle mark; paired with type in `SulphurSpringsLockup`. */
   sulphurSpringsIcon: "/logos/sulphur-springs-icon.webp",
 } as const;

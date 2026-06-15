@@ -1,6 +1,6 @@
 {
   "name": "chiropractic-paris-tx",
-  "version": "0.44.1",
+  "version": "0.44.2",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -23,6 +23,7 @@
     "build:chiro-packet": "node scripts/build-chiro-packet.mjs",
     "build:body-diagrams": "node scripts/build-body-diagrams.mjs",
     "build:chiro-logo": "node scripts/build-wide-chiro-logo.mjs",
+    "build:chiro-logo-transparent": "node scripts/build-transparent-chiro-logo.mjs",
     "vercel:login": "npx vercel@50 login",
     "vercel:link": "npx vercel@50 link",
     "deploy:vercel": "npx vercel@50 deploy --prod --yes"

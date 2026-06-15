@@ -22,16 +22,17 @@ export function ParisLockup({
       className={`inline-flex max-w-full items-center gap-2 sm:gap-2.5 ${className}`}
       style={{ height: `${heightPx}px` }}
     >
-      <Image
-        src={BRAND_LOGOS.chiropracticSource}
-        alt=""
-        width={160}
-        height={120}
-        aria-hidden
-        className="w-auto shrink-0 object-contain"
-        style={{ height: "100%" }}
-        priority
-      />
+      <span className="inline-flex shrink-0 mix-blend-multiply" style={{ height: "100%" }}>
+        <Image
+          src={BRAND_LOGOS.chiropracticMark}
+          alt=""
+          width={160}
+          height={120}
+          aria-hidden
+          className="h-full w-auto object-contain"
+          priority
+        />
+      </span>
       <span className="flex min-w-0 flex-col justify-center text-left leading-tight">
         <span className="whitespace-nowrap text-base font-black tracking-tight text-[#4a1515] sm:text-lg md:text-xl lg:text-2xl">
           {title}
