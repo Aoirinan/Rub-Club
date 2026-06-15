@@ -89,22 +89,17 @@ export const SS_STAFF_SEED: readonly SSStaffSeedEntry[] = [
     bio: "",
   },
   {
-    id: "leotta_cascia",
-    name: "Leotta Cascia",
-    role: "Massage Therapist",
-    image: "/images/staff-ss/leotta-cascia.webp",
-    bio: "",
-  },
-  {
     id: "brittany_brown",
     name: "Brittany Brown",
     role: "Massage Therapist",
+    image: "/images/staff-ss/brittany-brown.webp",
     bio: "",
   },
   {
     id: "ashlyn_davis",
     name: "Ashlyn Davis",
     role: "Rehab Therapy",
+    image: "/images/staff-ss/ashlyn-davis.webp",
     bio: "",
   },
 ] as const;

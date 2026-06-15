@@ -9,7 +9,6 @@ import { SS_STAFF_SEED } from "@/lib/site-staff-seed-rosters";
 import {
   getPracticePage,
   getSSServiceCards,
-  listPracticeTestimonials,
 } from "@/lib/practice-pages";
 import { practiceThemeStyle } from "@/components/practice/theme";
 import { UtilityBar } from "@/components/practice/UtilityBar";
@@ -17,7 +16,6 @@ import { PracticeHero } from "@/components/practice/PracticeHero";
 import { QuickActionsRow } from "@/components/practice/QuickActionsRow";
 import { ServicesGrid } from "@/components/practice/ServicesGrid";
 import { AboutWelcome } from "@/components/practice/AboutWelcome";
-import { PatientReviews } from "@/components/practice/PatientReviews";
 import { TeamStrip, type PracticeTeamMember } from "@/components/practice/TeamStrip";
 import { LocationContactBlock } from "@/components/practice/LocationContactBlock";
 import { ExtrasSection } from "@/components/practice/ExtrasSection";
@@ -46,9 +44,8 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function SulphurSpringsPage() {
-  const [page, testimonials, ssServiceCards, ssHours, staff, displayLocs] = await Promise.all([
+  const [page, ssServiceCards, ssHours, staff, displayLocs] = await Promise.all([
     getPracticePage("sulphur-springs"),
-    listPracticeTestimonials("sulphur-springs", { publishedOnly: true }),
     getSSServiceCards(),
     getSulphurOfficeHours(),
     resolveSiteStaffForBrand("sulphur"),
@@ -81,7 +78,6 @@ export default async function SulphurSpringsPage() {
         {page.aboutBlocks.map((block) => (
           <AboutWelcome key={block.id} data={block} phone={ss.phonePrimary} />
         ))}
-        <PatientReviews data={page.reviews} testimonials={testimonials} />
         {page.teamSections.map((section) => (
           <TeamStrip
             key={section.id}

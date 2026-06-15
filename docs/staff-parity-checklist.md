@@ -31,7 +31,7 @@ Paris chiropractors (Greg Thompson, Sean Welborn, Brandy Collins): `/about` and 
 |-------------|----------|
 | Dr. Conner Collins | `/sulphur-springs/staff` (featured) |
 | Jade Petty, Taylor Harrison | `/sulphur-springs/staff` |
-| Leotta Cascia, Brittany Brown, Ashlyn Davis | `/sulphur-springs/staff` |
+| Brittany Brown, Ashlyn Davis | `/sulphur-springs/staff` |
 
 ## Dual roles (intentional)
 

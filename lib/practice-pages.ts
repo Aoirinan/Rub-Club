@@ -516,7 +516,7 @@ async function buildSulphurSpringsDefaults(): Promise<PracticePageDoc> {
       },
     ],
     reviews: {
-      published: true,
+      published: false,
       heading: "What Our Patients Say",
       linkToReviewsPage: false,
       reviewsUrl: "",

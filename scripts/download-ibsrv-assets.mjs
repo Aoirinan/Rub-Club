@@ -63,6 +63,17 @@ const ASSETS = {
     "public/images/legacy/paris-staff-ashlie-jenkins.webp",
   "https://cdcssl.ibsrv.net/ibimg/smb/650x250_80/webmgr/1x/5/c/CHANN_20250220_1843.png.webp?ba181c242dc69fe0d7ca86fd954f35ae":
     "public/images/legacy/paris-staff-channety-wooten.webp",
+  // lib/site-staff-seed-rosters.ts — Sulphur Springs staff
+  "https://cdcssl.ibsrv.net/ibimg/smb/767x894_80/webmgr/0b/v/v/6894fb150b783_Dr.Collins_20250807_1915.jpg.webp?968bc0ef218b12b9863a228b79e19939":
+    "public/images/staff-ss/conner-collins.webp",
+  "https://cdcssl.ibsrv.net/ibimg/smb/767x919_80/webmgr/0b/v/v/69e109f521ad7_VictoriaJadePetty_20260416_1613.png.webp?4daec3811ca555c5551857eaa99d7cea":
+    "public/images/staff-ss/jade-petty.webp",
+  "https://cdcssl.ibsrv.net/ibimg/smb/767x1023_80/webmgr/0b/v/v/6a1879241eb5d_TaylorHarrison_20260528_1719.png.webp?48423671b990c51512501e7fbd79eb12":
+    "public/images/staff-ss/taylor-harrison.webp",
+  "https://cdcssl.ibsrv.net/ibimg/smb/925x1108_80/webmgr/0b/v/v/brittany-brown.png.webp?0eec5d70260952ed4d908224931db41e":
+    "public/images/staff-ss/brittany-brown.webp",
+  "https://cdcssl.ibsrv.net/ibimg/smb/767x1022_80/webmgr/0b/v/v/6a1879fb69f5a_AshlynDavis_20260528_1723.png.webp?e28faabde18cedf72f2cfeb449a7ebaf":
+    "public/images/staff-ss/ashlyn-davis.webp",
 };
 
 async function main() {
