@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { LOCATIONS, telHref } from "@/lib/constants";
 
@@ -44,6 +44,8 @@ type Props = {
   variant?: keyof typeof VARIANT_BASE;
   /** Force a brand (color + phone) instead of inferring it from the path. */
   brand?: "paris" | "sulphur";
+  /** Optional custom trigger content (e.g. quick-action circle with icon). */
+  children?: ReactNode;
 };
 
 type ContextPhone = { business: string; phone: string };
@@ -68,7 +70,7 @@ function contextPhone(pathname: string, brand: "paris" | "sulphur"): ContextPhon
   };
 }
 
-export function BookingCta({ label, className, variant = "default", brand }: Props) {
+export function BookingCta({ label, className, variant = "default", brand, children }: Props) {
   const pathname = usePathname() ?? "/";
   const [open, setOpen] = useState(false);
   const resolvedBrand =
@@ -88,8 +90,8 @@ export function BookingCta({ label, className, variant = "default", brand }: Pro
 
   return (
     <>
-      <button type="button" className={classes} onClick={() => setOpen(true)}>
-        {label}
+      <button type="button" className={classes} onClick={() => setOpen(true)} aria-label={label}>
+        {children ?? label}
       </button>
       {open ? (
         <div

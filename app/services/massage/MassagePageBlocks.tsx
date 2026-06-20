@@ -105,7 +105,7 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
               For insurance coordination, personal injury case management, and other Paris office
               roles, see{" "}
               <Link href="/locations/paris/staff" className="font-bold text-[#c0392b] underline">
-                Meet our Paris office team
+                About us — Paris office
               </Link>
               .
             </>

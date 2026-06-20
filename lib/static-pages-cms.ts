@@ -268,13 +268,13 @@ export function buildStaticPagesCmsDefaults(): Record<string, string> {
       "Family-owned chiropractic in Paris and Sulphur Springs, plus licensed massage therapy at our Paris office.",
     services_chiro_title: "Chiropractic care",
     services_chiro_body:
-      "Adjustments, decompression, rehab, acupuncture, and pediatric care at our Paris and Sulphur Springs offices.",
+      "Adjustments, decompression, rehab, and pediatric care at our Paris and Sulphur Springs offices. Acupuncture is offered at our Paris office only.",
     services_massage_title: "Massage therapy — The Rub Club",
     services_massage_body:
       "Deep tissue, prenatal, sports, and therapeutic massage at our Paris location, coordinated with chiropractic care when helpful.",
 
     reviews_hero_eyebrow: "Patient stories",
-    reviews_hero_title: "What our patients say",
+    reviews_hero_title: "Patient Reviews",
     reviews_hero_lede:
       "Voted Best Chiropractic Center and Best Massage in The Paris News reader polls. Below are stories adapted from public Google reviews (paraphrased, not copied word-for-word).",
     reviews_cta_heading: "Loved your visit? Leave us a review.",
@@ -284,21 +284,17 @@ export function buildStaticPagesCmsDefaults(): Record<string, string> {
     patient_forms_hero_eyebrow: "Welcome to our practice",
     patient_forms_hero_title: "Patient forms",
     patient_forms_hero_lede:
-      "Download our 9-page chiropractic intake packet or the massage new-client PDF, print and complete it at home, and bring it to your visit in Paris or Sulphur Springs.",
-    patient_forms_chiro_heading: "Chiropractic: new patient & personal injury",
+      "Print this form, fill it out, and bring it to your massage or chiro appointment.",
+    patient_forms_chiro_heading: "Chiro patient form",
     patient_forms_chiro_intro:
-      "This is the same 9-page printable packet we use in office for new chiropractic patients. Print it, complete every page that applies to your visit, and bring it with you (or arrive a few minutes early to fill it out here).",
-    patient_forms_chiro_bullets: `- Pages 1–4 — patient and insurance information, health history, and symptom checklist.
-- Pages 5–8 — insurance acknowledgment, informed consent, assignment of benefits, and Notice of Privacy Practices (HIPAA).
-- Page 9 — CMS-1500 (if your visit requires it; the front desk can help).
-- Personal injury / auto accident — use this same packet; answer accident and case questions where prompted and bring insurance or claim information to your appointment.`,
-    patient_forms_massage_heading: "New client form (PDF)",
+      "Chiropractic: new patient & personal injury form — Download, print, fill out by hand, and bring it in.",
+    patient_forms_chiro_bullets: "",
+    patient_forms_massage_heading: "Massage patient form",
     patient_forms_massage_body:
-      "Print this form, fill it in by hand, and bring it to your first massage appointment.",
-    patient_forms_inperson_heading: "Bringing your forms in person",
-    patient_forms_inperson_bullets: `- Complete your forms at home and bring the printed pages with you. If you can't print, arrive 10–15 minutes early and we'll have paper copies at the front desk.
-- Bring your insurance card and a photo ID with you — we'll scan them at the front desk. Please do not email or text card photos.
-- For questions about which pages apply to your visit, attorney letters of protection, or accommodations, call the office below or send us a message.`,
+      "Print this form, fill it out, and bring it to your massage or chiro appointment.",
+    patient_forms_inperson_heading: "Need help?",
+    patient_forms_inperson_bullets: `- Call either office if you have questions about which form to bring.
+- If you cannot print at home, arrive a few minutes early and we will have paper copies at the front desk.`,
   };
 
   TESTIMONIALS.forEach((t, i) => {

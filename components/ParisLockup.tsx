@@ -25,7 +25,7 @@ export function ParisLockup({
 }) {
   const mark = (
     <span
-      className="inline-flex shrink-0 mix-blend-multiply"
+      className="inline-flex shrink-0"
       style={{ height: `${heightPx}px` }}
     >
       <Image
@@ -64,7 +64,7 @@ export function ParisLockup({
       className={`inline-flex max-w-full items-center gap-2 sm:gap-2.5 ${className}`}
       style={{ height: `${heightPx}px` }}
     >
-      <span className="inline-flex shrink-0 mix-blend-multiply" style={{ height: "100%" }}>
+      <span className="inline-flex shrink-0" style={{ height: "100%" }}>
         <Image
           src={BRAND_LOGOS.chiropracticMark}
           alt=""

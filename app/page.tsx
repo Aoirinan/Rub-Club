@@ -16,6 +16,7 @@ import {
 import { getContentMany, renderRichText } from "@/lib/cms";
 import { DOCTOR_CMS_KEYS, doctorVideoItems, getDoctorsForMarketing } from "@/lib/cms-doctors";
 import { CHIRO, CHIRO_INTRO_VIDEO_SRC } from "@/lib/home-verbatim";
+import { PARIS_HOME_HERO_IMAGES } from "@/lib/home-images";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { getLayoutCmsContent } from "@/lib/cms-display";
 import { getParisOfficeHours } from "@/lib/office-hours";
@@ -26,7 +27,6 @@ import { siteDescription, siteTitle } from "@/lib/site-content";
 import { pageKeywords } from "@/lib/seo-keywords";
 import { getPracticePage, listPracticeTestimonials } from "@/lib/practice-pages";
 import { practiceThemeStyle } from "@/components/practice/theme";
-import { UtilityBar } from "@/components/practice/UtilityBar";
 import { PracticeHero } from "@/components/practice/PracticeHero";
 import { QuickActionsRow } from "@/components/practice/QuickActionsRow";
 import { ServicesGrid } from "@/components/practice/ServicesGrid";
@@ -104,6 +104,22 @@ export default async function Home() {
     },
   ];
 
+  const [twoPracticesBlock, ...otherAboutBlocks] = page.aboutBlocks;
+  const doctorsSection = page.teamSections.find((s) => s.source === "paris-doctors");
+  const massageTeamSection = page.teamSections.find((s) => s.source === "rub-club-team");
+  const otherTeamSections = page.teamSections.filter(
+    (s) => s.source !== "paris-doctors" && s.source !== "rub-club-team",
+  );
+
+  const awardsExtra = page.extras.find((e) => e.id === "awards");
+  const wellnessExtra = page.extras.find((e) => e.id === "wellness");
+  const otherExtras = page.extras.filter((e) => e.id !== "awards" && e.id !== "wellness");
+  const hero = {
+    ...page.hero,
+    imageUrl: PARIS_HOME_HERO_IMAGES[0],
+    slides: [...PARIS_HOME_HERO_IMAGES.slice(1)],
+  };
+
   return (
     <div className="bg-[#f4f2ea]" style={practiceThemeStyle("paris-home", page.theme)}>
       <JsonLd
@@ -114,25 +130,52 @@ export default async function Home() {
           faqPageJsonLd(homeFaqs),
         ]}
       />
-      <UtilityBar data={page.utilityBar} />
-      <PracticeHero data={page.hero} utility={page.utilityBar} headingTag="h1" />
-
-      <div className="bg-[#fff7d7] py-3 text-center text-sm text-[#5a4a15]">
-        {awardsHtml ? (
-          <div
-            className="mx-auto max-w-4xl px-2 [&_a]:font-bold [&_a]:text-[#5a4a15] [&_a]:underline"
-            dangerouslySetInnerHTML={{ __html: awardsHtml }}
-          />
-        ) : (
-          <>{c.home_awards_text}</>
-        )}
-      </div>
+      <PracticeHero data={hero} utility={page.utilityBar} headingTag="h1" />
 
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
         <QuickActionsRow data={page.quickActions} />
-        <ServicesGrid data={page.servicesGrid} />
 
-        {page.aboutBlocks.map((block, i) => (
+        {doctorsSection?.published ? (
+          <section
+            id="our-chiropractors"
+            className="scroll-mt-32 border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-10"
+          >
+            {doctorsSection.heading.trim() ? (
+              <h2 className="text-center text-3xl font-black text-[var(--pp-heading)]">
+                {doctorsSection.heading}
+              </h2>
+            ) : null}
+            {doctorsSection.intro.trim() ? (
+              <p
+                className="mx-auto mt-4 max-w-3xl text-center leading-relaxed text-stone-700 [&_a]:font-bold [&_a]:text-[var(--pp-accent)] [&_a]:underline"
+                dangerouslySetInnerHTML={{ __html: renderRichText(doctorsSection.intro) }}
+              />
+            ) : null}
+            <div className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+              {doctors.map((member) => (
+                <ChiropracticDoctorCard
+                  key={member.name}
+                  name={member.name}
+                  role={member.role}
+                  bio={member.bio}
+                  imageSrc={member.imageSrc}
+                  videoUrl={member.videoUrl}
+                  videoFile={member.videoFile}
+                  actionVideos={member.actionVideos}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {twoPracticesBlock?.published ? (
+          <AboutWelcome data={twoPracticesBlock} phone={paris.phonePrimary} />
+        ) : null}
+
+        <ServicesGrid data={page.servicesGrid} />
+        <AdjustmentsInActionSection />
+
+        {otherAboutBlocks.map((block, i) => (
           <Fragment key={block.id || i}>
             <AboutWelcome data={block} phone={paris.phonePrimary} />
             {i === 0 && block.published ? (
@@ -146,94 +189,55 @@ export default async function Home() {
         <TestimonialVideosSection />
         <PatientReviews data={page.reviews} testimonials={testimonials} />
 
-        {page.teamSections.map((section) => {
-          if (!section.published) return null;
-          if (section.source === "paris-doctors" && section.variant === "expanded") {
-            return (
-              <Fragment key={section.id}>
-                <section
-                  id="our-chiropractors"
-                  className="scroll-mt-32 border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-10"
-                >
-                  {section.heading.trim() ? (
-                    <h2 className="text-center text-3xl font-black text-[var(--pp-heading)]">
-                      {section.heading}
-                    </h2>
-                  ) : null}
-                  {section.intro.trim() ? (
-                    <p
-                      className="mx-auto mt-4 max-w-3xl text-center leading-relaxed text-stone-700 [&_a]:font-bold [&_a]:text-[var(--pp-accent)] [&_a]:underline"
-                      dangerouslySetInnerHTML={{ __html: renderRichText(section.intro) }}
-                    />
-                  ) : null}
-                  <div className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
-                    {doctors.map((member) => (
-                      <ChiropracticDoctorCard
-                        key={member.name}
-                        name={member.name}
-                        role={member.role}
-                        bio={member.bio}
-                        imageSrc={member.imageSrc}
-                        videoUrl={member.videoUrl}
-                        videoFile={member.videoFile}
-                        actionVideos={member.actionVideos}
-                      />
-                    ))}
-                  </div>
-                </section>
-                <AdjustmentsInActionSection />
-              </Fragment>
-            );
-          }
-          if (section.source === "rub-club-team") {
-            return (
-              <MassageTeamGrid
-                key={section.id}
-                members={massageTeam}
-                title={section.heading}
-                subtitle={section.intro}
-                variant="home"
-                footnote={
-                  section.linkUrl.trim() ? (
-                    <>
-                      Titles here reflect massage therapy roles. Insurance, personal injury,
-                      front desk, and other Paris office roles are on{" "}
-                      <Link
-                        href={section.linkUrl}
-                        className="font-bold text-[var(--pp-accent)] underline"
-                      >
-                        our Paris office team page
-                      </Link>
-                      .
-                    </>
-                  ) : undefined
-                }
+        {awardsHtml || c.home_awards_text ? (
+          <div className="bg-[#fff7d7] py-3 text-center text-sm text-[#5a4a15]">
+            {awardsHtml ? (
+              <div
+                className="mx-auto max-w-4xl px-2 [&_a]:font-bold [&_a]:text-[#5a4a15] [&_a]:underline"
+                dangerouslySetInnerHTML={{ __html: awardsHtml }}
               />
-            );
-          }
-          return (
-            <TeamStrip
-              key={section.id}
-              data={section}
-              members={membersBySource[section.source] ?? []}
-            />
-          );
-        })}
+            ) : (
+              <>{c.home_awards_text}</>
+            )}
+          </div>
+        ) : awardsExtra ? (
+          <ExtrasSection extras={[awardsExtra]} />
+        ) : null}
 
-        <LocationContactBlock
-          data={page.locationBlock}
-          location={{
-            name: paris.name,
-            phoneLabel: "Chiropractic",
-            phone: paris.phonePrimary,
-            addressLines: [...paris.addressLines],
-            mapsUrl: paris.mapsUrl,
-            detailsHref: `/locations/${paris.slug}`,
-            detailsLabel: "Paris details & hours",
-          }}
-          hours={parisHours}
-          secondaryLocations={secondaryLocations}
-        />
+        {wellnessExtra ? <ExtrasSection extras={[wellnessExtra]} /> : null}
+        <ExtrasSection extras={otherExtras} />
+
+        {massageTeamSection?.published ? (
+          <MassageTeamGrid
+            members={massageTeam}
+            title={massageTeamSection.heading}
+            subtitle={massageTeamSection.intro}
+            variant="home"
+            footnote={
+              massageTeamSection.linkUrl.trim() ? (
+                <>
+                  Titles here reflect massage therapy roles. Insurance, personal injury,
+                  front desk, and other Paris office roles are on{" "}
+                  <Link
+                    href={massageTeamSection.linkUrl}
+                    className="font-bold text-[var(--pp-accent)] underline"
+                  >
+                    About us — Paris office
+                  </Link>
+                  .
+                </>
+              ) : undefined
+            }
+          />
+        ) : null}
+
+        {otherTeamSections.map((section) => (
+          <TeamStrip
+            key={section.id}
+            data={section}
+            members={membersBySource[section.source] ?? []}
+          />
+        ))}
 
         <section
           aria-labelledby="home-faq"
@@ -255,7 +259,20 @@ export default async function Home() {
           </div>
         </section>
 
-        <ExtrasSection extras={page.extras} />
+        <LocationContactBlock
+          data={page.locationBlock}
+          location={{
+            name: paris.name,
+            phoneLabel: "Chiropractic",
+            phone: paris.phonePrimary,
+            addressLines: [...paris.addressLines],
+            mapsUrl: paris.mapsUrl,
+            detailsHref: `/locations/${paris.slug}`,
+            detailsLabel: "Paris details & hours",
+          }}
+          hours={parisHours}
+          secondaryLocations={secondaryLocations}
+        />
       </div>
       <StickyCallBar data={page.stickyCallBar} />
     </div>

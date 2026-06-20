@@ -18,7 +18,7 @@ import {
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "Meet the Staff — Sulphur Springs Chiropractic",
+  title: "About Us — Sulphur Springs Chiropractic",
   description:
     "Meet Dr. Conner Collins and the care team at Chiropractic Associates of Sulphur Springs. Chiropractor, massage therapists, rehab therapy, and front-desk staff serving Hopkins County, TX.",
   path: "/sulphur-springs/staff",
@@ -106,7 +106,7 @@ export default async function SulphurSpringsStaffPage() {
         items={[
           { name: "Home", url: "/" },
           { name: "Sulphur Springs", url: "/sulphur-springs" },
-          { name: "Meet the Staff", url: "/sulphur-springs/staff" },
+          { name: "About Us", url: "/sulphur-springs/staff" },
         ]}
       />
       <PageHero

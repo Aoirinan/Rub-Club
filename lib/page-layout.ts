@@ -106,18 +106,6 @@ export const PAGE_LAYOUT_PAGES: PageLayoutPageDef[] = [
         previewKey: "introPhoto",
       },
       {
-        id: "treatments",
-        label: "Treatments we combine",
-        description: "Treatment offerings grid",
-        previewKey: "staticSection",
-      },
-      {
-        id: "adjustments",
-        label: "Adjustments in action",
-        description: "Video / action section",
-        previewKey: "staticSection",
-      },
-      {
         id: "doctors",
         label: "Our Paris chiropractors",
         description: "Doctor cards from CMS",
@@ -141,6 +129,20 @@ export const PAGE_LAYOUT_PAGES: PageLayoutPageDef[] = [
         siteContentPage: "Doctors",
         previewKey: "doctorCards",
         embedKey: "doctors",
+      },
+      {
+        id: "treatments",
+        label: "Treatments we offer",
+        description: "Treatment offerings grid",
+        cmsFieldIds: ["chiro_treatments_heading", "chiro_treatments_intro", "chiro_treatments_list"],
+        siteContentPage: "Chiropractic",
+        previewKey: "staticSection",
+      },
+      {
+        id: "adjustments",
+        label: "Adjustments in action",
+        description: "Video / action section",
+        previewKey: "staticSection",
       },
       {
         id: "locations",

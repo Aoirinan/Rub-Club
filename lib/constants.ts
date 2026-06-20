@@ -66,6 +66,7 @@ export type LocationInfo = {
   postalCode: string;
   phonePrimary: string;
   phoneSecondary?: string;
+  fax?: string;
   /** Latitude / longitude for the office (approximate; refine via GBP). */
   geo: { latitude: number; longitude: number };
   /** Public Google Maps URL — used in contact pages, emails, and JSON-LD `hasMap`. */
@@ -93,6 +94,7 @@ export const LOCATIONS: Record<LocationId, LocationInfo> = {
     postalCode: "75460",
     phonePrimary: "903-785-5551",
     phoneSecondary: "903-739-9959",
+    fax: "903-784-4188",
     geo: { latitude: 33.6887, longitude: -95.5277 },
     mapsUrl:
       "https://www.google.com/maps/search/?api=1&query=3305+NE+Loop+286+Suite+A+Paris+TX+75460",
@@ -115,6 +117,7 @@ export const LOCATIONS: Record<LocationId, LocationInfo> = {
     addressRegion: "TX",
     postalCode: "75482",
     phonePrimary: "903-919-5020",
+    fax: "903-919-3703",
     geo: { latitude: 33.1387, longitude: -95.6011 },
     mapsUrl:
       "https://www.google.com/maps/search/?api=1&query=207+Jefferson+St+E+Sulphur+Springs+TX",

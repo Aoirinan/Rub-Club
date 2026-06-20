@@ -4,6 +4,8 @@
  * Rendered at /services/chiropractic/[slug].
  */
 
+import { buildParisChiroServiceAdditions } from "@/lib/paris-chiro-content-adapters";
+
 export type ParisChiroService = {
   slug: string;
   title: string;
@@ -11,7 +13,13 @@ export type ParisChiroService = {
   body: string;
 };
 
-export const PARIS_CHIRO_SERVICES: readonly ParisChiroService[] = [
+export type ParisChiroNavChild = {
+  href: string;
+  label: string;
+  group?: string;
+};
+
+const PARIS_CHIRO_CORE: ParisChiroService[] = [
   {
     slug: "chiropractic-adjustments",
     title: "Chiropractic Adjustments",
@@ -183,7 +191,98 @@ Once we identify which muscles need attention, we'll guide you through one-on-on
 
 To schedule an appointment for postural rehabilitation, call Chiropractic Associates in Paris at 903-785-5551.`,
   },
+  {
+    slug: "interferential-current-therapy",
+    title: "Interferential Current Therapy",
+    metaDescription:
+      "Interferential current therapy at Chiropractic Associates in Paris, TX. Deep-penetrating electrical stimulation for pain relief and reduced swelling.",
+    body: `Interferential current therapy (IFC) uses medium-frequency electrical currents that cross over each other to penetrate deeper into tissue than standard TENS units. The result is pain relief, reduced swelling, and improved circulation in muscles and joints.
+
+## How It Works
+
+Electrodes are placed around the painful area. The alternating currents stimulate nerves and muscles in a way that blocks pain signals and encourages the body to release endorphins. Many patients find IFC comfortable — you may feel a gentle tingling sensation during treatment.
+
+IFC is often used alongside chiropractic adjustments for back pain, sciatica, muscle spasms, and post-injury recovery. Call our Paris office at 903-785-5551 to ask whether interferential current therapy fits your treatment plan.`,
+  },
+  {
+    slug: "microcurrent-therapy",
+    title: "Microcurrent Therapy",
+    metaDescription:
+      "Microcurrent therapy at Chiropractic Associates in Paris, TX. Low-level electrical stimulation to support tissue repair and reduce inflammation.",
+    body: `Microcurrent therapy delivers extremely low-level electrical currents — so low you typically cannot feel them — that mirror the body's natural electrical activity. The goal is to support cellular repair, reduce inflammation, and accelerate healing in soft tissue.
+
+## When We Use Microcurrent
+
+Microcurrent may be recommended for acute sprains, chronic tendon irritation, post-surgical recovery support, and areas where deeper electrical stimulation would be too intense. Sessions are brief and are often combined with adjustments, massage, or other therapies in your care plan.
+
+Interested in learning more? Call Chiropractic Associates in Paris at 903-785-5551.`,
+  },
+];
+
+export const PARIS_CHIRO_SERVICES: readonly ParisChiroService[] = [
+  ...PARIS_CHIRO_CORE,
+  ...buildParisChiroServiceAdditions(),
 ] as const;
+
+/** Legacy chiropracticparistexas.com Services menu order (grouped mega-menu). */
+export function buildParisChiroNavChildren(): ParisChiroNavChild[] {
+  const chiro = (slug: string) => `/services/chiropractic/${slug}`;
+  const care = "Chiropractic Services";
+  return [
+    { href: chiro("auto-injury"), label: "Auto Injury", group: "Injuries" },
+    { href: chiro("personal-injury"), label: "Personal Injury", group: "Injuries" },
+    { href: chiro("sports-injury"), label: "Sports Injury", group: "Injuries" },
+    {
+      href: "/services/massage",
+      label: "What is Therapeutic Massage?",
+      group: "Therapeutic Massage",
+    },
+    { href: "/services/massage", label: "Deep Tissue Massage", group: "Therapeutic Massage" },
+    { href: "/services/massage", label: "Hot Stone Massage", group: "Therapeutic Massage" },
+    { href: "/services/massage", label: "Prenatal Massage", group: "Therapeutic Massage" },
+    { href: "/services/massage", label: "Relaxation Massage", group: "Therapeutic Massage" },
+    { href: "/services/massage", label: "Sports Massage", group: "Therapeutic Massage" },
+    { href: "/services/massage", label: "Swedish Massage", group: "Therapeutic Massage" },
+    {
+      href: chiro("heat-and-cryotherapy"),
+      label: "Ice Pack Cryotherapy",
+      group: "Cryotherapy",
+    },
+    {
+      href: chiro("electric-muscle-stimulation"),
+      label: "Electric Muscle Stimulation",
+      group: "Electrical Stimulation",
+    },
+    {
+      href: chiro("interferential-current-therapy"),
+      label: "Interferential Current Therapy",
+      group: "Electrical Stimulation",
+    },
+    {
+      href: chiro("microcurrent-therapy"),
+      label: "Microcurrent Therapy",
+      group: "Electrical Stimulation",
+    },
+    { href: chiro("stretch-and-flex-rehab"), label: "Stretch & Flex Rehab", group: care },
+    {
+      href: chiro("chiropractic-adjustments"),
+      label: "Adjustments and Manipulation",
+      group: care,
+    },
+    { href: chiro("spinal-decompression"), label: "Spinal Decompression", group: care },
+    { href: chiro("common-chiropractic-conditions"), label: "Common Chiropractic Conditions", group: care },
+    { href: chiro("therapeutic-exercise"), label: "Therapeutic Exercise", group: care },
+    { href: chiro("therapeutic-ultrasound"), label: "Therapeutic Ultrasound", group: care },
+    { href: chiro("degenerative-disc-disease"), label: "Degenerative Disc Disease", group: care },
+    { href: chiro("pediatric-care"), label: "Pediatric Care", group: care },
+    { href: chiro("prenatal-chiropractic"), label: "Prenatal Chiropractic", group: care },
+    { href: chiro("spine-care"), label: "Spine Care", group: care },
+    { href: chiro("injury-rehab"), label: "Injury Rehab", group: care },
+    { href: chiro("acupuncture"), label: "Acupuncture", group: care },
+    { href: chiro("postural-rehabilitation"), label: "Postural Rehabilitation", group: care },
+    { href: chiro("therapeutic-massage"), label: "Therapeutic Massage", group: care },
+  ];
+}
 
 export const PARIS_CHIRO_SERVICE_NAV = PARIS_CHIRO_SERVICES.map((s) => ({
   href: `/services/chiropractic/${s.slug}`,
@@ -198,16 +297,39 @@ export function getParisChiroService(slug: string): ParisChiroService | null {
   return PARIS_CHIRO_SERVICES.find((s) => s.slug === slug) ?? null;
 }
 
+/** Alternate treatment card names → Paris chiro detail slug. */
+const PARIS_CHIRO_NAME_ALIASES: Record<string, string> = {
+  "adjustments and manipulation": "chiropractic-adjustments",
+  "chiropractic adjustments": "chiropractic-adjustments",
+  "stretch and flex rehab": "stretch-and-flex-rehab",
+  "stretch flex rehab": "stretch-and-flex-rehab",
+  "auto injury": "auto-injury",
+  "auto injury care": "auto-injury",
+  "personal injury": "personal-injury",
+  "sports injury": "sports-injury",
+  "common chiropractic conditions": "common-chiropractic-conditions",
+  "therapeutic exercise": "therapeutic-exercise",
+  "prenatal chiropractic": "prenatal-chiropractic",
+  "spine care": "spine-care",
+  "injury rehab": "injury-rehab",
+  "heat and cryotherapy": "heat-and-cryotherapy",
+  "heat cryotherapy": "heat-and-cryotherapy",
+};
+
 /**
  * Slug for a treatment card name (CMS-edited "Name — Description" lines),
  * or null when no detail page exists for that name.
  */
 export function parisChiroServiceSlugForName(name: string): string | null {
-  const slug = name
+  const normalized = name
     .trim()
     .toLowerCase()
     .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+  const alias = PARIS_CHIRO_NAME_ALIASES[normalized];
+  if (alias && PARIS_CHIRO_SERVICES.some((s) => s.slug === alias)) return alias;
+
+  const slug = normalized.replace(/\s+/g, "-");
   return PARIS_CHIRO_SERVICES.some((s) => s.slug === slug) ? slug : null;
 }

@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { allParisChiroServiceSlugs } from "@/lib/paris-chiro-services";
 import { getSiteOrigin } from "@/lib/site-content";
 
 type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]["changeFrequency"]>;
@@ -12,9 +13,11 @@ const ENTRIES: { path: string; changeFrequency: ChangeFrequency; priority: numbe
   // canonical 200 URLs. Their targets (/services/*, /about, /contact) are below.
   { path: "/services/chiropractic", changeFrequency: "monthly", priority: 0.85 },
   { path: "/services/chiropractic/wellness-care-plans", changeFrequency: "monthly", priority: 0.8 },
-  { path: "/services/chiropractic/therapeutic-ultrasound", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/services/chiropractic/degenerative-disc-disease", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/services/chiropractic/postural-rehabilitation", changeFrequency: "monthly", priority: 0.6 },
+  ...allParisChiroServiceSlugs().map((slug) => ({
+    path: `/services/chiropractic/${slug}`,
+    changeFrequency: "monthly" as ChangeFrequency,
+    priority: 0.6,
+  })),
   { path: "/services/massage", changeFrequency: "monthly", priority: 0.85 },
   { path: "/services/massage/prices", changeFrequency: "monthly", priority: 0.6 },
   { path: "/locations/paris", changeFrequency: "monthly", priority: 0.82 },
@@ -34,7 +37,6 @@ const ENTRIES: { path: string; changeFrequency: ChangeFrequency; priority: numbe
   { path: "/sulphur-springs/massage/prices", changeFrequency: "monthly", priority: 0.6 },
   { path: "/sulphur-springs/wellness-care-plans", changeFrequency: "monthly", priority: 0.7 },
   { path: "/sulphur-springs/staff", changeFrequency: "monthly", priority: 0.7 },
-  { path: "/sulphur-springs/acupuncture", changeFrequency: "monthly", priority: 0.6 },
   { path: "/sulphur-springs/adjustments-and-manipulation", changeFrequency: "monthly", priority: 0.6 },
   { path: "/sulphur-springs/common-chiropractic-conditions", changeFrequency: "monthly", priority: 0.6 },
   { path: "/sulphur-springs/degenerative-disc-disease", changeFrequency: "monthly", priority: 0.6 },

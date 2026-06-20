@@ -569,7 +569,7 @@ export function PracticePagesEditor({ getIdToken, initialLocation, embedded = fa
               />
               <div className="space-y-3 rounded-xl border border-slate-200 p-3">
                 <p className="text-xs text-slate-500">
-                  Extra slides (optional). The hero rotates through the main photo plus these.
+                  Hero carousel (up to 4 photos). The hero rotates through the main photo plus these slides.
                 </p>
                 {doc.hero.slides.map((slide, i) => (
                   <div key={i} className="flex items-start gap-2">
@@ -1167,7 +1167,7 @@ export function PracticePagesEditor({ getIdToken, initialLocation, embedded = fa
 
             {/* 7. Team strips */}
             <SectionCard
-              title="7 · Meet our team"
+              title="7 · About us"
               hint="Photos and credentials come from the doctors / office-staff sections of the site; edit those under Website. Each strip controls a heading, link, and which roster it shows."
             >
               {doc.teamSections.map((section: PracticeTeamSection, i) => (

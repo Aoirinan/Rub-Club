@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FACEBOOK_URL, INSTAGRAM_URL, telHref, type LocationInfo } from "@/lib/constants";
 import { track } from "@/lib/analytics";
 import type { NavItem } from "@/components/DesktopNav";
+import { isNavItemActive } from "@/lib/nav-active";
 import { BookingCta } from "@/components/BookingCta";
 import {
   GIFT_CARD_MOBILE_EXPANDED,
@@ -27,6 +29,7 @@ export function MobileNav({
   businessContext?: SiteBusinessContext;
 }) {
   const businessContext = useSiteBusinessContext(businessContextProp);
+  const pathname = usePathname() ?? "/";
   const hasGiftCardInNav = items.some((i) => i.label === "Gift cards");
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -60,7 +63,7 @@ export function MobileNav({
       {/* Backpro-style full-width MENU bar (mobile only). */}
       <button
         type="button"
-        className="focus-ring flex w-full items-center justify-between bg-[var(--header-nav-hover)] px-4 py-2.5 text-sm font-black uppercase tracking-wide text-white lg:hidden"
+        className="focus-ring flex w-full items-center justify-between bg-black px-4 py-2.5 text-sm font-black uppercase tracking-wide text-white lg:hidden"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
         aria-expanded={open}
@@ -88,7 +91,7 @@ export function MobileNav({
           />
           <div className="mobile-drawer-panel absolute right-0 top-0 h-full w-[88%] max-w-sm overflow-y-auto bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-stone-200 px-4 py-3">
-              <span className="text-sm font-black uppercase tracking-wide text-[#c0392b]">Menu</span>
+              <span className="text-sm font-black uppercase tracking-wide text-[var(--header-nav-hover)]">Menu</span>
               <button
                 type="button"
                 onClick={close}
@@ -104,6 +107,9 @@ export function MobileNav({
               {items.map((item, idx) => {
                 const hasChildren = !!item.children?.length || !!item.clinics?.length;
                 const isExpanded = expanded === item.label;
+                const active = isNavItemActive(item, pathname, businessContext);
+                const linkClass = (base: string) =>
+                  `${base} ${active ? "bg-[var(--header-nav-hover)]/10 text-[var(--header-nav-hover)]" : ""}`;
 
                 if (!hasChildren) {
                   if (item.external) {
@@ -113,7 +119,9 @@ export function MobileNav({
                         href={item.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="focus-ring border-b border-stone-100 px-4 py-3 text-sm font-bold uppercase tracking-wide text-[#4a1515] hover:bg-stone-50"
+                        className={linkClass(
+                          "focus-ring border-b border-stone-100 px-4 py-3 text-sm font-bold uppercase tracking-wide text-[#4a1515] hover:bg-stone-50",
+                        )}
                         onClick={close}
                       >
                         {item.label}
@@ -124,7 +132,9 @@ export function MobileNav({
                     <Link
                       key={`${idx}-${item.href}`}
                       href={item.href}
-                      className="focus-ring border-b border-stone-100 px-4 py-3 text-sm font-bold uppercase tracking-wide text-[#4a1515] hover:bg-stone-50"
+                      className={linkClass(
+                        "focus-ring border-b border-stone-100 px-4 py-3 text-sm font-bold uppercase tracking-wide text-[#4a1515] hover:bg-stone-50",
+                      )}
                       onClick={close}
                     >
                       {item.label}
@@ -134,17 +144,19 @@ export function MobileNav({
 
                 return (
                   <div key={`${idx}-${item.href}`} className="border-b border-stone-100">
-                    <div className="flex items-center">
+                    <div className={`flex items-center ${active ? "bg-[var(--header-nav-hover)]/10" : ""}`}>
                       <Link
                         href={item.href}
-                        className="focus-ring flex-1 px-4 py-3 text-sm font-bold uppercase tracking-wide text-[#4a1515] hover:bg-stone-50"
+                        className={linkClass(
+                          "focus-ring flex-1 px-4 py-3 text-sm font-bold uppercase tracking-wide text-[#4a1515] hover:bg-stone-50",
+                        )}
                         onClick={close}
                       >
                         {item.label}
                       </Link>
                       <button
                         type="button"
-                        className="focus-ring px-4 py-3 text-[#c0392b]"
+                        className="focus-ring px-4 py-3 text-[var(--header-nav-hover)]"
                         onClick={() => toggle(item.label)}
                         aria-expanded={isExpanded}
                         aria-label={`Expand ${item.label} submenu`}
@@ -198,6 +210,11 @@ export function MobileNav({
                                       {p.label}: {p.number}
                                     </a>
                                   ))}
+                                  {clinic.fax?.trim() ? (
+                                    <p className="text-xs font-bold text-stone-600">
+                                      Fax: {clinic.fax}
+                                    </p>
+                                  ) : null}
                                 </div>
                                 <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5">
                                   <a
@@ -208,15 +225,6 @@ export function MobileNav({
                                   >
                                     Get directions
                                   </a>
-                                  {clinic.contactHref ? (
-                                    <Link
-                                      href={clinic.contactHref}
-                                      className="inline-block text-xs font-bold text-[#c0392b] underline"
-                                      onClick={close}
-                                    >
-                                      Send a message
-                                    </Link>
-                                  ) : null}
                                 </div>
                               </div>
                             ))

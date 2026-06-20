@@ -7,7 +7,7 @@ export const DEFAULT_PARIS_CHIRO_NAV: BusinessNavItem[] = [
     label: "About Us",
     href: "/locations/paris",
     children: [
-      { label: "Meet The Staff", href: "/locations/paris/staff" },
+      { label: "Our Team", href: "/locations/paris/staff" },
       { label: "Office & Hours", href: "/locations/paris" },
     ],
   },
@@ -39,7 +39,7 @@ export const DEFAULT_SULPHUR_SPRINGS_NAV: BusinessNavItem[] = [
   {
     label: "About Us",
     href: "/sulphur-springs/staff",
-    children: [{ label: "Meet The Staff", href: "/sulphur-springs/staff" }],
+    children: [{ label: "Our Team", href: "/sulphur-springs/staff" }],
   },
   {
     label: "Services",

@@ -46,7 +46,7 @@ export default async function InsurancePage() {
           <p className="text-sm text-stone-600">
             Auto-injury and personal-injury paperwork:{" "}
             <Link href="/locations/paris/staff" className="font-bold text-[#c0392b] underline">
-              meet our Paris office team
+              About us — Paris office
             </Link>{" "}
             (including our personal injury case manager).
           </p>

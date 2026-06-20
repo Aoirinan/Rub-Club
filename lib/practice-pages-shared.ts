@@ -267,6 +267,16 @@ function mergeQuickActions(
   };
 }
 
+/** Map legacy "Treatments we combine" copy to the current default heading. */
+export function normalizeChiroTreatmentsHeading(
+  heading: string,
+  fallback = "Treatments we offer",
+): string {
+  const trimmed = heading.trim();
+  if (!trimmed || /^treatments we combine$/i.test(trimmed)) return fallback;
+  return trimmed;
+}
+
 function mergeServicesGrid(
   raw: unknown,
   d: PracticeServicesGridSection,
@@ -274,7 +284,7 @@ function mergeServicesGrid(
   if (!isRecord(raw)) return d;
   return {
     published: bool(raw.published, d.published),
-    heading: str(raw.heading, d.heading),
+    heading: normalizeChiroTreatmentsHeading(str(raw.heading, d.heading)),
     intro: str(raw.intro, d.intro),
     mode: raw.mode === "custom" || raw.mode === "ss-services" ? raw.mode : d.mode,
     cards: Array.isArray(raw.cards)
@@ -414,22 +424,50 @@ function mergeLocationBlock(
   };
 }
 
-function mergeExtras(raw: unknown, d: PracticeExtra[]): PracticeExtra[] {
-  if (!Array.isArray(raw)) return d;
-  return raw.filter(isRecord).map((e, idx) => ({
-    id: str(e.id, `extra_${idx}`),
-    published: bool(e.published, true),
-    heading: str(e.heading, ""),
-    body: str(e.body, ""),
-    ctaLabel: str(e.ctaLabel, ""),
-    ctaUrl: str(e.ctaUrl, ""),
-    links: Array.isArray(e.links)
-      ? e.links
+function mergeExtra(raw: unknown, d: PracticeExtra): PracticeExtra {
+  if (!isRecord(raw)) return d;
+  return {
+    id: str(raw.id, d.id),
+    published: bool(raw.published, d.published),
+    heading: str(raw.heading, d.heading),
+    body: str(raw.body, d.body),
+    ctaLabel: str(raw.ctaLabel, d.ctaLabel),
+    ctaUrl: str(raw.ctaUrl, d.ctaUrl),
+    links: Array.isArray(raw.links)
+      ? raw.links
           .filter(isRecord)
           .map((l) => ({ label: str(l.label, ""), url: str(l.url, "") }))
           .filter((l) => l.label.trim().length > 0 && l.url.trim().length > 0)
-      : [],
-  }));
+      : d.links,
+  };
+}
+
+function mergeExtras(raw: unknown, d: PracticeExtra[]): PracticeExtra[] {
+  if (!Array.isArray(raw)) return d;
+  const rawById = new Map<string, Record<string, unknown>>();
+  for (const item of raw.filter(isRecord)) {
+    const id = str(item.id, "");
+    if (id) rawById.set(id, item);
+  }
+  const merged = d.map((def) => mergeExtra(rawById.get(def.id), def));
+  const knownIds = new Set(d.map((e) => e.id));
+  for (const item of raw.filter(isRecord)) {
+    const id = str(item.id, "");
+    if (id && !knownIds.has(id)) {
+      merged.push(
+        mergeExtra(item, {
+          id,
+          published: true,
+          heading: "",
+          body: "",
+          ctaLabel: "",
+          ctaUrl: "",
+          links: [],
+        }),
+      );
+    }
+  }
+  return merged;
 }
 
 function mergeStickyBar(raw: unknown, d: PracticeStickyBarSection): PracticeStickyBarSection {

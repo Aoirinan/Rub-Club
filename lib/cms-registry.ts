@@ -307,6 +307,7 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
 
   { id: "nav_giftcard_url", pageLabel: "Navigation", sectionLabel: "Links", fieldLabel: "Gift Card URL", type: "url" },
   { id: "nav_book_url", pageLabel: "Navigation", sectionLabel: "Links", fieldLabel: "Book Now URL", type: "url" },
+  { id: "nav_staff_label", pageLabel: "Navigation", sectionLabel: "Links", fieldLabel: "About Us nav label", type: "text" },
 
   { id: "chiro_wellness_teaser_heading", pageLabel: "Chiropractic", sectionLabel: "Wellness teaser", fieldLabel: "Heading", type: "text" },
   { id: "chiro_wellness_teaser_body", pageLabel: "Chiropractic", sectionLabel: "Wellness teaser", fieldLabel: "Body copy", type: "text" },
@@ -379,7 +380,7 @@ export const DEFAULTS: Record<string, string> = {
   home_awards_text:
     "Voted Best Chiropractic Center & Best Massage — The Paris News reader polls.",
   home_about_blurb: HOME_INTRO.body,
-  home_testimonials_heading: "What our patients say",
+  home_testimonials_heading: "Patient Reviews",
   home_testimonials_intro:
     "Voted Best Chiropractic Center and Best Massage in The Paris News reader polls. Below are stories adapted from public Google reviews (paraphrased, not copied word-for-word).",
 
@@ -392,10 +393,10 @@ export const DEFAULTS: Record<string, string> = {
   chiro_doctors_heading: "Our Paris chiropractors",
   chiro_doctors_intro:
     "Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins practice at our Paris office.",
-  chiro_treatments_heading: "Treatments We Combine",
+  chiro_treatments_heading: "Treatments we offer",
   chiro_treatments_intro: CHIRO.treatmentsIntro,
   chiro_treatments_list: CHIRO_TREATMENTS_LIST_DEFAULT,
-  chiro_testimonials_heading: "What Our Chiropractic Patients Say",
+  chiro_testimonials_heading: "Patient Reviews",
   chiro_cta_heading: CHIRO.contactUsTitle,
   chiro_cta_subtext: CHIRO.callCta,
   chiro_cta_paris_label: "Call Paris Office",
@@ -508,6 +509,7 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
 
   nav_giftcard_url: GIFT_CARD_ORDER_URL,
   nav_book_url: "/contact",
+  nav_staff_label: "About Us",
 
   ...wellnessCarePlansDefaults(),
   ...buildSSCmsDefaults(),

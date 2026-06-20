@@ -1,5 +1,7 @@
 import type { DocumentData, Firestore } from "firebase-admin/firestore";
 import { getFirestore } from "@/lib/firebase-admin";
+import { PARIS_STAFF_IMAGES } from "@/lib/paris-staff-images";
+import { PARIS_OFFICE_STAFF_SEED, SS_STAFF_SEED } from "@/lib/site-staff-seed-rosters";
 
 export const SITE_STAFF_COLLECTION = "site_staff_members";
 export const SITE_STAFF_CACHE_TAG = "site-staff-public";
@@ -149,17 +151,42 @@ export async function nextSiteStaffOrder(
   return Math.max(...forBrand.map((m) => m.order)) + 10;
 }
 
+function seedStaffDisplayForBrand(pageBrand: "paris" | "sulphur"): SiteStaffDisplayMember[] {
+  if (pageBrand === "sulphur") {
+    return SS_STAFF_SEED.map((m) => ({
+      id: m.id,
+      name: m.name,
+      role: m.role,
+      bio: m.bio,
+      ...(m.image ? { image: m.image } : {}),
+      featured: m.id === "dr_conner_collins",
+    }));
+  }
+  return PARIS_OFFICE_STAFF_SEED.map((m) => ({
+    id: m.id,
+    name: m.name,
+    role: m.role,
+    bio: m.bio,
+    image: PARIS_STAFF_IMAGES[m.imageKey],
+    featured: false,
+  }));
+}
+
 export async function listActiveSiteStaffForBrand(
   pageBrand: "paris" | "sulphur",
 ): Promise<SiteStaffDisplayMember[]> {
-  const db = getFirestore();
-  const snap = await db.collection(SITE_STAFF_COLLECTION).where("active", "==", true).get();
-  const rows: SiteStaffMemberStored[] = [];
-  for (const doc of snap.docs) {
-    const row = parseSiteStaffDoc(doc.id, doc.data());
-    if (row && memberMatchesBrand(row.brand, pageBrand)) rows.push(row);
+  try {
+    const db = getFirestore();
+    const snap = await db.collection(SITE_STAFF_COLLECTION).where("active", "==", true).get();
+    const rows: SiteStaffMemberStored[] = [];
+    for (const doc of snap.docs) {
+      const row = parseSiteStaffDoc(doc.id, doc.data());
+      if (row && memberMatchesBrand(row.brand, pageBrand)) rows.push(row);
+    }
+    return sortMembers(rows).map(storedToDisplay);
+  } catch {
+    return seedStaffDisplayForBrand(pageBrand);
   }
-  return sortMembers(rows).map(storedToDisplay);
 }
 
 /** Active staff for a location page (Firestore only). */

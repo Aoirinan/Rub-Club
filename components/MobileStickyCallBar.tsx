@@ -96,7 +96,7 @@ export function MobileStickyCallBar(props: MobileStickyCallBarProps) {
       </a>
       <BookingCta
         label="Book Now"
-        className="focus-ring flex items-center justify-center gap-2 bg-[#4a1515] px-4 py-3 text-sm font-black uppercase tracking-wide text-white"
+        className="focus-ring flex items-center justify-center gap-2 bg-black px-4 py-3 text-sm font-black uppercase tracking-wide text-white"
       />
     </div>
   );

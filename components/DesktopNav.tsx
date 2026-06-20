@@ -6,10 +6,13 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BookingCta } from "@/components/BookingCta";
 import { useHeaderCompact } from "@/components/HeaderThemeProvider";
 import { telHref } from "@/lib/constants";
+import { isNavItemActive } from "@/lib/nav-active";
 import {
   GIFT_CARD_DESKTOP_EXPANDED,
   useMassageGiftCardNavExpandedContext,
 } from "@/lib/massage-gift-card-nav-context";
+import { useSiteBusinessContext } from "@/lib/use-site-business-context";
+import type { SiteBusinessContext } from "@/lib/site-business-context";
 
 export type NavChild = { href: string; label: string; group?: string };
 
@@ -18,6 +21,7 @@ export type ContactClinicInfo = {
   name: string;
   addressLines: readonly string[];
   phones: { label: string; number: string }[];
+  fax?: string;
   mapsUrl: string;
   /** Dedicated contact page for this clinic. */
   contactHref?: string;
@@ -53,7 +57,7 @@ function panelAlignClass(align: PanelAlign): string {
   return "left-1/2 -translate-x-1/2";
 }
 
-function DropdownItem({
+function DropdownPanel({
   item,
   onClose,
   align = "center",
@@ -62,19 +66,13 @@ function DropdownItem({
   onClose: () => void;
   align?: PanelAlign;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  return (
-    <div ref={ref} className="relative">
-      {item.clinics?.length ? (
-        <ContactPanel item={item} onClose={onClose} align={align} />
-      ) : item.mega ? (
-        <MegaPanel item={item} onClose={onClose} align={align} />
-      ) : (
-        <StandardPanel item={item} onClose={onClose} align={align} />
-      )}
-    </div>
-  );
+  if (item.clinics?.length) {
+    return <ContactPanel item={item} onClose={onClose} align={align} />;
+  }
+  if (item.mega) {
+    return <MegaPanel item={item} onClose={onClose} align={align} />;
+  }
+  return <StandardPanel item={item} onClose={onClose} align={align} />;
 }
 
 function ContactPanel({
@@ -111,6 +109,12 @@ function ContactPanel({
                     {p.number}
                   </a>
                 ))}
+                {clinic.fax?.trim() ? (
+                  <p className="text-xs font-bold text-white/85">
+                    <span className="text-white/70">Fax: </span>
+                    {clinic.fax}
+                  </p>
+                ) : null}
               </div>
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
                 <a
@@ -121,15 +125,6 @@ function ContactPanel({
                 >
                   Get directions
                 </a>
-                {clinic.contactHref ? (
-                  <Link
-                    href={clinic.contactHref}
-                    className="inline-block text-xs font-bold underline hover:text-white/80"
-                    onClick={onClose}
-                  >
-                    Send a message &rarr;
-                  </Link>
-                ) : null}
               </div>
             </div>
           ))}
@@ -150,7 +145,7 @@ function StandardPanel({
 }) {
   return (
     <div
-      className={`absolute top-full z-50 min-w-[220px] pt-1 ${align === "right" ? "right-0" : "left-0"}`}
+      className={`absolute top-full z-50 min-w-[220px] pt-1 ${panelAlignClass(align)}`}
     >
       <div className="bg-white shadow-xl">
         {item.children!.map((c) => (
@@ -180,11 +175,10 @@ function MegaPanel({
   const groups = groupChildren(item.children!);
   return (
     <div
-      className={`absolute top-full z-50 w-[600px] max-w-[calc(100vw-2rem)] pt-1 lg:w-[720px] ${panelAlignClass(align)}`}
+      className={`absolute top-full z-50 w-[720px] max-w-[calc(100vw-2rem)] pt-1 lg:w-[860px] ${panelAlignClass(align)}`}
     >
-      {/* Backpro-style white services panel with dark uppercase links. */}
-      <div className="bg-white p-5 shadow-xl">
-        <div className="mb-3 border-b border-stone-200 pb-3">
+      <div className="bg-white p-6 shadow-xl">
+        <div className="mb-4 border-b border-stone-200 pb-3">
           <Link
             href={item.href}
             className="text-xs font-black uppercase tracking-widest text-[var(--header-nav-hover)] hover:underline"
@@ -193,19 +187,24 @@ function MegaPanel({
             Overview &rarr;
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1 lg:grid-cols-3">
+        {/* Balanced newspaper columns: each group stays whole and gets full column
+            width, so long labels don't wrap into a cramped mess. */}
+        <div className="columns-2 gap-x-10 lg:columns-3 [column-fill:balance]">
           {Array.from(groups.entries()).map(([group, items]) => (
-            <div key={group || "__default"} className="mb-3">
-              {group && (
+            <div
+              key={group || "__default"}
+              className="mb-5 break-inside-avoid"
+            >
+              {group ? (
                 <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-stone-400">
                   {group}
                 </p>
-              )}
+              ) : null}
               {items.map((c) => (
                 <Link
-                  key={c.href}
+                  key={`${c.href}-${c.label}`}
                   href={c.href}
-                  className="block py-1.5 text-xs font-bold uppercase tracking-wide text-[#4a5a58] hover:text-[var(--header-nav-hover)]"
+                  className="block py-1 text-xs font-bold uppercase leading-snug tracking-wide text-[#4a5a58] hover:text-[var(--header-nav-hover)]"
                   onClick={onClose}
                 >
                   {c.label}
@@ -223,11 +222,13 @@ export function DesktopNav({
   items,
   showBookCta = true,
   centerSlot,
+  businessContext: businessContextProp = "default",
 }: {
   items: readonly NavItem[];
   showBookCta?: boolean;
   /** Backpro-style centered logo: nav links split around this node. */
   centerSlot?: ReactNode;
+  businessContext?: SiteBusinessContext;
 }) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const navRef = useRef<HTMLElement>(null);
@@ -235,10 +236,11 @@ export function DesktopNav({
   const giftCardExpanded = useMassageGiftCardNavExpandedContext();
   const compact = useHeaderCompact();
   const pathname = usePathname() ?? "/";
+  const businessContext = useSiteBusinessContext(businessContextProp);
   // Backpro-style shrink: nav links lose vertical padding once scrolled.
   const itemPad = `transition-[padding] duration-300 ease-out motion-reduce:transition-none ${
-    compact ? "px-2 py-1.5" : "px-2 py-2"
-  }`;
+    compact ? "px-1 py-1.5" : "px-1 py-2"
+  } lg:px-1.5 xl:px-2`;
 
   useEffect(() => {
     if (openIdx === null) return;
@@ -271,25 +273,25 @@ export function DesktopNav({
   // Backpro look: the current page's link sits in a solid color box.
   const itemColors = (active: boolean) =>
     active
-      ? "bg-[var(--header-nav-hover)] text-white"
-      : "text-[var(--header-nav-hover)] hover:bg-[var(--header-nav-hover)] hover:text-white";
+      ? "bg-black text-white"
+      : "text-[var(--header-nav-hover)] hover:bg-black hover:text-white";
 
   const renderItem = (item: NavItem, idx: number, align: PanelAlign = "center") => {
     const hasChildren = !!item.children?.length || !!item.clinics?.length;
     const isOpen = openIdx === idx;
-    const active = pathname === item.href;
+    const active = isNavItemActive(item, pathname, businessContext);
 
     return (
       <div
         key={`${idx}-${item.href}`}
-        className="relative"
+        className={`relative ${isOpen ? "z-50" : ""}`}
         onMouseEnter={() => handleEnter(idx, hasChildren)}
         onMouseLeave={handleLeave}
       >
         {hasChildren ? (
           <button
             type="button"
-            className={`focus-ring inline-flex items-center gap-1 ${itemPad} text-xs font-bold uppercase tracking-wide ${itemColors(active)} xl:px-4 xl:text-sm`}
+            className={`focus-ring inline-flex items-center gap-1 whitespace-nowrap ${itemPad} text-xs font-bold uppercase tracking-wide ${itemColors(active)} xl:px-4 xl:text-sm`}
             onClick={() => setOpenIdx(isOpen ? null : idx)}
             aria-expanded={isOpen}
           >
@@ -326,7 +328,7 @@ export function DesktopNav({
           </a>
         ) : item.external ? (
           <a
-            className={`focus-ring block ${itemPad} text-xs font-bold uppercase tracking-wide ${itemColors(active)} xl:px-4 xl:text-sm`}
+            className={`focus-ring block whitespace-nowrap ${itemPad} text-xs font-bold uppercase tracking-wide ${itemColors(active)} xl:px-4 xl:text-sm`}
             href={item.href}
             target="_blank"
             rel="noopener noreferrer"
@@ -335,7 +337,7 @@ export function DesktopNav({
           </a>
         ) : (
           <Link
-            className={`focus-ring block ${itemPad} text-xs font-bold uppercase tracking-wide ${itemColors(active)} xl:px-4 xl:text-sm`}
+            className={`focus-ring block whitespace-nowrap ${itemPad} text-xs font-bold uppercase tracking-wide ${itemColors(active)} xl:px-4 xl:text-sm`}
             href={item.href}
           >
             {item.label}
@@ -343,7 +345,7 @@ export function DesktopNav({
         )}
 
         {hasChildren && isOpen ? (
-          <DropdownItem
+          <DropdownPanel
             item={item}
             onClose={() => setOpenIdx(null)}
             align={align}
@@ -370,27 +372,22 @@ export function DesktopNav({
       <nav
         ref={navRef}
         aria-label="Primary"
-        className="hidden bg-[var(--header-nav-bg)] shadow-md lg:block"
+        className="hidden overflow-visible bg-[var(--header-nav-bg)] shadow-md lg:block"
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-center px-4">
-          <div className="flex flex-1 items-center justify-end">
+        <div className="mx-auto flex max-w-7xl items-center justify-center overflow-visible px-2 lg:px-4">
+          <div className="flex min-w-0 flex-1 items-center justify-end overflow-visible">
             {left.map((item, idx) => renderItem(item, idx, "left"))}
           </div>
-          {/* Backpro-style shrink: logo lands large, scales down once scrolled. */}
           <div
-            className={`shrink-0 px-8 transition-[padding] duration-300 ease-out motion-reduce:transition-none xl:px-12 ${
-              compact ? "py-1" : "py-5"
+            className={`shrink-0 px-3 transition-[padding] duration-300 ease-out motion-reduce:transition-none lg:px-5 xl:px-8 ${
+              compact ? "py-1" : "py-3"
             }`}
           >
-            <div
-              className={`origin-center transition-transform duration-300 ease-out motion-reduce:transition-none ${
-                compact ? "scale-100" : "scale-[1.35]"
-              }`}
-            >
+            <div className="origin-center transition-transform duration-300 ease-out motion-reduce:transition-none">
               {centerSlot}
             </div>
           </div>
-          <div className="flex flex-1 items-center justify-start">
+          <div className="flex min-w-0 flex-1 items-center justify-start overflow-visible">
             {right.map((item, idx) => renderItem(item, mid + idx, "right"))}
             {bookCta}
           </div>

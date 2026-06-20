@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { telHref } from "@/lib/constants";
+import { StickyCallBarBookButton } from "@/components/practice/StickyCallBarBookButton";
 import type { PracticeStickyBarSection } from "@/lib/practice-pages-shared";
 
 /**
@@ -25,16 +25,11 @@ export function StickyCallBar({ data }: { data: PracticeStickyBarSection }) {
         {data.callLabel.trim() || "Call Us"}
       </a>
       {data.bookUrl.trim() ? (
-        <Link
-          href={data.bookUrl}
-          className="flex items-center justify-center gap-2 bg-[var(--pp-accent)] px-4 py-3 text-sm font-black uppercase tracking-wide text-white"
-        >
-          {data.bookLabel.trim() || "Book Now"}
-        </Link>
+        <StickyCallBarBookButton bookUrl={data.bookUrl} bookLabel={data.bookLabel} />
       ) : (
         <a
           href={telHref(data.phone)}
-          className="flex items-center justify-center gap-2 bg-[var(--pp-accent)] px-4 py-3 text-sm font-black uppercase tracking-wide text-white"
+          className="flex items-center justify-center gap-2 bg-black px-4 py-3 text-sm font-black uppercase tracking-wide text-white"
         >
           {data.bookLabel.trim() || "Book Now"}
         </a>

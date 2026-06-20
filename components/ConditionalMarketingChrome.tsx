@@ -13,6 +13,7 @@ import {
   type MobileStickyCallBarProps,
 } from "@/components/MobileStickyCallBar";
 import { AccessibilityPanel } from "@/components/AccessibilityPanel";
+import { SiteSocialBar } from "@/components/SiteSocialBar";
 import { MassageGiftCardNavProvider } from "@/lib/massage-gift-card-nav-context";
 
 /** Hide public site header/footer on admin popup routes (second-monitor scheduler). */
@@ -34,6 +35,7 @@ export function ConditionalMarketingChrome({
   const pathname = usePathname() ?? "";
   const minimal = pathname.startsWith("/admin/chiro");
   const hideGiftBanner = pathname.startsWith("/admin");
+  const hideSocialBar = pathname.startsWith("/admin");
   const giftProps = giftCardSticky ?? { enabled: false };
   const giftVisible = useGiftCardStickyVisible(giftProps) && !hideGiftBanner;
   const callBarProps: MobileStickyCallBarProps = stickyCallBar ?? {
@@ -57,6 +59,7 @@ export function ConditionalMarketingChrome({
   return (
     <MassageGiftCardNavProvider>
       {header}
+      {hideSocialBar ? null : <SiteSocialBar />}
       <div className={contentPad}>{children}</div>
       {footer}
       {hideGiftBanner ? null : <GiftCardStickyBanner {...giftProps} />}

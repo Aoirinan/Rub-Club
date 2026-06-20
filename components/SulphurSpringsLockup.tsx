@@ -10,6 +10,8 @@ export function SulphurSpringsLockup({
   className = "",
   /** Mobile/header hero: icon centered on top, type centered below. */
   stacked = false,
+  /** Nav center: icon only — saves horizontal space beside split nav links. */
+  markOnly = false,
 }: {
   primary?: boolean;
   /** Icon only — for side columns on narrow screens. */
@@ -18,21 +20,30 @@ export function SulphurSpringsLockup({
   iconScalePercent?: number;
   className?: string;
   stacked?: boolean;
+  markOnly?: boolean;
 }) {
   const iconPct = Math.min(100, Math.max(60, iconScalePercent));
+
+  const icon = (
+    <Image
+      src={BRAND_LOGOS.sulphurSpringsIcon}
+      alt=""
+      width={120}
+      height={120}
+      aria-hidden
+      className="aspect-square w-auto shrink-0 object-contain"
+      style={heightPx ? { height: `${heightPx}px` } : undefined}
+    />
+  );
+
+  if (markOnly) {
+    return <span className={`inline-flex shrink-0 ${className}`}>{icon}</span>;
+  }
 
   if (stacked) {
     return (
       <span className={`inline-flex max-w-full flex-col items-center gap-1.5 ${className}`}>
-        <Image
-          src={BRAND_LOGOS.sulphurSpringsIcon}
-          alt=""
-          width={120}
-          height={120}
-          aria-hidden
-          className="aspect-square w-auto shrink-0 object-contain"
-          style={heightPx ? { height: `${heightPx}px` } : undefined}
-        />
+        {icon}
         <span className="flex flex-col items-center text-center leading-tight text-[#243447]">
           <span className="text-lg font-semibold tracking-tight sm:text-xl">
             Chiropractic Associates

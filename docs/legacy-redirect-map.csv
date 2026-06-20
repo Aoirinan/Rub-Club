@@ -15,14 +15,14 @@ chiropracticparistexas.com,/acupuncture,/services/chiropractic/acupuncture,exact
 chiropracticparistexas.com,/acupuncture1,/services/chiropractic/acupuncture,exact,
 chiropracticparistexas.com,/adjustments-and-manipulation,/services/chiropractic/chiropractic-adjustments,exact,
 chiropracticparistexas.com,/attorneys.php,/contact,fallback,attorney-referral page retired
-chiropracticparistexas.com,/auto-accident-chiropractic.php,/sulphur-springs/auto-injury,close,injury pages now live under /sulphur-springs — confirm OK for Paris URLs
-chiropracticparistexas.com,/auto-injury,/sulphur-springs/auto-injury,close,same note as above
+chiropracticparistexas.com,/auto-accident-chiropractic.php,/services/chiropractic/auto-injury,exact,Paris injury page restored
+chiropracticparistexas.com,/auto-injury,/services/chiropractic/auto-injury,exact,
 chiropracticparistexas.com,/burn-scar-massage,/services/massage,close,specialty blurb retired
 chiropracticparistexas.com,/chiropractic-care,/services/chiropractic,exact,
 chiropracticparistexas.com,/chiropractic-care.php,/services/chiropractic,exact,
 chiropracticparistexas.com,/chiropractic-massage-therapy,/services/chiropractic/therapeutic-massage,exact,
 chiropracticparistexas.com,/cold-laser-therapy,/services/chiropractic,fallback,service no longer offered/listed
-chiropracticparistexas.com,/common-chiropractic-conditions,/sulphur-springs/common-chiropractic-conditions,close,conditions page now lives under SS section
+chiropracticparistexas.com,/common-chiropractic-conditions,/services/chiropractic/common-chiropractic-conditions,exact,Paris conditions page restored
 chiropracticparistexas.com,/conditions/index.php,/services/chiropractic,fallback,
 chiropracticparistexas.com,/contact,/contact,exact,same route — no rule needed
 chiropracticparistexas.com,/contact-us.php,/contact,exact,
@@ -49,17 +49,17 @@ chiropracticparistexas.com,/ems.php,/services/chiropractic/electric-muscle-stimu
 chiropracticparistexas.com,/interferential-current-therapy,/services/chiropractic/electric-muscle-stimulation,close,
 chiropracticparistexas.com,/microcurrent-therapy,/services/chiropractic/electric-muscle-stimulation,close,
 chiropracticparistexas.com,/hot-stone-massage,/services/massage,exact,
-chiropracticparistexas.com,/injuries,/sulphur-springs,close,injury hub now in SS services grid
-chiropracticparistexas.com,/injured-we-can-help,/sulphur-springs/personal-injury,close,blog post
+chiropracticparistexas.com,/injuries,/services/chiropractic/auto-injury,close,legacy injury hub → auto injury page
+chiropracticparistexas.com,/injured-we-can-help,/services/chiropractic/personal-injury,close,
 chiropracticparistexas.com,/massage.php,/services/massage,exact,
 chiropracticparistexas.com,/meet-the-doctor,/about,exact,already redirected via /meet-the-doctors rule — add singular form
 chiropracticparistexas.com,/pediatric-care,/services/chiropractic/pediatric-care,exact,
 chiropracticparistexas.com,/pediatric-chiropractic.php,/services/chiropractic/pediatric-care,exact,
-chiropracticparistexas.com,/personal-injury,/sulphur-springs/personal-injury,close,
+chiropracticparistexas.com,/personal-injury,/services/chiropractic/personal-injury,exact,
 chiropracticparistexas.com,/physical-therapy,/services/chiropractic,close,
 chiropracticparistexas.com,/physiotherapy.php,/services/chiropractic,close,
 chiropracticparistexas.com,/postural-rehabilitation.php,/services/chiropractic/postural-rehabilitation,exact,
-chiropracticparistexas.com,/prenatal-chiropractic,/services/chiropractic,fallback,page retired
+chiropracticparistexas.com,/prenatal-chiropractic,/services/chiropractic/prenatal-chiropractic,exact,Paris prenatal page restored
 chiropracticparistexas.com,/prenatal-massage,/services/massage,exact,
 chiropracticparistexas.com,/products.php,/services,fallback,
 chiropracticparistexas.com,/q-and-a,/faq,exact,
@@ -73,13 +73,14 @@ chiropracticparistexas.com,/services.php,/services,exact,
 chiropracticparistexas.com,/spinal-decompression,/services/chiropractic/spinal-decompression,exact,
 chiropracticparistexas.com,/spinal-decompression.php,/services/chiropractic/spinal-decompression,exact,
 chiropracticparistexas.com,/spinal-wellness-tips,/faq,close,
-chiropracticparistexas.com,/spine-care,/services/chiropractic,close,
-chiropracticparistexas.com,/sports-injury,/sulphur-springs/sports-injury,close,
+chiropracticparistexas.com,/spine-care,/services/chiropractic/spine-care,exact,
+chiropracticparistexas.com,/sports-injury,/services/chiropractic/sports-injury,exact,
 chiropracticparistexas.com,/staff,/locations/paris/staff,exact,
-chiropracticparistexas.com,/stretch---flex-rehab,/services/chiropractic,close,stretch & flex now a homepage services-grid card
+chiropracticparistexas.com,/stretch---flex-rehab,/services/chiropractic/stretch-and-flex-rehab,exact,
 chiropracticparistexas.com,/testimonials.php,/reviews,exact,
 chiropracticparistexas.com,/testimonials/page,/reviews,exact,
-chiropracticparistexas.com,/therapeutic-exercise,/services/chiropractic,close,
+chiropracticparistexas.com,/therapeutic-exercise,/services/chiropractic/therapeutic-exercise,exact,
+chiropracticparistexas.com,/injury-rehab,/services/chiropractic/injury-rehab,exact,
 chiropracticparistexas.com,/therapeutic-ultrasound,/services/chiropractic/therapeutic-ultrasound,exact,
 chiropracticparistexas.com,/ultra-sound.php,/services/chiropractic/therapeutic-ultrasound,exact,
 chiropracticparistexas.com,/vertebral-subluxation-complex,/sulphur-springs/vertebral-subluxation-complex,close,page now lives under SS section
@@ -149,7 +150,7 @@ chiropracticsulphursprings.com,/,/sulphur-springs,exact,matches current catch-al
 chiropracticsulphursprings.com,/-massage-therapy,/sulphur-springs/massage,exact,
 chiropracticsulphursprings.com,/about-chiro,/sulphur-springs/about-chiropractic,exact,
 chiropracticsulphursprings.com,/about-us,/locations/sulphur-springs,close,
-chiropracticsulphursprings.com,/acupuncture,/sulphur-springs/acupuncture,exact,
+chiropracticsulphursprings.com,/acupuncture,/sulphur-springs,exact,
 chiropracticsulphursprings.com,/adjustments-and-manipulation,/sulphur-springs/adjustments-and-manipulation,exact,
 chiropracticsulphursprings.com,/appointment-request,/book,exact,
 chiropracticsulphursprings.com,/auto-injury,/sulphur-springs/auto-injury,exact,

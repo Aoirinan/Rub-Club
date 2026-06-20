@@ -25,3 +25,11 @@ export const IMAGES = {
   staffChannety: "/images/legacy/staff-channety.webp",
   staffBrandi: "/images/legacy/staff-brandi.webp",
 } as const;
+
+/** Paris homepage hero carousel — real office photos (treatment room, hallway, rehab, waiting room). */
+export const PARIS_HOME_HERO_IMAGES = [
+  "/images/paris-home/hero-1-treatment-room.webp",
+  "/images/paris-home/hero-2-hallway.webp",
+  "/images/paris-home/hero-3-rehab-station.webp",
+  "/images/paris-home/hero-4-waiting-room.webp",
+] as const;

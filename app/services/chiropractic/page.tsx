@@ -19,7 +19,6 @@ import { getParisOfficeHours } from "@/lib/office-hours";
 import { CHIRO } from "@/lib/home-verbatim";
 import { getPracticePage, listPracticeTestimonials } from "@/lib/practice-pages";
 import { practiceThemeStyle } from "@/components/practice/theme";
-import { UtilityBar } from "@/components/practice/UtilityBar";
 import { PracticeHero } from "@/components/practice/PracticeHero";
 import { QuickActionsRow } from "@/components/practice/QuickActionsRow";
 import { ServicesGrid } from "@/components/practice/ServicesGrid";
@@ -102,18 +101,12 @@ export default async function ChiropracticServicePage() {
         ]}
       />
       <div style={practiceThemeStyle("paris-chiro", page.theme)}>
-        <UtilityBar data={page.utilityBar} />
         <Breadcrumbs
           items={serviceBreadcrumbs({ name: "Chiropractic", url: "/services/chiropractic" })}
         />
         <PracticeHero data={page.hero} utility={page.utilityBar} />
         <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
           <QuickActionsRow data={page.quickActions} />
-          <ServicesGrid data={page.servicesGrid} />
-          {page.aboutBlocks.map((block) => (
-            <AboutWelcome key={block.id} data={block} phone={paris.phonePrimary} />
-          ))}
-          <PatientReviews data={page.reviews} testimonials={testimonials} />
           {page.teamSections.map((section) => (
             <TeamStrip
               key={section.id}
@@ -121,6 +114,12 @@ export default async function ChiropracticServicePage() {
               members={membersBySource[section.source] ?? []}
             />
           ))}
+          <ServicesGrid data={page.servicesGrid} />
+          {page.aboutBlocks.map((block) => (
+            <AboutWelcome key={block.id} data={block} phone={paris.phonePrimary} />
+          ))}
+          <PatientReviews data={page.reviews} testimonials={testimonials} />
+          <ExtrasSection extras={page.extras} />
           <LocationContactBlock
             data={page.locationBlock}
             location={{
@@ -135,7 +134,6 @@ export default async function ChiropracticServicePage() {
             hours={parisHours}
             secondaryLocations={secondaryLocations}
           />
-          <ExtrasSection extras={page.extras} />
         </div>
         <StickyCallBar data={page.stickyCallBar} />
       </div>

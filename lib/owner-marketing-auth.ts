@@ -8,7 +8,7 @@ export type OwnerMarketingAuth =
 
 /** Manager Firebase token or legacy owner-password cookie. */
 export async function authorizeOwnerMarketing(req: Request): Promise<OwnerMarketingAuth> {
-  const staff = await requireStaff(req.headers.get("authorization"), "superadmin");
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (staff) return { ok: true, via: "staff", email: staff.email };
   if (await isSuperadminRequest(req.headers.get("cookie"))) return { ok: true, via: "cookie" };
   return { ok: false };

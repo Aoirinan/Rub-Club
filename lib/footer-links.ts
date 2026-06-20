@@ -29,20 +29,20 @@ Chiropractic wellness care plans — /services/chiropractic/wellness-care-plans
 Paris office — /locations/paris
 Sulphur Springs office — /locations/sulphur-springs
 Sulphur Springs services — /sulphur-springs
-Sulphur Springs staff — /sulphur-springs/staff
+Sulphur Springs about us — /sulphur-springs/staff
 About us — /about
 ${SHARED_LINK_LINES}
 Contact — /contact`;
 
 export const FOOTER_LINKS_PARIS_TEXT = `Chiropractic care — /services/chiropractic
 Wellness care plans — /services/chiropractic/wellness-care-plans
-Meet the staff — /locations/paris/staff
+About us — Paris office — /locations/paris/staff
 Office & hours — /locations/paris
 ${SHARED_LINK_LINES}
 Contact — /contact`;
 
 export const FOOTER_LINKS_SS_TEXT = `Home — /sulphur-springs
-Meet the staff — /sulphur-springs/staff
+About us — /sulphur-springs/staff
 About chiropractic — /sulphur-springs/patient-resources
 Q & A — /sulphur-springs/q-and-a
 ${SHARED_LINK_LINES}

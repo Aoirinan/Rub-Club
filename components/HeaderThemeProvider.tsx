@@ -68,7 +68,7 @@ export function HeaderThemeProvider({
 
   return (
     <HeaderCompactContext.Provider value={compact}>
-      <header className="sticky top-0 z-40" style={style}>
+      <header className="sticky top-0 z-40 overflow-visible" style={style}>
         {children}
       </header>
     </HeaderCompactContext.Provider>

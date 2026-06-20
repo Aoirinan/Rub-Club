@@ -19,26 +19,6 @@ export type SSService = {
 
 export const SS_SERVICES: readonly SSService[] = [
   {
-    slug: "acupuncture",
-    title: "Acupuncture",
-    metaDescription:
-      "Acupuncture treatment at Chiropractic Associates of Sulphur Springs. Ancient Chinese medicine used to alleviate pain and promote overall health.",
-    body: `Acupuncture is an ancient Chinese medicine used to alleviate pain and promote overall health. Acupuncture uses needles placed along invisible meridians that run throughout the body. Today, acupuncturists also use lasers, magnets and electric pulses in addition to needles. Each meridian point has a specific meaning and can unblock and repair meridians and channels with vital energy or chi. Through the stimulation of the meridians, an acupuncturist is able to restore balance and ergo health to the patient.
-
-Acupuncture is used to treat a wide range of health problems, such as:
-
-- Persistent lower back pain
-- Chronic tension-type headaches and migraines
-- Neck pain
-- Joint pain
-- Postoperative pain
-- Allergies
-- Depression and anxiety
-- Insomnia
-
-Acupuncture takes a holistic approach to understanding normal function and disease processes, and focuses as much on the prevention of illness as on the treatment.`,
-  },
-  {
     slug: "adjustments-and-manipulation",
     title: "Adjustments and Manipulation",
     metaDescription:

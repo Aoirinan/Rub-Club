@@ -6,6 +6,21 @@ import type {
 } from "@/lib/practice-pages-shared";
 
 /** Patient review cards (horizontal snap scroll on mobile, grid on desktop). */
+function StarRating() {
+  return (
+    <p
+      className="mt-3 flex justify-center gap-1 text-2xl text-[var(--pp-accent)]"
+      aria-label="5 out of 5 stars"
+    >
+      {Array.from({ length: 5 }, (_, i) => (
+        <span key={i} aria-hidden>
+          ★
+        </span>
+      ))}
+    </p>
+  );
+}
+
 export function PatientReviews({
   data,
   testimonials,
@@ -20,6 +35,7 @@ export function PatientReviews({
   return (
     <section className="px-4 py-12 sm:px-8">
       {data.heading.trim() ? <SectionHeading>{data.heading}</SectionHeading> : null}
+      <StarRating />
       <div className="mx-auto mt-10 flex max-w-6xl snap-x snap-mandatory gap-6 overflow-x-auto pb-2 lg:grid lg:grid-cols-3 lg:gap-8 lg:overflow-visible">
         {rows.map((t) => (
           <blockquote

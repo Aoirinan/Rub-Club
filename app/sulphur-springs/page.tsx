@@ -9,9 +9,10 @@ import { SS_STAFF_SEED } from "@/lib/site-staff-seed-rosters";
 import {
   getPracticePage,
   getSSServiceCards,
+  listPracticeTestimonials,
 } from "@/lib/practice-pages";
+import { PatientReviews } from "@/components/practice/PatientReviews";
 import { practiceThemeStyle } from "@/components/practice/theme";
-import { UtilityBar } from "@/components/practice/UtilityBar";
 import { PracticeHero } from "@/components/practice/PracticeHero";
 import { QuickActionsRow } from "@/components/practice/QuickActionsRow";
 import { ServicesGrid } from "@/components/practice/ServicesGrid";
@@ -44,12 +45,13 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function SulphurSpringsPage() {
-  const [page, ssServiceCards, ssHours, staff, displayLocs] = await Promise.all([
+  const [page, ssServiceCards, ssHours, staff, displayLocs, testimonials] = await Promise.all([
     getPracticePage("sulphur-springs"),
     getSSServiceCards(),
     getSulphurOfficeHours(),
     resolveSiteStaffForBrand("sulphur"),
     getDisplayLocations(),
+    listPracticeTestimonials("sulphur-springs", { publishedOnly: true }),
   ]);
   const ss = displayLocs.sulphur_springs;
 
@@ -70,7 +72,6 @@ export default async function SulphurSpringsPage() {
   return (
     <div className="bg-[#f4f2ea]" style={practiceThemeStyle("sulphur-springs", page.theme)}>
       <JsonLd data={chiropractorJsonLd(ss)} />
-      <UtilityBar data={page.utilityBar} />
       <PracticeHero data={page.hero} utility={page.utilityBar} />
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
         <QuickActionsRow data={page.quickActions} />
@@ -85,6 +86,8 @@ export default async function SulphurSpringsPage() {
             members={membersBySource[section.source] ?? []}
           />
         ))}
+        <PatientReviews data={page.reviews} testimonials={testimonials} />
+        <ExtrasSection extras={page.extras} />
         <LocationContactBlock
           data={page.locationBlock}
           location={{
@@ -98,7 +101,6 @@ export default async function SulphurSpringsPage() {
           }}
           hours={ssHours}
         />
-        <ExtrasSection extras={page.extras} />
       </div>
       <StickyCallBar data={page.stickyCallBar} />
     </div>

@@ -75,7 +75,7 @@ export default async function AboutPage() {
           <p className="mt-2 max-w-2xl text-sm text-stone-600">
             Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins practice in Paris.{" "}
             <Link href="/locations/paris/staff" className="font-bold text-[#c0392b] underline">
-              Meet our Paris office team
+              About us — Paris office
             </Link>
             .{" "}
             <Link href="/sulphur-springs/staff" className="font-bold text-[#c0392b] underline">

@@ -163,7 +163,7 @@ export function BrandLogoStrip({
           <ParisLockup
             heightPx={parisHeightPx}
             className={`max-w-full transition-[height] duration-300 ease-out ${!emphasize ? "opacity-90 transition-opacity hover:opacity-100" : ""}`}
-            markOnly={isCenterNav || (large && emphasize)}
+            markOnly={isCenterNav || (large && !showContact) || (large && emphasize)}
             stacked={stacked}
             title={branding?.parisLockup.title}
             subtitle={branding?.parisLockup.subtitle}

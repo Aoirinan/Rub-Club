@@ -3,23 +3,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { DoctorCardVideoAccordion } from "@/components/DoctorCardVideoAccordion";
+import { ChiropracticDoctorCard } from "@/components/ChiropracticDoctorCard";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
 import { getParisStaffPageContent } from "@/lib/paris-staff-cms";
-import { renderRichText } from "@/lib/cms";
+import { getContentMany } from "@/lib/cms";
+import { DOCTOR_CMS_KEYS, getDoctorsForMarketing } from "@/lib/cms-doctors";
+import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { resolveSiteStaffForBrand, type SiteStaffDisplayMember } from "@/lib/site-staff";
 
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
-  title: "Meet the Staff — Paris, TX Office",
+  title: "About Us — Paris, TX Office",
   description:
-    "Meet the Chiropractic Associates Paris office team — insurance, personal injury case management, front desk, therapy tech, rehab coaching, and marketing.",
+    "Meet the Chiropractic Associates Paris team — doctors, insurance coordinators, front desk, therapy tech, and support staff.",
   path: "/locations/paris/staff",
-  ogTitle: "Meet the Staff — Paris, TX",
+  ogTitle: "About Us — Paris, TX",
   ogDescription:
-    "Insurance coordinators, case managers, front desk, and support staff at our Paris main office.",
+    "Doctors and office team at our Paris main office — insurance, personal injury, front desk, and support staff.",
 });
 
 function StaffPhoto({ member, className }: { member: SiteStaffDisplayMember; className?: string }) {
@@ -79,31 +82,36 @@ function BioBlock({ bio }: { bio: string }) {
   return (
     <div className="space-y-4 leading-relaxed text-stone-700">
       {bio.split("\n\n").map((paragraph, i) => (
-        <p
-          key={i}
-          dangerouslySetInnerHTML={{ __html: renderRichText(paragraph) }}
-        />
+        <p key={i}>{paragraph}</p>
       ))}
     </div>
   );
 }
 
 export default async function ParisOfficeStaffPage() {
-  const [staff, page, displayLocs] = await Promise.all([
+  const [allStaff, page, displayLocs, cms] = await Promise.all([
     resolveSiteStaffForBrand("paris"),
     getParisStaffPageContent(),
     getDisplayLocations(),
+    getContentMany([...DOCTOR_CMS_KEYS]),
   ]);
   const paris = displayLocs.paris;
+
+  let doctorMedia: Awaited<ReturnType<typeof getSiteOwnerConfig>>["doctorMedia"] = [];
+  try {
+    doctorMedia = (await getSiteOwnerConfig()).doctorMedia;
+  } catch {
+    doctorMedia = [];
+  }
+  const doctors = await getDoctorsForMarketing(cms, doctorMedia);
 
   return (
     <>
       <Breadcrumbs
         items={[
           { name: "Home", url: "/" },
-          { name: "Locations", url: "/locations/paris" },
           { name: "Paris, TX", url: "/locations/paris" },
-          { name: "Meet the Staff", url: "/locations/paris/staff" },
+          { name: "About Us", url: "/locations/paris/staff" },
         ]}
       />
       <PageHero
@@ -115,16 +123,34 @@ export default async function ParisOfficeStaffPage() {
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
         <p className="text-center text-sm text-stone-600">
           Looking for massage therapists?{" "}
-          <Link href="/services/massage" className="font-bold text-[#c0392b] underline">
+          <Link href="/services/massage" className="font-bold text-[#d64535] underline">
             Meet The Rub Club team
           </Link>
           .
         </p>
 
-        <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
+        <section className="border-t-4 border-[var(--pp-accent,#d64535)] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-2xl font-black text-[#4a1515]">{page.doctorsHeading}</h2>
+          <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {doctors.map((member) => (
+              <ChiropracticDoctorCard
+                key={member.name}
+                name={member.name}
+                role={member.role}
+                bio={member.bio}
+                imageSrc={member.imageSrc}
+                videoUrl={member.videoUrl}
+                videoFile={member.videoFile}
+                actionVideos={member.actionVideos}
+              />
+            ))}
+          </div>
+        </section>
+
+        <section className="border-t-4 border-[var(--pp-accent,#d64535)] bg-white p-6 shadow-md sm:p-10">
           <h2 className="text-2xl font-black text-[#4a1515]">{page.sectionHeading}</h2>
           <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {staff.map((member) => (
+            {allStaff.map((member) => (
               <article
                 key={member.id}
                 className="flex flex-col overflow-hidden border border-stone-200 bg-stone-50 shadow-sm"

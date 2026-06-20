@@ -15,11 +15,11 @@ import {
 export const metadata = buildPageMetadata({
   title: "Wellness Care Plans — Chiropractic Associates, Sulphur Springs, TX",
   description:
-    "Chiro-Fitness and Acu-Fit monthly wellness memberships: adjustments, massage combos, therapy, acupuncture, and rehab sessions at our Sulphur Springs, TX office.",
+    "Chiro-Fitness monthly wellness memberships: adjustments, massage combos, therapy, and rehab sessions at our Sulphur Springs, TX office.",
   path: SS_WELLNESS_PUBLIC_PATH,
   ogTitle: "Wellness care plans — Sulphur Springs, TX",
   ogDescription:
-    "Monthly wellness membership options for chiropractic, massage, therapy, and acupuncture in Sulphur Springs, TX.",
+    "Monthly wellness membership options for chiropractic, massage, therapy, and rehab in Sulphur Springs, TX.",
 });
 
 export const revalidate = 60;

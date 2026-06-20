@@ -2,7 +2,6 @@ import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
-import { ContactForm } from "@/components/ContactForm";
 import { SectionHeading } from "@/components/practice/SectionHeading";
 import { practiceThemeStyle } from "@/components/practice/theme";
 import { getPageBrand } from "@/lib/page-business-theme";
@@ -12,18 +11,13 @@ import { organizationJsonLd } from "@/lib/structured-data";
 import { getParisOfficeHours } from "@/lib/office-hours";
 import { OfficeHoursTable } from "@/components/OfficeHoursTable";
 import { getContentMany } from "@/lib/cms";
-import {
-  contactAppointmentCopy,
-  getPublicBookingConfig,
-  isPublicBookingEnabled,
-} from "@/lib/public-booking-settings";
 
 export const revalidate = 60;
 
 export const metadata = buildPageMetadata({
   title: "Contact — Chiropractic Associates, Paris, TX",
   description:
-    "Phone number, address, and hours for The Rub Club and Chiropractic Associates in Paris, TX. Send a message or call us directly.",
+    "Phone number, address, and hours for The Rub Club and Chiropractic Associates in Paris, TX. Call us directly.",
   path: "/contact",
   ogTitle: "Contact — Chiropractic Associates, Paris",
   ogDescription:
@@ -47,9 +41,8 @@ function PinIcon() {
 }
 
 export default async function ContactPage() {
-  const [c, bookingConfig, parisHours, displayLocs, brand] = await Promise.all([
+  const [c, parisHours, displayLocs, brand] = await Promise.all([
     getContentMany(["contact_heading", "contact_subtext"]),
-    getPublicBookingConfig(),
     getParisOfficeHours(),
     getDisplayLocations(),
     getPageBrand(),
@@ -74,8 +67,8 @@ export default async function ContactPage() {
           ) : null}
         </section>
 
-        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
-          {/* Left column: office info + hours */}
+        <div className="grid gap-8 lg:grid-cols-1 lg:items-start">
+          {/* Office info + hours */}
           <div className="space-y-6">
             <section className="rounded-xl border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-8">
               <h2 className="text-xl font-black text-[var(--pp-heading)]">{paris.name}</h2>
@@ -97,6 +90,12 @@ export default async function ContactPage() {
                       {paris.phoneSecondary}
                     </a>
                     <span className="text-xs text-stone-500">(massage desk)</span>
+                  </p>
+                ) : null}
+                {paris.fax?.trim() ? (
+                  <p className="flex items-center gap-2 text-sm text-stone-700">
+                    <span className="font-bold text-[var(--pp-heading)]">Fax:</span>
+                    {paris.fax}
                   </p>
                 ) : null}
                 <p className="flex items-start gap-2">
@@ -145,31 +144,6 @@ export default async function ContactPage() {
               </div>
             </section>
           </div>
-
-          {/* Right column: message form */}
-          <section
-            id="send-message"
-            className="scroll-mt-24 rounded-xl border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-8"
-          >
-            <h2 className="text-xl font-black text-[var(--pp-heading)]">Send Us a Message</h2>
-            <p className="mt-2 text-sm text-stone-700">
-              {contactAppointmentCopy(isPublicBookingEnabled(bookingConfig))}
-            </p>
-            <div className="mt-5">
-              <ContactForm location="paris" variant={brand.variant} />
-            </div>
-            <div className="mt-5 rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-              <p className="font-bold">Privacy notice</p>
-              <p className="mt-1">
-                Please don&rsquo;t share sensitive health information through this form. For
-                anything medical, please call us directly. See our{" "}
-                <Link className="font-bold underline" href="/website-privacy">
-                  website privacy policy
-                </Link>
-                .
-              </p>
-            </div>
-          </section>
         </div>
       </div>
     </div>

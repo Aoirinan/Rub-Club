@@ -17,7 +17,7 @@ import { parisChiroServiceSlugForName } from "@/lib/paris-chiro-services";
 import { SS_INJURIES, SS_SERVICES } from "@/lib/sulphur-springs-content";
 import { ssPageCardBlurbId, ssPageCardImageId, ssPageMetaId } from "@/lib/ss-cms-registry";
 import { CHIRO, HOME_INTRO, MASSAGE } from "@/lib/home-verbatim";
-import { IMAGES } from "@/lib/home-images";
+import { IMAGES, PARIS_HOME_HERO_IMAGES } from "@/lib/home-images";
 import {
   FACEBOOK_URL,
   GIFT_CARD_ORDER_URL,
@@ -30,6 +30,7 @@ import {
   PRACTICE_TESTIMONIALS_SUBCOLLECTION,
   EMPTY_PRACTICE_THEME,
   mergePracticePageDoc,
+  normalizeChiroTreatmentsHeading,
   parsePracticeTestimonialDoc,
   type PracticeLocationId,
   type PracticePageDoc,
@@ -76,6 +77,7 @@ const HOME_DEFAULT_CMS_IDS = [
   "home_awards_text",
   "home_about_blurb",
   "home_testimonials_heading",
+  "about_body",
   "chiro_choose_title",
   "chiro_intro_body",
   "chiro_conditions_list",
@@ -168,7 +170,7 @@ async function buildParisChiroDefaults(): Promise<PracticePageDoc> {
     quickActions: {
       published: true,
       items: [
-        { label: "Meet Our Team", icon: "team", url: "/about" },
+        { label: "About Us", icon: "team", url: "/locations/paris/staff" },
         { label: "New Patient Forms", icon: "forms", url: "/patient-forms" },
         { label: "Office Hours", icon: "hours", url: "/locations/paris" },
         { label: "Schedule Appointment", icon: "calendar", url: "/book" },
@@ -176,7 +178,7 @@ async function buildParisChiroDefaults(): Promise<PracticePageDoc> {
     },
     servicesGrid: {
       published: true,
-      heading: c.chiro_treatments_heading ?? "",
+      heading: normalizeChiroTreatmentsHeading(c.chiro_treatments_heading ?? ""),
       intro: c.chiro_treatments_intro ?? "",
       mode: "custom",
       cards: treatmentCards,
@@ -196,7 +198,7 @@ async function buildParisChiroDefaults(): Promise<PracticePageDoc> {
     ],
     reviews: {
       published: true,
-      heading: c.chiro_testimonials_heading ?? "What Our Chiropractic Patients Say",
+      heading: c.chiro_testimonials_heading ?? "Patient Reviews",
       linkToReviewsPage: true,
       reviewsUrl: "/reviews",
       reviewsLinkLabel: "Read more patient reviews",
@@ -209,7 +211,7 @@ async function buildParisChiroDefaults(): Promise<PracticePageDoc> {
         intro: c.chiro_doctors_intro ?? "",
         source: "paris-doctors",
         variant: "cards",
-        linkUrl: "/about",
+        linkUrl: "/locations/paris/staff",
         linkLabel: "Meet our doctors",
       },
     ],
@@ -224,21 +226,21 @@ async function buildParisChiroDefaults(): Promise<PracticePageDoc> {
     },
     extras: [
       {
-        id: "wellness",
-        published: true,
-        heading: c.chiro_wellness_teaser_heading ?? "",
-        body: c.chiro_wellness_teaser_body ?? "",
-        ctaLabel: "View wellness care plans",
-        ctaUrl: WELLNESS_CARE_PLANS_PATH,
-        links: [],
-      },
-      {
         id: "awards",
         published: true,
         heading: "Awards",
         body: CHIRO.awards,
         ctaLabel: "",
         ctaUrl: "",
+        links: [],
+      },
+      {
+        id: "wellness",
+        published: true,
+        heading: c.chiro_wellness_teaser_heading ?? "",
+        body: c.chiro_wellness_teaser_body ?? "",
+        ctaLabel: "View wellness care plans",
+        ctaUrl: WELLNESS_CARE_PLANS_PATH,
         links: [],
       },
       {
@@ -294,11 +296,12 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
     },
     hero: {
       published: true,
-      eyebrow: CHIRO.spineHeadline,
-      heading: c.home_hero_heading ?? "",
-      tagline: c.home_hero_subheading ?? "",
-      imageUrl: IMAGES.chiroBg,
-      slides: [],
+      eyebrow: "Chiropractic Associates · Paris, TX",
+      heading: "Efficient, evidence-informed chiropractic care",
+      tagline:
+        "Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins serve patients across Northeast Texas from Paris and Sulphur Springs.",
+      imageUrl: PARIS_HOME_HERO_IMAGES[0],
+      slides: [...PARIS_HOME_HERO_IMAGES.slice(1)],
       ctaLabel: c.home_hero_cta_label?.trim() || "Book Now",
       ctaUrl: "",
       callPhone: parisPhone,
@@ -306,7 +309,7 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
     quickActions: {
       published: true,
       items: [
-        { label: "Meet Our Team", icon: "team", url: "/about" },
+        { label: "About Us", icon: "team", url: "/locations/paris/staff" },
         { label: "New Patient Forms", icon: "forms", url: "/patient-forms" },
         { label: "Office Hours", icon: "hours", url: "/locations/paris" },
         { label: "Schedule Appointment", icon: "calendar", url: "/book" },
@@ -358,6 +361,17 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
     },
     aboutBlocks: [
       {
+        id: "two-practices-one-address",
+        published: true,
+        heading: "Two practices, one address",
+        body: c.about_body ?? "",
+        bullets: [],
+        imageUrl: IMAGES.chiroBlade,
+        phoneCtaLabel: "",
+        ctaLabel: "",
+        ctaUrl: "",
+      },
+      {
         id: "choose-chiropractors",
         published: true,
         heading: c.chiro_choose_title ?? CHIRO.chooseTitle,
@@ -382,7 +396,7 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
     ],
     reviews: {
       published: true,
-      heading: c.home_testimonials_heading?.trim() || "What our patients say",
+      heading: c.home_testimonials_heading?.trim() || "Patient Reviews",
       linkToReviewsPage: true,
       reviewsUrl: "/reviews",
       reviewsLinkLabel: "Read more patient reviews",
@@ -396,7 +410,7 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
           "Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins serve our Paris office. Dr. Conner Collins leads care in Sulphur Springs.",
         source: "paris-doctors",
         variant: "expanded",
-        linkUrl: "/about",
+        linkUrl: "/locations/paris/staff",
         linkLabel: "Meet our doctors",
       },
       {
@@ -407,7 +421,7 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
         source: "rub-club-team",
         variant: "cards",
         linkUrl: "/locations/paris/staff",
-        linkLabel: "Our Paris office team",
+        linkLabel: "About us — Paris office",
       },
     ],
     locationBlock: {
@@ -420,6 +434,15 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
       showSecondaryLocations: true,
     },
     extras: [
+      {
+        id: "awards",
+        published: true,
+        heading: "Awards",
+        body: CHIRO.awards,
+        ctaLabel: "",
+        ctaUrl: "",
+        links: [],
+      },
       {
         id: "wellness",
         published: true,
@@ -530,11 +553,11 @@ async function buildSulphurSpringsDefaults(): Promise<PracticePageDoc> {
       },
     ],
     reviews: {
-      published: false,
-      heading: "What Our Patients Say",
-      linkToReviewsPage: false,
-      reviewsUrl: "",
-      reviewsLinkLabel: "",
+      published: true,
+      heading: "Patient Reviews",
+      linkToReviewsPage: true,
+      reviewsUrl: "/reviews",
+      reviewsLinkLabel: "Read more patient reviews",
     },
     teamSections: [
       {

@@ -92,7 +92,9 @@ export function BusinessLogoHeader({
               width={360}
               height={120}
               sizes="(max-width: 640px) 80vw, 360px"
-              className="w-auto max-w-full object-contain mix-blend-multiply transition-[height] duration-300 ease-out"
+              className={`w-auto object-contain mix-blend-multiply transition-[height] duration-300 ease-out ${
+                large ? "max-w-[10rem]" : "max-w-full"
+              }`}
               style={{ height: `${ssMarkPx}px` }}
               priority
             />
@@ -101,6 +103,7 @@ export function BusinessLogoHeader({
               primary
               heightPx={ssMarkPx}
               stacked={stacked}
+              markOnly={large}
               className="max-w-full"
             />
           )}

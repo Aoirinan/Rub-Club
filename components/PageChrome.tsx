@@ -6,33 +6,8 @@ import { breadcrumbJsonLd } from "@/lib/structured-data";
 export type Crumb = { name: string; url: string };
 
 export function Breadcrumbs({ items }: { items: readonly Crumb[] }) {
-  return (
-    <>
-      <JsonLd data={breadcrumbJsonLd(items)} />
-      <nav
-        aria-label="Breadcrumb"
-        className="mx-auto max-w-6xl px-4 pt-6 text-xs text-stone-600"
-      >
-        <ol className="flex flex-wrap items-center gap-1">
-          {items.map((c, idx) => {
-            const last = idx === items.length - 1;
-            return (
-              <li key={c.url} className="flex items-center gap-1">
-                {last ? (
-                  <span className="font-semibold text-stone-900">{c.name}</span>
-                ) : (
-                  <Link className="hover:underline" href={c.url}>
-                    {c.name}
-                  </Link>
-                )}
-                {!last ? <span aria-hidden>›</span> : null}
-              </li>
-            );
-          })}
-        </ol>
-      </nav>
-    </>
-  );
+  // Structured data only — visible trail removed; main nav covers wayfinding.
+  return <JsonLd data={breadcrumbJsonLd(items)} />;
 }
 
 export type BrandVariant = "paris" | "sulphur";

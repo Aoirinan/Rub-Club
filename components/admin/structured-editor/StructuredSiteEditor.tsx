@@ -108,7 +108,6 @@ const SUPERSEDED_FIELD_IDS: Record<string, string[]> = {
     "chiro_conditions_list",
     "chiro_doctors_heading",
     "chiro_doctors_intro",
-    "chiro_treatments_heading",
     "chiro_treatments_intro",
     "chiro_testimonials_heading",
     "chiro_cta_heading",

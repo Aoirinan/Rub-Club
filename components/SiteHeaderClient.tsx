@@ -13,14 +13,15 @@ import { HeaderThemeProvider, useHeaderCompact } from "@/components/HeaderThemeP
 import { SiteHeaderLogoRow } from "@/components/SiteHeaderLogoRow";
 import { MobileNav } from "@/components/MobileNav";
 import type { NavItem } from "@/components/DesktopNav";
-import { CHIRO_TREATMENT_OFFERINGS } from "@/lib/chiro-treatments";
-import { parisChiroServiceSlugForName } from "@/lib/paris-chiro-services";
+import {
+  buildParisChiroNavChildren,
+} from "@/lib/paris-chiro-services";
 import type { HeaderBrandContent } from "@/lib/brand-logos";
 import type { HeaderColorConfig } from "@/lib/header-colors";
 import { useSiteBusinessContext } from "@/lib/use-site-business-context";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
 
-export type ServicesNavChild = { href: string; label: string };
+export type ServicesNavChild = { href: string; label: string; group?: string };
 
 export function buildDefaultNavItems(
   giftCardHref: string,
@@ -30,11 +31,16 @@ export function buildDefaultNavItems(
   ssServicesNavChildren?: ServicesNavChild[],
   businessContext: SiteBusinessContext = "default",
   ssWellnessNavChildren?: ServicesNavChild[],
+  staffNavLabel = "About Us",
 ): NavItem[] {
   // On the Sulphur Springs section, the Services / Wellness Plan dropdowns stay
   // on SS pages instead of jumping to the Paris equivalents.
   const onSulphur = businessContext === "sulphur_springs";
   return [
+    {
+      href: onSulphur ? "/sulphur-springs" : "/",
+      label: "Home",
+    },
     onSulphur && ssServicesNavChildren?.length
       ? {
           href: "/sulphur-springs",
@@ -46,16 +52,8 @@ export function buildDefaultNavItems(
           href: "/services/chiropractic",
           label: "Services",
           mega: true,
-          // Manager-edited treatments list (CMS) when provided; static fallback.
-          children:
-            servicesNavChildren ??
-            CHIRO_TREATMENT_OFFERINGS.map((t) => {
-              const slug = parisChiroServiceSlugForName(t.name);
-              return {
-                href: slug ? `/services/chiropractic/${slug}` : "/services/chiropractic",
-                label: t.name,
-              };
-            }),
+          // Grouped legacy Services mega-menu when provided; static fallback.
+          children: servicesNavChildren ?? buildParisChiroNavChildren(),
         },
     {
       href: "/services/chiropractic",
@@ -75,7 +73,7 @@ export function buildDefaultNavItems(
     },
     {
       href: "/locations/paris/staff",
-      label: "Staff",
+      label: staffNavLabel,
       children: [
         { href: "/locations/paris/staff", label: "Paris" },
         { href: "/sulphur-springs/staff", label: "Sulphur Springs" },
@@ -102,13 +100,11 @@ export function buildDefaultNavItems(
     },
     { href: "/patient-forms", label: "Patient Forms" },
     {
-      // On the Sulphur Springs side, the Locations tab + "Send us a message"
-      // link go to the Sulphur Springs contact page; Paris/default -> /contact.
       href: onSulphur ? "/sulphur-springs/contact" : "/contact",
-      label: "Locations",
+      label: "Contact Us",
       clinics: (() => {
         const parisClinic = {
-          name: "Paris",
+          name: "Paris (main office)",
           addressLines: paris.addressLines,
           phones: [
             { label: "Office", number: paris.phonePrimary },
@@ -116,17 +112,16 @@ export function buildDefaultNavItems(
               ? [{ label: "Massage desk", number: paris.phoneSecondary }]
               : []),
           ],
+          fax: paris.fax,
           mapsUrl: paris.mapsUrl,
-          contactHref: "/contact",
         };
         const ssClinic = {
-          name: "Sulphur Springs",
+          name: "Sulphur Springs (second location)",
           addressLines: sulphur.addressLines,
           phones: [{ label: "Office", number: sulphur.phonePrimary }],
+          fax: sulphur.fax,
           mapsUrl: sulphur.mapsUrl,
-          contactHref: "/sulphur-springs/contact",
         };
-        // Put the visitor's current location first.
         return onSulphur ? [ssClinic, parisClinic] : [parisClinic, ssClinic];
       })(),
     },
@@ -163,6 +158,7 @@ export function SiteHeaderClient({
   servicesNavChildren,
   ssServicesNavChildren,
   ssWellnessNavChildren,
+  staffNavLabel = "About Us",
 }: {
   paris: LocationInfo;
   sulphur: LocationInfo;
@@ -174,6 +170,7 @@ export function SiteHeaderClient({
   servicesNavChildren?: ServicesNavChild[];
   ssServicesNavChildren?: ServicesNavChild[];
   ssWellnessNavChildren?: ServicesNavChild[];
+  staffNavLabel?: string;
 }) {
   const businessContext = useSiteBusinessContext(initialBusinessContext);
   const isBusinessScoped =
@@ -189,6 +186,7 @@ export function SiteHeaderClient({
     ssServicesNavChildren,
     businessContext,
     ssWellnessNavChildren,
+    staffNavLabel,
   );
 
   const rub = paris.phoneSecondary?.trim();
@@ -197,45 +195,45 @@ export function SiteHeaderClient({
     <HeaderThemeProvider colors={headerColors} initialBusinessContext={initialBusinessContext}>
       {showTopPhoneBar ? (
         <HeaderTier1Collapse>
-        <div className="bg-[var(--header-phone-bar-bg)] px-4 py-1.5 text-center text-xs font-bold text-white sm:text-sm">
-          {businessContext === "paris_chiro" ? (
-            <a className="hover:underline" href={telHref(paris.phonePrimary)}>
-              Paris Chiropractic {paris.phonePrimary}
-            </a>
-          ) : businessContext === "sulphur_springs" ? (
-            <a className="hover:underline" href={telHref(sulphur.phonePrimary)}>
-              Sulphur Springs {sulphur.phonePrimary}
-            </a>
-          ) : (
-            <>
+          <div className="bg-[var(--header-phone-bar-bg)] px-4 py-1.5 text-center text-xs font-bold text-white sm:text-sm">
+            {businessContext === "paris_chiro" ? (
               <a className="hover:underline" href={telHref(paris.phonePrimary)}>
-                Paris {paris.phonePrimary}
+                Paris Chiropractic {paris.phonePrimary}
               </a>
-              <span className="mx-3 hidden text-white/40 sm:inline" aria-hidden>
-                |
-              </span>
-              <a
-                className="mt-1 inline-block hover:underline sm:mt-0"
-                href={telHref(sulphur.phonePrimary)}
-              >
+            ) : businessContext === "sulphur_springs" ? (
+              <a className="hover:underline" href={telHref(sulphur.phonePrimary)}>
                 Sulphur Springs {sulphur.phonePrimary}
               </a>
-              {rub ? (
-                <>
-                  <span className="mx-3 hidden text-white/40 md:inline" aria-hidden>
-                    |
-                  </span>
-                  <a
-                    className="mt-1 block text-[#f19f1f] hover:underline md:mt-0 md:inline"
-                    href={telHref(rub)}
-                  >
-                    The Rub Club: {rub}
-                  </a>
-                </>
-              ) : null}
-            </>
-          )}
-        </div>
+            ) : (
+              <>
+                <a className="hover:underline" href={telHref(paris.phonePrimary)}>
+                  Paris {paris.phonePrimary}
+                </a>
+                <span className="mx-3 hidden text-white/40 sm:inline" aria-hidden>
+                  |
+                </span>
+                <a
+                  className="mt-1 inline-block hover:underline sm:mt-0"
+                  href={telHref(sulphur.phonePrimary)}
+                >
+                  Sulphur Springs {sulphur.phonePrimary}
+                </a>
+                {rub ? (
+                  <>
+                    <span className="mx-3 hidden text-white/40 md:inline" aria-hidden>
+                      |
+                    </span>
+                    <a
+                      className="mt-1 block text-[#f19f1f] hover:underline md:mt-0 md:inline"
+                      href={telHref(rub)}
+                    >
+                      The Rub Club: {rub}
+                    </a>
+                  </>
+                ) : null}
+              </>
+            )}
+          </div>
         </HeaderTier1Collapse>
       ) : null}
 
@@ -276,6 +274,7 @@ export function SiteHeaderClient({
       <BusinessSubNav
         items={navItems}
         showBookCta
+        businessContext={businessContext}
         centerSlot={
           isBusinessScoped ? (
             <BusinessLogoHeader

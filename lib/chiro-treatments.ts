@@ -4,12 +4,36 @@
 
 export const CHIRO_TREATMENT_OFFERINGS = [
   {
+    name: "Stretch & Flex Rehab",
+    desc: "Coach-led stretching and flexibility work coordinated with your chiropractic care plan.",
+  },
+  {
+    name: "Auto Injury",
+    desc: "Documentation and treatment after motor vehicle accidents — whiplash, soft tissue, and spinal care.",
+  },
+  {
+    name: "Personal Injury",
+    desc: "Care for slip-and-fall, workplace, and other non-auto injuries with thorough exam and records.",
+  },
+  {
+    name: "Sports Injury",
+    desc: "Recovery support for athletes — sprains, strains, overuse, and return-to-play planning.",
+  },
+  {
     name: "Chiropractic Adjustments",
     desc: "Hands-on spinal and joint manipulation to restore alignment and reduce pain.",
   },
   {
     name: "Electric Muscle Stimulation",
     desc: "Low-level electrical pulses that ease muscle spasms and speed tissue recovery.",
+  },
+  {
+    name: "Interferential Current Therapy",
+    desc: "Medium-frequency current that penetrates deep tissue to reduce pain and swelling.",
+  },
+  {
+    name: "Microcurrent Therapy",
+    desc: "Sub-sensory electrical stimulation that supports tissue repair and reduces inflammation.",
   },
   {
     name: "Heat & Cryotherapy",
@@ -20,8 +44,20 @@ export const CHIRO_TREATMENT_OFFERINGS = [
     desc: "Gentle traction therapy to relieve pressure on compressed discs and nerves.",
   },
   {
+    name: "Common Chiropractic Conditions",
+    desc: "Allergies, disc problems, whiplash, sciatica, headaches, and other everyday complaints.",
+  },
+  {
+    name: "Therapeutic Exercise",
+    desc: "Guided movement programs to rebuild strength, flexibility, and endurance.",
+  },
+  {
     name: "Therapeutic Massage",
     desc: "Soft-tissue work including trigger point therapy and lymphatic massage.",
+  },
+  {
+    name: "Therapeutic Ultrasound",
+    desc: "Sound-wave therapy that increases blood flow and supports soft-tissue healing.",
   },
   {
     name: "Acupuncture",
@@ -30,6 +66,26 @@ export const CHIRO_TREATMENT_OFFERINGS = [
   {
     name: "Pediatric Care",
     desc: "Gentle, age-appropriate adjustments for infants through teenagers.",
+  },
+  {
+    name: "Prenatal Chiropractic",
+    desc: "Gentle adjustments and positioning support for expecting mothers.",
+  },
+  {
+    name: "Spine Care",
+    desc: "Comprehensive spinal wellness — adjustments, decompression, massage, and rehab.",
+  },
+  {
+    name: "Injury Rehab",
+    desc: "Personalized recovery after accidents, sports injuries, and daily wear-and-tear.",
+  },
+  {
+    name: "Degenerative Disc Disease",
+    desc: "Non-surgical care plans for age-related disc changes, herniation, and stenosis.",
+  },
+  {
+    name: "Postural Rehabilitation",
+    desc: "Posture Pro assessment and guided rehab exercises to restore spinal balance.",
   },
 ] as const;
 

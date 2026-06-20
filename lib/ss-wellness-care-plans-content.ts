@@ -1,16 +1,14 @@
 /**
- * Sulphur Springs Chiro-Fitness / Acu-Fit wellness membership pricing.
- * Mirrors the Paris wellness plans (same pricing) but with its own CMS fields
- * (ss_wellness_*) and Sulphur Springs office/phone references. Defaults for
- * CMS; editable in superadmin -> Site content -> SS subpages.
+ * Sulphur Springs Chiro-Fitness wellness membership pricing.
+ * Same Paris pricing structure but without Acu-Fit (SS does not offer acupuncture).
+ * CMS fields use ss_wellness_*; editable in superadmin → Site content → SS subpages.
  */
 
 import type { ContentFieldMeta } from "@/lib/cms-registry";
 import {
-  WELLNESS_SECTION_SPECS,
-  WELLNESS_HERO_EYEBROW,
   WELLNESS_CLOSING_HEADLINE,
   WELLNESS_CLOSING_LINES,
+  WELLNESS_SECTION_SPECS,
   parseWellnessLines,
   type WellnessPlanSection,
   type WellnessCarePlansContent,
@@ -18,7 +16,11 @@ import {
 
 export const SS_WELLNESS_PUBLIC_PATH = "/sulphur-springs/wellness-care-plans";
 
-export const SS_WELLNESS_HERO_EYEBROW = WELLNESS_HERO_EYEBROW;
+/** SS wellness plans exclude acupuncture (needles not offered at this location). */
+export const SS_WELLNESS_SECTION_SPECS: readonly WellnessPlanSection[] =
+  WELLNESS_SECTION_SPECS.filter((s) => s.id !== "acu");
+
+export const SS_WELLNESS_HERO_EYEBROW = "Chiro-Fitness";
 
 export const SS_WELLNESS_PAGE_LEDE =
   "Chiro-Fitness memberships use automatic monthly debit and are for wellness care only. The pricing below is the same for all Chiropractic Associates patients. Call our Sulphur Springs office at 903-919-5020 to enroll or confirm current pricing.";
@@ -38,7 +40,7 @@ export function ssWellnessSectionFieldId(
 }
 
 function buildSSWellnessSectionsFromContent(c: Record<string, string>): WellnessPlanSection[] {
-  return WELLNESS_SECTION_SPECS.map((spec) => {
+  return SS_WELLNESS_SECTION_SPECS.map((spec) => {
     const titleKey = ssWellnessSectionFieldId(spec.id, "title");
     const subtitleKey = ssWellnessSectionFieldId(spec.id, "subtitle");
     const linesKey = ssWellnessSectionFieldId(spec.id, "lines");
@@ -55,7 +57,7 @@ function buildSSWellnessSectionsFromContent(c: Record<string, string>): Wellness
 export const SS_WELLNESS_PAGE_CMS_FIELD_IDS = [
   "ss_wellness_hero_eyebrow",
   "ss_wellness_page_lede",
-  ...WELLNESS_SECTION_SPECS.flatMap((s) => [
+  ...SS_WELLNESS_SECTION_SPECS.flatMap((s) => [
     ssWellnessSectionFieldId(s.id, "title"),
     ssWellnessSectionFieldId(s.id, "subtitle"),
     ssWellnessSectionFieldId(s.id, "lines"),
@@ -75,7 +77,7 @@ export function ssWellnessCarePlansDefaults(): Record<string, string> {
     ss_wellness_cta_title: SS_WELLNESS_CTA_TITLE,
     ss_wellness_cta_body: SS_WELLNESS_CTA_BODY,
   };
-  for (const spec of WELLNESS_SECTION_SPECS) {
+  for (const spec of SS_WELLNESS_SECTION_SPECS) {
     out[ssWellnessSectionFieldId(spec.id, "title")] = spec.title;
     out[ssWellnessSectionFieldId(spec.id, "subtitle")] = spec.subtitle ?? "";
     out[ssWellnessSectionFieldId(spec.id, "lines")] = spec.lines.join("\n");
@@ -116,7 +118,7 @@ export function buildSSWellnessCmsRegistry(): ContentFieldMeta[] {
       type: "richtext",
     },
   ];
-  for (const spec of WELLNESS_SECTION_SPECS) {
+  for (const spec of SS_WELLNESS_SECTION_SPECS) {
     fields.push(
       {
         id: ssWellnessSectionFieldId(spec.id, "title"),

@@ -47,7 +47,7 @@ export default async function ParisLocationPage() {
       <div className="mx-auto max-w-6xl px-4 pb-16">
         <p className="text-center text-sm text-stone-600">
           <Link href="/locations/paris/staff" className="font-bold text-[#c0392b] underline">
-            Meet our Paris office team
+            About us — Paris office
           </Link>
           {" · "}
           <Link href="/services/massage" className="font-bold text-[#c0392b] underline">

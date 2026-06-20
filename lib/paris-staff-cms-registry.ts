@@ -4,6 +4,7 @@ import { PARIS_STAFF_PAGE_DEFAULTS } from "@/lib/paris-office-staff";
 export const PARIS_STAFF_PAGE_CMS_KEYS = [
   "paris_staff_hero_title",
   "paris_staff_hero_lede",
+  "paris_staff_doctors_heading",
   "paris_staff_section_heading",
   "paris_staff_cta_title",
   "paris_staff_cta_body",
@@ -26,10 +27,17 @@ export function buildParisStaffCmsRegistry(): ContentFieldMeta[] {
       type: "richtext",
     },
     {
+      id: "paris_staff_doctors_heading",
+      pageLabel: "Paris staff",
+      sectionLabel: "Doctors block",
+      fieldLabel: "Doctors section heading",
+      type: "text",
+    },
+    {
       id: "paris_staff_section_heading",
       pageLabel: "Paris staff",
       sectionLabel: "Team grid",
-      fieldLabel: "Section heading",
+      fieldLabel: "Office team section heading",
       type: "text",
     },
     {
@@ -53,6 +61,7 @@ export function buildParisStaffCmsDefaults(): Record<string, string> {
   return {
     paris_staff_hero_title: PARIS_STAFF_PAGE_DEFAULTS.heroTitle,
     paris_staff_hero_lede: PARIS_STAFF_PAGE_DEFAULTS.heroLede,
+    paris_staff_doctors_heading: PARIS_STAFF_PAGE_DEFAULTS.doctorsHeading,
     paris_staff_section_heading: PARIS_STAFF_PAGE_DEFAULTS.sectionHeading,
     paris_staff_cta_title: PARIS_STAFF_PAGE_DEFAULTS.ctaTitle,
     paris_staff_cta_body: PARIS_STAFF_PAGE_DEFAULTS.ctaBody,

@@ -37,8 +37,8 @@ export const PRACTICE_THEMES: Record<PracticeLocationId, PracticeThemeVars> = {
   // as vivid red instead of muddy maroon; body headings/buttons keep the deep
   // brand red (#4a1515) for contrast and readability.
   "paris-home": {
-    accent: "#c0392b",
-    accentHover: "#962d22",
+    accent: "#d64535",
+    accentHover: "#b83828",
     heading: "#4a1515",
     eyebrow: "#f3c1ba",
     heroOverlay: "#6e1a1a",
@@ -50,8 +50,8 @@ export const PRACTICE_THEMES: Record<PracticeLocationId, PracticeThemeVars> = {
     ctaHover: "#341010",
   },
   "paris-chiro": {
-    accent: "#c0392b",
-    accentHover: "#962d22",
+    accent: "#d64535",
+    accentHover: "#b83828",
     heading: "#4a1515",
     eyebrow: "#f3c1ba",
     heroOverlay: "#6e1a1a",
