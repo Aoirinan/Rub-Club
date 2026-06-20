@@ -605,9 +605,11 @@ function AdminDashboard() {
             <p>{error}</p>
             {error.includes("not yet granted staff") ? (
               <p className="mt-2">
-                <Link href="/admin/super" className="font-semibold underline">
-                  Open staff setup / manager tools
+                <Link href="/admin/setup" className="font-semibold underline">
+                  First-time owner? Run setup
                 </Link>
+                {" · "}
+                Invited staff should ask their manager to re-send the invite.
               </p>
             ) : null}
           </div>

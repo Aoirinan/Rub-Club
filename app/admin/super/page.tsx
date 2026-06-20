@@ -11,6 +11,8 @@ import {
   staffMeetsMin,
   staffRoleLabel,
   staffLocationScopeLabel,
+  normalizeStaffRole,
+  normalizeStaffLocationScope,
   type StaffRole,
   type StaffLocationScope,
 } from "@/lib/staff-roles";
@@ -127,6 +129,45 @@ function inviteEmailIssueHint(issue?: InviteStaffResponse["inviteEmailIssue"]): 
   return " Email was not sent — ask your web person to fix outgoing email (see Email delivery section below).";
 }
 
+function formatInviteResult(
+  data: InviteStaffResponse,
+  inviteRole: StaffRole,
+  providerLabel: (id: string | undefined) => string | null,
+): string {
+  const parts: string[] = [];
+  const linkNote =
+    data.linkedProviderId && inviteRole === "massage_therapist"
+      ? ` Linked to provider “${data.linkedProviderDisplayName ?? providerLabel(data.linkedProviderId) ?? data.linkedProviderId}”.`
+      : "";
+  const issueNote = inviteEmailIssueHint(data.inviteEmailIssue);
+  if (data.createdNewAuthUser) {
+    if (data.emailedReset) {
+      parts.push("New account created. They should receive an email with a link to set their password.");
+    } else if (data.temporaryPassword) {
+      parts.push(
+        `${data.passwordWarning ?? "Share this password once, securely."} Temporary password: ${data.temporaryPassword}${issueNote}`,
+      );
+    } else {
+      parts.push(`New account created.${issueNote}`);
+    }
+  } else if (data.emailedReset) {
+    parts.push(
+      "Staff access updated. They should receive an email with a link to open the portal or reset their password.",
+    );
+  } else {
+    parts.push(
+      `Staff access was saved${linkNote}, but no invitation email was sent.${issueNote} They can still use “Forgot password” on the staff login page with their work email once mail is working.`,
+    );
+  }
+  const joined = parts.join(" ");
+  return joined.includes("Linked to provider") || !linkNote ? joined : `${joined}${linkNote}`;
+}
+
+type LastInviteResult = InviteStaffResponse & {
+  email: string;
+  message: string;
+};
+
 export default function SuperAdminPage() {
   const router = useRouter();
   const [auth, setAuth] = useState<Auth | null>(null);
@@ -137,9 +178,10 @@ export default function SuperAdminPage() {
   const [role, setRole] = useState<StaffRole>("front_desk");
   const [linkedProviderId, setLinkedProviderId] = useState("");
   const [locationScope, setLocationScope] = useState<StaffLocationScope>("both");
-  const [bootstrapSecret, setBootstrapSecret] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [lastInviteResult, setLastInviteResult] = useState<LastInviteResult | null>(null);
   const [deletingUid, setDeletingUid] = useState<string | null>(null);
+  const [resendingUid, setResendingUid] = useState<string | null>(null);
   const [emailStatus, setEmailStatus] = useState<EmailStatus | null>(null);
   const [bookableProviders, setBookableProviders] = useState<ProviderRow[]>([]);
   const [newProviderName, setNewProviderName] = useState("");
@@ -223,16 +265,16 @@ export default function SuperAdminPage() {
     return p?.displayName ?? id.trim();
   }
 
-  async function submitStaff() {
-    setMessage(null);
-    if (!auth) return;
-    const user = auth.currentUser;
-    if (!user) return;
-    if (role === "massage_therapist" && !linkedProviderId.trim()) {
-      setMessage("Select a linked bookable provider for massage therapists.");
-      return;
+  async function inviteStaff(payload: {
+    email: string;
+    role: StaffRole;
+    locationScope: StaffLocationScope;
+    linkedProviderId?: string;
+  }): Promise<{ ok: boolean; data: InviteStaffResponse }> {
+    if (!auth?.currentUser) {
+      return { ok: false, data: { error: "Not signed in." } };
     }
-    const token = await user.getIdToken();
+    const token = await auth.currentUser.getIdToken();
     const res = await fetch("/api/admin/invite-staff", {
       method: "POST",
       headers: {
@@ -240,48 +282,88 @@ export default function SuperAdminPage() {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        email: email.trim(),
-        role,
-        locationScope: role === "superadmin" ? "both" : locationScope,
-        ...(role === "massage_therapist" ? { linkedProviderId: linkedProviderId.trim() } : {}),
+        email: payload.email.trim(),
+        role: payload.role,
+        locationScope: payload.role === "superadmin" ? "both" : payload.locationScope,
+        ...(payload.role === "massage_therapist" && payload.linkedProviderId
+          ? { linkedProviderId: payload.linkedProviderId.trim() }
+          : {}),
       }),
     });
     const data = (await res.json().catch(() => ({}))) as InviteStaffResponse;
-    if (!res.ok) {
+    return { ok: res.ok, data };
+  }
+
+  async function submitStaff() {
+    setMessage(null);
+    setLastInviteResult(null);
+    if (!auth) return;
+    if (role === "massage_therapist" && !linkedProviderId.trim()) {
+      setMessage("Select a linked bookable provider for massage therapists.");
+      return;
+    }
+    const trimmedEmail = email.trim();
+    const { ok, data } = await inviteStaff({
+      email: trimmedEmail,
+      role,
+      locationScope,
+      linkedProviderId: linkedProviderId.trim() || undefined,
+    });
+    if (!ok) {
       setMessage(typeof data.error === "string" ? data.error : "Could not save staff.");
       return;
     }
-    const parts: string[] = [];
-    const linkNote =
-      data.linkedProviderId && role === "massage_therapist"
-        ? ` Linked to provider “${data.linkedProviderDisplayName ?? providerLabelById(data.linkedProviderId) ?? data.linkedProviderId}”.`
-        : "";
-    const issueNote = inviteEmailIssueHint(data.inviteEmailIssue);
-    if (data.createdNewAuthUser) {
-      if (data.emailedReset) {
-        parts.push("New account created. They should receive an email with a link to set their password.");
-      } else if (data.temporaryPassword) {
-        parts.push(
-          `${data.passwordWarning ?? "Share this password once, securely."} Temporary password: ${data.temporaryPassword}${issueNote}`,
-        );
-      } else {
-        parts.push(`New account created.${issueNote}`);
-      }
-    } else if (data.emailedReset) {
-      parts.push(
-        "Staff access updated. They should receive an email with a link to open the portal or reset their password.",
-      );
-    } else {
-      parts.push(
-        `Staff access was saved${linkNote}, but no invitation email was sent.${issueNote} They can still use “Forgot password” on the staff login page with their work email once mail is working.`,
-      );
-    }
-    const joined = parts.join(" ");
-    const messageBody =
-      joined.includes("Linked to provider") || !linkNote ? joined : `${joined}${linkNote}`;
-    setMessage(messageBody);
+    const resultMessage = formatInviteResult(data, role, providerLabelById);
+    setMessage(resultMessage);
+    setLastInviteResult({ ...data, email: trimmedEmail, message: resultMessage });
     setEmail("");
+    const token = await auth.currentUser!.getIdToken();
     await loadStaff(token);
+  }
+
+  async function resendInviteForRow(row: StaffRow) {
+    setMessage(null);
+    setLastInviteResult(null);
+    if (!row.email?.trim()) {
+      setMessage("This person has no email on file.");
+      return;
+    }
+    const inviteRole = normalizeStaffRole(row.role);
+    if (!inviteRole) {
+      setMessage("This person has an invalid role. Remove and invite them again.");
+      return;
+    }
+    if (inviteRole === "massage_therapist" && !row.linkedProviderId?.trim()) {
+      setMessage("Massage therapists need a linked provider. Re-invite them using the form above.");
+      return;
+    }
+    setResendingUid(row.uid);
+    try {
+      const { ok, data } = await inviteStaff({
+        email: row.email.trim(),
+        role: inviteRole,
+        locationScope: normalizeStaffLocationScope(row.locationScope),
+        linkedProviderId: row.linkedProviderId,
+      });
+      if (!ok) {
+        setMessage(typeof data.error === "string" ? data.error : "Could not re-send invite.");
+        return;
+      }
+      const resultMessage = formatInviteResult(data, inviteRole, providerLabelById);
+      setMessage(resultMessage);
+      setLastInviteResult({ ...data, email: row.email.trim(), message: resultMessage });
+    } finally {
+      setResendingUid(null);
+    }
+  }
+
+  async function copyTemporaryPassword(password: string) {
+    try {
+      await navigator.clipboard.writeText(password);
+      setMessage("Temporary password copied to clipboard. Share it securely, then clear your clipboard.");
+    } catch {
+      setMessage("Could not copy to clipboard. Select and copy the password manually.");
+    }
   }
 
   async function deleteStaffRow(targetUid: string) {
@@ -508,37 +590,6 @@ export default function SuperAdminPage() {
     }
   }
 
-  async function runBootstrap() {
-    setMessage(null);
-    if (!auth) return;
-    const user = auth.currentUser;
-    if (!user) return;
-    const token = await user.getIdToken();
-    const res = await fetch("/api/admin/bootstrap", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({ secret: bootstrapSecret }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setMessage(typeof data.error === "string" ? data.error : "Bootstrap failed.");
-      return;
-    }
-    setMessage("Bootstrap complete. You are now a superadmin.");
-    setBootstrapSecret("");
-    const fresh = await user.getIdToken(true);
-    const meRes = await fetch("/api/admin/me", {
-      headers: { Authorization: `Bearer ${fresh}` },
-    });
-    setMe((await meRes.json()) as Me);
-    await loadStaff(fresh);
-    await loadEmailStatus(fresh);
-    await loadBookableProviders(fresh);
-  }
-
   const providerIssues = useMemo(() => detectProviderIssues(bookableProviders), [bookableProviders]);
 
   if (!meReady) {
@@ -550,7 +601,6 @@ export default function SuperAdminPage() {
   const isOperations = me?.role ? staffMeetsMin(me.role, "manager") : false;
   const isDeskOnly =
     me?.role === "front_desk" || me?.role === "massage_therapist";
-  const needsBootstrap = !me?.role;
   const assignableRoles = STAFF_ROLE_OPTIONS.filter(
     (o) => me?.role === "superadmin" || o.value !== "superadmin",
   );
@@ -560,7 +610,7 @@ export default function SuperAdminPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
-            {isOperations ? "Scheduling & team" : needsBootstrap ? "Staff setup" : "Access"}
+            {isOperations ? "Scheduling & team" : "Access"}
           </h1>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -585,29 +635,6 @@ export default function SuperAdminPage() {
             this management page. Ask a <strong>manager</strong> to promote you if you need scheduling
             and team settings.
           </p>
-        </section>
-      ) : null}
-
-      {needsBootstrap ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
-          <h2 className="text-lg font-semibold text-slate-900">First-time owner setup</h2>
-          <p className="text-sm text-slate-600">
-            Enter the one-time setup code from your web person, then run setup. After that you can add
-            team logins below.
-          </p>
-          <input
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            placeholder="Setup code"
-            value={bootstrapSecret}
-            onChange={(e) => setBootstrapSecret(e.target.value)}
-          />
-          <button
-            type="button"
-            onClick={runBootstrap}
-            className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-          >
-            Run setup
-          </button>
         </section>
       ) : null}
 
@@ -707,6 +734,41 @@ export default function SuperAdminPage() {
               Add or invite
             </button>
 
+            {lastInviteResult ? (
+              <div
+                className={`rounded-lg border px-4 py-3 text-sm ${
+                  lastInviteResult.emailedReset
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-950"
+                    : lastInviteResult.temporaryPassword
+                      ? "border-amber-200 bg-amber-50 text-amber-950"
+                      : "border-slate-200 bg-slate-50 text-slate-800"
+                }`}
+              >
+                <p className="font-semibold">
+                  {lastInviteResult.emailedReset
+                    ? "Check inbox for password link"
+                    : lastInviteResult.temporaryPassword
+                      ? "Share this one-time password securely"
+                      : "Invite saved"}
+                </p>
+                <p className="mt-1">{lastInviteResult.message}</p>
+                {lastInviteResult.temporaryPassword ? (
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <code className="rounded bg-white px-2 py-1 font-mono text-xs">
+                      {lastInviteResult.temporaryPassword}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => copyTemporaryPassword(lastInviteResult.temporaryPassword!)}
+                      className="rounded-full border border-amber-300 bg-white px-3 py-1 text-xs font-semibold text-amber-950 hover:bg-amber-100"
+                    >
+                      Copy password
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="border-t border-slate-100 pt-4">
               <h3 className="text-sm font-semibold text-slate-900">People with access</h3>
               <ul className="mt-2 space-y-2 text-sm text-slate-700">
@@ -736,16 +798,26 @@ export default function SuperAdminPage() {
                           </div>
                         ) : null}
                       </div>
-                      {!isSelf ? (
+                      <div className="flex shrink-0 flex-wrap gap-2">
                         <button
                           type="button"
-                          disabled={deletingUid === s.uid}
-                          onClick={() => deleteStaffRow(s.uid)}
-                          className="shrink-0 rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          disabled={resendingUid === s.uid || deletingUid === s.uid}
+                          onClick={() => resendInviteForRow(s)}
+                          className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          {deletingUid === s.uid ? "Removing…" : "Remove access"}
+                          {resendingUid === s.uid ? "Sending…" : "Re-send invite"}
                         </button>
-                      ) : null}
+                        {!isSelf ? (
+                          <button
+                            type="button"
+                            disabled={deletingUid === s.uid || resendingUid === s.uid}
+                            onClick={() => deleteStaffRow(s.uid)}
+                            className="rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {deletingUid === s.uid ? "Removing…" : "Remove access"}
+                          </button>
+                        ) : null}
+                      </div>
                     </li>
                   );
                 })}
@@ -1082,31 +1154,6 @@ export default function SuperAdminPage() {
               ) : null}
             </ul>
           </OpsCollapsibleSection>
-
-          {me?.role === "superadmin" ? (
-            <OpsCollapsibleSection
-              title="First-time setup (advanced)"
-              summary="Only if your web person gave you a new setup code."
-              defaultOpen={false}
-            >
-              <p className="text-sm text-slate-600">
-                Use only when recovering owner access. Prefer inviting team members above.
-              </p>
-              <input
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                placeholder="Setup code"
-                value={bootstrapSecret}
-                onChange={(e) => setBootstrapSecret(e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={runBootstrap}
-                className="rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400"
-              >
-                Run setup
-              </button>
-            </OpsCollapsibleSection>
-          ) : null}
         </>
       ) : null}
     </div>

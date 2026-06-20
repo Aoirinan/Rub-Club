@@ -138,12 +138,15 @@ flowchart LR
 
 ## Bootstrap a superadmin (one-time)
 
-1. Set `ADMIN_BOOTSTRAP_SECRET` to a long random string and deploy.
-2. Sign in via `/admin/login` with the staff Firebase Auth account that should be promoted.
-3. POST `/api/admin/bootstrap` with header `x-bootstrap-secret: <secret>` and a JSON body
-   matching the route's expectations.
-4. Remove `ADMIN_BOOTSTRAP_SECRET` from your environment.
-5. New staff are added via `/admin/super` (invite email link generation goes through SendGrid).
+1. Set `ADMIN_BOOTSTRAP_SECRET` to a long random string in your environment (local `.env` and/or Vercel).
+2. Enable **Email/Password** in Firebase Auth → Sign-in method.
+3. Add authorized domains in Firebase Auth (e.g. `localhost`, your Vercel hostname, production domain).
+4. Sign in at `/admin/login` with the Firebase account that should become the first administrator.
+5. Open `/admin/setup`, enter the setup code, and click **Run setup**. You become a **superadmin**.
+6. Remove `ADMIN_BOOTSTRAP_SECRET` from your environment after success.
+7. Confirm invite email status on `/admin/super` (Scheduling & team). If SendGrid is not configured, invites fall back to a one-time password you share manually.
+
+**API alternative:** `POST /api/admin/bootstrap` with `Authorization: Bearer <Firebase ID token>` and JSON body `{ "secret": "<ADMIN_BOOTSTRAP_SECRET>" }`.
 
 **Staff roles migration (existing projects):** If any `staff/{uid}` documents still have
 `role: "admin"`, run once after deploy (dry run first):
@@ -155,6 +158,46 @@ npx tsx scripts/migrate-staff-roles.ts --apply
 
 Roles are `massage_therapist`, `front_desk`, `manager`, and `superadmin`. Legacy `admin` is
 still accepted at read time as `front_desk` until migrated.
+
+---
+
+## Staff onboarding runbook
+
+### First superadmin (owner)
+
+Follow the bootstrap steps above. After setup, use **Admin → Scheduling & team** (`/admin/super`) to invite team members.
+
+### Front desk
+
+1. Manager signs in → `/admin/super` → **Team logins**.
+2. Enter work email, role **Front desk**, and **Location access** (Paris, Sulphur Springs, or both).
+3. Click **Add or invite**. Staff receives an email with a password link (or a one-time password if email is not configured).
+4. Staff signs in at `/admin/login` → **Bookings** scheduler.
+
+### Massage therapist
+
+1. Create their bookable provider under **Operations → Providers** if needed.
+2. Invite with role **Massage therapist** and select **Linked bookable provider**.
+3. They sign in → read-only day view for their calendar.
+
+### Manager
+
+Same invite flow with role **Manager**. Set location scope if they handle contact inbox for one office.
+
+### Re-send invite / forgot password
+
+- Managers can click **Re-send invite** on any staff row in **Team logins**.
+- Staff can use **Forgot password?** on `/admin/login` after their account exists.
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| Wrong email or password | Check credentials; account may exist in Firebase but was never invited |
+| Signed in, no staff access | Owner: `/admin/setup`. Staff: manager re-sends invite |
+| No invite email | Check `SENDGRID_API_KEY` and verified `SENDGRID_FROM_EMAIL`; use one-time password from invite response |
+| Password reset link fails | Add domain to Firebase authorized domains; verify `NEXT_PUBLIC_APP_URL` |
+| Therapist sees wrong calendar | Re-invite with correct linked provider |
 
 ---
 

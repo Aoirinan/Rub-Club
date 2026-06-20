@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
@@ -72,8 +73,20 @@ export function AdminAuthGate({
 
   if (!me?.role) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-16 text-center text-sm text-slate-700">
-        Your account is signed in but not yet granted staff access.
+      <div className="mx-auto max-w-lg space-y-3 px-4 py-16 text-center text-sm text-slate-700">
+        <p>Your account is signed in but not yet granted staff access.</p>
+        <p>
+          <Link href="/admin/setup" className="font-semibold text-[#c0392b] underline">
+            First-time owner? Run setup
+          </Link>
+        </p>
+        <p className="text-slate-600">
+          If you were invited as staff, ask your manager to re-send your invite, then sign in at{" "}
+          <Link href="/admin/login" className="font-semibold underline">
+            staff login
+          </Link>
+          .
+        </p>
       </div>
     );
   }

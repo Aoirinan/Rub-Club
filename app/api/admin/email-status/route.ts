@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireStaff } from "@/lib/staff-auth";
+import { requireStaff, verifyBearerUid } from "@/lib/staff-auth";
 
 import { getSendgridApiKey, getSendgridFromEmail, getSendgridFromEmailNormalized, isValidOutboundFromEmail } from "@/lib/sendgrid";
 
@@ -8,11 +8,16 @@ export const runtime = "nodejs";
 /**
  * Whether outbound staff/notification email can be attempted (env present).
  * Does not expose keys or addresses.
+ * Managers+ and authenticated users without staff access (bootstrap/setup) may read.
  */
 export async function GET(req: Request) {
-  const staff = await requireStaff(req.headers.get("authorization"), "manager");
+  const authHeader = req.headers.get("authorization");
+  const staff = await requireStaff(authHeader, "manager");
   if (!staff) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const decoded = await verifyBearerUid(authHeader);
+    if (!decoded?.uid) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
   }
 
   const key = getSendgridApiKey();
