@@ -31,6 +31,24 @@ Add your Vercel hostname and final domain under **Firebase Auth → Settings →
 
 If staff invites fail with **“Domain not allowlisted by project”**, the domain in the error is missing from that Firebase list — not a SendGrid issue.
 
+## Staff invite email deliverability (spam / junk folder)
+
+Gmail may show **“Chiropractic Associates via sendgrid.net”** and file invites in Spam when:
+
+1. **Single Sender Verification** is used (personal Gmail/Outlook) instead of **Domain Authentication**
+2. The clinic domain has no SPF/DKIM records pointing at SendGrid
+
+**Recommended fix (SendGrid dashboard):**
+
+1. **Settings → Sender Authentication → Authenticate Your Domain** for `chiropracticparistexas.com` (or your primary clinic domain)
+2. Add the DNS records SendGrid provides (CNAME) at your domain registrar
+3. Set Vercel `SENDGRID_FROM_EMAIL` to a clinic address on that domain, e.g. `scheduling@chiropracticparistexas.com`
+4. Redeploy and re-send the staff invite
+
+**Until then:** Staff can open the message from Spam and click **Report not spam**, or use **Forgot password** on the staff login page.
+
+Optional: set `SENDGRID_REPLY_TO` to a clinic inbox staff can reply to.
+
 ## Online booking (no payment required)
 
 Public `/book` works with Firebase + SendGrid only. Turn scheduling on/off under **Admin → Banners & promos → Online booking**. Online Square prepay stays **off** unless you enable it in that panel.

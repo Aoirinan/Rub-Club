@@ -7,6 +7,7 @@ import { getPublicAppOriginForRequest } from "@/lib/app-origin";
 import { fetchProviderById } from "@/lib/providers-db";
 import { requireStaff } from "@/lib/staff-auth";
 import { sendStaffInviteEmail } from "@/lib/sendgrid";
+import { siteShortName } from "@/lib/site-content";
 import {
   STAFF_ROLES,
   STAFF_LOCATION_SCOPES,
@@ -187,11 +188,11 @@ export async function POST(req: Request) {
     to: email,
     resetLink,
     inviterNote: isBrandNew
-      ? "A manager added you to the Paris Wellness staff portal."
-      : "You have been granted access to the Paris Wellness staff portal. Use the link below to sign in or reset your password if needed.",
+      ? `You have been added to the ${siteShortName} staff portal for scheduling and front-desk tools.`
+      : `Your access to the ${siteShortName} staff portal has been updated.`,
     subject: isBrandNew
-      ? "Staff portal — set your password"
-      : "Staff portal — access granted",
+      ? `Your ${siteShortName} staff sign-in`
+      : `Your ${siteShortName} staff access`,
   });
   emailedReset = emailResult.sent;
   if (!emailResult.sent) {

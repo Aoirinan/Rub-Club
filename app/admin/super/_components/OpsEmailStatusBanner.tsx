@@ -13,6 +13,7 @@ type EmailStatus = {
   likelySwapped?: boolean;
   fromLooksLikeApiKey?: boolean;
   apiKeyLooksLikeEmail?: boolean;
+  fromUsesFreeMailbox?: boolean;
   officeNotificationConfigured?: boolean;
 };
 
@@ -37,6 +38,7 @@ export function OpsEmailStatusBanner({
   const hasProblem =
     emailStatus.likelySwapped ||
     emailStatus.fromEnvInvalidFormat ||
+    emailStatus.fromUsesFreeMailbox ||
     !emailStatus.sendgridConfigured;
 
   async function runTest() {
@@ -109,6 +111,21 @@ export function OpsEmailStatusBanner({
           Add <code className="text-xs">SENDGRID_API_KEY</code> and{" "}
           <code className="text-xs">SENDGRID_FROM_EMAIL</code> in Vercel → Settings → Environment
           Variables (Production), then redeploy.
+        </p>
+      ) : null}
+
+      {emailStatus.fromUsesFreeMailbox ? (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+          The FROM address uses a personal mailbox (Gmail, Outlook, etc.). Gmail often shows{" "}
+          <strong>via sendgrid.net</strong> and may file invites in <strong>Spam</strong>. For
+          production, authenticate your clinic domain in SendGrid (Settings → Sender Authentication)
+          and set <code className="text-xs">SENDGRID_FROM_EMAIL</code> to something like{" "}
+          <code className="text-xs">scheduling@chiropracticparistexas.com</code>.
+        </p>
+      ) : emailStatus.sendgridConfigured ? (
+        <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+          If invites land in spam, authenticate your clinic domain in SendGrid and ask staff to mark
+          the first message as <strong>Not spam</strong>.
         </p>
       ) : null}
 

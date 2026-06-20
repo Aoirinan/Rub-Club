@@ -57,6 +57,7 @@ type EmailStatus = {
   likelySwapped?: boolean;
   fromLooksLikeApiKey?: boolean;
   apiKeyLooksLikeEmail?: boolean;
+  fromUsesFreeMailbox?: boolean;
   officeNotificationConfigured?: boolean;
 };
 

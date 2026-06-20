@@ -32,6 +32,7 @@ export async function GET(req: Request) {
     likelySwapped: diagnostics.likelySwapped,
     fromLooksLikeApiKey: diagnostics.fromLooksLikeApiKey,
     apiKeyLooksLikeEmail: diagnostics.apiKeyLooksLikeEmail,
+    fromUsesFreeMailbox: diagnostics.fromUsesFreeMailbox,
     officeNotificationConfigured: officeTo.length > 0,
   });
 }

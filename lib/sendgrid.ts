@@ -1,5 +1,6 @@
 import sgMail from "@sendgrid/mail";
-import { emailFromName } from "@/lib/site-content";
+import { emailFromName, siteShortName } from "@/lib/site-content";
+import { getPublicAppOrigin } from "@/lib/app-origin";
 
 let configured = false;
 
@@ -63,7 +64,30 @@ export type SendgridEnvDiagnostics = {
   /** API key env looks like an email — likely swapped with FROM in Vercel */
   apiKeyLooksLikeEmail: boolean;
   likelySwapped: boolean;
+  /** FROM uses gmail/outlook/etc. — often lands in spam without domain authentication */
+  fromUsesFreeMailbox: boolean;
 };
+
+const FREE_MAILBOX_DOMAINS = new Set([
+  "gmail.com",
+  "googlemail.com",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+  "yahoo.com",
+  "icloud.com",
+  "aol.com",
+]);
+
+export function getSendgridReplyToEmail(): string | undefined {
+  const raw = firstNonEmpty(
+    process.env.SENDGRID_REPLY_TO,
+    process.env.RESCHEDULE_EMAIL,
+    process.env.OFFICE_NOTIFICATION_EMAIL,
+  );
+  const normalized = normalizeSingleSenderEmail(raw);
+  return isValidOutboundFromEmail(normalized) ? normalized : undefined;
+}
 
 export function getSendgridEnvDiagnostics(): SendgridEnvDiagnostics {
   const { key, fromRaw } = resolveSendgridCredentials();
@@ -76,6 +100,8 @@ export function getSendgridEnvDiagnostics(): SendgridEnvDiagnostics {
   const apiKeyLooksLikeEmail = isValidOutboundFromEmail(key);
   const likelySwapped = fromLooksLikeApiKey && apiKeyLooksLikeEmail;
   const fromEnvInvalidFormat = hasFromEmail && !fromLooksValid && !fromLooksLikeApiKey;
+  const fromDomain = fromNorm.split("@")[1]?.toLowerCase() ?? "";
+  const fromUsesFreeMailbox = fromLooksValid && FREE_MAILBOX_DOMAINS.has(fromDomain);
 
   return {
     hasApiKey,
@@ -87,6 +113,7 @@ export function getSendgridEnvDiagnostics(): SendgridEnvDiagnostics {
     fromLooksLikeApiKey,
     apiKeyLooksLikeEmail,
     likelySwapped,
+    fromUsesFreeMailbox,
   };
 }
 
@@ -170,6 +197,7 @@ export async function sendOutboundEmail(params: {
     await sgMail.send({
     to: params.to,
     from: { email: fromEmail, name: params.fromName ?? emailFromName },
+    ...(getSendgridReplyToEmail() ? { replyTo: getSendgridReplyToEmail() } : {}),
     subject: params.subject,
     text: params.text,
     html: params.html ?? `<pre>${escapeHtml(params.text)}</pre>`,
@@ -289,28 +317,45 @@ export async function sendStaffInviteEmail(params: {
 
   const note =
     params.inviterNote ?? "You have been invited to the staff portal.";
-  const subject = params.subject ?? "Staff portal — set your password";
+  const subject = params.subject ?? `Your ${siteShortName} staff sign-in`;
+  const loginUrl = `${getPublicAppOrigin()}/admin/login`;
   const text = [
     note,
     "",
-    "Use this link to sign in or set a new password:",
+    "Set your password or sign in using this link:",
     params.resetLink,
     "",
-    "If the link expires, use “Forgot password” on the staff sign-in page with this email address.",
+    `Staff sign-in page: ${loginUrl}`,
+    "",
+    "If the link expires, open the staff sign-in page and use Forgot password with this email address.",
+    "",
+    "— Chiropractic Associates / The Rub Club (Paris & Sulphur Springs, TX)",
   ].join("\n");
 
   const safeHref = escapeHtml(params.resetLink);
+  const safeLogin = escapeHtml(loginUrl);
+  const html = [
+    `<p>${escapeHtml(note)}</p>`,
+    `<p><a href="${safeHref}">Set your password or open the staff portal</a></p>`,
+    `<p style="font-size:14px;color:#444">Or copy this link into your browser:<br><span style="word-break:break-all">${safeHref}</span></p>`,
+    `<p style="font-size:14px;color:#444">Staff sign-in: <a href="${safeLogin}">${safeLogin}</a></p>`,
+    `<p style="font-size:12px;color:#666;margin-top:24px">Chiropractic Associates · The Rub Club · Paris &amp; Sulphur Springs, TX</p>`,
+  ].join("");
 
   try {
     await sgMail.send({
       to: params.to,
       from: { email: fromEmail, name: emailFromName },
+      ...(getSendgridReplyToEmail() ? { replyTo: getSendgridReplyToEmail() } : {}),
       subject,
       text,
-      html: `<p>${escapeHtml(note)}</p><p><a href="${safeHref}">Open staff portal link</a></p>`,
+      html,
       trackingSettings: {
         clickTracking: { enable: false },
         openTracking: { enable: false },
+      },
+      mailSettings: {
+        bypassListManagement: { enable: true },
       },
     });
     return { sent: true };
