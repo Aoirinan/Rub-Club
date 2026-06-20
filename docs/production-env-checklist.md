@@ -23,7 +23,13 @@ Every public `/contact` submission is:
 
 Before go-live, submit a test on `/contact`, sign in as front desk, open **Admin → Contact inbox**, and confirm the message appears. Email to Sean’s Gmail is optional backup, not required for daily workflow.
 
-Add your Vercel hostname and final domain under **Firebase Auth → Settings → Authorized domains** so admin login and password reset work.
+Add your Vercel hostname and final domain under **Firebase Auth → Settings → Authorized domains** so admin login, password reset, and staff invite links work. For this project add at minimum:
+
+- `rub-club.vercel.app` (Vercel production URL until custom DNS is primary)
+- `localhost` (local development)
+- Your production domain when live (e.g. `www.chiropracticparistexas.com`)
+
+If staff invites fail with **“Domain not allowlisted by project”**, the domain in the error is missing from that Firebase list — not a SendGrid issue.
 
 ## Online booking (no payment required)
 

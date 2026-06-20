@@ -45,18 +45,25 @@ function trustedAppHostnames(): Set<string> {
   return hosts;
 }
 
+function isTrustedAppHostname(host: string): boolean {
+  const h = host.toLowerCase();
+  if (h === "localhost" || h === "127.0.0.1") return true;
+  if (h.endsWith(".vercel.app")) return true;
+  return trustedAppHostnames().has(h);
+}
+
 function originFromRequest(req: Request): string | null {
   const origin = req.headers.get("origin")?.trim().replace(/\/$/, "");
   if (origin && /^https?:\/\//i.test(origin)) {
     const host = hostnameFromOriginOrUrl(origin);
-    if (host && trustedAppHostnames().has(host)) return origin;
+    if (host && isTrustedAppHostname(host)) return origin;
   }
   const referer = req.headers.get("referer")?.trim();
   if (referer) {
     try {
       const u = new URL(referer);
       const host = u.hostname.toLowerCase();
-      if (trustedAppHostnames().has(host)) {
+      if (isTrustedAppHostname(host)) {
         return u.origin;
       }
     } catch {

@@ -150,32 +150,53 @@ export async function POST(req: Request) {
   let emailedReset = false;
   let inviteEmailIssue: "missing_env" | "sendgrid_error" | "reset_link_failed" | null = null;
   let inviteEmailDetail: string | undefined;
+  const continueOrigin = getPublicAppOriginForRequest(req);
+
+  let resetLink: string;
   try {
-    const origin = getPublicAppOriginForRequest(req);
-    const resetLink = await auth.generatePasswordResetLink(email, {
-      url: `${origin}/auth/password-reset-complete`,
+    resetLink = await auth.generatePasswordResetLink(email, {
+      url: `${continueOrigin}/auth/password-reset-complete`,
       handleCodeInApp: false,
     });
-    const isBrandNew = createdNewAuthUser && temporaryPassword;
-    const emailResult = await sendStaffInviteEmail({
-      to: email,
-      resetLink,
-      inviterNote: isBrandNew
-        ? "A manager added you to the Paris Wellness staff portal."
-        : "You have been granted access to the Paris Wellness staff portal. Use the link below to sign in or reset your password if needed.",
-      subject: isBrandNew
-        ? "Staff portal — set your password"
-        : "Staff portal — access granted",
-    });
-    emailedReset = emailResult.sent;
-    if (!emailResult.sent) {
-      inviteEmailIssue = emailResult.issue;
-      inviteEmailDetail = emailResult.sendgridDetail;
-    }
   } catch (e) {
-    console.error("Password reset link / email failed", e);
+    console.error("Password reset link failed", e);
     inviteEmailIssue = "reset_link_failed";
     inviteEmailDetail = firebaseErrorMessage(e);
+    return NextResponse.json({
+      ok: true,
+      uid,
+      role,
+      createdNewAuthUser,
+      emailedReset: false,
+      inviteEmailIssue,
+      inviteEmailDetail,
+      continueOrigin,
+      ...(linkedProviderId ? { linkedProviderId, linkedProviderDisplayName } : {}),
+      ...(createdNewAuthUser && temporaryPassword
+        ? {
+            temporaryPassword,
+            passwordWarning:
+              `Could not create a password-reset link for ${continueOrigin}. Add that domain in Firebase Auth → Settings → Authorized domains, then re-send the invite. Until then, share this one-time password securely:`,
+          }
+        : {}),
+    });
+  }
+
+  const isBrandNew = createdNewAuthUser && temporaryPassword;
+  const emailResult = await sendStaffInviteEmail({
+    to: email,
+    resetLink,
+    inviterNote: isBrandNew
+      ? "A manager added you to the Paris Wellness staff portal."
+      : "You have been granted access to the Paris Wellness staff portal. Use the link below to sign in or reset your password if needed.",
+    subject: isBrandNew
+      ? "Staff portal — set your password"
+      : "Staff portal — access granted",
+  });
+  emailedReset = emailResult.sent;
+  if (!emailResult.sent) {
+    inviteEmailIssue = emailResult.issue;
+    inviteEmailDetail = emailResult.sendgridDetail;
   }
 
   return NextResponse.json({
@@ -185,6 +206,7 @@ export async function POST(req: Request) {
     createdNewAuthUser,
     emailedReset,
     inviteEmailIssue,
+    continueOrigin,
     ...(linkedProviderId ? { linkedProviderId, linkedProviderDisplayName } : {}),
     ...(inviteEmailDetail ? { inviteEmailDetail } : {}),
     ...(createdNewAuthUser && !emailedReset && temporaryPassword

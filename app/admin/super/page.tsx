@@ -131,7 +131,16 @@ function detectProviderIssues(rows: ProviderRow[]): ProviderIssue[] {
 
 function inviteEmailIssueHint(issue?: InviteStaffResponse["inviteEmailIssue"]): string {
   if (!issue) return "";
-  return " Email was not sent — ask your web person to fix outgoing email (see Email delivery section below).";
+  if (issue === "reset_link_failed") {
+    return " The password-reset link could not be created. Add the domain you use to sign in (e.g. rub-club.vercel.app) under Firebase Auth → Settings → Authorized domains, then re-send the invite.";
+  }
+  return " Email was not sent — check Email delivery below or send a test email.";
+}
+
+function inviteDetailLabel(issue?: InviteStaffResponse["inviteEmailIssue"]): string {
+  if (issue === "reset_link_failed") return "Firebase";
+  if (issue === "sendgrid_error" || issue === "missing_env") return "SendGrid";
+  return "Error";
 }
 
 function formatInviteResult(
@@ -168,7 +177,7 @@ function formatInviteResult(
   const withLink =
     joined.includes("Linked to provider") || !linkNote ? joined : `${joined}${linkNote}`;
   if (data.inviteEmailDetail?.trim()) {
-    return `${withLink} SendGrid: ${data.inviteEmailDetail.trim()}`;
+    return `${withLink} ${inviteDetailLabel(data.inviteEmailIssue)}: ${data.inviteEmailDetail.trim()}`;
   }
   return withLink;
 }
@@ -783,7 +792,8 @@ export default function SuperAdminPage() {
                 {lastInviteResult.inviteEmailDetail?.trim() &&
                 !lastInviteResult.message.includes(lastInviteResult.inviteEmailDetail.trim()) ? (
                   <p className="mt-2 rounded bg-white/70 px-2 py-1 text-xs font-medium">
-                    SendGrid: {lastInviteResult.inviteEmailDetail.trim()}
+                    {inviteDetailLabel(lastInviteResult.inviteEmailIssue)}:{" "}
+                    {lastInviteResult.inviteEmailDetail.trim()}
                   </p>
                 ) : null}
                 {lastInviteResult.temporaryPassword ? (
