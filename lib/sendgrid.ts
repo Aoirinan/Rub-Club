@@ -7,20 +7,87 @@ let configured = false;
  * Canonical names: SENDGRID_API_KEY, SENDGRID_FROM_EMAIL (see env.example).
  * Aliases below match common Vercel typos / naming from other tools.
  */
+function firstNonEmpty(...values: Array<string | undefined>): string {
+  for (const v of values) {
+    const t = v?.trim();
+    if (t) return t;
+  }
+  return "";
+}
+
 export function getSendgridApiKey(): string {
-  const v =
-    process.env.SENDGRID_API_KEY?.trim() ??
-    process.env.SEND_GRID?.trim() ??
-    process.env.send_grid?.trim();
-  return v ?? "";
+  return resolveSendgridCredentials().key;
 }
 
 export function getSendgridFromEmail(): string {
-  const v =
-    process.env.SENDGRID_FROM_EMAIL?.trim() ??
-    process.env.sendgridfromemail?.trim() ??
-    process.env.SENDGRIDFROMEMAIL?.trim();
-  return v ?? "";
+  return resolveSendgridCredentials().fromRaw;
+}
+
+function resolveSendgridCredentials(): { key: string; fromRaw: string } {
+  const key = firstNonEmpty(
+    process.env.SENDGRID_API_KEY,
+    process.env.SEND_GRID,
+    process.env.send_grid,
+  );
+  const fromRaw = firstNonEmpty(
+    process.env.SENDGRID_FROM_EMAIL,
+    process.env.sendgridfromemail,
+    process.env.SENDGRIDFROMEMAIL,
+  );
+
+  const keyLooksEmail = isValidOutboundFromEmail(key);
+  const fromLooksSg = fromRaw.startsWith("SG.");
+
+  if (fromLooksSg && keyLooksEmail) {
+    return { key: fromRaw, fromRaw: key };
+  }
+
+  return { key, fromRaw };
+}
+
+function getSendgridFromEmailNormalizedFromRaw(raw: string): string {
+  return normalizeSingleSenderEmail(raw);
+}
+
+export type SendgridEnvDiagnostics = {
+  hasApiKey: boolean;
+  hasFromEmail: boolean;
+  sendgridConfigured: boolean;
+  fromEnvInvalidFormat: boolean;
+  /** API key env looks like SG.xxx */
+  apiKeyLooksValid: boolean;
+  /** FROM env normalizes to a valid email */
+  fromLooksValid: boolean;
+  /** FROM has SG. prefix — likely swapped with API key in Vercel */
+  fromLooksLikeApiKey: boolean;
+  /** API key env looks like an email — likely swapped with FROM in Vercel */
+  apiKeyLooksLikeEmail: boolean;
+  likelySwapped: boolean;
+};
+
+export function getSendgridEnvDiagnostics(): SendgridEnvDiagnostics {
+  const { key, fromRaw } = resolveSendgridCredentials();
+  const fromNorm = getSendgridFromEmailNormalizedFromRaw(fromRaw);
+  const hasApiKey = Boolean(key);
+  const hasFromEmail = Boolean(fromRaw);
+  const fromLooksValid = isValidOutboundFromEmail(fromNorm);
+  const apiKeyLooksValid = key.startsWith("SG.");
+  const fromLooksLikeApiKey = fromRaw.startsWith("SG.");
+  const apiKeyLooksLikeEmail = isValidOutboundFromEmail(key);
+  const likelySwapped = fromLooksLikeApiKey && apiKeyLooksLikeEmail;
+  const fromEnvInvalidFormat = hasFromEmail && !fromLooksValid && !fromLooksLikeApiKey;
+
+  return {
+    hasApiKey,
+    hasFromEmail,
+    sendgridConfigured: hasApiKey && fromLooksValid,
+    fromEnvInvalidFormat,
+    apiKeyLooksValid,
+    fromLooksValid,
+    fromLooksLikeApiKey,
+    apiKeyLooksLikeEmail,
+    likelySwapped,
+  };
 }
 
 /** Strip quotes, first line only, optional `Name <addr>` / JSON `{"email":...}` — Vercel pastes often break SendGrid "from". */
@@ -76,7 +143,7 @@ export type EmailAttachment = {
 
 export type OutboundEmailResult =
   | { ok: true }
-  | { ok: false; reason: "missing_api_key" | "invalid_from_email" | "send_failed" };
+  | { ok: false; reason: "missing_api_key" | "invalid_from_email" | "send_failed"; detail?: string };
 
 /** Sends mail when SendGrid is configured; returns whether delivery was attempted successfully. */
 export async function sendOutboundEmail(params: {
@@ -120,7 +187,7 @@ export async function sendOutboundEmail(params: {
     return { ok: true };
   } catch (err) {
     console.error("[sendgrid] send failed to", params.to, err);
-    return { ok: false, reason: "send_failed" };
+    return { ok: false, reason: "send_failed", detail: sendgridDisplayForAdmin(err) };
   }
 }
 
@@ -162,7 +229,7 @@ function sendgridUserFacingDetail(e: unknown): string | undefined {
 }
 
 /** Human-readable line for superadmin when SendGrid send fails. */
-function sendgridDisplayForAdmin(e: unknown): string {
+export function sendgridDisplayForAdmin(e: unknown): string {
   const fromErrors = sendgridUserFacingDetail(e);
   if (fromErrors) return fromErrors;
 

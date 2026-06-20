@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireStaff, verifyBearerUid } from "@/lib/staff-auth";
-
-import { getSendgridApiKey, getSendgridFromEmail, getSendgridFromEmailNormalized, isValidOutboundFromEmail } from "@/lib/sendgrid";
+import { getSendgridEnvDiagnostics } from "@/lib/sendgrid";
 
 export const runtime = "nodejs";
 
@@ -20,20 +19,19 @@ export async function GET(req: Request) {
     }
   }
 
-  const key = getSendgridApiKey();
-  const rawFrom = getSendgridFromEmail();
-  const fromNorm = getSendgridFromEmailNormalized();
-  const hasValidFrom = isValidOutboundFromEmail(fromNorm);
-  const fromEnvInvalidFormat = rawFrom.trim().length > 0 && !hasValidFrom;
-
+  const diagnostics = getSendgridEnvDiagnostics();
   const officeTo = process.env.OFFICE_NOTIFICATION_EMAIL?.trim() ?? "";
 
   return NextResponse.json({
-    sendgridConfigured: Boolean(key && hasValidFrom),
-    hasApiKey: Boolean(key),
-    hasFromEmail: hasValidFrom,
-    fromEnvInvalidFormat,
-    /** Set when contact/booking office notification copies can be sent (address not exposed). */
+    sendgridConfigured: diagnostics.sendgridConfigured,
+    hasApiKey: diagnostics.hasApiKey,
+    hasFromEmail: diagnostics.hasFromEmail,
+    fromEnvInvalidFormat: diagnostics.fromEnvInvalidFormat,
+    apiKeyLooksValid: diagnostics.apiKeyLooksValid,
+    fromLooksValid: diagnostics.fromLooksValid,
+    likelySwapped: diagnostics.likelySwapped,
+    fromLooksLikeApiKey: diagnostics.fromLooksLikeApiKey,
+    apiKeyLooksLikeEmail: diagnostics.apiKeyLooksLikeEmail,
     officeNotificationConfigured: officeTo.length > 0,
   });
 }

@@ -52,6 +52,11 @@ type EmailStatus = {
   hasApiKey: boolean;
   hasFromEmail: boolean;
   fromEnvInvalidFormat?: boolean;
+  apiKeyLooksValid?: boolean;
+  fromLooksValid?: boolean;
+  likelySwapped?: boolean;
+  fromLooksLikeApiKey?: boolean;
+  apiKeyLooksLikeEmail?: boolean;
   officeNotificationConfigured?: boolean;
 };
 
@@ -160,7 +165,12 @@ function formatInviteResult(
     );
   }
   const joined = parts.join(" ");
-  return joined.includes("Linked to provider") || !linkNote ? joined : `${joined}${linkNote}`;
+  const withLink =
+    joined.includes("Linked to provider") || !linkNote ? joined : `${joined}${linkNote}`;
+  if (data.inviteEmailDetail?.trim()) {
+    return `${withLink} SendGrid: ${data.inviteEmailDetail.trim()}`;
+  }
+  return withLink;
 }
 
 type LastInviteResult = InviteStaffResponse & {
@@ -364,6 +374,24 @@ export default function SuperAdminPage() {
     } catch {
       setMessage("Could not copy to clipboard. Select and copy the password manually.");
     }
+  }
+
+  async function sendTestEmail(): Promise<{ ok: boolean; detail?: string; to?: string }> {
+    if (!auth?.currentUser) return { ok: false, detail: "Not signed in." };
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch("/api/admin/email-test", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      detail?: string;
+      to?: string;
+    };
+    if (data.ok) {
+      await loadEmailStatus(token);
+    }
+    return { ok: Boolean(data.ok), detail: data.detail, to: data.to };
   }
 
   async function deleteStaffRow(targetUid: string) {
@@ -640,7 +668,7 @@ export default function SuperAdminPage() {
 
       {isOperations ? (
         <>
-          <OpsEmailStatusBanner emailStatus={emailStatus} />
+          <OpsEmailStatusBanner emailStatus={emailStatus} onSendTestEmail={sendTestEmail} />
 
           <OpsCollapsibleSection
             title="Team logins"
@@ -752,6 +780,12 @@ export default function SuperAdminPage() {
                       : "Invite saved"}
                 </p>
                 <p className="mt-1">{lastInviteResult.message}</p>
+                {lastInviteResult.inviteEmailDetail?.trim() &&
+                !lastInviteResult.message.includes(lastInviteResult.inviteEmailDetail.trim()) ? (
+                  <p className="mt-2 rounded bg-white/70 px-2 py-1 text-xs font-medium">
+                    SendGrid: {lastInviteResult.inviteEmailDetail.trim()}
+                  </p>
+                ) : null}
                 {lastInviteResult.temporaryPassword ? (
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <code className="rounded bg-white px-2 py-1 font-mono text-xs">
