@@ -153,18 +153,17 @@ export default async function ParisChiroServicePage({ params }: Props) {
         <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
           <div className="prose prose-stone max-w-none">
             {hasImages ? (
-              <ParisChiroPageContent
-                body={page.body}
-                heroImage={page.heroImage}
-                galleryImages={page.galleryImages}
-              />
+              <ParisChiroPageContent body={page.body} heroImage={page.heroImage} />
             ) : (
               <SsMarkdownBody body={page.body} />
             )}
           </div>
         </section>
         {stretchFlexExercises.length ? (
-          <StretchFlexExercises exercises={stretchFlexExercises} />
+          <StretchFlexExercises
+            exercises={stretchFlexExercises}
+            photos={page.galleryImages ?? []}
+          />
         ) : null}
         <LocationHoursSection location={paris} hours={parisHours} />
         <ScheduleCtaCard
