@@ -1,13 +1,31 @@
 import Image from "next/image";
 import type { StretchFlexExercise } from "@/lib/stretch-flex";
 
+/** Single editable gallery photo (uniform 4:3, rounded, subtle border + shadow). */
+function GalleryPhoto({ src }: { src: string }) {
+  return (
+    <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-stone-200 shadow-sm">
+      <Image
+        src={src}
+        alt="Stretch & Flex Rehab"
+        fill
+        loading="lazy"
+        sizes="(max-width: 1024px) 45vw, 320px"
+        className="object-cover"
+        unoptimized={src.startsWith("http")}
+      />
+    </div>
+  );
+}
+
 /**
  * Stretch & Flex Rehab exercises (CURSOR_PROMPT §7): each movement's name,
  * verbatim instructions, and photo gallery (next/image, lazy-loaded below the
  * fold). Exercises with no photos yet render name + instructions only.
  *
  * `photos` are the editable page gallery images (CMS: Stretch & Flex Rehab →
- * Gallery photo 1/2/3) shown beside the movement list.
+ * Gallery photo 1/2/3). The first two sit in the right column beside the
+ * movement list; the third sits in the left column under the list.
  */
 export function StretchFlexExercises({
   exercises,
@@ -18,6 +36,9 @@ export function StretchFlexExercises({
 }) {
   const gallery = photos.map((p) => p.trim()).filter(Boolean);
   if (!exercises.length && !gallery.length) return null;
+
+  const rightPhotos = gallery.slice(0, 2);
+  const leftPhoto = gallery[2] ?? "";
 
   return (
     <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
@@ -58,24 +79,16 @@ export function StretchFlexExercises({
               ) : null}
             </div>
           ))}
+          {leftPhoto ? (
+            <div className="max-w-[360px]">
+              <GalleryPhoto src={leftPhoto} />
+            </div>
+          ) : null}
         </div>
-        {gallery.length ? (
-          <div className="grid grid-cols-3 gap-3 lg:grid-cols-1 lg:gap-4">
-            {gallery.map((src, i) => (
-              <div
-                key={`${src}-${i}`}
-                className="relative aspect-[4/3] overflow-hidden rounded-xl border border-stone-200 shadow-sm"
-              >
-                <Image
-                  src={src}
-                  alt="Stretch & Flex Rehab"
-                  fill
-                  loading="lazy"
-                  sizes="(max-width: 1024px) 30vw, 320px"
-                  className="object-cover"
-                  unoptimized={src.startsWith("http")}
-                />
-              </div>
+        {rightPhotos.length ? (
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:gap-4">
+            {rightPhotos.map((src, i) => (
+              <GalleryPhoto key={`${src}-${i}`} src={src} />
             ))}
           </div>
         ) : null}
