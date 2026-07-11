@@ -1,0 +1,180 @@
+
+=== massage-paris  (https://www.massageparistexas.com) ===
+  ok  index                                    12 blocks, 35 assets
+  ok  gentle-massage-therapy                   7 blocks, 2 assets
+  ok  deep-tissue-massage                      30 blocks, 2 assets
+  ok  massage-therapy                          13 blocks, 2 assets
+  ok  staff                                    1 blocks, 26 assets
+  ok  therapeutic-massage                      14 blocks, 2 assets
+  ok  therapeutic---swedish                    27 blocks, 5 assets
+  ok  prenatal-massage                         29 blocks, 5 assets
+  ok  sports-massage                           21 blocks, 5 assets
+  ok  joint-pain-relief                        21 blocks, 2 assets
+  ok  muscle-pain-treatments                   8 blocks, 2 assets
+  ok  chiropractic-care                        14 blocks, 5 assets
+  ok  hot-stone-massage                        10 blocks, 5 assets
+  ok  neck-pain-relief                         13 blocks, 2 assets
+  ok  natural-stress-relief                    9 blocks, 2 assets
+  ok  back-pain-relief                         12 blocks, 2 assets
+  ok  injury-pain-relief                       12 blocks, 2 assets
+  ok  sciatica                                 11 blocks, 2 assets
+  ok  massage-prices                           2 blocks, 2 assets
+  ok  contact                                  1 blocks, 2 assets
+  ok  patient-forms                            6 blocks, 3 assets
+  ok  sitemap                                  24 blocks, 2 assets
+  ok  3d-spine-simulator                       1 blocks, 2 assets
+  ok  storage__app__media__the-rub-club-new-client-form-1.pdf 0 blocks, 0 assets
+  ok  about                                    17 blocks, 2 assets
+  ok  services                                 6 blocks, 2 assets
+  ok  plugins__editor__cms__content__baystonechiro__3d_spine__nerve_chart__postures.html 73 blocks, 22 assets
+  ok  auto-injury                              5 blocks, 2 assets
+  ok  vertebral-subluxation-complex            10 blocks, 2 assets
+  ok  sports-injury                            4 blocks, 2 assets
+  ok  personal-injury                          9 blocks, 2 assets
+  ok  what-is-chiropractic-massage-therapy     13 blocks, 2 assets
+  ok  common-chiropractic-conditions           26 blocks, 2 assets
+  ok  plugins__editor__cms__content__baystonechiro__3d_spine__nerve_chart__subluxation-degeneration.html 16 blocks, 1 assets
+  ok  plugins__editor__cms__content__baystonechiro__3d_spine__nerve_chart__nerve.html 53 blocks, 29 assets
+  ok  burn-scar-massage                        3 blocks, 2 assets
+  ok  swedish-massage                          4 blocks, 2 assets
+  ok  relaxation-massage                       4 blocks, 2 assets
+  ok  thai-massage                             6 blocks, 2 assets
+  ok  electrical-muscle-stimulation            6 blocks, 2 assets
+  ok  whole-body-cryotherapy                   9 blocks, 2 assets
+  ok  ice-pack-cryotherapy                     6 blocks, 2 assets
+  ok  interferential-current-therapy           6 blocks, 2 assets
+  ok  acupuncture                              11 blocks, 2 assets
+  ok  microcurrent-therapy                     4 blocks, 2 assets
+  ok  cold-laser-therapy                       16 blocks, 2 assets
+  ok  custom-foot-orthotics                    6 blocks, 2 assets
+  ok  spinal-decompression                     4 blocks, 2 assets
+  ok  degenerative-disc-disease                11 blocks, 2 assets
+  ok  adjustments-and-manipulation             6 blocks, 5 assets
+  ok  therapeutic-exercise                     16 blocks, 6 assets
+  ok  therapeutic-ultrasound                   7 blocks, 2 assets
+  --> 52 pages, 0 left unqueued
+
+=== chiro-paris  (https://www.chiropracticparistexas.com) ===
+  ! ASSET FAILED  https://www.chiropracticparistexas.com/storage/app/media/_SHARED/chiro_spine_model_transparent.png  (404)
+  ok  index                                    3 blocks, 16 assets
+  ok  about                                    16 blocks, 5 assets
+  ok  testimonials__page                       3 blocks, 9 assets
+  ok  meet-the-doctor                          10 blocks, 17 assets
+  ok  staff                                    3 blocks, 29 assets
+  ok  services                                 30 blocks, 5 assets
+  ok  auto-injury                              15 blocks, 5 assets
+  ok  injuries                                 4 blocks, 5 assets
+  ok  stretch---flex-rehab                     2 blocks, 17 assets
+  ok  what-is-chiropractic-massage-therapy     8 blocks, 5 assets
+  ok  sports-injury                            7 blocks, 5 assets
+  ok  personal-injury                          9 blocks, 5 assets
+  ok  chiropractic-massage-therapy             18 blocks, 5 assets
+  ok  hot-stone-massage                        3 blocks, 5 assets
+  ok  prenatal-massage                         6 blocks, 5 assets
+  ok  relaxation-massage                       4 blocks, 5 assets
+  ok  deep-tissue-massage                      13 blocks, 5 assets
+  ok  swedish-massage                          4 blocks, 5 assets
+  ok  cryotherapy                              2 blocks, 5 assets
+  ok  ice-pack-cryotherapy                     5 blocks, 5 assets
+  ok  sports-massage                           7 blocks, 5 assets
+  ok  spinal-decompression                     4 blocks, 5 assets
+  ok  electrical-muscle-stimulation            6 blocks, 5 assets
+  ok  electrical-stimulation-therapies         4 blocks, 5 assets
+  ok  adjustments-and-manipulation             11 blocks, 8 assets
+  ok  low-back-pain-treatments                 21 blocks, 5 assets
+  ok  neck-pain-treatments                     15 blocks, 5 assets
+  ok  sciatica-treatments                      13 blocks, 5 assets
+  ok  common-chiropractic-conditions           20 blocks, 5 assets
+  ok  knee-pain-treatments                     1 blocks, 5 assets
+  ok  pinched-nerve-treatments                 1 blocks, 5 assets
+  ok  herniated-disc-treatments                16 blocks, 5 assets
+  ok  therapeutic-exercise                     16 blocks, 9 assets
+  ok  pediatric-care                           8 blocks, 5 assets
+  ok  degenerative-disc-disease                11 blocks, 5 assets
+  ok  prenatal-chiropractic                    3 blocks, 5 assets
+  ok  therapeutic-ultrasound                   7 blocks, 5 assets
+  ok  injury-rehab                             14 blocks, 5 assets
+  ok  new-patients                             5 blocks, 5 assets
+  ok  spine-care                               24 blocks, 5 assets
+  ok  spine-specialist                         17 blocks, 9 assets
+  ok  wellness-care-plans                      16 blocks, 5 assets
+  ok  patient-resources                        8 blocks, 5 assets
+  ok  contact                                  4 blocks, 5 assets
+  ok  patient-forms                            7 blocks, 7 assets
+  ok  about-chiro                              6 blocks, 5 assets
+  ok  spinal-wellness-tips                     13 blocks, 5 assets
+  ok  links                                    10 blocks, 5 assets
+  ok  q-and-a                                  20 blocks, 5 assets
+  ! PAGE FAILED  https://www.chiropracticparistexas.com/mid-back  (404)
+  ! PAGE FAILED  https://www.chiropracticparistexas.com/shoulder-and-clavicle  (404)
+  ! PAGE FAILED  https://www.chiropracticparistexas.com/head-and-neck  (404)
+  ! PAGE FAILED  https://www.chiropracticparistexas.com/upper-back  (404)
+  ok  sitemap                                  49 blocks, 5 assets
+  ok  disclaimers__privacy_policy              12 blocks, 5 assets
+  ! PAGE FAILED  https://www.chiropracticparistexas.com/elbow-hand-and-wrist  (404)
+  ! PAGE FAILED  https://www.chiropracticparistexas.com/lower-back  (404)
+  ok  vertebral-subluxation-complex            10 blocks, 5 assets
+  ok  thai-massage                             4 blocks, 5 assets
+  ok  disclaimers__hipaa_policy                31 blocks, 5 assets
+  ok  disclaimers__terms_of_use                17 blocks, 5 assets
+  ok  interferential-current-therapy           14 blocks, 5 assets
+  ok  acupuncture                              11 blocks, 5 assets
+  ok  cold-laser-therapy                       16 blocks, 5 assets
+  ! PAGE FAILED  https://www.chiropracticparistexas.com/microcurrent-therapy  (404)
+  ok  custom-foot-orthotics                    6 blocks, 5 assets
+  ok  storage__app__media__sedona__new_pt_paperwork.pdf 1 blocks, 0 assets
+  ! PAGE FAILED  https://www.chiropracticparistexas.com/burn-scar-massage  (404)
+  ok  storage__app__media__sedona__personal_injury_form.pdf 4 blocks, 0 assets
+  ok  educational-videos                       3 blocks, 5 assets
+  ok  exercise-videos                          2 blocks, 5 assets
+  ! PAGE FAILED  https://www.chiropracticparistexas.com/cdn-cgi/l/email-protection  (404)
+  --> 63 pages, 0 left unqueued
+
+=== chiro-sulphur  (https://www.chiropracticsulphursprings.com) ===
+  ok  index                                    5 blocks, 4 assets
+  ok  about-us                                 2 blocks, 4 assets
+  ok  new-patients                             4 blocks, 4 assets
+  ok  meet-the-staff                           3 blocks, 4 assets
+  ok  covid--19                                2 blocks, 4 assets
+  ok  adjustments-and-manipulation             6 blocks, 4 assets
+  ok  acupuncture                              11 blocks, 4 assets
+  ok  testimonials                             2 blocks, 4 assets
+  ok  services                                 22 blocks, 4 assets
+  ok  degenerative-disc-disease                11 blocks, 4 assets
+  ok  common-chiropractic-conditions           4 blocks, 4 assets
+  ok  ice-pack-cryotherapy                     5 blocks, 4 assets
+  ok  electrical-muscle-stimulation            6 blocks, 4 assets
+  ok  therapeutic-exercise                     16 blocks, 4 assets
+  ok  therapeutic-ultrasound                   7 blocks, 4 assets
+  ok  postural-rehabilitation                  3 blocks, 4 assets
+  ok  spinal-decompression                     4 blocks, 4 assets
+  ok  auto-injury                              8 blocks, 4 assets
+  ok  sports-injury                            4 blocks, 4 assets
+  ok  injuries                                 4 blocks, 4 assets
+  ok  personal-injury                          9 blocks, 4 assets
+  ok  about-chiro                              5 blocks, 4 assets
+  ok  q-and-a                                  20 blocks, 4 assets
+  ok  links                                    10 blocks, 4 assets
+  ok  educational-videos                       2 blocks, 4 assets
+  ok  appointment-request                      1 blocks, 4 assets
+  ok  vertebral-subluxation-complex            10 blocks, 4 assets
+  ok  spinal-wellness-tips                     13 blocks, 4 assets
+  ok  exercise-videos                          2 blocks, 4 assets
+  ok  contact-us                               2 blocks, 4 assets
+  ok  appointment                              1 blocks, 4 assets
+  ok  sitemap                                  33 blocks, 4 assets
+  ! PAGE FAILED  https://www.chiropracticsulphursprings.com/chiropractic-massage-therapy  (404)
+  ! PAGE FAILED  https://www.chiropracticsulphursprings.com/what-is-chiropractic-massage-therapy  (404)
+  ! PAGE FAILED  https://www.chiropracticsulphursprings.com/relaxation-massage  (404)
+  ! PAGE FAILED  https://www.chiropracticsulphursprings.com/prenatal-massage  (404)
+  ! PAGE FAILED  https://www.chiropracticsulphursprings.com/deep-tissue-massage  (404)
+  ! PAGE FAILED  https://www.chiropracticsulphursprings.com/swedish-massage  (404)
+  ! PAGE FAILED  https://www.chiropracticsulphursprings.com/sports-massage  (404)
+  --> 32 pages, 0 left unqueued
+
+=== DONE ===
+pages:  147
+assets: 198 ok, 1 failed
+
+Failed assets (grab these manually):
+  https://www.chiropracticparistexas.com/storage/app/media/_SHARED/chiro_spine_model_transparent.png

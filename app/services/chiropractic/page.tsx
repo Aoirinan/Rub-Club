@@ -17,13 +17,14 @@ import { pageKeywords } from "@/lib/seo-keywords";
 import { getDisplayLocations } from "@/lib/cms-display";
 import { getParisOfficeHours } from "@/lib/office-hours";
 import { CHIRO } from "@/lib/home-verbatim";
-import { getPracticePage, listPracticeTestimonials } from "@/lib/practice-pages";
+import { getPracticePage } from "@/lib/practice-pages";
 import { practiceThemeStyle } from "@/components/practice/theme";
 import { PracticeHero } from "@/components/practice/PracticeHero";
 import { QuickActionsRow } from "@/components/practice/QuickActionsRow";
 import { ServicesGrid } from "@/components/practice/ServicesGrid";
 import { AboutWelcome } from "@/components/practice/AboutWelcome";
-import { PatientReviews } from "@/components/practice/PatientReviews";
+// CURSOR_PROMPT §8a: PatientReviews intentionally not rendered on the
+// chiropractic page (component retained in the repo for other pages).
 import { TeamStrip, type PracticeTeamMember } from "@/components/practice/TeamStrip";
 import {
   LocationContactBlock,
@@ -49,9 +50,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export const revalidate = 60;
 
 export default async function ChiropracticServicePage() {
-  const [page, testimonials, parisHours, displayLocs] = await Promise.all([
+  const [page, parisHours, displayLocs] = await Promise.all([
     getPracticePage("paris-chiro"),
-    listPracticeTestimonials("paris-chiro", { publishedOnly: true }),
     getParisOfficeHours(),
     getDisplayLocations(),
   ]);
@@ -118,7 +118,7 @@ export default async function ChiropracticServicePage() {
           {page.aboutBlocks.map((block) => (
             <AboutWelcome key={block.id} data={block} phone={paris.phonePrimary} />
           ))}
-          <PatientReviews data={page.reviews} testimonials={testimonials} />
+          {/* CURSOR_PROMPT §8a: reviews section removed from the chiropractic page. */}
           <ExtrasSection extras={page.extras} />
           <LocationContactBlock
             data={page.locationBlock}

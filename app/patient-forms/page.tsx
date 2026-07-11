@@ -37,14 +37,8 @@ export default async function PatientFormsPage() {
 
   const ssFirst = isSulphurSpringsBrand(brand);
   const locationCards = ssFirst
-    ? [
-        { key: "ss", label: "Sulphur Springs, TX", phone: displayLocs.sulphur_springs.phonePrimary },
-        { key: "paris", label: "Paris, TX", phone: displayLocs.paris.phonePrimary },
-      ]
-    : [
-        { key: "paris", label: "Paris, TX", phone: displayLocs.paris.phonePrimary },
-        { key: "ss", label: "Sulphur Springs, TX", phone: displayLocs.sulphur_springs.phonePrimary },
-      ];
+    ? [displayLocs.sulphur_springs, displayLocs.paris]
+    : [displayLocs.paris, displayLocs.sulphur_springs];
 
   return (
     <div style={practiceThemeStyle(brand.loc)}>
@@ -115,16 +109,31 @@ export default async function PatientFormsPage() {
           </div>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             {locationCards.map((loc) => (
-              <div key={loc.key} className="rounded border border-stone-200 bg-white p-4">
+              <div key={loc.id} className="rounded border border-stone-200 bg-white p-4">
                 <p className="text-xs font-bold uppercase tracking-wide text-stone-600">
-                  {loc.label}
+                  {loc.shortName}
                 </p>
                 <a
-                  href={telHref(loc.phone)}
-                  className="mt-1 block text-lg font-black text-[var(--pp-heading)] hover:underline"
+                  href={loc.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="focus-ring mt-2 block text-sm text-stone-700 hover:underline"
                 >
-                  {loc.phone}
+                  {loc.addressLines.map((line) => (
+                    <span key={line} className="block">
+                      {line}
+                    </span>
+                  ))}
                 </a>
+                <a
+                  href={telHref(loc.phonePrimary)}
+                  className="mt-2 block text-lg font-black text-[var(--pp-heading)] hover:underline"
+                >
+                  {loc.phonePrimary}
+                </a>
+                {loc.fax?.trim() ? (
+                  <p className="mt-1 text-sm text-stone-600">Fax: {loc.fax}</p>
+                ) : null}
               </div>
             ))}
           </div>

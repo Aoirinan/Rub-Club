@@ -33,6 +33,11 @@ export async function GET(req: Request) {
     fromLooksLikeApiKey: diagnostics.fromLooksLikeApiKey,
     apiKeyLooksLikeEmail: diagnostics.apiKeyLooksLikeEmail,
     fromUsesFreeMailbox: diagnostics.fromUsesFreeMailbox,
+    fromEmail: diagnostics.fromEmail,
+    fromEmailDomain: diagnostics.fromEmailDomain,
+    fromDisplayName: diagnostics.fromDisplayName,
+    isClinicFromDomain: diagnostics.isClinicFromDomain,
+    isTransitionFromDomain: diagnostics.isTransitionFromDomain,
     officeNotificationConfigured: officeTo.length > 0,
   });
 }

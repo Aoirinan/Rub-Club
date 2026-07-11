@@ -187,6 +187,7 @@ export async function POST(req: Request) {
   const emailResult = await sendStaffInviteEmail({
     to: email,
     resetLink,
+    loginOrigin: continueOrigin,
     inviterNote: isBrandNew
       ? `You have been added to the ${siteShortName} staff portal for scheduling and front-desk tools.`
       : `Your access to the ${siteShortName} staff portal has been updated.`,
@@ -214,7 +215,7 @@ export async function POST(req: Request) {
       ? {
           temporaryPassword,
           passwordWarning:
-            "SendGrid is not configured or email failed. Share this one-time password with the employee securely, then ask them to change it via Forgot password on the staff login page.",
+            "SendGrid is not configured or email failed. Share this one-time password with the employee securely, then ask a superadmin to send a password reset link from Scheduling & team.",
         }
       : {}),
   });

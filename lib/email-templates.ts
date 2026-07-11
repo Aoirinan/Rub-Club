@@ -137,7 +137,7 @@ function detailsTable(ctx: BookingEmailContext): string {
  */
 export function patientPendingEmail(
   ctx: BookingEmailContext,
-  opts?: { recurrenceNote?: string },
+  opts?: { recurrenceNote?: string; isFirstVisit?: boolean },
 ): {
   subject: string;
   text: string;
@@ -147,12 +147,16 @@ export function patientPendingEmail(
   const subject = `Request received — ${formatChicagoDateTimeShort(ctx.start)}`;
 
   const recLine = opts?.recurrenceNote?.trim();
+  const firstVisitNote = opts?.isFirstVisit
+    ? "This looks like your first visit with us — please arrive 10–15 minutes early for paperwork."
+    : "";
 
   const text = [
     `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
     "",
     "Thanks — we got your appointment request. The office will review it and email you again as soon as it is confirmed.",
     "",
+    ...(firstVisitNote ? [firstVisitNote, ""] : []),
     `Requested time: ${formatChicagoDateTimeLong(ctx.start)}`,
     `Service: ${serviceLineEmailLabel(ctx.serviceLine)} (${ctx.durationMin} min)`,
     `Provider: ${ctx.providerDisplayName || "First available"}`,
@@ -174,6 +178,11 @@ export function patientPendingEmail(
   const body = `
     <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
     <p style="margin:12px 0 0 0;">Thanks — we received your appointment request. The office will review it and email you again as soon as it is confirmed. You do not need to do anything else right now.</p>
+    ${
+      opts?.isFirstVisit
+        ? `<p style="margin:12px 0 0 0;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;font-size:14px;color:${TEXT};"><strong>First visit?</strong> Please arrive 10–15 minutes early for paperwork. Bring photo ID and your insurance card if you have one.</p>`
+        : ""
+    }
     <p style="margin:12px 0 0 0;padding:10px 12px;background:#fdf6e0;border:1px solid #f19f1f;border-radius:6px;font-size:14px;font-weight:700;color:${TEXT};">
       Status: PENDING — we have not yet confirmed this appointment.
     </p>
@@ -208,13 +217,32 @@ export function patientPendingEmail(
  * Patient email sent once the office has accepted the request.
  * This is the "real" confirmation — pair it with the ICS attachment.
  */
-export function patientAcceptedEmail(ctx: BookingEmailContext): {
+export function patientAcceptedEmail(
+  ctx: BookingEmailContext,
+  opts?: { isFirstVisit?: boolean },
+): {
   subject: string;
   text: string;
   html: string;
 } {
   const loc = LOCATIONS[ctx.locationId];
   const subject = `Appointment confirmed — ${formatChicagoDateTimeShort(ctx.start)}`;
+
+  const firstVisitLines = opts?.isFirstVisit
+    ? [
+        "Before your first visit:",
+        "• Arrive 10–15 minutes early for paperwork.",
+        "• Bring photo ID and your insurance card if you have one.",
+        "• Wear comfortable clothing.",
+        "",
+      ]
+    : [
+        "Before your visit:",
+        "• Arrive 10–15 minutes early for paperwork on a first visit (5 minutes for returning patients).",
+        "• Bring photo ID and your insurance card if you have one.",
+        "• Comfortable clothing is fine for both massage and chiropractic.",
+        "",
+      ];
 
   const text = [
     `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
@@ -226,11 +254,7 @@ export function patientAcceptedEmail(ctx: BookingEmailContext): {
     `Provider: ${ctx.providerDisplayName || "First available"}`,
     `Location: ${loc.name} — ${loc.addressLines.join(", ")}`,
     "",
-    "Before your visit:",
-    "• Arrive 10–15 minutes early for paperwork on a first visit (5 minutes for returning patients).",
-    "• Bring photo ID and your insurance card if you have one.",
-    "• Comfortable clothing is fine for both massage and chiropractic.",
-    "",
+    ...firstVisitLines,
     `To reschedule or cancel: call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
     ...(ctx.patientManageUrl
       ? ["", `Or use your secure link (same device / browser): ${ctx.patientManageUrl}`]
@@ -249,11 +273,17 @@ export function patientAcceptedEmail(ctx: BookingEmailContext): {
     <p style="margin:12px 0 0 0;">Good news — your appointment has been confirmed. We've attached a calendar invite (.ics) to add it to your calendar.</p>
     ${detailsTable(ctx)}
     ${prefNote}
-    <h2 style="margin:20px 0 6px 0;font-size:16px;color:${TEXT};">Before your visit</h2>
+    <h2 style="margin:20px 0 6px 0;font-size:16px;color:${TEXT};">${opts?.isFirstVisit ? "Before your first visit" : "Before your visit"}</h2>
     <ul style="margin:0;padding-left:18px;color:${TEXT};font-size:14px;line-height:1.6;">
-      <li>Arrive 10–15 minutes early for paperwork on a first visit (5 minutes for returning patients).</li>
-      <li>Bring photo ID and your insurance card if you have one.</li>
-      <li>Comfortable clothing is fine for massage and chiropractic appointments.</li>
+      ${
+        opts?.isFirstVisit
+          ? `<li>Arrive <strong>10–15 minutes early</strong> for paperwork.</li>
+             <li>Bring photo ID and your insurance card if you have one.</li>
+             <li>Comfortable clothing is fine for massage and chiropractic appointments.</li>`
+          : `<li>Arrive 10–15 minutes early for paperwork on a first visit (5 minutes for returning patients).</li>
+             <li>Bring photo ID and your insurance card if you have one.</li>
+             <li>Comfortable clothing is fine for massage and chiropractic appointments.</li>`
+      }
     </ul>
     <p style="margin:16px 0 0 0;font-size:14px;">
       Need to reschedule or cancel? Call
@@ -524,13 +554,32 @@ export function officeNotificationEmail(ctx: BookingEmailContext): {
 /**
  * Patient reminder email for an upcoming confirmed appointment.
  */
-export function patientReminderEmail(ctx: BookingEmailContext): {
+export function patientReminderEmail(
+  ctx: BookingEmailContext,
+  opts?: { isFirstVisit?: boolean },
+): {
   subject: string;
   text: string;
   html: string;
 } {
   const loc = LOCATIONS[ctx.locationId];
   const subject = `Reminder — ${formatChicagoDateTimeShort(ctx.start)}`;
+
+  const beforeVisitText = opts?.isFirstVisit
+    ? [
+        "Before your first visit:",
+        "• Arrive 10–15 minutes early for paperwork.",
+        "• Bring photo ID and your insurance card if you have one.",
+        "• Comfortable clothing is fine for both massage and chiropractic.",
+        "",
+      ]
+    : [
+        "Before your visit:",
+        "• Arrive 10–15 minutes early for paperwork on a first visit (5 minutes for returning patients).",
+        "• Bring photo ID and your insurance card if you have one.",
+        "• Comfortable clothing is fine for both massage and chiropractic.",
+        "",
+      ];
 
   const text = [
     `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
@@ -542,11 +591,7 @@ export function patientReminderEmail(ctx: BookingEmailContext): {
     `Provider: ${ctx.providerDisplayName || "First available"}`,
     `Location: ${loc.name} — ${loc.addressLines.join(", ")}`,
     "",
-    "Before your visit:",
-    "• Arrive 10–15 minutes early for paperwork on a first visit (5 minutes for returning patients).",
-    "• Bring photo ID and your insurance card if you have one.",
-    "• Comfortable clothing is fine for both massage and chiropractic.",
-    "",
+    ...beforeVisitText,
     `To reschedule or cancel: call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
     "",
     `Reference: ${ctx.bookingId}`,
@@ -556,11 +601,17 @@ export function patientReminderEmail(ctx: BookingEmailContext): {
     <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
     <p style="margin:12px 0 0 0;">Just a friendly reminder about your upcoming appointment.</p>
     ${detailsTable(ctx)}
-    <h2 style="margin:20px 0 6px 0;font-size:16px;color:${TEXT};">Before your visit</h2>
+    <h2 style="margin:20px 0 6px 0;font-size:16px;color:${TEXT};">${opts?.isFirstVisit ? "Before your first visit" : "Before your visit"}</h2>
     <ul style="margin:0;padding-left:18px;color:${TEXT};font-size:14px;line-height:1.6;">
-      <li>Arrive 10–15 minutes early for paperwork on a first visit (5 minutes for returning patients).</li>
-      <li>Bring photo ID and your insurance card if you have one.</li>
-      <li>Comfortable clothing is fine for massage and chiropractic appointments.</li>
+      ${
+        opts?.isFirstVisit
+          ? `<li>Arrive <strong>10–15 minutes early</strong> for paperwork.</li>
+             <li>Bring photo ID and your insurance card if you have one.</li>
+             <li>Comfortable clothing is fine for massage and chiropractic appointments.</li>`
+          : `<li>Arrive 10–15 minutes early for paperwork on a first visit (5 minutes for returning patients).</li>
+             <li>Bring photo ID and your insurance card if you have one.</li>
+             <li>Comfortable clothing is fine for massage and chiropractic appointments.</li>`
+      }
     </ul>
     <p style="margin:16px 0 0 0;font-size:14px;">
       Need to reschedule or cancel? Call
@@ -796,6 +847,197 @@ export function patientCustomEmail(
     preheader: params.message.slice(0, 100),
     heading: params.subject,
     body,
+  });
+
+  return { subject, text, html };
+}
+
+/**
+ * Patient email when an appointment time changes (reschedule).
+ */
+export function patientRescheduledEmail(
+  ctx: BookingEmailContext,
+  params: {
+    previousStart: DateTime;
+    rescheduledBy: "patient" | "staff";
+  },
+): { subject: string; text: string; html: string } {
+  const loc = LOCATIONS[ctx.locationId];
+  const subject = `Appointment moved — ${formatChicagoDateTimeShort(ctx.start)}`;
+  const opener =
+    params.rescheduledBy === "patient"
+      ? "This confirms your appointment time was updated using your secure online link."
+      : "The office moved your appointment to a new time.";
+
+  const text = [
+    `Hi ${ctx.name.split(" ")[0] || ctx.name},`,
+    "",
+    opener,
+    "",
+    `Previous time: ${formatChicagoDateTimeLong(params.previousStart)}`,
+    `New time: ${formatChicagoDateTimeLong(ctx.start)}`,
+    `Service: ${serviceLineEmailLabel(ctx.serviceLine)} (${ctx.durationMin} min)`,
+    `Provider: ${ctx.providerDisplayName || "First available"}`,
+    `Location: ${loc.name} — ${loc.addressLines.join(", ")}`,
+    "",
+    "An updated calendar invite (.ics) is attached when your appointment was already confirmed.",
+    "",
+    `Questions? Call ${loc.phonePrimary}${loc.phoneSecondary ? ` (massage desk ${loc.phoneSecondary})` : ""}.`,
+    ...(ctx.patientManageUrl
+      ? ["", `Manage online: ${ctx.patientManageUrl}`]
+      : ["", "Use the same manage link from your confirmation email to reschedule or cancel online."]),
+    "",
+    `Reference: ${ctx.bookingId}`,
+  ].join("\n");
+
+  const body = `
+    <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
+    <p style="margin:12px 0 0 0;">${escapeHtml(opener)}</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="margin-top:12px;border:1px solid #e6e2d3;border-radius:6px;">
+      <tr>
+        <td style="padding:10px 12px;border-bottom:1px solid #f0ecdd;font-size:13px;color:${MUTED};
+                   text-transform:uppercase;letter-spacing:1px;font-weight:700;width:120px;">Was</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f0ecdd;font-size:15px;color:${MUTED};
+                   text-decoration:line-through;">${escapeHtml(formatChicagoDateTimeLong(params.previousStart))}</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 12px;border-bottom:1px solid #f0ecdd;font-size:13px;color:${MUTED};
+                   text-transform:uppercase;letter-spacing:1px;font-weight:700;">Now</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f0ecdd;font-size:15px;color:${TEXT};font-weight:700;">${escapeHtml(formatChicagoDateTimeLong(ctx.start))}</td>
+      </tr>
+    </table>
+    ${detailsTable(ctx)}
+    <p style="margin:16px 0 0 0;font-size:14px;">
+      Questions? Call
+      <a href="tel:+1${loc.phonePrimary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phonePrimary)}</a>${
+        loc.phoneSecondary
+          ? ` (massage desk <a href="tel:+1${loc.phoneSecondary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phoneSecondary)}</a>)`
+          : ""
+      }.
+    </p>
+    ${
+      ctx.patientManageUrl
+        ? `<p style="margin:16px 0 0 0;font-size:14px;">
+      <a href="${escapeHtml(ctx.patientManageUrl)}" style="color:${PRIMARY};font-weight:700;">Reschedule or cancel online</a>
+    </p>`
+        : ""
+    }
+    <p style="margin:16px 0 0 0;font-size:12px;color:${MUTED};">Reference: ${escapeHtml(ctx.bookingId)}</p>
+  `;
+
+  const html = brandedShell({
+    preheader: `Moved to ${formatChicagoDateTimeShort(ctx.start)}.`,
+    heading: "Your appointment was rescheduled",
+    body,
+    ctaText: "View location and map",
+    ctaHref: loc.mapsUrl,
+  });
+
+  return { subject, text, html };
+}
+
+/** Office alert when a patient reschedules online. */
+export function officeRescheduleNotificationEmail(
+  ctx: BookingEmailContext,
+  params: { previousStart: DateTime },
+): { subject: string; text: string; html: string } {
+  const subject = `Patient rescheduled: ${ctx.name} → ${formatChicagoDateTimeShort(ctx.start)}`;
+  const text = [
+    "PATIENT RESCHEDULED ONLINE",
+    "",
+    `Reference: ${ctx.bookingId}`,
+    `Patient: ${ctx.name}`,
+    `Email: ${ctx.email}`,
+    ...(ctx.phone ? [`Phone: ${ctx.phone}`] : []),
+    "",
+    `Previous: ${formatChicagoDateTimeLong(params.previousStart)}`,
+    `New: ${formatChicagoDateTimeLong(ctx.start)}`,
+    `Service: ${serviceLineEmailLabel(ctx.serviceLine)} (${ctx.durationMin} min)`,
+    `Provider: ${ctx.providerDisplayName || "First available"}`,
+  ].join("\n");
+
+  const body = `
+    <p style="margin:0;font-weight:700;color:${TEXT};">A patient rescheduled online</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="margin-top:12px;border:1px solid #e6e2d3;border-radius:6px;">
+      <tr>
+        <td style="padding:10px 12px;border-bottom:1px solid #f0ecdd;font-size:13px;color:${MUTED};font-weight:700;">Patient</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f0ecdd;">${escapeHtml(ctx.name)}</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 12px;border-bottom:1px solid #f0ecdd;font-size:13px;color:${MUTED};font-weight:700;">Was</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f0ecdd;">${escapeHtml(formatChicagoDateTimeLong(params.previousStart))}</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 12px;border-bottom:1px solid #f0ecdd;font-size:13px;color:${MUTED};font-weight:700;">Now</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f0ecdd;font-weight:700;">${escapeHtml(formatChicagoDateTimeLong(ctx.start))}</td>
+      </tr>
+    </table>
+    ${detailsTable(ctx)}
+    <p style="margin:12px 0 0 0;font-size:12px;color:${MUTED};">Reference: ${escapeHtml(ctx.bookingId)}</p>
+  `;
+
+  const html = brandedShell({
+    preheader: `${ctx.name} moved to ${formatChicagoDateTimeShort(ctx.start)}.`,
+    heading: "Patient rescheduled online",
+    body,
+    ctaText: "Open admin dashboard",
+    ctaHref: siteUrl("/admin"),
+  });
+
+  return { subject, text, html };
+}
+
+/** PHI-free acknowledgment after a patient submits an online form. */
+export function onlineFormSubmissionAckEmail(params: {
+  formTitle: string;
+  recipientName?: string;
+}): { subject: string; text: string; html: string } {
+  const greeting = params.recipientName?.trim()
+    ? `Hi ${params.recipientName.trim().split(/\s+/)[0]},`
+    : "Hello,";
+  const subject = `We received your form — ${siteShortName}`;
+
+  const text = [
+    greeting,
+    "",
+    `Thank you — we received your "${params.formTitle}" form.`,
+    "Our team will review it before your visit.",
+    "",
+    "If you have questions before your appointment, please call:",
+    "Paris office: 903-785-5551",
+    "The Rub Club (massage): 903-739-9959",
+    "Sulphur Springs: 903-919-5020",
+    "",
+    "Please do not reply with medical records or other sensitive health information by email.",
+    "",
+    siteShortName,
+  ].join("\n");
+
+  const body = `
+    <p style="margin:0 0 12px 0;">${escapeHtml(greeting)}</p>
+    <p style="margin:0 0 12px 0;">
+      Thank you — we received your <strong>${escapeHtml(params.formTitle)}</strong> form.
+      Our team will review it before your visit.
+    </p>
+    <p style="margin:0 0 12px 0;">
+      <strong>Questions before your visit?</strong><br />
+      Paris office: <a href="tel:+19037855551" style="color:${PRIMARY};font-weight:700;">903-785-5551</a><br />
+      The Rub Club (massage): <a href="tel:+19037399959" style="color:${PRIMARY};font-weight:700;">903-739-9959</a><br />
+      Sulphur Springs: <a href="tel:+19039195020" style="color:${PRIMARY};font-weight:700;">903-919-5020</a>
+    </p>
+    <p style="margin:0;font-size:13px;color:${MUTED};">
+      Please do not send medical records or other sensitive health information by email.
+    </p>
+  `;
+
+  const html = brandedShell({
+    preheader: `We received your ${params.formTitle} form.`,
+    heading: "Form received",
+    body,
+    ctaText: "Visit our website",
+    ctaHref: siteUrl("/"),
   });
 
   return { subject, text, html };

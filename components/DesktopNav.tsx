@@ -16,6 +16,19 @@ import type { SiteBusinessContext } from "@/lib/site-business-context";
 
 export type NavChild = { href: string; label: string; group?: string };
 
+/** Stack a multi-word nav label so the second word sits under the first. */
+function StackedLabel({ label }: { label: string }) {
+  const words = label.trim().split(/\s+/);
+  if (words.length < 2) return <>{label}</>;
+  return (
+    <span className="flex flex-col items-center leading-[1.05]">
+      {words.map((w, i) => (
+        <span key={i}>{w}</span>
+      ))}
+    </span>
+  );
+}
+
 /** Per-clinic contact details rendered inside the Contact dropdown. */
 export type ContactClinicInfo = {
   name: string;
@@ -291,11 +304,11 @@ export function DesktopNav({
         {hasChildren ? (
           <button
             type="button"
-            className={`focus-ring inline-flex items-center gap-1 whitespace-nowrap ${itemPad} text-xs font-bold uppercase tracking-wide ${itemColors(active)} xl:px-4 xl:text-sm`}
+            className={`focus-ring inline-flex items-center gap-1 ${itemPad} text-xs font-black uppercase tracking-wide ${itemColors(active)} xl:px-4 xl:text-sm`}
             onClick={() => setOpenIdx(isOpen ? null : idx)}
             aria-expanded={isOpen}
           >
-            {item.label}
+            <StackedLabel label={item.label} />
             <svg
               width="10"
               height="10"
@@ -328,19 +341,19 @@ export function DesktopNav({
           </a>
         ) : item.external ? (
           <a
-            className={`focus-ring block whitespace-nowrap ${itemPad} text-xs font-bold uppercase tracking-wide ${itemColors(active)} xl:px-4 xl:text-sm`}
+            className={`focus-ring block ${itemPad} text-xs font-black uppercase tracking-wide ${itemColors(active)} xl:px-4 xl:text-sm`}
             href={item.href}
             target="_blank"
             rel="noopener noreferrer"
           >
-            {item.label}
+            <StackedLabel label={item.label} />
           </a>
         ) : (
           <Link
-            className={`focus-ring block whitespace-nowrap ${itemPad} text-xs font-bold uppercase tracking-wide ${itemColors(active)} xl:px-4 xl:text-sm`}
+            className={`focus-ring block ${itemPad} text-xs font-black uppercase tracking-wide ${itemColors(active)} xl:px-4 xl:text-sm`}
             href={item.href}
           >
-            {item.label}
+            <StackedLabel label={item.label} />
           </Link>
         )}
 

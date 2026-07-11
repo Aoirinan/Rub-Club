@@ -14,6 +14,11 @@ type EmailStatus = {
   fromLooksLikeApiKey?: boolean;
   apiKeyLooksLikeEmail?: boolean;
   fromUsesFreeMailbox?: boolean;
+  fromEmail?: string;
+  fromEmailDomain?: string;
+  fromDisplayName?: string;
+  isClinicFromDomain?: boolean;
+  isTransitionFromDomain?: boolean;
   officeNotificationConfigured?: boolean;
 };
 
@@ -41,6 +46,14 @@ export function OpsEmailStatusBanner({
     emailStatus.fromUsesFreeMailbox ||
     !emailStatus.sendgridConfigured;
 
+  const summary = hasProblem
+    ? "Email may land in spam until FROM uses an authenticated domain."
+    : emailStatus.isClinicFromDomain
+      ? "Sending from clinic domain — send a test to confirm delivery."
+      : emailStatus.isTransitionFromDomain
+        ? "Transition domain active — cut over to clinic domain when DNS is ready."
+        : "SendGrid env looks configured — send a test to confirm delivery.";
+
   async function runTest() {
     if (!onSendTestEmail) return;
     setTestBusy(true);
@@ -55,11 +68,7 @@ export function OpsEmailStatusBanner({
   return (
     <OpsCollapsibleSection
       title="Email delivery"
-      summary={
-        hasProblem
-          ? "Invitation emails may not send until setup is fixed."
-          : "SendGrid env looks configured — send a test to confirm delivery."
-      }
+      summary={summary}
       defaultOpen={hasProblem}
     >
       <ul className="space-y-1 text-sm text-slate-700">
@@ -80,13 +89,21 @@ export function OpsEmailStatusBanner({
           <strong>
             {!emailStatus.hasFromEmail
               ? "missing"
-              : emailStatus.fromLooksValid
-                ? "valid"
-                : emailStatus.fromLooksLikeApiKey
-                  ? "looks like API key (swapped?)"
-                  : "invalid format"}
+              : emailStatus.fromEmail
+                ? emailStatus.fromEmail
+                : emailStatus.fromLooksValid
+                  ? "valid"
+                  : emailStatus.fromLooksLikeApiKey
+                    ? "looks like API key (swapped?)"
+                    : "invalid format"}
           </strong>
         </li>
+        {emailStatus.fromEmail ? (
+          <li>
+            Display name in inbox:{" "}
+            <strong>{emailStatus.fromDisplayName ?? "Chiropractic Associates · The Rub Club"}</strong>
+          </li>
+        ) : null}
       </ul>
 
       {emailStatus.likelySwapped ? (
@@ -116,15 +133,29 @@ export function OpsEmailStatusBanner({
 
       {emailStatus.fromUsesFreeMailbox ? (
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
-          The FROM address uses a personal mailbox (Gmail, Outlook, etc.). Gmail often shows{" "}
-          <strong>via sendgrid.net</strong> and may file invites in <strong>Spam</strong>. For
-          production, authenticate your clinic domain in SendGrid (Settings → Sender Authentication)
-          and set <code className="text-xs">SENDGRID_FROM_EMAIL</code> to something like{" "}
-          <code className="text-xs">scheduling@chiropracticparistexas.com</code>.
+          The FROM address uses a personal mailbox (Gmail, Outlook, etc.). Authenticate{" "}
+          <strong>massageparistx.com</strong> in SendGrid, set{" "}
+          <code className="text-xs">sendgridfromemail</code> to{" "}
+          <code className="text-xs">scheduling@massageparistx.com</code>, and set{" "}
+          <code className="text-xs">SENDGRID_REPLY_TO</code> to{" "}
+          <code className="text-xs">scheduling@massageparistx.com</code>. See the transition
+          setup guide below.
+        </p>
+      ) : emailStatus.isTransitionFromDomain ? (
+        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950">
+          Transition sender is active on <strong>{emailStatus.fromEmailDomain}</strong>. When clinic
+          DNS is ready, switch to{" "}
+          <code className="text-xs">scheduling@chiropracticparistexas.com</code> in Vercel only —
+          no code change.
+        </p>
+      ) : emailStatus.isClinicFromDomain ? (
+        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950">
+          Sending from the clinic domain. If mail still lands in spam, confirm SendGrid domain
+          authentication is verified.
         </p>
       ) : emailStatus.sendgridConfigured ? (
         <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-          If invites land in spam, authenticate your clinic domain in SendGrid and ask staff to mark
+          If invites land in spam, authenticate a sending domain in SendGrid and ask staff to mark
           the first message as <strong>Not spam</strong>.
         </p>
       ) : null}
@@ -155,14 +186,24 @@ export function OpsEmailStatusBanner({
         </div>
       ) : null}
 
-      <a
-        href="https://github.com/Aoirinan/Rub-Club/blob/main/docs/production-env-checklist.md"
-        className="inline-block text-sm font-semibold text-[#c0392b] underline"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Setup guide (for your developer)
-      </a>
+      <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+        <a
+          href="https://github.com/Aoirinan/Rub-Club/blob/main/docs/sendgrid-transition-setup.md"
+          className="inline-block text-sm font-semibold text-[#c0392b] underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Transition email setup (massageparistx.com → clinic)
+        </a>
+        <a
+          href="https://github.com/Aoirinan/Rub-Club/blob/main/docs/production-env-checklist.md"
+          className="inline-block text-sm font-semibold text-[#c0392b] underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Production env checklist
+        </a>
+      </div>
     </OpsCollapsibleSection>
   );
 }

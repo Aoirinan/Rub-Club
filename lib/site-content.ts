@@ -14,7 +14,7 @@ export const siteTitleTemplate = "%s | Chiropractic Associates";
 export const siteShortName = "Chiropractic Associates";
 
 /** SendGrid / transactional email "From" display name. */
-export const emailFromName = siteShortName;
+export const emailFromName = "Chiropractic Associates · The Rub Club";
 
 /** Privacy, terms, and policy copy — chiro-led brand with massage partner named. */
 export const siteLegalName =

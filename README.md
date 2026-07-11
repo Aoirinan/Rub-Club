@@ -184,10 +184,22 @@ Follow the bootstrap steps above. After setup, use **Admin → Scheduling & team
 
 Same invite flow with role **Manager**. Set location scope if they handle contact inbox for one office.
 
-### Re-send invite / forgot password
+### Re-send invite / password reset
 
 - Managers can click **Re-send invite** on any staff row in **Team logins**.
-- Staff can use **Forgot password?** on `/admin/login` after their account exists.
+- **Superadmins** can click **Send password reset** on any staff row (password reset links are not self-service on `/admin/login`).
+
+### Staff login security
+
+- **Email/password only** — no social login in this phase.
+- **Password reset** is superadmin-only via `POST /api/admin/staff/send-password-reset` from **Team logins** (SendGrid when configured). Self-service `POST /api/admin/forgot-password` is disabled.
+- **App Check** (optional): set `NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY` — see [`docs/production-env-checklist.md`](docs/production-env-checklist.md).
+- **Email verification**: unverified staff see a banner in admin with **Resend verification** (does not block access).
+- Firebase Console: authorized domains, password policy (8+ chars), email enumeration protection.
+
+### Transition email (Phase 1–2B → clinic cutover)
+
+Send system mail from **your** authenticated domain now (`scheduling@massageparistx.com`), display name **Chiropractic Associates · The Rub Club**, then swap `sendgridfromemail` to `scheduling@chiropracticparistexas.com` when clinic DNS is ready — no code change. See [`docs/sendgrid-transition-setup.md`](docs/sendgrid-transition-setup.md).
 
 ### Troubleshooting
 

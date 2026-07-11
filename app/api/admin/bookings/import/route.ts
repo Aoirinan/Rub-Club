@@ -287,9 +287,9 @@ export async function POST(req: Request) {
         createMetaVia: "csv_import",
       });
 
-      if (ins === "ok") {
+      if (ins.status === "ok") {
         createdIds.push(bookingRef.id);
-      } else if (ins === "slot_taken") {
+      } else if (ins.status === "slot_taken") {
         errors.push({ row: excelRow, message: "Slot already taken (or enable skip conflict in the form)." });
       } else {
         errors.push({

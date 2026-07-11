@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getAuth, getFirestore } from "@/lib/firebase-admin";
+import { getPublicAppOriginForRequest } from "@/lib/app-origin";
+import { sendStaffAccessRevokedEmail } from "@/lib/sendgrid";
 import { requireStaff } from "@/lib/staff-auth";
 import {
   STAFF_ROLES,
@@ -165,6 +167,19 @@ export async function DELETE(req: Request) {
   }
 
   await targetRef.delete();
+
+  const targetEmail =
+    typeof targetSnap.get("email") === "string" ? targetSnap.get("email").trim().toLowerCase() : "";
+  if (targetEmail.includes("@")) {
+    try {
+      await sendStaffAccessRevokedEmail({
+        to: targetEmail,
+        loginOrigin: getPublicAppOriginForRequest(req),
+      });
+    } catch (e) {
+      console.error("[staff] access-revoked email failed", e);
+    }
+  }
 
   try {
     await getAuth().deleteUser(targetUid);

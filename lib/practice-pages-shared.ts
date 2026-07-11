@@ -187,6 +187,9 @@ export type PracticePageDoc = {
   stickyCallBar: PracticeStickyBarSection;
 };
 
+/** Review location scope (CURSOR_PROMPT §8). Untagged reviews default to hidden. */
+export type PracticeTestimonialLocation = "paris" | "sulphur-springs" | "massage";
+
 export type PracticeTestimonial = {
   id: string;
   name: string;
@@ -195,6 +198,8 @@ export type PracticeTestimonial = {
   quote: string;
   order: number;
   published: boolean;
+  /** Location scope for filtering (§8). Undefined = untagged (hidden when filtered). */
+  location?: PracticeTestimonialLocation;
 };
 
 /* ------------------------------------------------------------------ */
@@ -524,6 +529,11 @@ export function parsePracticeTestimonialDoc(
   id: string,
   data: Record<string, unknown> | undefined,
 ): PracticeTestimonial {
+  const rawLoc = data?.location;
+  const location =
+    rawLoc === "paris" || rawLoc === "sulphur-springs" || rawLoc === "massage"
+      ? rawLoc
+      : undefined;
   return {
     id,
     name: str(data?.name, ""),
@@ -531,6 +541,7 @@ export function parsePracticeTestimonialDoc(
     quote: str(data?.quote, ""),
     order: typeof data?.order === "number" ? data.order : 0,
     published: bool(data?.published, false),
+    ...(location ? { location } : {}),
   };
 }
 

@@ -117,6 +117,16 @@ export function CmsFieldEditor({ field, busy, onSave, onReset, compact }: Props)
                   if (file) void onSave(field.id, field.value, file);
                 }}
               />
+              {field.type === "image" && field.value ? (
+                <button
+                  type="button"
+                  disabled={busy}
+                  className="text-xs font-semibold text-slate-600 underline disabled:opacity-50"
+                  onClick={() => void onSave(field.id, "")}
+                >
+                  Clear image
+                </button>
+              ) : null}
             </div>
           ) : null}
           {field.type !== "image" && field.type !== "video" ? (

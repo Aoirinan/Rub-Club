@@ -3,9 +3,10 @@
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { onAuthStateChanged, type Auth } from "firebase/auth";
+import { onAuthStateChanged, type Auth, type User } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import { staffMeetsMin, type StaffRole } from "@/lib/staff-roles";
+import { EmailVerificationBanner } from "@/app/admin/_components/EmailVerificationBanner";
 
 type Me = {
   authenticated: boolean;
@@ -32,6 +33,7 @@ export function AdminAuthGate({
   const minRole: StaffRole | undefined = requireMinRole ?? (requireSuperadmin ? "superadmin" : undefined);
   const router = useRouter();
   const [auth, setAuth] = useState<Auth | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [me, setMe] = useState<Me | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -41,12 +43,14 @@ export function AdminAuthGate({
 
   useEffect(() => {
     if (!auth) return;
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser) {
+        setUser(null);
         router.replace("/admin/login");
         return;
       }
-      const token = await user.getIdToken();
+      setUser(firebaseUser);
+      const token = await firebaseUser.getIdToken();
       const res = await fetch("/api/admin/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -95,5 +99,10 @@ export function AdminAuthGate({
     return null;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {user ? <EmailVerificationBanner user={user} /> : null}
+      {children}
+    </>
+  );
 }

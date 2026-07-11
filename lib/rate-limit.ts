@@ -23,10 +23,13 @@ export function getClientIp(headers: Headers): string {
 
 export async function assertRateLimitOk(
   headers: Headers,
+  options?: { bucket?: string; maxPerWindow?: number },
 ): Promise<{ ok: true } | { ok: false; retryAfterSec: number }> {
   const ip = getClientIp(headers);
   const windowStart = Math.floor(Date.now() / WINDOW_MS);
-  const id = `${hashIp(ip)}_${windowStart}`;
+  const bucket = options?.bucket ?? "default";
+  const maxPerWindow = options?.maxPerWindow ?? MAX_PER_WINDOW;
+  const id = `${hashIp(ip)}_${bucket}_${windowStart}`;
   const db = getFirestore();
   const ref = db.collection("rate_limits").doc(id);
 
@@ -34,7 +37,7 @@ export async function assertRateLimitOk(
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref);
       const current = snap.exists ? (snap.get("count") as number) : 0;
-      if (current >= MAX_PER_WINDOW) {
+      if (current >= maxPerWindow) {
         throw new Error("rate_limited");
       }
       tx.set(

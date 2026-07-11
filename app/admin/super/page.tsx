@@ -171,7 +171,7 @@ function formatInviteResult(
     );
   } else {
     parts.push(
-      `Staff access was saved${linkNote}, but no invitation email was sent.${issueNote} They can still use “Forgot password” on the staff login page with their work email once mail is working.`,
+      `Staff access was saved${linkNote}, but no invitation email was sent.${issueNote} Ask a superadmin to send a password reset link from Team logins.`,
     );
   }
   const joined = parts.join(" ");
@@ -202,6 +202,7 @@ export default function SuperAdminPage() {
   const [lastInviteResult, setLastInviteResult] = useState<LastInviteResult | null>(null);
   const [deletingUid, setDeletingUid] = useState<string | null>(null);
   const [resendingUid, setResendingUid] = useState<string | null>(null);
+  const [resettingUid, setResettingUid] = useState<string | null>(null);
   const [emailStatus, setEmailStatus] = useState<EmailStatus | null>(null);
   const [bookableProviders, setBookableProviders] = useState<ProviderRow[]>([]);
   const [newProviderName, setNewProviderName] = useState("");
@@ -374,6 +375,51 @@ export default function SuperAdminPage() {
       setLastInviteResult({ ...data, email: row.email.trim(), message: resultMessage });
     } finally {
       setResendingUid(null);
+    }
+  }
+
+  async function sendPasswordResetForRow(row: StaffRow) {
+    setMessage(null);
+    setLastInviteResult(null);
+    if (!auth?.currentUser) return;
+    if (!row.email?.trim()) {
+      setMessage("This person has no email on file.");
+      return;
+    }
+    setResettingUid(row.uid);
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch("/api/admin/staff/send-password-reset", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ uid: row.uid }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        emailedReset?: boolean;
+        email?: string;
+        detail?: string;
+      };
+      if (!res.ok) {
+        setMessage(typeof data.error === "string" ? data.error : "Could not send password reset.");
+        return;
+      }
+      if (data.emailedReset) {
+        setMessage(
+          `Password reset link sent to ${data.email ?? row.email.trim()}. They should check inbox and spam.`,
+        );
+        return;
+      }
+      setMessage(
+        data.detail?.trim()
+          ? `Password reset email was not sent: ${data.detail.trim()}`
+          : "Password reset email was not sent. Check Email delivery below.",
+      );
+    } finally {
+      setResettingUid(null);
     }
   }
 
@@ -637,6 +683,7 @@ export default function SuperAdminPage() {
   }
 
   const isOperations = me?.role ? staffMeetsMin(me.role, "manager") : false;
+  const isSuperadmin = me?.role === "superadmin";
   const isDeskOnly =
     me?.role === "front_desk" || me?.role === "massage_therapist";
   const assignableRoles = STAFF_ROLE_OPTIONS.filter(
@@ -652,6 +699,22 @@ export default function SuperAdminPage() {
           </h1>
         </div>
         <div className="flex flex-wrap gap-2">
+          {isOperations ? (
+            <Link
+              href="/admin/legacy-pages"
+              className="text-sm font-semibold text-slate-600 hover:underline"
+            >
+              Legacy pages
+            </Link>
+          ) : null}
+          {isOperations ? (
+            <Link
+              href="/admin/stretch-flex"
+              className="text-sm font-semibold text-slate-600 hover:underline"
+            >
+              Stretch &amp; Flex photos
+            </Link>
+          ) : null}
           {isOperations ? (
             <Link
               href="/admin/super/slot-inspector"
@@ -689,6 +752,11 @@ export default function SuperAdminPage() {
               Enter their work email. New users get a sign-in link by email, or a one-time password you can share
               securely.
             </p>
+            {!isSuperadmin ? (
+              <p className="text-sm text-slate-600">
+                Password resets are sent by a <strong>superadmin</strong> from the list below.
+              </p>
+            ) : null}
             <details className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
               <summary className="cursor-pointer font-semibold text-slate-900">
                 What can each role do?
@@ -844,9 +912,27 @@ export default function SuperAdminPage() {
                         ) : null}
                       </div>
                       <div className="flex shrink-0 flex-wrap gap-2">
+                        {isSuperadmin ? (
+                          <button
+                            type="button"
+                            disabled={
+                              resettingUid === s.uid ||
+                              resendingUid === s.uid ||
+                              deletingUid === s.uid
+                            }
+                            onClick={() => sendPasswordResetForRow(s)}
+                            className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {resettingUid === s.uid ? "Sending…" : "Send password reset"}
+                          </button>
+                        ) : null}
                         <button
                           type="button"
-                          disabled={resendingUid === s.uid || deletingUid === s.uid}
+                          disabled={
+                            resendingUid === s.uid ||
+                            deletingUid === s.uid ||
+                            resettingUid === s.uid
+                          }
                           onClick={() => resendInviteForRow(s)}
                           className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
@@ -855,7 +941,11 @@ export default function SuperAdminPage() {
                         {!isSelf ? (
                           <button
                             type="button"
-                            disabled={deletingUid === s.uid || resendingUid === s.uid}
+                            disabled={
+                              deletingUid === s.uid ||
+                              resendingUid === s.uid ||
+                              resettingUid === s.uid
+                            }
                             onClick={() => deleteStaffRow(s.uid)}
                             className="rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                           >
@@ -984,8 +1074,8 @@ export default function SuperAdminPage() {
             </p>
             <p className="text-sm text-slate-600">
               Website bios and photos:{" "}
-              <Link href="/admin/super/page-builder?page=massage" className="font-semibold text-[#c0392b] underline">
-                Website → Massage page
+              <Link href="/admin/super/page-builder?scope=massage-team" className="font-semibold text-[#c0392b] underline">
+                Website → Massage team
               </Link>
               .
             </p>

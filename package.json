@@ -1,6 +1,6 @@
 {
   "name": "chiropractic-paris-tx",
-  "version": "0.45.2",
+  "version": "0.47.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -33,6 +33,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@sendgrid/mail": "^8.1.6",
+    "cheerio": "^1.2.0",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "firebase": "^12.13.0",

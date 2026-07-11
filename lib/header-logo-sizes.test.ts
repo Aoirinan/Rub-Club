@@ -14,7 +14,7 @@ describe("parseHeaderLogoHeightPx", () => {
 
   it("clamps to safe bounds", () => {
     expect(parseHeaderLogoHeightPx("10", 96)).toBe(24);
-    expect(parseHeaderLogoHeightPx("999", 96)).toBe(160);
+    expect(parseHeaderLogoHeightPx("999", 96)).toBe(240);
   });
 
   it("parses valid integers", () => {
@@ -32,8 +32,8 @@ describe("headerLogoHeightsFromValues", () => {
 });
 
 describe("headerLogoHeightPx", () => {
-  it("uses Paris defaults bumped ~20% for desktop nav", () => {
-    expect(DEFAULT_HEADER_LOGO_HEIGHTS.chiro.nav).toBe(96);
-    expect(headerLogoHeightPx(DEFAULT_HEADER_LOGO_HEIGHTS.chiro, "side")).toBe(40);
+  it("uses Paris defaults bumped ~50% for desktop nav", () => {
+    expect(DEFAULT_HEADER_LOGO_HEIGHTS.chiro.nav).toBe(144);
+    expect(headerLogoHeightPx(DEFAULT_HEADER_LOGO_HEIGHTS.chiro, "side")).toBe(60);
   });
 });

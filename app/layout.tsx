@@ -180,6 +180,7 @@ export default async function RootLayout({
             giftCardSticky={giftCardSticky}
             stickyCallBar={stickyCallBar}
             accessibilityPanelEnabled={accessibilityPanelEnabled}
+            socialBarLabel={cms.social_bar_label}
             header={
               <>
                 <SiteHeader

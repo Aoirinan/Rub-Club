@@ -11,6 +11,7 @@ import { insertAdminBookingInTransaction } from "@/lib/admin-booking-insert";
 import { fetchSchedulerServiceById } from "@/lib/scheduler-services-db";
 import { isPatientBusinessTag, mergePatientBusinessTag } from "@/lib/patient-business";
 import { linkBookingAfterCreate } from "@/lib/patients-db";
+import { sendAdminCreatedBookingEmail } from "@/lib/admin-booking-notify";
 import { sendSms } from "@/lib/twilio";
 import { logSmsSent } from "@/lib/sms-audit";
 import { getSiteOrigin } from "@/lib/site-content";
@@ -103,6 +104,7 @@ export async function POST(req: Request) {
 
   const createdIds: string[] = [];
   const conflicts: string[] = [];
+  let firstPortalPlainToken: string | undefined;
 
   const staffActor = { uid: staff.uid, email: staff.email ?? null };
 
@@ -132,8 +134,11 @@ export async function POST(req: Request) {
         ...(seriesId ? { seriesId, recurrence: body.recurrence } : {}),
       });
 
-      if (result === "ok") {
+      if (result.status === "ok") {
         createdIds.push(bookingRef.id);
+        if (!firstPortalPlainToken && result.portalPlainToken) {
+          firstPortalPlainToken = result.portalPlainToken;
+        }
         await linkBookingAfterCreate(db, bookingRef.id, "manual").catch((e) =>
           console.error("[patients] link after admin create", e),
         );
@@ -159,14 +164,14 @@ export async function POST(req: Request) {
         continue;
       }
 
-      if (result === "slot_taken" || result === "slot_blocked") {
+      if (result.status === "slot_taken" || result.status === "slot_blocked") {
         const dateLabel = thisStart.setZone(TIME_ZONE).toFormat("LLL d");
         conflicts.push(dateLabel);
         if (occurrences === 1) {
           return NextResponse.json(
             {
               error:
-                result === "slot_taken"
+                result.status === "slot_taken"
                   ? "That time slot is already taken by another appointment."
                   : "That time is blocked by an admin hold. Remove the matching hold first (Scheduler → Block tray), or enable 'Allow double-booking' to override.",
             },
@@ -178,6 +183,22 @@ export async function POST(req: Request) {
     } catch (e) {
       console.error("[admin/bookings/create]", e);
       return NextResponse.json({ error: "Could not create booking" }, { status: 500 });
+    }
+  }
+
+  if (createdIds.length > 0 && body.email?.trim()) {
+    const primaryId = createdIds[0]!;
+    const isFirstVisit = body.sendFirstTimeNotification !== false;
+    try {
+      await sendAdminCreatedBookingEmail({
+        db,
+        bookingId: primaryId,
+        status,
+        portalPlainToken: firstPortalPlainToken,
+        isFirstVisit,
+      });
+    } catch (err) {
+      console.error("[admin/bookings/create] patient email failed", err);
     }
   }
 

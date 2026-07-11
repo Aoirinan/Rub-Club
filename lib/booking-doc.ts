@@ -28,7 +28,7 @@ export function bookingDocToEmailContext(
   if (typeof startIso !== "string" || !startIso.length) return null;
   if (typeof email !== "string" || !email.length) return null;
   if (typeof name !== "string" || !name.length) return null;
-  if (typeof phone !== "string" || !phone.length) return null;
+  const phoneStr = typeof phone === "string" ? phone : "";
 
   const start = DateTime.fromISO(startIso, { zone: "utc" }).setZone(TIME_ZONE);
   if (!start.isValid) return null;
@@ -42,7 +42,7 @@ export function bookingDocToEmailContext(
     durationMin: durationMin as DurationMin, // legacy type; values may be 90/120 for admin bookings
     start,
     name,
-    phone,
+    phone: phoneStr,
     email,
     notes: typeof data.notes === "string" && data.notes.length ? data.notes : undefined,
     providerDisplayName: typeof data.providerDisplayName === "string" ? data.providerDisplayName : "",

@@ -2,24 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { MassageTeamGrid } from "@/components/marketing/MassageTeamGrid";
+import { ServicesGrid } from "@/components/practice/ServicesGrid";
 import { BookingCta } from "@/components/BookingCta";
 import { IMAGES } from "@/lib/home-images";
 import { renderRichText } from "@/lib/cms";
 import { MASSAGE } from "@/lib/home-verbatim";
+import { MASSAGE_SERVICE_PAGES } from "@/lib/massage-services";
 import type { MassageTeamCard } from "@/lib/massage-team-data";
 import { telHref, type LocationInfo } from "@/lib/constants";
-
-const SERVICES = [
-  { name: "Deep Tissue Massage", body: "Slow, targeted pressure to release chronic tension in the neck, shoulders, lower back, and hips." },
-  { name: "Swedish Massage", body: "Long, flowing strokes that relax muscles, boost circulation, and melt away everyday stress." },
-  { name: "Therapeutic Massage", body: "Coordinated with your chiropractic plan — designed to support recovery between adjustments." },
-  { name: "Prenatal Massage", body: "Side-lying, pregnancy-safe positioning with techniques to ease swelling, hip pressure, and tension headaches." },
-  { name: "Sports Massage", body: "Pre- and post-event work focused on recovery, range of motion, and getting you back to training without rushing tissue." },
-  { name: "Hot Stone Massage", body: "Heated stones paired with hands-on work to warm tight muscles and release deep tension." },
-  { name: "Relaxation Massage", body: "Gentle, calming, full-body massage focused purely on unwinding and stress relief." },
-  { name: "Gentle Massage Therapy", body: "Light-pressure massage for sensitive clients, older adults, or anyone easing into bodywork." },
-  { name: "Trigger Point & Lymphatic", body: "Focused release of stubborn knots, plus gentle lymphatic drainage when appropriate for post-op or chronic swelling." },
-];
 
 export type MassagePageData = {
   introParagraphs: string[];
@@ -55,28 +45,24 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
         </section>
       );
     case "services":
+      // CURSOR_PROMPT §6a: clickable cards, one per massage service, each linking
+      // to its verbatim /services/massage/<slug> page. Same card component as §4.
       return (
         <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#4a1515]">Services we offer</h2>
-          {data.serviceLines.length > 0 ? (
-            <div className="mt-6 space-y-4 text-sm leading-relaxed text-stone-700">
-              {data.serviceLines.map((line) => (
-                <p
-                  key={line.slice(0, 48)}
-                  dangerouslySetInnerHTML={{ __html: renderRichText(line) }}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {SERVICES.map((s) => (
-                <article key={s.name} className="border border-stone-200 bg-stone-50 p-5 shadow-sm">
-                  <h3 className="text-lg font-black text-[#4a1515]">{s.name}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-stone-700">{s.body}</p>
-                </article>
-              ))}
-            </div>
-          )}
+          <ServicesGrid
+            data={{
+              published: true,
+              heading: "Services we offer",
+              intro: "",
+              mode: "custom",
+              cards: MASSAGE_SERVICE_PAGES.map((s) => ({
+                name: s.name,
+                blurb: s.blurb,
+                imageUrl: s.imageUrl,
+                href: `/services/massage/${s.slug}`,
+              })),
+            }}
+          />
           <p className="mt-6 text-sm leading-relaxed text-stone-700">
             Need more than soft-tissue work?{" "}
             <Link href="/services/chiropractic" className="font-bold text-[#c0392b] underline">

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
 import { rescheduleBookingForStartChange } from "@/lib/booking-reschedule";
+import { sendRescheduleNotifications } from "@/lib/booking-reschedule-notify";
 import { findBookingByPortalToken } from "@/lib/patient-portal-lookup";
 import { assertRateLimitOk } from "@/lib/rate-limit";
 
@@ -71,6 +72,20 @@ export async function POST(req: Request) {
       { error: messageFor(result.code), code: result.code },
       { status: result.status },
     );
+  }
+
+  if (result.changed) {
+    try {
+      await sendRescheduleNotifications({
+        db,
+        bookingId: snap.id,
+        prevStartIso: result.prevStartIso,
+        rescheduledBy: "patient",
+        notifyOffice: true,
+      });
+    } catch (err) {
+      console.error("[patient/reschedule] email failed", err);
+    }
   }
 
   return NextResponse.json({ ok: true });

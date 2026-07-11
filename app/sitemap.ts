@@ -1,6 +1,9 @@
 import type { MetadataRoute } from "next";
 import { allParisChiroServiceSlugs } from "@/lib/paris-chiro-services";
 import { getSiteOrigin } from "@/lib/site-content";
+import { listAllPublishedLegacyPages } from "@/lib/legacy-pages";
+
+export const revalidate = 3600;
 
 type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]["changeFrequency"]>;
 
@@ -55,13 +58,33 @@ const ENTRIES: { path: string; changeFrequency: ChangeFrequency; priority: numbe
   { path: "/sulphur-springs/q-and-a", changeFrequency: "monthly", priority: 0.55 },
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = getSiteOrigin();
   const lastModified = new Date();
-  return ENTRIES.map((e) => ({
+
+  const staticEntries = ENTRIES.map((e) => ({
     url: `${origin}${e.path}`,
     lastModified,
     changeFrequency: e.changeFrequency,
     priority: e.priority,
   }));
+
+  // Every published legacy page is a canonical 200 route (CURSOR_PROMPT §5).
+  const known = new Set(ENTRIES.map((e) => e.path));
+  let legacyEntries: MetadataRoute.Sitemap = [];
+  try {
+    const legacyPages = await listAllPublishedLegacyPages();
+    legacyEntries = legacyPages
+      .filter((p) => !known.has(p.route))
+      .map((p) => ({
+        url: `${origin}${p.route}`,
+        lastModified,
+        changeFrequency: "monthly" as ChangeFrequency,
+        priority: 0.5,
+      }));
+  } catch {
+    // Firestore unavailable at build — static entries still ship.
+  }
+
+  return [...staticEntries, ...legacyEntries];
 }

@@ -7,6 +7,7 @@
  */
 
 import { sendOutboundEmail } from "@/lib/sendgrid";
+import { onlineFormSubmissionAckEmail } from "@/lib/email-templates";
 import { getPublicAppOrigin } from "@/lib/app-origin";
 
 export async function notifyNewSubmission(params: {
@@ -40,6 +41,30 @@ export async function notifyNewSubmission(params: {
     } catch (err) {
       console.error("[online-forms] notification error", err);
     }
+  }
+}
+
+/** PHI-free auto-reply to the patient who submitted a form. */
+export async function sendSubmissionAcknowledgment(params: {
+  to: string;
+  formTitle: string;
+  recipientName?: string;
+}): Promise<void> {
+  const to = params.to.trim().toLowerCase();
+  if (!to.includes("@")) return;
+
+  const { subject, text, html } = onlineFormSubmissionAckEmail({
+    formTitle: params.formTitle,
+    recipientName: params.recipientName,
+  });
+
+  try {
+    const res = await sendOutboundEmail({ to, subject, text, html });
+    if (!res.ok) {
+      console.warn("[online-forms] acknowledgment not sent:", res.reason);
+    }
+  } catch (err) {
+    console.error("[online-forms] acknowledgment error", err);
   }
 }
 

@@ -36,7 +36,10 @@ export type InsertAdminBookingArgs = {
   bufferAfterMinutes?: number;
 };
 
-export type InsertAdminBookingResult = "ok" | "slot_taken" | "slot_blocked";
+export type InsertAdminBookingResult =
+  | { status: "ok"; portalPlainToken?: string }
+  | { status: "slot_taken" }
+  | { status: "slot_blocked" };
 
 /**
  * Creates one admin booking + slot buckets inside a Firestore transaction.
@@ -70,8 +73,8 @@ export async function insertAdminBookingInTransaction(
     bufferAfterMinutes = 0,
   } = args;
 
-  const portalHash =
-    status === "confirmed" ? hashPatientPortalToken(generatePatientPortalToken()) : "";
+  const portalPlain = status === "confirmed" ? generatePatientPortalToken() : undefined;
+  const portalHash = portalPlain ? hashPatientPortalToken(portalPlain) : "";
 
   const bucketIds = bucketDocIdsForAppointment(locationId, providerId, thisStart, durationMin, {
     bufferBeforeMinutes,
@@ -159,10 +162,10 @@ export async function insertAdminBookingInTransaction(
         });
       }
     });
-    return "ok";
+    return { status: "ok", ...(portalPlain ? { portalPlainToken: portalPlain } : {}) };
   } catch (e) {
-    if (e instanceof Error && e.message === "slot_taken") return "slot_taken";
-    if (e instanceof Error && e.message === "slot_blocked") return "slot_blocked";
+    if (e instanceof Error && e.message === "slot_taken") return { status: "slot_taken" };
+    if (e instanceof Error && e.message === "slot_blocked") return { status: "slot_blocked" };
     throw e;
   }
 }

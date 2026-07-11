@@ -24,6 +24,7 @@ export function ConditionalMarketingChrome({
   giftCardSticky,
   stickyCallBar,
   accessibilityPanelEnabled = true,
+  socialBarLabel,
 }: {
   header: ReactNode;
   footer: ReactNode;
@@ -31,6 +32,7 @@ export function ConditionalMarketingChrome({
   giftCardSticky?: GiftCardStickyBannerProps;
   stickyCallBar?: MobileStickyCallBarProps;
   accessibilityPanelEnabled?: boolean;
+  socialBarLabel?: string;
 }) {
   const pathname = usePathname() ?? "";
   const minimal = pathname.startsWith("/admin/chiro");
@@ -59,7 +61,7 @@ export function ConditionalMarketingChrome({
   return (
     <MassageGiftCardNavProvider>
       {header}
-      {hideSocialBar ? null : <SiteSocialBar />}
+      {hideSocialBar ? null : <SiteSocialBar label={socialBarLabel} />}
       <div className={contentPad}>{children}</div>
       {footer}
       {hideGiftBanner ? null : <GiftCardStickyBanner {...giftProps} />}

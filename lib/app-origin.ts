@@ -81,3 +81,11 @@ function originFromRequest(req: Request): string | null {
 export function getPublicAppOriginForRequest(req: Request): string {
   return originFromRequest(req) ?? getPublicAppOrigin();
 }
+
+/** Client-side: use the hostname the user is actually on (for Firebase continueUrl). */
+export function getPublicAppOriginForBrowser(): string {
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin.replace(/\/$/, "");
+  }
+  return getPublicAppOrigin();
+}

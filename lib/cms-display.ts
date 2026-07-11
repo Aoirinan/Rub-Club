@@ -55,6 +55,7 @@ const LAYOUT_CMS_IDS = [
   "footer_copyright",
   "nav_giftcard_url",
   "nav_book_url",
+  "social_bar_label",
 ] as const;
 
 export type LayoutCmsContent = Record<(typeof LAYOUT_CMS_IDS)[number], string>;

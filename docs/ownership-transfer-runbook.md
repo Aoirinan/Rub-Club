@@ -60,6 +60,8 @@ Current owner: developer or third party → transfer to: **clinic registrar acco
 
 Current owner: developer → transfer to: **clinic billing account**
 
+**During Phase 1–2B:** It is expected that `SENDGRID_FROM_EMAIL` uses a **developer-owned transition domain** (e.g. `scheduling@massageparistx.com`) while clinic DNS is unavailable. Display name stays clinic-branded. Cut over to `scheduling@chiropracticparistexas.com` before or at go-live — see [`sendgrid-transition-setup.md`](sendgrid-transition-setup.md).
+
 1. Clinic creates a SendGrid account under the business email.
 2. Re-verify the sender domain on the clinic account (DNS records — easy now that the domain is also on the clinic account).
 3. Generate a new SendGrid API key on the clinic account → update Vercel env var (`SENDGRID_API_KEY`).

@@ -10,8 +10,40 @@ Use this when deploying to Vercel (or similar). Copy `env.example` to Vercel **P
 | `NEXT_PUBLIC_FIREBASE_*` | Web app config from Firebase console (API key, auth domain, project ID, storage bucket) |
 | `NEXT_PUBLIC_APP_URL` | Your live URL with `https://` and no trailing slash (e.g. `https://www.chiropracticparistexas.com` or the Vercel URL until DNS is ready) |
 | `SENDGRID_API_KEY` | From SendGrid → API Keys |
-| `SENDGRID_FROM_EMAIL` | A **verified** sender in SendGrid (clinic email, not a personal test address in production) |
+| `SENDGRID_FROM_EMAIL` | A **verified** sender in SendGrid — see [Transition email](#transition-email-developer-domain--clinic-domain) below |
+| `SENDGRID_REPLY_TO` | Inbox that receives **replies** to system mail (`scheduling@massageparistx.com` now; clinic scheduling inbox after cutover) |
+| `SENDGRID_FROM_NAME` | Optional display name in inboxes (default: `Chiropractic Associates · The Rub Club`) |
 | `OFFICE_NOTIFICATION_EMAIL` | Optional email copies for bookings + contact form. Use **`dr.seanwelborn@gmail.com`**. Front desk should use **Admin → Contact inbox**, not email. |
+
+## Transition email (developer domain → clinic domain)
+
+During Phase 1–2B the clinic website may still live on the legacy host and clinic DNS may be unavailable. Send system mail from **a domain you control**, then swap one env var when the clinic domain is ready.
+
+**Full steps:** [`sendgrid-transition-setup.md`](sendgrid-transition-setup.md)
+
+### Phase A — Now (your domain)
+
+| Variable | Transition value |
+|----------|------------------|
+| `sendgridfromemail` | `scheduling@massageparistx.com` (after SendGrid domain auth on that domain) |
+| `SENDGRID_REPLY_TO` | `scheduling@massageparistx.com` |
+| `SENDGRID_FROM_NAME` | `Chiropractic Associates · The Rub Club` |
+| `OFFICE_NOTIFICATION_EMAIL` | Unchanged — **recipient** for office copies, not the visible sender |
+
+SendGrid → **Verify a Single Sender** for `scheduling@massageparistx.com` (no DNS changes). When GoDaddy mailbox is ready, confirm the link → update Vercel `sendgridfromemail` → redeploy.
+
+Admin → **Email delivery** shows the current FROM address and warns if still on a personal mailbox (Outlook/Gmail).
+
+### Phase B — Clinic cutover (when GoDaddy/host access is ready)
+
+- [ ] Check clinic MX records and existing mailboxes — do not break current host email
+- [ ] SendGrid → authenticate `chiropracticparistexas.com` (or verify `scheduling@chiropracticparistexas.com`)
+- [ ] Vercel: `sendgridfromemail` → `scheduling@chiropracticparistexas.com`
+- [ ] Vercel: `SENDGRID_REPLY_TO` → clinic scheduling inbox
+- [ ] Redeploy; test from Admin **Email delivery**, `/contact`, staff invite
+- [ ] At handoff: new `SENDGRID_API_KEY` on clinic SendGrid account ([ownership transfer](ownership-transfer-runbook.md))
+
+**Do not** use personal Outlook/Gmail as `SENDGRID_FROM_EMAIL` in production — it lands in spam and shows “via sendgrid.net”.
 
 ## Contact form (required for handoff)
 
@@ -31,23 +63,54 @@ Add your Vercel hostname and final domain under **Firebase Auth → Settings →
 
 If staff invites fail with **“Domain not allowlisted by project”**, the domain in the error is missing from that Firebase list — not a SendGrid issue.
 
+## Staff login security (Firebase Console)
+
+Recommended settings under **Firebase → Authentication → Settings**:
+
+| Setting | Action |
+|---------|--------|
+| Authorized domains | `rub-club.vercel.app`, `localhost`, production domain |
+| Password policy | Enforce minimum 8 characters with complexity |
+| Email enumeration protection | Enable (recommended) |
+
+### App Check (optional, invisible bot protection)
+
+1. Google Cloud → enable **reCAPTCHA Enterprise**
+2. Create a **score-based** website key for `rub-club.vercel.app` and your production domain (no checkbox challenge)
+3. Firebase → **App Check** → register the web app with that key
+4. Set `NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY` in Vercel and redeploy
+5. Run in **monitoring** mode first; enable **enforcement** for Authentication after a few days of clean traffic
+
+Staff **password reset** is superadmin-only: **Scheduling & team → Team logins → Send password reset** (`POST /api/admin/staff/send-password-reset`, rate-limited, SendGrid when configured). Self-service forgot password on `/admin/login` is disabled (`POST /api/admin/forgot-password` returns 403).
+
 ## Staff invite email deliverability (spam / junk folder)
 
-Gmail may show **“Chiropractic Associates via sendgrid.net”** and file invites in Spam when:
+Gmail often files staff invites in **Spam** even when SendGrid domain auth is verified, because:
 
-1. **Single Sender Verification** is used (personal Gmail/Outlook) instead of **Domain Authentication**
-2. The clinic domain has no SPF/DKIM records pointing at SendGrid
+1. **Link domain mismatch** — the reset button pointed at `*.firebaseapp.com` while mail comes from `scheduling@massageparistx.com` (looks like phishing).
+2. **New sender reputation** — `massageparistx.com` is still building trust with Gmail.
+3. **Password / invite wording** — transactional account emails get extra scrutiny.
 
-**Recommended fix (SendGrid dashboard):**
+### Fix link domain (recommended)
 
-1. **Settings → Sender Authentication → Authenticate Your Domain** for `chiropracticparistexas.com` (or your primary clinic domain)
-2. Add the DNS records SendGrid provides (CNAME) at your domain registrar
-3. Set Vercel `SENDGRID_FROM_EMAIL` to a clinic address on that domain, e.g. `scheduling@chiropracticparistexas.com`
-4. Redeploy and re-send the staff invite
+1. Deploy the app with the custom handler at **`/auth/action`** (included in this repo).
+2. **Firebase Console** → **Authentication** → **Templates** → open any email template → **Customize action URL** → set:
+   - `https://rub-club.vercel.app/auth/action` (or your production `NEXT_PUBLIC_APP_URL` + `/auth/action`)
+3. Save. **New** invite and admin-initiated password reset links from the app will use your Vercel domain instead of `firebaseapp.com`.
+4. Re-send the staff invite and test in Gmail.
 
-**Until then:** Staff can open the message from Spam and click **Report not spam**, or use **Forgot password** on the staff login page.
+Ensure that same hostname is in **Firebase Auth → Settings → Authorized domains**.
 
-Optional: set `SENDGRID_REPLY_TO` to a clinic inbox staff can reply to.
+### Already done / still helps
+
+- **SendGrid domain authentication** on `massageparistx.com` (SPF/DKIM/DMARC)
+- `sendgridfromemail` = `scheduling@massageparistx.com`
+- Ask the recipient to open once from Spam → **Report not spam**
+- [Google Postmaster Tools](https://postmaster.google.com/) — add `massageparistx.com` to monitor reputation
+
+### Later (clinic go-live)
+
+Authenticate `chiropracticparistexas.com` in SendGrid and set the Firebase action URL + `NEXT_PUBLIC_APP_URL` to the clinic production domain.
 
 ## Online booking (no payment required)
 

@@ -137,6 +137,52 @@ const LEGACY_PRIMARY_REDIRECTS: Record<string, string> = {
  * massageparistexas.com paths that map somewhere OTHER than the
  * /services/massage host catch-all (which remains the final fallback).
  */
+// massageparistexas.com service pages now have their own verbatim routes under
+// /services/massage/<slug> (CURSOR_PROMPT §5). Point each old path at its exact
+// new page instead of the generic /services/massage host catch-all. Slugs whose
+// better home is a curated page (prices, chiropractic-care, contact, forms) are
+// handled explicitly below and excluded here.
+const MASSAGE_LEGACY_PAGE_SLUGS = [
+  "acupuncture",
+  "adjustments-and-manipulation",
+  "auto-injury",
+  "back-pain-relief",
+  "burn-scar-massage",
+  "cold-laser-therapy",
+  "common-chiropractic-conditions",
+  "custom-foot-orthotics",
+  "deep-tissue-massage",
+  "degenerative-disc-disease",
+  "electrical-muscle-stimulation",
+  "gentle-massage-therapy",
+  "hot-stone-massage",
+  "ice-pack-cryotherapy",
+  "injury-pain-relief",
+  "interferential-current-therapy",
+  "joint-pain-relief",
+  "massage-therapy",
+  "microcurrent-therapy",
+  "muscle-pain-treatments",
+  "natural-stress-relief",
+  "neck-pain-relief",
+  "personal-injury",
+  "prenatal-massage",
+  "relaxation-massage",
+  "sciatica",
+  "spinal-decompression",
+  "sports-injury",
+  "sports-massage",
+  "swedish-massage",
+  "thai-massage",
+  "therapeutic---swedish",
+  "therapeutic-exercise",
+  "therapeutic-massage",
+  "therapeutic-ultrasound",
+  "vertebral-subluxation-complex",
+  "what-is-chiropractic-massage-therapy",
+  "whole-body-cryotherapy",
+];
+
 const LEGACY_MASSAGE_REDIRECTS: Record<string, string> = {
   "/about.htm": "/about",
   "/chiropactic.htm": "/services/chiropractic", // (sic — legacy typo)
@@ -148,6 +194,9 @@ const LEGACY_MASSAGE_REDIRECTS: Record<string, string> = {
   "/massage-prices": "/services/massage/prices",
   "/massage-prices.php": "/services/massage/prices",
   "/patient-forms": "/patient-forms",
+  ...Object.fromEntries(
+    MASSAGE_LEGACY_PAGE_SLUGS.map((slug) => [`/${slug}`, `/services/massage/${slug}`]),
+  ),
 };
 
 /**

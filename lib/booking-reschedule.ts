@@ -23,8 +23,15 @@ export type RescheduleFailureCode =
   | "slot_blocked"
   | "server_error";
 
+export type RescheduleSuccess = {
+  ok: true;
+  prevStartIso: string;
+  newStartIso: string;
+  changed: boolean;
+};
+
 export type RescheduleResult =
-  | { ok: true }
+  | RescheduleSuccess
   | { ok: false; code: RescheduleFailureCode; status: number };
 
 function isBookingFieldOk(
@@ -83,8 +90,9 @@ export async function rescheduleBookingForStartChange(
   }
 
   const prevStartIso = typeof d.startIso === "string" ? d.startIso : "";
-  if (prevStartIso && newStart.toUTC().toISO() === prevStartIso) {
-    return { ok: true };
+  const newStartIso = newStart.toUTC().toISO()!;
+  if (prevStartIso && newStartIso === prevStartIso) {
+    return { ok: true, prevStartIso, newStartIso, changed: false };
   }
 
   const now = DateTime.now().setZone(TIME_ZONE);
@@ -215,5 +223,5 @@ export async function rescheduleBookingForStartChange(
     return { ok: false, code: "server_error", status: 500 };
   }
 
-  return { ok: true };
+  return { ok: true, prevStartIso, newStartIso, changed: true };
 }

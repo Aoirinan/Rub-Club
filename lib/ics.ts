@@ -10,6 +10,8 @@ type IcsEvent = {
   organizerEmail?: string;
   organizerName?: string;
   url?: string;
+  /** RFC 5545 calendar method — use REQUEST when updating an existing invite. */
+  method?: "PUBLISH" | "REQUEST";
 };
 
 function pad(n: number): string {
@@ -55,7 +57,7 @@ export function buildIcs(event: IcsEvent): string {
     "VERSION:2.0",
     "PRODID:-//Wellness Paris TX//Booking//EN",
     "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
+    `METHOD:${event.method ?? "PUBLISH"}`,
     "BEGIN:VEVENT",
     `UID:${event.uid}`,
     `DTSTAMP:${dtStamp}`,

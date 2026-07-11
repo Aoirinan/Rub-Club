@@ -12,7 +12,11 @@ import {
   pruneHiddenValues,
   type IntakeFormState,
 } from "@/lib/intakeForms/validate";
-import { notifyNewSubmission } from "@/lib/intakeForms/notify";
+import { notifyNewSubmission, sendSubmissionAcknowledgment } from "@/lib/intakeForms/notify";
+import {
+  extractSubmitterEmail,
+  extractSubmitterName,
+} from "@/lib/intakeForms/submitter-contact";
 import type {
   IntakeSignatureValue,
   IntakeDiagramValue,
@@ -159,6 +163,15 @@ export async function POST(req: Request) {
     submissionId,
     notifyEmails: config.notifyEmails,
   });
+
+  const submitterEmail = extractSubmitterEmail(definition, pruned.answers, pruned.signatures);
+  if (submitterEmail) {
+    await sendSubmissionAcknowledgment({
+      to: submitterEmail,
+      formTitle: config.title,
+      recipientName: extractSubmitterName(definition, pruned.answers),
+    });
+  }
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }

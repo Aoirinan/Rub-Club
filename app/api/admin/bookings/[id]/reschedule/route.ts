@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
 import { rescheduleBookingForStartChange } from "@/lib/booking-reschedule";
+import { sendRescheduleNotifications } from "@/lib/booking-reschedule-notify";
 import { requireStaff } from "@/lib/staff-auth";
 
 export const runtime = "nodejs";
@@ -67,6 +68,19 @@ export async function POST(req: Request, ctx: Params) {
       { error: messageFor(result.code), code: result.code },
       { status: result.status },
     );
+  }
+
+  if (result.changed) {
+    try {
+      await sendRescheduleNotifications({
+        db,
+        bookingId: id,
+        prevStartIso: result.prevStartIso,
+        rescheduledBy: "staff",
+      });
+    } catch (err) {
+      console.error("[admin/reschedule] email failed", err);
+    }
   }
 
   return NextResponse.json({ ok: true });

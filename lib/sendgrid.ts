@@ -66,6 +66,14 @@ export type SendgridEnvDiagnostics = {
   likelySwapped: boolean;
   /** FROM uses gmail/outlook/etc. — often lands in spam without domain authentication */
   fromUsesFreeMailbox: boolean;
+  /** Normalized FROM address (safe to show managers — not a secret). */
+  fromEmail?: string;
+  fromEmailDomain?: string;
+  fromDisplayName: string;
+  /** True when FROM is on the clinic production domain (post-cutover). */
+  isClinicFromDomain: boolean;
+  /** True when FROM is a developer transition domain (expected before clinic DNS access). */
+  isTransitionFromDomain: boolean;
 };
 
 const FREE_MAILBOX_DOMAINS = new Set([
@@ -87,6 +95,26 @@ export function getSendgridReplyToEmail(): string | undefined {
   );
   const normalized = normalizeSingleSenderEmail(raw);
   return isValidOutboundFromEmail(normalized) ? normalized : undefined;
+}
+
+/** Inbox display name for outbound mail. Override with SENDGRID_FROM_NAME in Vercel. */
+export function getSendgridFromDisplayName(): string {
+  const custom = process.env.SENDGRID_FROM_NAME?.trim();
+  return custom || emailFromName;
+}
+
+const CLINIC_EMAIL_DOMAINS = ["chiropracticparistexas.com", "chiropracticassociates.com"];
+
+export function isClinicFromDomain(fromEmail: string): boolean {
+  const domain = fromEmail.split("@")[1]?.toLowerCase() ?? "";
+  return CLINIC_EMAIL_DOMAINS.some((d) => domain === d || domain.endsWith(`.${d}`));
+}
+
+export function isTransitionFromDomain(fromEmail: string): boolean {
+  if (!isValidOutboundFromEmail(fromEmail)) return false;
+  const domain = fromEmail.split("@")[1]?.toLowerCase() ?? "";
+  if (FREE_MAILBOX_DOMAINS.has(domain)) return false;
+  return !isClinicFromDomain(fromEmail);
 }
 
 export function getSendgridEnvDiagnostics(): SendgridEnvDiagnostics {
@@ -114,6 +142,11 @@ export function getSendgridEnvDiagnostics(): SendgridEnvDiagnostics {
     apiKeyLooksLikeEmail,
     likelySwapped,
     fromUsesFreeMailbox,
+    fromEmail: fromLooksValid ? fromNorm : undefined,
+    fromEmailDomain: fromLooksValid ? fromDomain : undefined,
+    fromDisplayName: getSendgridFromDisplayName(),
+    isClinicFromDomain: fromLooksValid ? isClinicFromDomain(fromNorm) : false,
+    isTransitionFromDomain: fromLooksValid ? isTransitionFromDomain(fromNorm) : false,
   };
 }
 
@@ -196,7 +229,7 @@ export async function sendOutboundEmail(params: {
   try {
     await sgMail.send({
     to: params.to,
-    from: { email: fromEmail, name: params.fromName ?? emailFromName },
+    from: { email: fromEmail, name: params.fromName ?? getSendgridFromDisplayName() },
     ...(getSendgridReplyToEmail() ? { replyTo: getSendgridReplyToEmail() } : {}),
     subject: params.subject,
     text: params.text,
@@ -292,13 +325,103 @@ function sendgridErrorDetail(e: unknown): string {
   return o.message ?? String(e);
 }
 
-/** SendGrid accepted the message, or a stable reason this deployment did not send. */
-export async function sendStaffInviteEmail(params: {
-  to: string;
-  resetLink: string;
-  inviterNote?: string;
-  subject?: string;
-}): Promise<StaffInviteEmailResult> {
+type StaffPortalEmailContent = {
+  subject: string;
+  preheader: string;
+  headline: string;
+  paragraphs: string[];
+  ctaLabel: string;
+  ctaHref: string;
+  loginUrl: string;
+  footerLines: string[];
+  category: string;
+};
+
+function buildStaffPortalEmailHtml(content: StaffPortalEmailContent): string {
+  const PRIMARY = "#c0392b";
+  const ACCENT = "#f19f1f";
+  const TEXT = "#4a1515";
+  const MUTED = "#5b6360";
+  const safeHref = escapeHtml(content.ctaHref);
+  const safeLogin = escapeHtml(content.loginUrl);
+  const bodyHtml = content.paragraphs
+    .map(
+      (p) =>
+        `<p style="margin:0 0 16px;color:${TEXT};font-size:15px;line-height:1.55">${escapeHtml(p)}</p>`,
+    )
+    .join("");
+  const footerHtml = content.footerLines
+    .map(
+      (line) =>
+        `<p style="margin:0 0 8px;color:${MUTED};font-size:12px;line-height:1.5">${escapeHtml(line)}</p>`,
+    )
+    .join("");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(content.subject)}</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f2ea;font-family:Arial,Helvetica,sans-serif;color:${TEXT};">
+  <span style="display:none!important;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">${escapeHtml(content.preheader)}</span>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f2ea;padding:32px 12px">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+               style="max-width:600px;background:#ffffff;border-top:6px solid ${PRIMARY};box-shadow:0 1px 2px rgba(0,0,0,0.06);">
+          <tr>
+            <td style="padding:24px 24px 0">
+              <p style="margin:0;font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:${PRIMARY};">
+                ${escapeHtml(siteShortName)} · Staff portal
+              </p>
+              <h1 style="margin:8px 0 0;font-size:24px;line-height:1.25;color:${TEXT};">${escapeHtml(content.headline)}</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:12px 24px 24px">
+              ${bodyHtml}
+              <p style="margin:0 0 20px">
+                <a href="${safeHref}" style="display:inline-block;background:${ACCENT};color:${TEXT};text-decoration:none;font-size:14px;font-weight:900;letter-spacing:1px;text-transform:uppercase;padding:14px 22px;border-radius:6px">${escapeHtml(content.ctaLabel)}</a>
+              </p>
+              <p style="margin:0 0 16px;color:${MUTED};font-size:13px;line-height:1.5">If the button does not work, copy this link into your browser:<br><span style="word-break:break-all;color:${TEXT}">${safeHref}</span></p>
+              <p style="margin:0 0 16px;color:${MUTED};font-size:13px;line-height:1.5">Staff sign-in page: <a href="${safeLogin}" style="color:${PRIMARY};font-weight:700">${safeLogin}</a></p>
+              ${footerHtml}
+              <p style="margin:16px 0 0;padding-top:16px;border-top:1px solid #e6e2d3;color:${MUTED};font-size:12px;line-height:1.5;">
+                Paris office: <a href="tel:+19037855551" style="color:${PRIMARY};">903-785-5551</a> ·
+                The Rub Club: <a href="tel:+19037399959" style="color:${PRIMARY};">903-739-9959</a> ·
+                Sulphur Springs: <a href="tel:+19039195020" style="color:${PRIMARY};">903-919-5020</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+function buildStaffPortalEmailText(content: StaffPortalEmailContent): string {
+  return [
+    content.headline,
+    "",
+    ...content.paragraphs,
+    "",
+    `${content.ctaLabel}:`,
+    content.ctaHref,
+    "",
+    `Staff sign-in page: ${content.loginUrl}`,
+    "",
+    ...content.footerLines,
+  ].join("\n");
+}
+
+async function sendStaffPortalEmail(
+  to: string,
+  content: StaffPortalEmailContent,
+): Promise<StaffInviteEmailResult> {
   ensureSendgrid();
   const key = getSendgridApiKey();
   const rawFrom = getSendgridFromEmail();
@@ -311,45 +434,25 @@ export async function sendStaffInviteEmail(params: {
       sent: false,
       issue: "sendgrid_error",
       sendgridDetail:
-        "FROM address is not a valid email after cleaning the env value. Use only the address (e.g. russell_forsyth_1992@outlook.com): no quotes, no newlines, no JSON. If the value looks like SG.x… you may have put the API key in sendgridfromemail by mistake — swap the two variables in Vercel.",
+        "FROM address is not a valid email after cleaning the env value. Use only the address (e.g. scheduling@massageparistx.com): no quotes, no newlines, no JSON. If the value looks like SG.x… you may have put the API key in sendgridfromemail by mistake — swap the two variables in Vercel.",
     };
   }
 
-  const note =
-    params.inviterNote ?? "You have been invited to the staff portal.";
-  const subject = params.subject ?? `Your ${siteShortName} staff sign-in`;
-  const loginUrl = `${getPublicAppOrigin()}/admin/login`;
-  const text = [
-    note,
-    "",
-    "Set your password or sign in using this link:",
-    params.resetLink,
-    "",
-    `Staff sign-in page: ${loginUrl}`,
-    "",
-    "If the link expires, open the staff sign-in page and use Forgot password with this email address.",
-    "",
-    "— Chiropractic Associates / The Rub Club (Paris & Sulphur Springs, TX)",
-  ].join("\n");
-
-  const safeHref = escapeHtml(params.resetLink);
-  const safeLogin = escapeHtml(loginUrl);
-  const html = [
-    `<p>${escapeHtml(note)}</p>`,
-    `<p><a href="${safeHref}">Set your password or open the staff portal</a></p>`,
-    `<p style="font-size:14px;color:#444">Or copy this link into your browser:<br><span style="word-break:break-all">${safeHref}</span></p>`,
-    `<p style="font-size:14px;color:#444">Staff sign-in: <a href="${safeLogin}">${safeLogin}</a></p>`,
-    `<p style="font-size:12px;color:#666;margin-top:24px">Chiropractic Associates · The Rub Club · Paris &amp; Sulphur Springs, TX</p>`,
-  ].join("");
+  const text = buildStaffPortalEmailText(content);
+  const html = buildStaffPortalEmailHtml(content);
 
   try {
     await sgMail.send({
-      to: params.to,
-      from: { email: fromEmail, name: emailFromName },
+      to,
+      from: { email: fromEmail, name: getSendgridFromDisplayName() },
       ...(getSendgridReplyToEmail() ? { replyTo: getSendgridReplyToEmail() } : {}),
-      subject,
+      subject: content.subject,
       text,
       html,
+      categories: [content.category],
+      headers: {
+        "X-Entity-Ref-ID": content.category,
+      },
       trackingSettings: {
         clickTracking: { enable: false },
         openTracking: { enable: false },
@@ -360,11 +463,92 @@ export async function sendStaffInviteEmail(params: {
     });
     return { sent: true };
   } catch (e) {
-    console.error("SendGrid staff invite failed:", sendgridErrorDetail(e));
+    console.error(`SendGrid ${content.category} failed:`, sendgridErrorDetail(e));
     return {
       sent: false,
       issue: "sendgrid_error",
       sendgridDetail: sendgridDisplayForAdmin(e),
     };
   }
+}
+
+/** Branded password reset — always SendGrid, never Firebase's noreply@firebaseapp.com mailer. */
+export async function sendStaffPasswordResetEmail(params: {
+  to: string;
+  resetLink: string;
+  loginOrigin?: string;
+}): Promise<StaffInviteEmailResult> {
+  const loginUrl = `${(params.loginOrigin ?? getPublicAppOrigin()).replace(/\/$/, "")}/admin/login`;
+
+  return sendStaffPortalEmail(params.to, {
+    subject: `${siteShortName} — reset your staff portal password`,
+    preheader: "Use this link to set a new password for the staff scheduling portal.",
+    headline: "Reset your staff password",
+    paragraphs: [
+      "You requested a password reset for the Chiropractic Associates / The Rub Club staff portal.",
+    ],
+    ctaLabel: "Set a new password",
+    ctaHref: params.resetLink,
+    loginUrl,
+    footerLines: [
+      "If you did not request this reset, you can ignore this email.",
+      `${siteShortName} · The Rub Club · Paris & Sulphur Springs, TX`,
+    ],
+    category: "staff-password-reset",
+  });
+}
+
+/** SendGrid accepted the message, or a stable reason this deployment did not send. */
+export async function sendStaffInviteEmail(params: {
+  to: string;
+  resetLink: string;
+  inviterNote?: string;
+  subject?: string;
+  loginOrigin?: string;
+}): Promise<StaffInviteEmailResult> {
+  const note =
+    params.inviterNote ?? "You have been invited to the staff portal.";
+  const subject = params.subject ?? `Your ${siteShortName} staff sign-in`;
+  const loginUrl = `${(params.loginOrigin ?? getPublicAppOrigin()).replace(/\/$/, "")}/admin/login`;
+
+  return sendStaffPortalEmail(params.to, {
+    subject,
+    preheader: "Set your password and sign in to the staff scheduling portal.",
+    headline: "Your staff portal access",
+    paragraphs: [note, "Use the button below to set your password."],
+    ctaLabel: "Set your password",
+    ctaHref: params.resetLink,
+    loginUrl,
+    footerLines: [
+      "If the link expires, ask a superadmin to send a new password reset link from Scheduling & team.",
+      `${siteShortName} · The Rub Club · Paris & Sulphur Springs, TX`,
+    ],
+    category: "staff-invite",
+  });
+}
+
+/** Notify a former staff member that portal access was removed. */
+export async function sendStaffAccessRevokedEmail(params: {
+  to: string;
+  loginOrigin?: string;
+}): Promise<StaffInviteEmailResult> {
+  const loginUrl = `${(params.loginOrigin ?? getPublicAppOrigin()).replace(/\/$/, "")}/admin/login`;
+
+  return sendStaffPortalEmail(params.to, {
+    subject: `${siteShortName} — staff portal access removed`,
+    preheader: "Your staff portal sign-in has been deactivated.",
+    headline: "Staff access removed",
+    paragraphs: [
+      "Your access to the Chiropractic Associates / The Rub Club staff scheduling portal has been removed.",
+      "If you believe this is a mistake, contact your office manager or a superadmin.",
+    ],
+    ctaLabel: "Staff sign-in page",
+    ctaHref: loginUrl,
+    loginUrl,
+    footerLines: [
+      "Do not attempt to sign in with old credentials — your account has been deactivated.",
+      `${siteShortName} · The Rub Club · Paris & Sulphur Springs, TX`,
+    ],
+    category: "staff-access-revoked",
+  });
 }

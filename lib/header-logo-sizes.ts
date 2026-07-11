@@ -15,6 +15,11 @@ export const HEADER_LOGO_HEIGHT_FIELDS: Record<
   },
 };
 
+/** All CMS field ids for logo height — hide numeric inputs when using the visual editor. */
+export const ALL_HEADER_LOGO_HEIGHT_FIELD_IDS: string[] = Object.values(
+  HEADER_LOGO_HEIGHT_FIELDS,
+).flatMap(({ nav, mobile }) => [nav, mobile]);
+
 export type HeaderLogoHeights = {
   /** Desktop nav center (large slot, not scrolled). */
   nav: number;
@@ -24,14 +29,18 @@ export type HeaderLogoHeights = {
   mobile: number;
 };
 
-/** Default Paris nav height is ~20% above the original 80px code default. */
+/** Defaults bumped ~50% larger (still editable in the branding editor). */
 export const DEFAULT_HEADER_LOGO_HEIGHTS: Record<HeaderBrandKey, HeaderLogoHeights> = {
-  chiro: { nav: 96, navCompact: 67, mobile: 72 },
-  ss: { nav: 72, navCompact: 50, mobile: 56 },
+  chiro: { nav: 144, navCompact: 101, mobile: 108 },
+  ss: { nav: 108, navCompact: 76, mobile: 84 },
 };
 
 const MIN_LOGO_HEIGHT_PX = 24;
-const MAX_LOGO_HEIGHT_PX = 160;
+// Raised so the larger defaults still have room to grow when editing.
+const MAX_LOGO_HEIGHT_PX = 240;
+
+export const HEADER_LOGO_HEIGHT_MIN_PX = MIN_LOGO_HEIGHT_PX;
+export const HEADER_LOGO_HEIGHT_MAX_PX = MAX_LOGO_HEIGHT_PX;
 
 export function parseHeaderLogoHeightPx(
   raw: string | undefined,

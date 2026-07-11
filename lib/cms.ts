@@ -58,6 +58,7 @@ export const CMS_REVALIDATE_PATHS = [
   "/contact",
   "/services",
   "/services/chiropractic",
+  "/services/chiropractic/stretch-and-flex-rehab",
   "/services/chiropractic/wellness-care-plans",
   "/services/massage",
   "/services/massage/prices",

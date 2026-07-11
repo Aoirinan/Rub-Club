@@ -1,12 +1,26 @@
 /** Renders SS page body text: ## headings, - bullet blocks, paragraph breaks. */
-export function SsMarkdownBody({ body }: { body: string }) {
+export function SsMarkdownBody({
+  body,
+  centeredH2Titles,
+}: {
+  body: string;
+  /** H2 titles (text after "## ") rendered centered and larger. */
+  centeredH2Titles?: string[];
+}) {
   return (
     <>
       {body.split("\n\n").map((block, i) => {
         if (block.startsWith("## ")) {
+          const title = block.replace("## ", "");
+          const centered = centeredH2Titles?.includes(title);
           return (
-            <h2 key={i} className="mt-8 text-xl font-black text-[#4a1515] first:mt-0">
-              {block.replace("## ", "")}
+            <h2
+              key={i}
+              className={`mt-8 font-black text-[#4a1515] first:mt-0 ${
+                centered ? "text-center text-3xl" : "text-xl"
+              }`}
+            >
+              {title}
             </h2>
           );
         }

@@ -42,6 +42,14 @@ import { StickyCallBar } from "@/components/practice/StickyCallBar";
 
 export const revalidate = 60;
 
+// CURSOR_PROMPT §3a / §3b: these home sections are intentionally NOT rendered.
+// The components (ChiropracticDoctorCard, MassageTeamGrid) and their
+// practice_pages data are retained — flip these back to true to restore.
+// NOTE §3a: this removes the "Our Chiropractors" doctor grid only. The separate
+// "Choose Our Chiropractors" AboutWelcome block is KEPT (rendered below).
+const SHOW_OUR_CHIROPRACTORS_SECTION = false; // §3a
+const SHOW_MEET_THE_TEAM_SECTION = false; // §3b
+
 export const metadata = buildPageMetadata({
   title: siteTitle,
   brandInTitle: true,
@@ -53,7 +61,8 @@ export const metadata = buildPageMetadata({
 export default async function Home() {
   const [page, testimonials, parisHours, cmsLayout, homeFaqs] = await Promise.all([
     getPracticePage("paris-home"),
-    listPracticeTestimonials("paris-home", { publishedOnly: true }),
+    // CURSOR_PROMPT §8b: Paris page shows ONLY Paris-tagged reviews (untagged hidden).
+    listPracticeTestimonials("paris-home", { publishedOnly: true, location: "paris" }),
     getParisOfficeHours(),
     getLayoutCmsContent(),
     getActiveFaqs().then((faqs) => faqs.slice(0, 5)),
@@ -135,7 +144,7 @@ export default async function Home() {
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
         <QuickActionsRow data={page.quickActions} />
 
-        {doctorsSection?.published ? (
+        {SHOW_OUR_CHIROPRACTORS_SECTION && doctorsSection?.published ? (
           <section
             id="our-chiropractors"
             className="scroll-mt-32 border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-10"
@@ -169,7 +178,11 @@ export default async function Home() {
         ) : null}
 
         {twoPracticesBlock?.published ? (
-          <AboutWelcome data={twoPracticesBlock} phone={paris.phonePrimary} />
+          <AboutWelcome
+            data={twoPracticesBlock}
+            phone={paris.phonePrimary}
+            layout="intro-then-aside"
+          />
         ) : null}
 
         <ServicesGrid data={page.servicesGrid} />
@@ -207,7 +220,7 @@ export default async function Home() {
         {wellnessExtra ? <ExtrasSection extras={[wellnessExtra]} /> : null}
         <ExtrasSection extras={otherExtras} />
 
-        {massageTeamSection?.published ? (
+        {SHOW_MEET_THE_TEAM_SECTION && massageTeamSection?.published ? (
           <MassageTeamGrid
             members={massageTeam}
             title={massageTeamSection.heading}

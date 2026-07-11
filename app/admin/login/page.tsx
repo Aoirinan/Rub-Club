@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { sendPasswordResetEmail, signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
-import { getPublicAppOrigin } from "@/lib/app-origin";
+import { completeStaffSignIn } from "@/lib/staff-sign-in-client";
 
 function authErrorMessage(err: unknown): string {
   if (err instanceof FirebaseError) {
@@ -25,6 +25,8 @@ function authErrorMessage(err: unknown): string {
         return "Email and password sign-in is not enabled for this site. Contact your administrator.";
       case "auth/network-request-failed":
         return "Network error. Check your connection and try again.";
+      case "auth/unauthorized-continue-uri":
+        return "Password reset could not start because this site’s domain is not authorized in Firebase. Ask your administrator to add rub-club.vercel.app (and your production domain) under Firebase Auth → Settings → Authorized domains.";
       case "auth/invalid-api-key":
         return "Sign-in could not be completed because of a site configuration issue. Your administrator may need to update API keys or allowed domains for this app.";
       default:
@@ -43,29 +45,26 @@ export default function AdminLoginPage() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [resetBusy, setResetBusy] = useState(false);
   const [noStaffAccess, setNoStaffAccess] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotMessage, setForgotMessage] = useState<string | null>(null);
+  const [forgotBusy, setForgotBusy] = useState(false);
 
   const nextPath = searchParams.get("next");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setInfo(null);
     setNoStaffAccess(false);
     setBusy(true);
     try {
       const auth = getFirebaseClientAuth();
       const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
-      const token = await cred.user.getIdToken();
-      const meRes = await fetch("/api/admin/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const me = (await meRes.json()) as { role?: string | null };
-      if (!me.role) {
+      const result = await completeStaffSignIn(cred);
+      if (!result.ok) {
         setNoStaffAccess(true);
         setError(
           "Your account signed in successfully but does not have staff access yet.",
@@ -82,27 +81,27 @@ export default function AdminLoginPage() {
     }
   }
 
-  async function onForgotPassword() {
-    setError(null);
-    setInfo(null);
-    const trimmed = email.trim();
-    if (!trimmed) {
-      setError("Enter your work email above, then click Forgot password.");
-      return;
-    }
-    setResetBusy(true);
+  async function requestPasswordReset() {
+    setForgotMessage(null);
+    setForgotBusy(true);
     try {
-      const auth = getFirebaseClientAuth();
-      const origin = getPublicAppOrigin();
-      await sendPasswordResetEmail(auth, trimmed, {
-        url: `${origin}/auth/password-reset-complete`,
-        handleCodeInApp: false,
+      const res = await fetch("/api/admin/forgot-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
       });
-      setInfo("If that email has an account, a password reset link was sent. Check your inbox.");
-    } catch (err) {
-      setError(authErrorMessage(err));
+      const data = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
+      if (!res.ok) {
+        setForgotMessage(typeof data.error === "string" ? data.error : "Could not send reset email.");
+        return;
+      }
+      setForgotMessage(
+        typeof data.message === "string"
+          ? data.message
+          : "If an account with that email exists, we sent password reset instructions.",
+      );
     } finally {
-      setResetBusy(false);
+      setForgotBusy(false);
     }
   }
 
@@ -115,6 +114,10 @@ export default function AdminLoginPage() {
           <p className="mt-2 text-sm text-stone-700">
             Use the email and password your administrator created for you. If you were just invited,
             open the link in your invite email to set your password first.
+          </p>
+          <p className="mt-2 text-xs text-stone-600">
+            Use at least 8 characters with letters and numbers. Choose a unique password not shared
+            with personal accounts.
           </p>
         </div>
 
@@ -131,26 +134,71 @@ export default function AdminLoginPage() {
           </label>
           <label className="block space-y-1 text-sm">
             <span className="font-bold text-[#4a1515]">Password</span>
-            <input
-              type="password"
-              className="w-full border border-stone-300 px-3 py-2"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                className="w-full border border-stone-300 px-3 py-2 pr-16"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#c0392b] underline"
+                aria-pressed={showPassword}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </label>
-          <div className="text-right">
-            <button
-              type="button"
-              onClick={onForgotPassword}
-              disabled={resetBusy || busy}
-              className="text-sm font-semibold text-[#c0392b] underline hover:text-[#962d22] disabled:opacity-50"
-            >
-              {resetBusy ? "Sending reset link…" : "Forgot password?"}
-            </button>
-          </div>
+          <p className="text-xs text-stone-600">
+            {showForgot ? (
+              <>
+                Enter your staff email and we&apos;ll send a reset link when an account exists.{" "}
+                <button
+                  type="button"
+                  className="font-semibold text-[#c0392b] underline"
+                  onClick={() => {
+                    setShowForgot(false);
+                    setForgotMessage(null);
+                  }}
+                >
+                  Back to sign-in
+                </button>
+              </>
+            ) : (
+              <>
+                Forgot your password?{" "}
+                <button
+                  type="button"
+                  className="font-semibold text-[#c0392b] underline"
+                  onClick={() => {
+                    setShowForgot(true);
+                    setForgotMessage(null);
+                    setError(null);
+                  }}
+                >
+                  Send yourself a reset link
+                </button>{" "}
+                or ask a superadmin from <strong>Scheduling &amp; team</strong>.
+              </>
+            )}
+          </p>
+          {showForgot ? (
+            <div className="space-y-3 rounded-lg border border-stone-200 bg-stone-50 p-3">
+              <button
+                type="button"
+                disabled={forgotBusy || !email.trim()}
+                onClick={() => void requestPasswordReset()}
+                className="w-full border border-[#c0392b] bg-white py-2 text-sm font-bold uppercase tracking-wide text-[#c0392b] hover:bg-[#fdf6f5] disabled:opacity-50"
+              >
+                {forgotBusy ? "Sending…" : "Email reset link"}
+              </button>
+              {forgotMessage ? <p className="text-sm text-stone-700">{forgotMessage}</p> : null}
+            </div>
+          ) : null}
           {error ? <p className="text-sm text-red-700">{error}</p> : null}
-          {info ? <p className="text-sm text-emerald-800">{info}</p> : null}
           {noStaffAccess ? (
             <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
               <p>
@@ -171,6 +219,15 @@ export default function AdminLoginPage() {
             {busy ? "Signing in…" : "Sign in"}
           </button>
         </form>
+
+        <div className="space-y-2 border-t border-stone-300 pt-4 text-center text-xs text-stone-600">
+          <p>For Chiropractic Associates staff only. Unauthorized access is prohibited.</p>
+          <p>
+            <Link href="/website-privacy" className="font-semibold text-[#c0392b] underline">
+              Website privacy &amp; cookies
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

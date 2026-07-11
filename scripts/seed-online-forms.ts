@@ -24,6 +24,7 @@ import {
   DEFAULT_DISABLED_MESSAGE,
   DEFAULT_TERMS_HTML,
 } from "../lib/intakeForms/seed-config";
+import { defaultOnlineFormNotifyEmails } from "../lib/intakeForms/submitter-contact";
 import {
   INTAKE_LEGAL_TEXT_COLLECTION,
   INTAKE_LEGAL_TEXT_SEEDS,
@@ -43,6 +44,8 @@ async function main() {
   }
 
   // Per-form config docs.
+  const defaultNotifyEmails = defaultOnlineFormNotifyEmails();
+
   for (const form of INTAKE_FORM_SEEDS) {
     const ref = db.collection(INTAKE_FORMS_CONFIG_COLLECTION).doc(form.slug);
     if ((await ref.get()).exists) {
@@ -59,7 +62,7 @@ async function main() {
       termsHtml: DEFAULT_TERMS_HTML,
       successMessage: DEFAULT_SUCCESS_MESSAGE,
       disabledMessage: DEFAULT_DISABLED_MESSAGE,
-      notifyEmails: [],
+      notifyEmails: defaultNotifyEmails,
       updatedAt: now,
       updatedBy: "seed",
     });

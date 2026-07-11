@@ -4,9 +4,10 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { DateTime } from "luxon";
-import { onAuthStateChanged, signOut, type Auth } from "firebase/auth";
+import { onAuthStateChanged, signOut, type Auth, type User } from "firebase/auth";
 import { TIME_ZONE } from "@/lib/constants";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
+import { EmailVerificationBanner } from "@/app/admin/_components/EmailVerificationBanner";
 import {
   ALL_STATUSES,
   DEFAULT_STATUSES,
@@ -92,6 +93,7 @@ function AdminDashboard() {
   const serviceScope = isChiroWindow ? "chiropractic" : "bodywork";
   const basePath = isChiroWindow ? "/admin/chiro" : "/admin";
   const [auth, setAuth] = useState<Auth | null>(null);
+  const [authUser, setAuthUser] = useState<User | null>(null);
   const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -305,9 +307,11 @@ function AdminDashboard() {
     if (!auth) return;
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        setAuthUser(null);
         router.replace("/admin/login");
         return;
       }
+      setAuthUser(user);
       const token = await user.getIdToken();
       const meRes = await fetch("/api/admin/me", {
         headers: { Authorization: `Bearer ${token}` },
@@ -494,6 +498,7 @@ function AdminDashboard() {
   const isDeskWrite = me?.capabilities?.deskWrite ?? (me?.role ? staffMeetsMin(me.role, "front_desk") : false);
   return (
     <div className="min-h-screen bg-slate-50">
+      {me?.role && authUser ? <EmailVerificationBanner user={authUser} /> : null}
       <SchedulerHeader
         mode={schedulerMode}
         email={me?.email}

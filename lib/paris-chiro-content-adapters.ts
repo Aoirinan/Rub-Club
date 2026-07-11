@@ -1,4 +1,3 @@
-import { CHIRO } from "@/lib/home-verbatim";
 import { SS_INJURIES, SS_SERVICES } from "@/lib/sulphur-springs-content";
 
 type ServiceDraft = {
@@ -50,8 +49,8 @@ export function buildParisChiroServiceAdditions(): ServiceDraft[] {
       slug: "stretch-and-flex-rehab",
       title: "Stretch & Flex Rehab",
       metaDescription:
-        "Stretch & Flex Rehab at Chiropractic Associates in Paris, TX. Coach-led stretching and flexibility work coordinated with your chiropractic care plan.",
-      body: `${CHIRO.stretchP1}\n\n${CHIRO.stretchP2}\n\nOur Stretch & Flex Rehab program pairs guided stretching with your chiropractic treatment so tight muscles and stiff joints recover faster. Ask about it when you call or at your next visit.\n\nCall our Paris office at ${PARIS_PHONE} to learn more or book a session.`,
+        "Stretch & Flex Rehab at Chiropractic Associates in Paris, TX. Attended stretching, aerobic exercise, CORE strengthening, and resistance exercise coordinated with chiropractic care.",
+      body: `## WHY STRETCH?\n\nOur rehab coaches use attended stretching techniques that will help your muscles become flexible and have more range of motion. When your body is suffering from stiffness, joint or muscle pain, we forget about the importance of stretching. We believe that our stretching rehab techniques and chiropractor adjustments will help the muscles and also keep the body relaxed. Maintaining a wellness visit will not only reduce the chances but may also prevent injuries and allows your body to react in a positive way during daily activities. Here at our office, we will offer attended stretching, aerobic exercise, CORE strengthening, resistance exercise and instructions for at home stretching.`,
     },
     ssInjury("auto-injury"),
     ssInjury("personal-injury"),

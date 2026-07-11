@@ -16,6 +16,8 @@ import { pageKeywords } from "@/lib/seo-keywords";
 import { getDisplayLocations, getScopeVisualLayout } from "@/lib/cms-display";
 import { getPageBlockOrder } from "@/lib/page-layout-db";
 import { ServicePageVisualSection } from "@/components/ServicePageVisualSection";
+import { MassageReviews } from "@/components/marketing/MassageReviews";
+import { getMassageReviews } from "@/lib/massage-reviews";
 import { MassagePageBlock } from "./MassagePageBlocks";
 
 export const revalidate = 60;
@@ -52,6 +54,7 @@ export default async function MassageServicePage() {
   const serviceLines = (c.massage_services_list ?? "").split(/\n\n+/).filter(Boolean);
   const blockData = { introParagraphs, serviceLines, massageTeam, paris };
   const cmsMap = c as Record<string, string>;
+  const massageReviews = getMassageReviews();
 
   return (
     <>
@@ -88,6 +91,10 @@ export default async function MassageServicePage() {
           ))}
         </div>
       )}
+      {/* CURSOR_PROMPT §6b: massage reviews with 5-star display. */}
+      <div className="mx-auto max-w-6xl px-4 pb-16">
+        <MassageReviews reviews={massageReviews} />
+      </div>
     </>
   );
 }

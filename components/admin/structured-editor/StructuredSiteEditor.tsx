@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
+import { MassageTeamAdminSection } from "@/app/admin/super/_components/MassageTeamAdminSection";
 import { SiteStaffAdminSection } from "@/app/admin/super/_components/SiteStaffAdminSection";
 import { PracticePagesEditor } from "@/components/admin/practice-pages/PracticePagesEditor";
 import { useSiteContentFields } from "@/components/admin/cms/useSiteContentFields";
@@ -10,12 +11,15 @@ import {
   CONTENT_SCOPES,
   isContentScopeId,
   isFaqItemsScope,
+  isMassageTeamScope,
 } from "@/lib/page-builder-content-scopes";
 import { isPageLayoutId, PAGE_LAYOUT_PAGES } from "@/lib/page-layout";
 import type { PageBuilderScopeId } from "@/lib/page-builder-content-scopes";
 import type { PracticeLocationId } from "@/lib/practice-pages-shared";
 import { FaqItemsPanel } from "@/components/admin/FaqItemsPanel";
+import { HeaderLogoSizeEditor } from "@/components/admin/structured-editor/HeaderLogoSizeEditor";
 import { ScopeFieldForm } from "./ScopeFieldForm";
+import { ALL_HEADER_LOGO_HEIGHT_FIELD_IDS } from "@/lib/header-logo-sizes";
 
 type Props = {
   getIdToken: () => Promise<string | null>;
@@ -27,6 +31,7 @@ function parseInitialScope(raw?: string): PageBuilderScopeId {
   if (raw === "header-branding") return "footer";
   if (raw && isPageLayoutId(raw)) return raw;
   if (raw && isFaqItemsScope(raw)) return raw;
+  if (raw && isMassageTeamScope(raw)) return raw;
   if (raw && isContentScopeId(raw)) return raw;
   return "home";
 }
@@ -45,9 +50,10 @@ function scopeLivePath(scope: PageBuilderScopeId): string | null {
   if (scope === "reviews") return "/reviews";
   if (scope === "patient-forms") return "/patient-forms";
   if (scope === "faq-copy") return "/faq";
+  if (scope === "massage-team") return "/services/massage";
   if (scope === "services-hub") return "/services";
   if (scope === "paris-office") return "/locations/paris";
-  if (scope === "paris-chiro-pages") return "/services/chiropractic";
+  if (scope === "paris-chiro-pages") return "/services/chiropractic/stretch-and-flex-rehab";
   if (scope === "paris-staff") return "/locations/paris/staff";
   if (scope === "ss-staff") return "/sulphur-springs/staff";
   if (scope === "ss-subpages") return "/sulphur-springs";
@@ -67,6 +73,7 @@ function scopeLabel(scope: PageBuilderScopeId, pages: { id: string; label: strin
     return pages.find((p) => p.id === scope)?.label ?? scope;
   }
   if (scope === "faq-items") return "FAQ items";
+  if (scope === "massage-team") return "Massage team";
   return CONTENT_SCOPES.find((s) => s.id === scope)?.label ?? scope;
 }
 
@@ -176,11 +183,22 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
   const staffFocus = officeStaffLocationFocus(scope);
 
   const practiceLocation = practiceLocationForScope(scope);
-  const widePane = Boolean(practiceLocation) || Boolean(staffFocus);
+  const widePane =
+    Boolean(practiceLocation) ||
+    Boolean(staffFocus) ||
+    scope === "massage-team" ||
+    scope === "footer";
 
   let main: React.ReactNode = null;
   if (scope === "faq-items") {
     main = <FaqItemsPanel getIdToken={getIdToken} />;
+  } else if (scope === "massage-team") {
+    main = (
+      <MassageTeamAdminSection
+        auth={auth}
+        onNotify={() => setPreviewKey((k) => k + 1)}
+      />
+    );
   } else if (practiceLocation) {
     main = (
       <div className="space-y-6">
@@ -215,6 +233,28 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
           auth={auth}
           locationFocus={staffFocus}
           onNotify={() => setPreviewKey((k) => k + 1)}
+        />
+      </div>
+    );
+  } else if (scope === "footer") {
+    main = (
+      <div className="space-y-6">
+        <HeaderLogoSizeEditor
+          fields={cms.fields}
+          busy={cms.busy}
+          onSave={async (id, value) => {
+            await cms.saveField(id, value);
+            setPreviewKey((k) => k + 1);
+          }}
+        />
+        <ScopeFieldForm
+          scope={scope}
+          fields={cms.fields}
+          busy={cms.busy}
+          message={cms.message}
+          onSave={cms.saveField}
+          onReset={cms.resetField}
+          excludeFieldIds={ALL_HEADER_LOGO_HEIGHT_FIELD_IDS}
         />
       </div>
     );
@@ -260,6 +300,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
                   </option>
                 ))}
                 <option value="faq-items">FAQ items</option>
+                <option value="massage-team">Massage team</option>
               </optgroup>
             </select>
           </label>

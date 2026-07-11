@@ -20,7 +20,6 @@ import { CHIRO, HOME_INTRO, MASSAGE } from "@/lib/home-verbatim";
 import { IMAGES, PARIS_HOME_HERO_IMAGES } from "@/lib/home-images";
 import {
   FACEBOOK_URL,
-  GIFT_CARD_ORDER_URL,
   INSTAGRAM_URL,
   LOCATIONS,
   WELLNESS_CARE_PLANS_PATH,
@@ -315,6 +314,10 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
         { label: "Schedule Appointment", icon: "calendar", url: "/book" },
       ],
     },
+    // CURSOR_PROMPT §4: exactly three equal service cards. Each card is a
+    // clickable <Link> (see components/practice/ServicesGrid.tsx) and every
+    // field (title/name, image, shortDescription/blurb, href) is CMS-editable
+    // via Practice pages -> Our Services.
     servicesGrid: {
       published: true,
       heading: "Our Services",
@@ -322,40 +325,22 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
       mode: "custom",
       cards: [
         {
-          name: "Deep Tissue Massage",
-          blurb: "",
-          imageUrl: IMAGES.serviceDeepTissue,
-          href: "/services/massage",
-        },
-        {
-          name: "Pre-Natal Massage",
-          blurb: "",
-          imageUrl: IMAGES.servicePrenatal,
-          href: "/services/massage",
-        },
-        {
           name: "Chiropractic Care",
-          blurb: "",
+          blurb: "Adjustments, spinal decompression, and therapy from our Paris chiropractors.",
           imageUrl: IMAGES.massageChiroTile,
           href: "/services/chiropractic",
         },
         {
-          name: "Sports Massage",
-          blurb: "",
-          imageUrl: IMAGES.serviceSports,
-          href: "/services/massage",
-        },
-        {
-          name: "Gift Cards",
-          blurb: "",
-          imageUrl: IMAGES.rubClubLogo,
-          href: GIFT_CARD_ORDER_URL,
-        },
-        {
           name: "Stretch & Flex Rehab",
-          blurb: CHIRO.stretchP1,
-          imageUrl: "",
-          href: "/book?service=stretch",
+          blurb: "Assisted stretching and rehab movement to restore mobility and ease pain.",
+          imageUrl: "/images/legacy/stretch-flex-gallery-1.webp",
+          href: "/services/chiropractic/stretch-and-flex-rehab",
+        },
+        {
+          name: "Massage",
+          blurb: "Deep tissue, prenatal, sports, and relaxation massage at The Rub Club.",
+          imageUrl: IMAGES.serviceDeepTissue,
+          href: "/services/massage",
         },
       ],
     },
@@ -636,7 +621,14 @@ export async function getPracticePage(loc: PracticeLocationId): Promise<Practice
 
 export async function listPracticeTestimonials(
   loc: PracticeLocationId,
-  opts: { publishedOnly?: boolean } = {},
+  opts: {
+    publishedOnly?: boolean;
+    /**
+     * CURSOR_PROMPT §8: when set, show ONLY reviews tagged with this location.
+     * Untagged reviews are hidden (never shown when a location filter is active).
+     */
+    location?: import("@/lib/practice-pages-shared").PracticeTestimonialLocation;
+  } = {},
 ): Promise<PracticeTestimonial[]> {
   try {
     const snap = await getFirestore()
@@ -644,11 +636,12 @@ export async function listPracticeTestimonials(
       .doc(loc)
       .collection(PRACTICE_TESTIMONIALS_SUBCOLLECTION)
       .get();
-    const rows = snap.docs
+    let rows = snap.docs
       .map((d) => parsePracticeTestimonialDoc(d.id, d.data()))
       .filter((t) => t.quote.trim().length > 0);
-    const filtered = opts.publishedOnly ? rows.filter((t) => t.published) : rows;
-    return filtered.sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
+    if (opts.publishedOnly) rows = rows.filter((t) => t.published);
+    if (opts.location) rows = rows.filter((t) => t.location === opts.location);
+    return rows.sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
   } catch {
     return [];
   }

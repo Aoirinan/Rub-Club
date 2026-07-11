@@ -5,6 +5,7 @@
  */
 
 import { buildParisChiroServiceAdditions } from "@/lib/paris-chiro-content-adapters";
+import { buildMassageServiceNavChildren } from "@/lib/massage-services";
 
 export type ParisChiroService = {
   slug: string;
@@ -232,17 +233,9 @@ export function buildParisChiroNavChildren(): ParisChiroNavChild[] {
     { href: chiro("auto-injury"), label: "Auto Injury", group: "Injuries" },
     { href: chiro("personal-injury"), label: "Personal Injury", group: "Injuries" },
     { href: chiro("sports-injury"), label: "Sports Injury", group: "Injuries" },
-    {
-      href: "/services/massage",
-      label: "What is Therapeutic Massage?",
-      group: "Therapeutic Massage",
-    },
-    { href: "/services/massage", label: "Deep Tissue Massage", group: "Therapeutic Massage" },
-    { href: "/services/massage", label: "Hot Stone Massage", group: "Therapeutic Massage" },
-    { href: "/services/massage", label: "Prenatal Massage", group: "Therapeutic Massage" },
-    { href: "/services/massage", label: "Relaxation Massage", group: "Therapeutic Massage" },
-    { href: "/services/massage", label: "Sports Massage", group: "Therapeutic Massage" },
-    { href: "/services/massage", label: "Swedish Massage", group: "Therapeutic Massage" },
+    // CURSOR_PROMPT §5b: each Therapeutic Massage entry links to its own
+    // verbatim /services/massage/<slug> page (order = legacy nav order).
+    ...buildMassageServiceNavChildren(),
     {
       href: chiro("heat-and-cryotherapy"),
       label: "Ice Pack Cryotherapy",

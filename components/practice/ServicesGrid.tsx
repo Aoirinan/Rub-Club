@@ -71,7 +71,8 @@ export function ServicesGrid({
             <Link
               key={`${idx}-${card.name}`}
               href={card.href}
-              className="group flex flex-col overflow-hidden rounded-xl bg-white p-5 text-center shadow-md transition hover:shadow-lg"
+              aria-label={card.name}
+              className="focus-ring group flex flex-col overflow-hidden rounded-xl bg-white p-5 text-center shadow-md transition hover:shadow-lg"
             >
               <CardBody card={card} />
             </Link>

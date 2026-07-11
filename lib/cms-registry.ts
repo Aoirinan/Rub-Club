@@ -304,6 +304,7 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "location_section_heading", pageLabel: "Footer", sectionLabel: "Location & hours sections", fieldLabel: "Location heading (subpage bottom sections)", type: "text" },
   { id: "hours_section_heading", pageLabel: "Footer", sectionLabel: "Location & hours sections", fieldLabel: "Hours heading (subpage bottom sections)", type: "text" },
   { id: "footer_copyright", pageLabel: "Footer", sectionLabel: "Footer", fieldLabel: "Copyright Text", type: "text" },
+  { id: "social_bar_label", pageLabel: "Footer", sectionLabel: "Social bar", fieldLabel: "Social bar label (e.g. \"Follow us on social media\")", type: "text" },
 
   { id: "nav_giftcard_url", pageLabel: "Navigation", sectionLabel: "Links", fieldLabel: "Gift Card URL", type: "url" },
   { id: "nav_book_url", pageLabel: "Navigation", sectionLabel: "Links", fieldLabel: "Book Now URL", type: "url" },
@@ -488,10 +489,10 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
   header_ss_logo: "",
   header_paris_lockup_title: "Chiropractic Associates",
   header_paris_lockup_subtitle: "& The Rub Club · Paris, TX",
-  header_paris_logo_nav_height_px: "96",
-  header_paris_logo_mobile_height_px: "72",
-  header_ss_logo_nav_height_px: "72",
-  header_ss_logo_mobile_height_px: "56",
+  header_paris_logo_nav_height_px: "144",
+  header_paris_logo_mobile_height_px: "108",
+  header_ss_logo_nav_height_px: "108",
+  header_ss_logo_mobile_height_px: "84",
 
   footer_tagline:
     "Family-owned wellness in Northeast Texas. Two practices, one address in Paris — plus chiropractic care in Sulphur Springs.",
@@ -506,6 +507,7 @@ Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office
   location_section_heading: "Our Location",
   hours_section_heading: "Office Hours",
   footer_copyright: `© ${new Date().getFullYear()} ${siteShortName}. All rights reserved.`,
+  social_bar_label: "Follow us on social media",
 
   nav_giftcard_url: GIFT_CARD_ORDER_URL,
   nav_book_url: "/contact",
