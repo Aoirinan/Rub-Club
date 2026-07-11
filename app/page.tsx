@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { JsonLd } from "@/components/JsonLd";
-import { HomeVideo } from "@/components/HomeVideo";
 import { FaqList } from "@/components/FaqList";
 import { MassageTeamGrid } from "@/components/marketing/MassageTeamGrid";
 import { TestimonialVideosSection } from "@/components/TestimonialVideosSection";
@@ -15,7 +14,7 @@ import {
 } from "@/lib/structured-data";
 import { getContentMany, renderRichText } from "@/lib/cms";
 import { DOCTOR_CMS_KEYS, doctorVideoItems, getDoctorsForMarketing } from "@/lib/cms-doctors";
-import { CHIRO, CHIRO_INTRO_VIDEO_SRC } from "@/lib/home-verbatim";
+import { CHIRO } from "@/lib/home-verbatim";
 import { PARIS_HOME_HERO_IMAGES } from "@/lib/home-images";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { getLayoutCmsContent } from "@/lib/cms-display";
@@ -191,11 +190,6 @@ export default async function Home() {
         {otherAboutBlocks.map((block, i) => (
           <Fragment key={block.id || i}>
             <AboutWelcome data={block} phone={paris.phonePrimary} />
-            {i === 0 && block.published ? (
-              <section className="border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-10">
-                <HomeVideo src={CHIRO_INTRO_VIDEO_SRC} heading={CHIRO.introVideoHeading} />
-              </section>
-            ) : null}
           </Fragment>
         ))}
 
