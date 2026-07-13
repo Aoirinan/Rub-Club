@@ -13,7 +13,7 @@
  *
  * Output:
  *   legacy-export/
- *     raw/<site>/<slug>.html      full original HTML, untouched (source of truth)
+ *     raw/<site>/<slug>.html      original HTML (API keys stripped on save)
  *     assets/<site>/<file>        every downloaded image + video
  *     content.json                structured extraction
  *     report.txt                  what worked, what didn't
@@ -57,6 +57,13 @@ const HEADERS = {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const report = [];
 const log = (msg) => { console.log(msg); report.push(msg); };
+
+/** Strip vendor-embedded API keys (e.g. Google Maps) before archiving HTML. */
+function sanitizeRawHtml(html) {
+  return html
+    .replace(/<script[^>]*maps\.google(?:apis)?\.com\/maps\/api\/js[^>]*>\s*<\/script>\s*/gi, '')
+    .replace(/AIza[0-9A-Za-z_-]{35}/g, 'REDACTED');
+}
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
@@ -201,7 +208,7 @@ async function crawlSite(site) {
       const slug = slugFromUrl(norm);
       const rawPath = path.join(OUT, 'raw', key, `${slug}.html`);
       await fs.mkdir(path.dirname(rawPath), { recursive: true });
-      await fs.writeFile(rawPath, html, 'utf8');
+      await fs.writeFile(rawPath, sanitizeRawHtml(html), 'utf8');
 
       const $full = load(html);
 
