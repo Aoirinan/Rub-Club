@@ -9,8 +9,10 @@ export type Testimonial = {
 };
 
 /**
- * Curated patient stories for marketing. Several are paraphrased from public
- * Google Business Profile reviews — see /reviews for how we use them and to leave your own.
+ * Curated patient stories for marketing (Paris pages and /reviews). Several are
+ * paraphrased from public Google Business Profile reviews — see /reviews for
+ * how we use them and to leave your own. Sulphur Springs stories live in
+ * SULPHUR_SPRINGS_TESTIMONIALS below and only appear on /sulphur-springs pages.
  */
 export const TESTIMONIALS: readonly Testimonial[] = [
   {
@@ -27,14 +29,6 @@ export const TESTIMONIALS: readonly Testimonial[] = [
     author: "Expectant mom, Paris",
     context: "Prenatal massage · Google review",
     service: "massage",
-    fromGoogleReview: true,
-  },
-  {
-    quote:
-      "After a car accident I could barely turn my head. A few weeks with Dr. Welborn plus deep-tissue work from The Rub Club and I was back to normal.",
-    author: "Sulphur Springs patient",
-    context: "Auto injury recovery · Google review",
-    service: "both",
     fromGoogleReview: true,
   },
   {
@@ -59,6 +53,18 @@ export const TESTIMONIALS: readonly Testimonial[] = [
     author: "Northeast Texas family",
     context: "First-time visit",
     service: "both",
+  },
+];
+
+/** Sulphur Springs stories — shown only on /sulphur-springs pages. */
+export const SULPHUR_SPRINGS_TESTIMONIALS: readonly Testimonial[] = [
+  {
+    quote:
+      "After a car accident I could barely turn my head. A few weeks with Dr. Welborn plus deep-tissue work from The Rub Club and I was back to normal.",
+    author: "Sulphur Springs patient",
+    context: "Auto injury recovery · Google review",
+    service: "both",
+    fromGoogleReview: true,
   },
 ];
 

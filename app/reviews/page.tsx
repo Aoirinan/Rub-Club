@@ -11,7 +11,7 @@ export const revalidate = 60;
 export const metadata = buildPageMetadata({
   title: "Patient Reviews",
   description:
-    "Hear what Paris and Sulphur Springs patients say about Chiropractic Associates and The Rub Club, then leave your own review on Google.",
+    "Hear what our patients say about Chiropractic Associates and The Rub Club in Paris, TX, then leave your own review on Google.",
   path: "/reviews",
   ogTitle: "Patient Reviews — Chiropractic Associates",
   ogDescription: "Read patient stories and leave us a Google review.",

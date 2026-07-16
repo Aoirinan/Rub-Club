@@ -1,7 +1,10 @@
 import { getContentMany } from "@/lib/cms";
-import { buildStaticPagesCmsDefaults, STATIC_PAGES_CMS_IDS } from "@/lib/static-pages-cms";
+import {
+  buildStaticPagesCmsDefaults,
+  REVIEWS_TESTIMONIAL_SLOTS,
+  STATIC_PAGES_CMS_IDS,
+} from "@/lib/static-pages-cms";
 import type { Testimonial } from "@/lib/testimonials";
-import { TESTIMONIALS } from "@/lib/testimonials";
 
 export type ReviewsPageContent = {
   heroEyebrow: string;
@@ -16,8 +19,7 @@ export async function getReviewsPageContent(): Promise<ReviewsPageContent> {
   const cms = await getContentMany([...STATIC_PAGES_CMS_IDS]);
   const defaults = buildStaticPagesCmsDefaults();
 
-  const testimonials = TESTIMONIALS.map((t, i) => {
-    const n = i + 1;
+  const testimonials = REVIEWS_TESTIMONIAL_SLOTS.map(({ n, testimonial: t }) => {
     const quote = cms[`reviews_testimonial_${n}_quote`]?.trim();
     const author = cms[`reviews_testimonial_${n}_author`]?.trim();
     const context = cms[`reviews_testimonial_${n}_context`]?.trim();

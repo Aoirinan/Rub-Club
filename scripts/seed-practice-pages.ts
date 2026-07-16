@@ -1,7 +1,7 @@
 /**
  * Seeds practice_pages/{paris-home|paris-chiro|sulphur-springs} with each
  * page's current live copy (CMS values + static fallbacks) plus testimonials:
- *   - Paris home: the 6 curated /reviews stories (published, with context)
+ *   - Paris home: the curated Paris /reviews stories (published, with context)
  *   - Paris chiro: the 3 currently-live chiro testimonials (published) + 3 unpublished placeholders
  *   - Sulphur Springs: the SS auto-injury story (published) + 3 unpublished placeholders
  *
@@ -16,7 +16,7 @@ loadEnvConfig(process.cwd());
 
 import { getFirestore } from "../lib/firebase-admin";
 import { getContentMany } from "../lib/cms";
-import { TESTIMONIALS } from "../lib/testimonials";
+import { SULPHUR_SPRINGS_TESTIMONIALS, TESTIMONIALS } from "../lib/testimonials";
 import {
   PRACTICE_LOCATION_IDS,
   PRACTICE_PAGES_COLLECTION,
@@ -53,7 +53,7 @@ async function parisChiroLiveTestimonials(): Promise<SeedTestimonial[]> {
   return rows;
 }
 
-/** The 6 curated /reviews stories (paraphrased Google reviews), published. */
+/** The curated Paris /reviews stories (paraphrased Google reviews), published. */
 function parisHomeTestimonials(): SeedTestimonial[] {
   return TESTIMONIALS.map((t, i) => ({
     name: t.author,
@@ -64,9 +64,9 @@ function parisHomeTestimonials(): SeedTestimonial[] {
   }));
 }
 
-/** The SS auto-injury story from /reviews, published. */
+/** The SS auto-injury story, published. */
 function sulphurSpringsTestimonials(): SeedTestimonial[] {
-  return TESTIMONIALS.filter((t) => /sulphur springs/i.test(t.author)).map((t, i) => ({
+  return SULPHUR_SPRINGS_TESTIMONIALS.map((t, i) => ({
     name: t.author,
     context: t.context ?? "",
     quote: t.quote,
@@ -95,7 +95,7 @@ async function seedTestimonials(loc: PracticeLocationId): Promise<void> {
   }
 
   const live = await liveTestimonialsFor(loc);
-  // The home page already shows 6 published stories — no placeholders needed.
+  // The home page already shows its published stories — no placeholders needed.
   const placeholders: SeedTestimonial[] =
     loc === "paris-home"
       ? []

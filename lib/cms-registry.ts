@@ -76,8 +76,8 @@ export type ContentFieldMeta = {
 
 const CHIRO_TESTIMONIAL_DEFAULTS = [
   {
-    text: "After a car accident I could barely turn my head. A few weeks with Dr. Welborn plus deep-tissue work from The Rub Club and I was back to normal.",
-    attr: "Sulphur Springs patient · Auto injury recovery",
+    text: "Dr. Brandy Collins is gentle with my kids and patient with their questions. We drive over an hour because she is worth it.",
+    attr: "Parent of two · Pediatric care",
   },
   {
     text: "Dr. Thompson and the team have kept me moving for years. I always leave feeling looked after — and they never push extra visits I do not need.",

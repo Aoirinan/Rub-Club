@@ -1,5 +1,28 @@
 import type { ContentFieldMeta } from "@/lib/cms-registry";
+import type { Testimonial } from "@/lib/testimonials";
 import { TESTIMONIALS } from "@/lib/testimonials";
+
+/**
+ * Stable CMS slot numbers for the /reviews testimonials. Slot 3 was the
+ * Sulphur Springs story (removed from the Paris-facing /reviews page); its
+ * number is retired so existing `reviews_testimonial_N_*` CMS overrides keep
+ * applying to the same stories they were written for.
+ */
+const RETIRED_REVIEWS_TESTIMONIAL_SLOTS: ReadonlySet<number> = new Set([3]);
+
+export const REVIEWS_TESTIMONIAL_SLOTS: ReadonlyArray<{
+  n: number;
+  testimonial: Testimonial;
+}> = (() => {
+  const slots: { n: number; testimonial: Testimonial }[] = [];
+  let n = 1;
+  for (const t of TESTIMONIALS) {
+    while (RETIRED_REVIEWS_TESTIMONIAL_SLOTS.has(n)) n++;
+    slots.push({ n, testimonial: t });
+    n++;
+  }
+  return slots;
+})();
 
 export const STATIC_PAGES_CMS_REGISTRY: ContentFieldMeta[] = [
   {
@@ -144,8 +167,7 @@ export const STATIC_PAGES_CMS_REGISTRY: ContentFieldMeta[] = [
     fieldLabel: "Body paragraph",
     type: "richtext",
   },
-  ...TESTIMONIALS.flatMap((t, i) => {
-    const n = i + 1;
+  ...REVIEWS_TESTIMONIAL_SLOTS.flatMap(({ n }) => {
     return [
       {
         id: `reviews_testimonial_${n}_quote`,
@@ -297,8 +319,7 @@ export function buildStaticPagesCmsDefaults(): Record<string, string> {
 - If you cannot print at home, arrive a few minutes early and we will have paper copies at the front desk.`,
   };
 
-  TESTIMONIALS.forEach((t, i) => {
-    const n = i + 1;
+  REVIEWS_TESTIMONIAL_SLOTS.forEach(({ n, testimonial: t }) => {
     defaults[`reviews_testimonial_${n}_quote`] = t.quote;
     defaults[`reviews_testimonial_${n}_author`] = t.author;
     defaults[`reviews_testimonial_${n}_context`] = t.context ?? "";
