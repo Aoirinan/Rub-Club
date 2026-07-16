@@ -22,12 +22,16 @@ const ASSETS = {
     "public/images/legacy/massage-hero-banner.webp",
   "https://cdcssl.ibsrv.net/ibimg/smb/1400x933_80/webmgr/1w/3/z/ple/shutterstock_1184775688-ed.jpg.webp?8559b7dd5203b55a0948674df741e14c":
     "public/images/legacy/massage-patient.webp",
-  "https://cdcssl.ibsrv.net/ibimg/smb/1400x990_80/webmgr/1w/3/z/ple/shutterstock_336945686.jpg.webp?3f41a60baebc9b6209258b4e72b3b21c":
-    "public/images/legacy/service-deep-tissue.webp",
+  // Content-correct mapping: shutterstock_1729514116 is clinical/deep work;
+  // shutterstock_336945686 is the prenatal client photo.
   "https://cdcssl.ibsrv.net/ibimg/smb/1400x934_80/webmgr/1w/3/z/ple/shutterstock_1729514116.jpg.webp?b1c3bc3c658cca01290563c23e62c80c":
+    "public/images/legacy/service-deep-tissue.webp",
+  "https://cdcssl.ibsrv.net/ibimg/smb/1400x990_80/webmgr/1w/3/z/ple/shutterstock_336945686.jpg.webp?3f41a60baebc9b6209258b4e72b3b21c":
     "public/images/legacy/service-prenatal.webp",
   "https://cdcssl.ibsrv.net/ibimg/smb/1400x934_80/webmgr/1w/3/z/ple/shutterstock_222620296.jpg.webp?a1f06e92b4c31d8c39aa11d2e138128a":
     "public/images/legacy/service-sports.webp",
+  "https://cdcssl.ibsrv.net/ibimg/smb/916x610_80/webmgr/1w/3/z/30768.jpg.webp?19fc9b77b8732ce957129c639b735013":
+    "public/images/legacy/service-hot-stone.webp",
   "https://cdcssl.ibsrv.net/ibimg/smb/1400x934_80/webmgr/1w/3/z/ple/638660a05d69e_chirobg.jpg.webp?20e761e45f85550c3bd062f087af0e56":
     "public/images/legacy/massage-chiro-tile.webp",
   "https://cdcssl.ibsrv.net/ibimg/smb/1400x1227_80/webmgr/1x/5/c/sedona/637d483367b61_blade.jpg.webp?f4d8fdfeaf0d5752ef0b4d328a1456af":
