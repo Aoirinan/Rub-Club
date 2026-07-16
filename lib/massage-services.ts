@@ -23,7 +23,7 @@ export const MASSAGE_SERVICE_PAGES: readonly MassageServicePage[] = [
     slug: "therapeutic-massage",
     name: "What is Therapeutic Massage?",
     blurb: "Coordinated with your chiropractic plan to support recovery between adjustments.",
-    imageUrl: "",
+    imageUrl: IMAGES.serviceTherapeutic,
   },
   {
     slug: "deep-tissue-massage",
@@ -35,7 +35,7 @@ export const MASSAGE_SERVICE_PAGES: readonly MassageServicePage[] = [
     slug: "hot-stone-massage",
     name: "Hot Stone Massage",
     blurb: "Heated stones paired with hands-on work to warm tight muscles and release deep tension.",
-    imageUrl: "",
+    imageUrl: IMAGES.serviceHotStone,
   },
   {
     slug: "prenatal-massage",
@@ -47,7 +47,7 @@ export const MASSAGE_SERVICE_PAGES: readonly MassageServicePage[] = [
     slug: "relaxation-massage",
     name: "Relaxation Massage",
     blurb: "Gentle, calming, full-body massage focused purely on unwinding and stress relief.",
-    imageUrl: "",
+    imageUrl: IMAGES.serviceRelaxation,
   },
   {
     slug: "sports-massage",
@@ -59,25 +59,25 @@ export const MASSAGE_SERVICE_PAGES: readonly MassageServicePage[] = [
     slug: "swedish-massage",
     name: "Swedish Massage",
     blurb: "Long, flowing strokes that relax muscles, boost circulation, and melt away everyday stress.",
-    imageUrl: "",
+    imageUrl: IMAGES.serviceSwedish,
   },
   {
     slug: "gentle-massage-therapy",
     name: "Gentle Massage Therapy",
     blurb: "Light-pressure massage for sensitive clients, older adults, or anyone easing into bodywork.",
-    imageUrl: "",
+    imageUrl: IMAGES.serviceGentle,
   },
   {
     slug: "thai-massage",
     name: "Thai Massage",
     blurb: "Assisted stretching and rhythmic pressure to improve flexibility and release tension.",
-    imageUrl: "",
+    imageUrl: IMAGES.serviceThai,
   },
   {
     slug: "burn-scar-massage",
     name: "Burn Scar Massage",
     blurb: "Specialized soft-tissue work to improve mobility and comfort in healed scar tissue.",
-    imageUrl: "",
+    imageUrl: IMAGES.serviceBurnScar,
   },
 ];
 

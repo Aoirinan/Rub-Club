@@ -39,9 +39,11 @@ const URL_MAP: Record<string, string> = {
     "/images/legacy/massage-hero-banner.webp",
   "https://cdcssl.ibsrv.net/ibimg/smb/1400x933_80/webmgr/1w/3/z/ple/shutterstock_1184775688-ed.jpg.webp?8559b7dd5203b55a0948674df741e14c":
     "/images/legacy/massage-patient.webp",
-  "https://cdcssl.ibsrv.net/ibimg/smb/1400x990_80/webmgr/1w/3/z/ple/shutterstock_336945686.jpg.webp?3f41a60baebc9b6209258b4e72b3b21c":
-    "/images/legacy/service-deep-tissue.webp",
+  // Content-correct mapping: shutterstock_1729514116 is clinical/deep work;
+  // shutterstock_336945686 is the prenatal client photo.
   "https://cdcssl.ibsrv.net/ibimg/smb/1400x934_80/webmgr/1w/3/z/ple/shutterstock_1729514116.jpg.webp?b1c3bc3c658cca01290563c23e62c80c":
+    "/images/legacy/service-deep-tissue.webp",
+  "https://cdcssl.ibsrv.net/ibimg/smb/1400x990_80/webmgr/1w/3/z/ple/shutterstock_336945686.jpg.webp?3f41a60baebc9b6209258b4e72b3b21c":
     "/images/legacy/service-prenatal.webp",
   "https://cdcssl.ibsrv.net/ibimg/smb/1400x934_80/webmgr/1w/3/z/ple/shutterstock_222620296.jpg.webp?a1f06e92b4c31d8c39aa11d2e138128a":
     "/images/legacy/service-sports.webp",
