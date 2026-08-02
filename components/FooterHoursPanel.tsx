@@ -22,6 +22,67 @@ function HoursTable({ rows }: { rows: readonly OfficeHoursRow[] }) {
   );
 }
 
+/** "Monday" -> "Mon", so two hours columns can sit side by side in the footer. */
+function shortDay(day: string): string {
+  return day.trim().slice(0, 3);
+}
+
+/** "9:00 AM – 6:00 PM" -> "9–6", "Closed" -> "Closed" — compact enough for a narrow column. */
+function shortHours(hours: string): string {
+  const trimmed = hours.trim();
+  if (!trimmed || /closed/i.test(trimmed)) return trimmed || "—";
+  const times = trimmed.split(/[–-]/).map((t) => t.trim());
+  if (times.length !== 2) return trimmed;
+  const compact = (t: string) => {
+    const m = t.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+    if (!m) return t;
+    const [, h, min, ampm] = m;
+    return `${h}${min && min !== "00" ? `:${min}` : ""}${ampm ? ampm[0]!.toLowerCase() : ""}`;
+  };
+  return `${compact(times[0]!)}–${compact(times[1]!)}`;
+}
+
+/** Two hours sets shown side by side, one row per day, to keep the footer column short. */
+function TwoBusinessHoursTable({
+  leftLabel,
+  leftRows,
+  rightLabel,
+  rightRows,
+}: {
+  leftLabel: string;
+  leftRows: readonly OfficeHoursRow[];
+  rightLabel: string;
+  rightRows: readonly OfficeHoursRow[];
+}) {
+  const findHours = (rows: readonly OfficeHoursRow[], day: string) =>
+    rows.find((r) => r.day.trim().toLowerCase() === day.trim().toLowerCase())?.hours;
+
+  return (
+    <div>
+      <div className="mb-1 flex justify-between gap-2 text-[11px] font-bold text-white/70">
+        <span className="w-8" />
+        <span className="flex-1 text-right">{leftLabel}</span>
+        <span className="flex-1 text-right">{rightLabel}</span>
+      </div>
+      <dl className="space-y-1">
+        {leftRows.map((row, i) => {
+          const rightHours = findHours(rightRows, row.day) ?? rightRows[i]?.hours ?? "—";
+          return (
+            <div
+              key={row.day}
+              className="flex justify-between gap-2 border-b border-white/10 py-1 text-xs"
+            >
+              <dt className="w-8 font-bold text-white">{shortDay(row.day)}</dt>
+              <dd className="flex-1 text-right text-white/80">{shortHours(row.hours)}</dd>
+              <dd className="flex-1 text-right text-white/80">{shortHours(rightHours)}</dd>
+            </div>
+          );
+        })}
+      </dl>
+    </div>
+  );
+}
+
 function locationLabel(focus: FooterHoursFocus): string | null {
   if (focus === "paris") return LOCATIONS.paris.shortName;
   if (focus === "sulphur_springs") return LOCATIONS.sulphur_springs.shortName;
@@ -54,20 +115,18 @@ export function FooterHoursPanel({
       ) : null}
       <div className="mt-3 space-y-4">
         {focus === "paris" || focus === "both" ? (
-          <div className="space-y-3">
+          <div>
             {focus === "both" ? (
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-[#f19f1f]">
+              <p className="mb-2 text-xs font-black uppercase tracking-[0.14em] text-[#f19f1f]">
                 {LOCATIONS.paris.shortName}
               </p>
             ) : null}
-            <div>
-              <p className="mb-1 text-xs font-bold text-white/70">Chiropractic Associates</p>
-              <HoursTable rows={parisChiroHours} />
-            </div>
-            <div>
-              <p className="mb-1 text-xs font-bold text-white/70">The Rub Club (massage)</p>
-              <HoursTable rows={parisMassageHours} />
-            </div>
+            <TwoBusinessHoursTable
+              leftLabel="Chiro"
+              leftRows={parisChiroHours}
+              rightLabel="Massage"
+              rightRows={parisMassageHours}
+            />
           </div>
         ) : null}
         {focus === "sulphur_springs" || focus === "both" ? (
