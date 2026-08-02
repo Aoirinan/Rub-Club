@@ -9,7 +9,7 @@ import { SsMarkdownBody } from "@/components/SsMarkdownBody";
 import { LegacyPageBody } from "@/components/LegacyPageBody";
 import { telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
-import { getParisOfficeHours } from "@/lib/office-hours";
+import { getParisChiroOfficeHours } from "@/lib/office-hours";
 import { getContentMany } from "@/lib/cms";
 import { allParisChiroServiceSlugs, getParisChiroService } from "@/lib/paris-chiro-services";
 import { getPublishedLegacyPage, listPublishedLegacyPagesForSite } from "@/lib/legacy-pages";
@@ -98,7 +98,7 @@ export default async function ParisChiroServicePage({ params }: Props) {
   const { slug } = await params;
   const [page, parisHours, displayLocs] = await Promise.all([
     getParisChiroPageContent(slug),
-    getParisOfficeHours(),
+    getParisChiroOfficeHours(),
     getDisplayLocations(),
   ]);
 

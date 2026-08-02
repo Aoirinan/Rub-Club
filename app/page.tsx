@@ -18,7 +18,7 @@ import { CHIRO } from "@/lib/home-verbatim";
 import { PARIS_HOME_HERO_IMAGES } from "@/lib/home-images";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { getLayoutCmsContent } from "@/lib/cms-display";
-import { getParisOfficeHours } from "@/lib/office-hours";
+import { getParisChiroOfficeHours, getParisOfficeHours } from "@/lib/office-hours";
 import { getActiveFaqs } from "@/lib/site-faqs";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { mergedDisplayLocations } from "@/lib/site-display-overrides";
@@ -58,10 +58,11 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function Home() {
-  const [page, testimonials, parisHours, cmsLayout, homeFaqs] = await Promise.all([
+  const [page, testimonials, chiroHours, massageHours, cmsLayout, homeFaqs] = await Promise.all([
     getPracticePage("paris-home"),
     // CURSOR_PROMPT §8b: Paris page shows ONLY Paris-tagged reviews (untagged hidden).
     listPracticeTestimonials("paris-home", { publishedOnly: true, location: "paris" }),
+    getParisChiroOfficeHours(),
     getParisOfficeHours(),
     getLayoutCmsContent(),
     getActiveFaqs().then((faqs) => faqs.slice(0, 5)),
@@ -277,7 +278,9 @@ export default async function Home() {
             detailsHref: `/locations/${paris.slug}`,
             detailsLabel: "Paris details & hours",
           }}
-          hours={parisHours}
+          hours={chiroHours}
+          hoursLabel="Chiropractic"
+          additionalHours={[{ label: "Massage (The Rub Club)", rows: massageHours }]}
           secondaryLocations={secondaryLocations}
         />
       </div>

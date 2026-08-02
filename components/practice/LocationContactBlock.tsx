@@ -24,16 +24,27 @@ export type PracticeSecondaryLocation = {
   hrefLabel: string;
 };
 
+export type LocationContactHoursGroup = {
+  label: string;
+  rows: OfficeHoursRow[];
+};
+
 /** Office info + hours table + embedded map, with optional secondary-office cards. */
 export function LocationContactBlock({
   data,
   location,
   hours,
+  hoursLabel,
+  additionalHours = [],
   secondaryLocations = [],
 }: {
   data: PracticeLocationBlockSection;
   location: PracticeLocationInfo;
   hours: OfficeHoursRow[];
+  /** Shown above `hours` only when there's more than one business's hours to distinguish. */
+  hoursLabel?: string;
+  /** Extra labeled hours blocks — e.g. a co-located business with a different schedule. */
+  additionalHours?: LocationContactHoursGroup[];
   secondaryLocations?: PracticeSecondaryLocation[];
 }) {
   if (!data.published) return null;
@@ -109,7 +120,7 @@ export function LocationContactBlock({
           {hours.length > 0 ? (
             <div>
               <h3 className="text-sm font-black uppercase tracking-wide text-[var(--pp-accent)]">
-                Office Hours
+                {hoursLabel ? `${hoursLabel} Hours` : "Office Hours"}
               </h3>
               <div className="mt-2 max-w-sm">
                 <OfficeHoursTable
@@ -120,6 +131,20 @@ export function LocationContactBlock({
               </div>
             </div>
           ) : null}
+          {additionalHours.map((group) => (
+            <div key={group.label}>
+              <h3 className="text-sm font-black uppercase tracking-wide text-[var(--pp-accent)]">
+                {group.label} Hours
+              </h3>
+              <div className="mt-2 max-w-sm">
+                <OfficeHoursTable
+                  rows={group.rows}
+                  dayClassName="font-medium text-stone-800"
+                  rowClassName="flex justify-between gap-3 border-b border-stone-100 py-1 text-sm text-stone-700"
+                />
+              </div>
+            </div>
+          ))}
         </div>
         {data.mapEmbedUrl.trim() ? (
           <div className="overflow-hidden border border-stone-200 bg-stone-100">

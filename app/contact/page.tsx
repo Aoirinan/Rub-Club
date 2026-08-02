@@ -8,7 +8,7 @@ import { getPageBrand } from "@/lib/page-business-theme";
 import { telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
 import { organizationJsonLd } from "@/lib/structured-data";
-import { getParisOfficeHours } from "@/lib/office-hours";
+import { getParisChiroOfficeHours, getParisOfficeHours } from "@/lib/office-hours";
 import { OfficeHoursTable } from "@/components/OfficeHoursTable";
 import { getContentMany } from "@/lib/cms";
 
@@ -41,8 +41,9 @@ function PinIcon() {
 }
 
 export default async function ContactPage() {
-  const [c, parisHours, displayLocs, brand] = await Promise.all([
+  const [c, chiroHours, massageHours, displayLocs, brand] = await Promise.all([
     getContentMany(["contact_heading", "contact_subtext"]),
+    getParisChiroOfficeHours(),
     getParisOfficeHours(),
     getDisplayLocations(),
     getPageBrand(),
@@ -136,11 +137,25 @@ export default async function ContactPage() {
 
             <section className="rounded-xl border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-8">
               <h2 className="text-xl font-black text-[var(--pp-heading)]">Hours</h2>
-              <div className="mt-4">
-                <OfficeHoursTable
-                  rows={parisHours}
-                  rowClassName="flex justify-between gap-3 border-b border-stone-200 py-1.5 text-sm"
-                />
+              <div className="mt-4 space-y-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
+                    Chiropractic Associates
+                  </p>
+                  <OfficeHoursTable
+                    rows={chiroHours}
+                    rowClassName="flex justify-between gap-3 border-b border-stone-200 py-1.5 text-sm"
+                  />
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
+                    The Rub Club (massage)
+                  </p>
+                  <OfficeHoursTable
+                    rows={massageHours}
+                    rowClassName="flex justify-between gap-3 border-b border-stone-200 py-1.5 text-sm"
+                  />
+                </div>
               </div>
             </section>
           </div>

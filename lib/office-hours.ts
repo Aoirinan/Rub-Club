@@ -1,9 +1,9 @@
 import { getContentMany } from "@/lib/cms";
-import { MASSAGE } from "@/lib/home-verbatim";
+import { CHIRO, MASSAGE } from "@/lib/home-verbatim";
 
 export type OfficeHoursRow = { day: string; hours: string };
 
-export { PARIS_HOURS_DEFAULT_TEXT } from "@/lib/cms-registry";
+export { PARIS_HOURS_DEFAULT_TEXT, PARIS_CHIRO_HOURS_DEFAULT_TEXT } from "@/lib/cms-registry";
 
 function parseLine(line: string): OfficeHoursRow | null {
   const trimmed = line.trim();
@@ -36,9 +36,16 @@ export function parseOfficeHoursCms(text: string | undefined, fallback: OfficeHo
   return rows.length > 0 ? rows : fallback;
 }
 
+/** The Rub Club (massage) office hours for the Paris location. */
 export async function getParisOfficeHours(): Promise<OfficeHoursRow[]> {
   const c = await getContentMany(["paris_hours"]);
   return parseOfficeHoursCms(c.paris_hours, [...MASSAGE.hours]);
+}
+
+/** Chiropractic Associates office hours for the Paris location — a separate business from The Rub Club, kept on its own schedule. */
+export async function getParisChiroOfficeHours(): Promise<OfficeHoursRow[]> {
+  const c = await getContentMany(["paris_chiro_hours"]);
+  return parseOfficeHoursCms(c.paris_chiro_hours, [...CHIRO.hours]);
 }
 
 export async function getSulphurOfficeHours(): Promise<OfficeHoursRow[]> {

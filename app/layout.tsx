@@ -48,7 +48,7 @@ import {
   BUSINESS_CTX_COOKIE,
   parseBusinessContextValue,
 } from "@/lib/site-business-context";
-import { getParisOfficeHours, getSulphurOfficeHours } from "@/lib/office-hours";
+import { getParisChiroOfficeHours, getParisOfficeHours, getSulphurOfficeHours } from "@/lib/office-hours";
 import { getBrandThemeStyle } from "@/lib/brand-theme";
 
 export const revalidate = 60;
@@ -116,13 +116,15 @@ export default async function RootLayout({
     cookieStore.get(BUSINESS_CTX_COOKIE)?.value,
   );
 
-  const [cms, bookingConfig, parisHours, sulphurHours, brandThemeStyle] = await Promise.all([
-    getLayoutCmsContent(),
-    getPublicBookingConfig(),
-    getParisOfficeHours(),
-    getSulphurOfficeHours(),
-    getBrandThemeStyle(),
-  ]);
+  const [cms, bookingConfig, parisChiroHours, parisMassageHours, sulphurHours, brandThemeStyle] =
+    await Promise.all([
+      getLayoutCmsContent(),
+      getPublicBookingConfig(),
+      getParisChiroOfficeHours(),
+      getParisOfficeHours(),
+      getSulphurOfficeHours(),
+      getBrandThemeStyle(),
+    ]);
   const onlineBookingEnabled = isPublicBookingEnabled(bookingConfig);
   let displayLocs = mergedDisplayLocations(undefined, cms);
   let giftCardSticky = effectiveGiftCardSticky(undefined, cms);
@@ -204,7 +206,8 @@ export default async function RootLayout({
                   footerTagline={cms.footer_tagline}
                   footerCopyright={cms.footer_copyright}
                   footerLinks={footerLinks}
-                  parisHours={parisHours}
+                  parisChiroHours={parisChiroHours}
+                  parisMassageHours={parisMassageHours}
                   sulphurHours={sulphurHours}
                   initialDomainCtx={initialDomainCtx}
                   initialBusinessContext={initialBusinessContext}

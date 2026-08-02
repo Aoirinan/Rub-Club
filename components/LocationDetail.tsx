@@ -4,14 +4,25 @@ import { BookingCta } from "@/components/BookingCta";
 import { OfficeHoursTable } from "@/components/OfficeHoursTable";
 import type { OfficeHoursRow } from "@/lib/office-hours";
 
+export type LocationHoursGroup = {
+  label: string;
+  rows: readonly OfficeHoursRow[];
+};
+
 export function LocationDetail({
   location,
   reviewUrl,
   officeHours,
+  officeHoursLabel,
+  additionalHours = [],
 }: {
   location: LocationInfo;
   reviewUrl: string;
   officeHours: readonly OfficeHoursRow[];
+  /** Shown above `officeHours` only when there's more than one business's hours to distinguish. */
+  officeHoursLabel?: string;
+  /** Extra labeled hours blocks — e.g. a co-located business with a different schedule. */
+  additionalHours?: readonly LocationHoursGroup[];
 }) {
   const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(
     `${location.streetAddress}, ${location.addressLocality}, ${location.addressRegion} ${location.postalCode}`,
@@ -68,8 +79,18 @@ export function LocationDetail({
           </div>
         </div>
         <div className="space-y-4">
-          <h3 className="text-lg font-black text-[#4a1515]">Office hours</h3>
-          <OfficeHoursTable rows={officeHours} />
+          <div>
+            <h3 className="text-lg font-black text-[#4a1515]">
+              {officeHoursLabel ? `${officeHoursLabel} hours` : "Office hours"}
+            </h3>
+            <OfficeHoursTable rows={officeHours} />
+          </div>
+          {additionalHours.map((group) => (
+            <div key={group.label}>
+              <h3 className="text-lg font-black text-[#4a1515]">{group.label} hours</h3>
+              <OfficeHoursTable rows={group.rows} />
+            </div>
+          ))}
           <BookingCta
             label="Book at this location"
             query={`location=${location.id}`}

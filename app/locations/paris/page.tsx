@@ -4,7 +4,7 @@ import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { LocationDetail } from "@/components/LocationDetail";
 import { getDisplayLocations, getReviewUrlForLocation } from "@/lib/cms-display";
-import { getParisOfficeHours } from "@/lib/office-hours";
+import { getParisChiroOfficeHours, getParisOfficeHours } from "@/lib/office-hours";
 import { chiropractorJsonLd, massageJsonLd } from "@/lib/structured-data";
 
 export const metadata = buildPageMetadata({
@@ -19,8 +19,9 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function ParisLocationPage() {
-  const [reviewUrl, officeHours, displayLocs] = await Promise.all([
+  const [reviewUrl, chiroHours, massageHours, displayLocs] = await Promise.all([
     getReviewUrlForLocation("paris"),
+    getParisChiroOfficeHours(),
     getParisOfficeHours(),
     getDisplayLocations(),
   ]);
@@ -43,7 +44,13 @@ export default async function ParisLocationPage() {
         title={`Paris, TX — ${paris.streetAddress}`}
         lede="Both Chiropractic Associates and The Rub Club operate from this address. Easy parking, friendly front desk, weekday hours."
       />
-      <LocationDetail location={paris} reviewUrl={reviewUrl} officeHours={officeHours} />
+      <LocationDetail
+        location={paris}
+        reviewUrl={reviewUrl}
+        officeHours={chiroHours}
+        officeHoursLabel="Chiropractic Associates"
+        additionalHours={[{ label: "The Rub Club (massage)", rows: massageHours }]}
+      />
       <div className="mx-auto max-w-6xl px-4 pb-16">
         <p className="text-center text-sm text-stone-600">
           <Link href="/locations/paris/staff" className="font-bold text-[#c0392b] underline">

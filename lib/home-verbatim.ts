@@ -45,6 +45,15 @@ export const CHIRO = {
   stretchP2: "Ask us about Stretch & Flex Rehab when you call or at your next visit—we will explain how it fits your goals.",
   stretchCallPart1: "Call us to get",
   stretchCallPart2: "STRETCHED today!",
+  hours: [
+    { day: "Monday", hours: "9:00 AM – 6:00 PM" },
+    { day: "Tuesday", hours: "9:00 AM – 5:00 PM" },
+    { day: "Wednesday", hours: "9:00 AM – 5:00 PM" },
+    { day: "Thursday", hours: "9:00 AM – 5:00 PM" },
+    { day: "Friday", hours: "9:00 AM – 6:00 PM" },
+    { day: "Saturday", hours: "Closed" },
+    { day: "Sunday", hours: "Closed" },
+  ],
   betterTitle: "A Better Care Experience",
   teamHelpTitle: "How Our Team Can Help",
   teamHelpBody:

@@ -32,7 +32,8 @@ export function SiteFooterClient({
   footerTagline,
   footerCopyright,
   footerLinks,
-  parisHours,
+  parisChiroHours,
+  parisMassageHours,
   sulphurHours,
   initialDomainCtx,
   initialBusinessContext = "default",
@@ -44,7 +45,8 @@ export function SiteFooterClient({
   footerCopyright?: string | null;
   /** Raw CMS "Label — /path" link lists per business context. */
   footerLinks?: Partial<Record<SiteBusinessContext, string | undefined>>;
-  parisHours: readonly OfficeHoursRow[];
+  parisChiroHours: readonly OfficeHoursRow[];
+  parisMassageHours: readonly OfficeHoursRow[];
   sulphurHours: readonly OfficeHoursRow[];
   initialDomainCtx: DomainContextValue;
   initialBusinessContext?: SiteBusinessContext;
@@ -159,7 +161,8 @@ export function SiteFooterClient({
           </ul>
         </nav>
         <FooterHoursPanel
-          parisHours={parisHours}
+          parisChiroHours={parisChiroHours}
+          parisMassageHours={parisMassageHours}
           sulphurHours={sulphurHours}
           initialDomainCtx={initialDomainCtx}
           initialBusinessContext={initialBusinessContext}

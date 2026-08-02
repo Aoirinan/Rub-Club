@@ -29,12 +29,14 @@ function locationLabel(focus: FooterHoursFocus): string | null {
 }
 
 export function FooterHoursPanel({
-  parisHours,
+  parisChiroHours,
+  parisMassageHours,
   sulphurHours,
   initialDomainCtx,
   initialBusinessContext = "default",
 }: {
-  parisHours: readonly OfficeHoursRow[];
+  parisChiroHours: readonly OfficeHoursRow[];
+  parisMassageHours: readonly OfficeHoursRow[];
   sulphurHours: readonly OfficeHoursRow[];
   initialDomainCtx: DomainContextValue;
   initialBusinessContext?: SiteBusinessContext;
@@ -52,13 +54,20 @@ export function FooterHoursPanel({
       ) : null}
       <div className="mt-3 space-y-4">
         {focus === "paris" || focus === "both" ? (
-          <div>
+          <div className="space-y-3">
             {focus === "both" ? (
-              <p className="mb-2 text-xs font-black uppercase tracking-[0.14em] text-[#f19f1f]">
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-[#f19f1f]">
                 {LOCATIONS.paris.shortName}
               </p>
             ) : null}
-            <HoursTable rows={parisHours} />
+            <div>
+              <p className="mb-1 text-xs font-bold text-white/70">Chiropractic Associates</p>
+              <HoursTable rows={parisChiroHours} />
+            </div>
+            <div>
+              <p className="mb-1 text-xs font-bold text-white/70">The Rub Club (massage)</p>
+              <HoursTable rows={parisMassageHours} />
+            </div>
           </div>
         ) : null}
         {focus === "sulphur_springs" || focus === "both" ? (
