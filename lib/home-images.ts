@@ -18,8 +18,6 @@ export const IMAGES = {
   serviceRelaxation: "/images/legacy/service-relaxation.webp",
   serviceSwedish: "/images/legacy/service-swedish.webp",
   serviceGentle: "/images/legacy/service-gentle.webp",
-  serviceThai: "/images/legacy/service-thai.webp",
-  serviceBurnScar: "/images/legacy/service-burn-scar.webp",
   massageChiroTile: "/images/legacy/massage-chiro-tile.webp",
   chiroBlade: "/images/legacy/chiro-blade.webp",
   chiroBg: "/images/legacy/chiro-bg.webp",

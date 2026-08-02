@@ -67,18 +67,6 @@ export const MASSAGE_SERVICE_PAGES: readonly MassageServicePage[] = [
     blurb: "Light-pressure massage for sensitive clients, older adults, or anyone easing into bodywork.",
     imageUrl: IMAGES.serviceGentle,
   },
-  {
-    slug: "thai-massage",
-    name: "Thai Massage",
-    blurb: "Assisted stretching and rhythmic pressure to improve flexibility and release tension.",
-    imageUrl: IMAGES.serviceThai,
-  },
-  {
-    slug: "burn-scar-massage",
-    name: "Burn Scar Massage",
-    blurb: "Specialized soft-tissue work to improve mobility and comfort in healed scar tissue.",
-    imageUrl: IMAGES.serviceBurnScar,
-  },
 ];
 
 /** Nav children for the "Therapeutic Massage" mega-menu group (§5b). */
