@@ -2,9 +2,6 @@ import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
-import { getContentMany } from "@/lib/cms";
-import { DOCTOR_CMS_KEYS, doctorVideoItems, getDoctorsForMarketing } from "@/lib/cms-doctors";
-import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import {
   getPublicBookingConfig,
   isPublicBookingEnabled,
@@ -15,7 +12,7 @@ import { chiropractorJsonLd, serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
 import { pageKeywords } from "@/lib/seo-keywords";
 import { getDisplayLocations } from "@/lib/cms-display";
-import { getParisOfficeHours } from "@/lib/office-hours";
+import { getParisChiroOfficeHours } from "@/lib/office-hours";
 import { CHIRO } from "@/lib/home-verbatim";
 import { getPracticePage } from "@/lib/practice-pages";
 import { practiceThemeStyle } from "@/components/practice/theme";
@@ -25,7 +22,6 @@ import { ServicesGrid } from "@/components/practice/ServicesGrid";
 import { AboutWelcome } from "@/components/practice/AboutWelcome";
 // CURSOR_PROMPT §8a: PatientReviews intentionally not rendered on the
 // chiropractic page (component retained in the repo for other pages).
-import { TeamStrip, type PracticeTeamMember } from "@/components/practice/TeamStrip";
 import {
   LocationContactBlock,
   type PracticeSecondaryLocation,
@@ -52,28 +48,11 @@ export const revalidate = 60;
 export default async function ChiropracticServicePage() {
   const [page, parisHours, displayLocs] = await Promise.all([
     getPracticePage("paris-chiro"),
-    getParisOfficeHours(),
+    getParisChiroOfficeHours(),
     getDisplayLocations(),
   ]);
   const paris = displayLocs.paris;
   const ss = displayLocs.sulphur_springs;
-
-  const doctorCms = await getContentMany([...DOCTOR_CMS_KEYS]);
-  let doctorMedia: Awaited<ReturnType<typeof getSiteOwnerConfig>>["doctorMedia"] = [];
-  try {
-    doctorMedia = (await getSiteOwnerConfig()).doctorMedia;
-  } catch {
-    doctorMedia = [];
-  }
-  const doctors = await getDoctorsForMarketing(doctorCms, doctorMedia);
-  const membersBySource: Partial<Record<string, PracticeTeamMember[]>> = {
-    "paris-doctors": doctors.map((d) => ({
-      name: d.name,
-      credential: d.role,
-      imageUrl: d.imageSrc,
-      videos: doctorVideoItems(d),
-    })),
-  };
 
   const secondaryLocations: PracticeSecondaryLocation[] = [
     {
@@ -107,13 +86,8 @@ export default async function ChiropracticServicePage() {
         <PracticeHero data={page.hero} utility={page.utilityBar} />
         <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
           <QuickActionsRow data={page.quickActions} />
-          {page.teamSections.map((section) => (
-            <TeamStrip
-              key={section.id}
-              data={section}
-              members={membersBySource[section.source] ?? []}
-            />
-          ))}
+          {/* "Our Paris chiropractors" section intentionally omitted — the
+              doctors already appear on /about (and /locations/paris/staff). */}
           <ServicesGrid data={page.servicesGrid} />
           {page.aboutBlocks.map((block) => (
             <AboutWelcome key={block.id} data={block} phone={paris.phonePrimary} />

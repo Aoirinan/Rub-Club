@@ -10,6 +10,7 @@ import {
 import { CHIRO_TREATMENTS_LIST_DEFAULT } from "@/lib/chiro-treatments";
 import { MASSAGE_PRICES_DEFAULT } from "@/lib/massage-prices-content";
 export const PARIS_HOURS_DEFAULT_TEXT = MASSAGE.hours.map((r) => `${r.day}|${r.hours}`).join("\n");
+export const PARIS_CHIRO_HOURS_DEFAULT_TEXT = CHIRO.hours.map((r) => `${r.day}|${r.hours}`).join("\n");
 import { siteShortName } from "@/lib/site-content";
 import {
   WELLNESS_SECTION_SPECS,
@@ -177,7 +178,14 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
     id: "paris_hours",
     pageLabel: "Paris / main office",
     sectionLabel: "Hours",
-    fieldLabel: "Office hours (one line per day: Monday|9:00 AM – 5:00 PM)",
+    fieldLabel: "Massage (Rub Club) office hours (one line per day: Monday|9:00 AM – 5:00 PM)",
+    type: "richtext",
+  },
+  {
+    id: "paris_chiro_hours",
+    pageLabel: "Paris / main office",
+    sectionLabel: "Hours",
+    fieldLabel: "Chiropractic office hours (one line per day: Monday|9:00 AM – 5:00 PM)",
     type: "richtext",
   },
 
@@ -441,6 +449,7 @@ export const DEFAULTS: Record<string, string> = {
   massage_prices_body: MASSAGE_PRICES_DEFAULT,
 
   paris_hours: PARIS_HOURS_DEFAULT_TEXT,
+  paris_chiro_hours: PARIS_CHIRO_HOURS_DEFAULT_TEXT,
 
   ss_doctor_heading: "Our Sulphur Springs chiropractor",
   ss_doctor_intro: "",
@@ -460,9 +469,7 @@ Deep Tissue Massage — Slow, targeted pressure to release chronic tension in th
 Trigger Point & Lymphatic — Focused release of stubborn knots, plus gentle lymphatic drainage when appropriate.`,
 
   about_heading: "About our practice",
-  about_body: `Chiropractic Associates was founded in Paris, TX in 1998 by Dr. Greg Thompson. As the practice grew, Dr. Thompson opened The Rub Club so that licensed massage therapists could coordinate care directly with the chiropractic team — same building, same schedule, same standards.
-
-Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office and a second chiropractic location in Sulphur Springs. Our doctors and therapists share charts and timelines so your massage and adjustment work together, not against each other.`,
+  about_body: `Today we serve Northeast Texas and Southeast Oklahoma from our main Paris office and a second chiropractic location in Sulphur Springs. Our doctors and therapists share charts and timelines so your massage and adjustment work together, not against each other.`,
 
   faq_heading: "Frequently asked questions",
   faq_intro:

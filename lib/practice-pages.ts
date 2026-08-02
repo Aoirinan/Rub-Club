@@ -128,7 +128,7 @@ async function buildParisChiroDefaults(): Promise<PracticePageDoc> {
     name: "Auto Injury Care",
     blurb: "Evaluation and treatment after car accidents — one of the conditions we treat most.",
     imageUrl: "",
-    href: "",
+    href: "/services/chiropractic/auto-injury",
   });
 
   const conditions = (c.chiro_conditions_list ?? "")
@@ -189,10 +189,10 @@ async function buildParisChiroDefaults(): Promise<PracticePageDoc> {
         heading: c.chiro_choose_title ?? "",
         body: c.chiro_intro_body ?? "",
         bullets: conditions,
-        imageUrl: IMAGES.chiroBg,
+        imageUrl: IMAGES.chiroBlade,
         phoneCtaLabel: "Call Paris Office",
-        ctaLabel: "",
-        ctaUrl: "",
+        ctaLabel: "Meet Our Doctors",
+        ctaUrl: "/locations/paris/staff",
       },
     ],
     reviews: {
