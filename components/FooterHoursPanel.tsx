@@ -27,7 +27,7 @@ function shortDay(day: string): string {
   return day.trim().slice(0, 3);
 }
 
-/** "9:00 AM – 6:00 PM" -> "9–6", "Closed" -> "Closed" — compact enough for a narrow column. */
+/** "9:00 AM – 6:00 PM" -> "9am–6pm", "Closed" -> "Closed" — compact enough for a narrow column. */
 function shortHours(hours: string): string {
   const trimmed = hours.trim();
   if (!trimmed || /closed/i.test(trimmed)) return trimmed || "—";
@@ -37,7 +37,7 @@ function shortHours(hours: string): string {
     const m = t.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
     if (!m) return t;
     const [, h, min, ampm] = m;
-    return `${h}${min && min !== "00" ? `:${min}` : ""}${ampm ? ampm[0]!.toLowerCase() : ""}`;
+    return `${h}${min && min !== "00" ? `:${min}` : ""}${ampm ? ampm.toLowerCase() : ""}`;
   };
   return `${compact(times[0]!)}–${compact(times[1]!)}`;
 }
