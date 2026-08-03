@@ -31,10 +31,10 @@ export const IMAGES = {
   staffBrandi: "/images/legacy/staff-brandi.webp",
 } as const;
 
-/** Paris homepage hero carousel — real office photos (treatment room, hallway, rehab, waiting room). */
+/** Paris homepage hero carousel — real office photos (reception, waiting room, massage hallway, rehab). */
 export const PARIS_HOME_HERO_IMAGES = [
-  "/images/paris-home/hero-1-treatment-room.webp",
-  "/images/paris-home/hero-2-hallway.webp",
-  "/images/paris-home/hero-3-rehab-station.webp",
-  "/images/paris-home/hero-4-waiting-room.webp",
+  "/images/paris-home/hero-1-reception.webp",
+  "/images/paris-home/hero-2-waiting-room.webp",
+  "/images/paris-home/hero-3-massage-hallway.webp",
+  "/images/paris-home/hero-4-rehab-station.webp",
 ] as const;
