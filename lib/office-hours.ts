@@ -29,17 +29,7 @@ function parseLine(line: string): OfficeHoursRow | null {
   return { day: trimmed, hours: "" };
 }
 
-/**
- * Split a day's hours into its separate shifts so a split schedule can be
- * stacked one range per line instead of wrapping mid-range in narrow columns.
- * "8:00 AM – 1:00 PM, 2:00 PM – 5:00 PM" -> ["8:00 AM – 1:00 PM", "2:00 PM – 5:00 PM"]
- */
-export function hoursShifts(hours: string): string[] {
-  return hours
-    .split(",")
-    .map((shift) => shift.trim())
-    .filter(Boolean);
-}
+export { hoursShifts } from "@/lib/office-hours-format";
 
 /** Parse Site content hours text into day / time rows (Paris table or SS summary lines). */
 export function parseOfficeHoursCms(text: string | undefined, fallback: OfficeHoursRow[]): OfficeHoursRow[] {

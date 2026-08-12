@@ -7,7 +7,8 @@ import type { DomainContextValue } from "@/lib/domain-context";
 import { useSiteBusinessContext } from "@/lib/use-site-business-context";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
 import { footerHoursFocus, type FooterHoursFocus } from "@/lib/footer-hours-context";
-import { hoursShifts, type OfficeHoursRow } from "@/lib/office-hours";
+import { hoursShifts } from "@/lib/office-hours-format";
+import type { OfficeHoursRow } from "@/lib/office-hours";
 
 function HoursTable({ rows }: { rows: readonly OfficeHoursRow[] }) {
   return (

@@ -1,4 +1,5 @@
-import { hoursShifts, type OfficeHoursRow } from "@/lib/office-hours";
+import { hoursShifts } from "@/lib/office-hours-format";
+import type { OfficeHoursRow } from "@/lib/office-hours";
 
 type Props = {
   rows: readonly OfficeHoursRow[];
