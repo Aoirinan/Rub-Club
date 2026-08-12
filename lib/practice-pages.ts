@@ -528,7 +528,9 @@ async function buildSulphurSpringsDefaults(): Promise<PracticePageDoc> {
       {
         id: "welcome",
         published: true,
-        heading: c.ss_hero_heading ?? "",
+        // Intentionally blank: this copy sits directly under the hero <h1>, so a
+        // heading here would repeat it.
+        heading: "",
         body: [c.ss_intro_body ?? "", ...SS_INTRO_EXTRA_PARAGRAPHS].filter(Boolean).join("\n\n"),
         bullets: [],
         imageUrl: "",
@@ -664,7 +666,7 @@ function firstSentence(text: string): string {
  * CMS overrides, falling back to the current meta description.
  */
 export async function getSSServiceCards(): Promise<PracticeServiceCard[]> {
-  const pages = [...SS_SERVICES, ...SS_INJURIES];
+  const pages = [...SS_SERVICES.filter((s) => !s.unlisted), ...SS_INJURIES];
   const ids = pages.flatMap((s) => [
     ssPageMetaId(s.slug),
     ssPageCardBlurbId(s.slug),

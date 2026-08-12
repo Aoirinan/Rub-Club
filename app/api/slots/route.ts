@@ -12,8 +12,8 @@ import {
   bucketDocIdsForAppointment,
   holdBucketIdsForPublicBooking,
   unionCandidateStartsFromHoursContexts,
-  enumerateCandidateStartsInWindow,
-  effectiveDayWindowFromHours,
+  enumerateCandidateStartsInWindows,
+  effectiveDayWindowsFromHours,
 } from "@/lib/slots-luxon";
 import { getPublicBookingConfig, isPublicBookingEnabled } from "@/lib/public-booking-settings";
 
@@ -98,8 +98,8 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: "Unknown or inactive provider for this location/service" }, { status: 400 });
       }
       const hoursCtx = providerHoursContext(provider);
-      const window = effectiveDayWindowFromHours(date, hoursCtx);
-      const candidates = enumerateCandidateStartsInWindow(date, durationMin, window);
+      const windows = effectiveDayWindowsFromHours(date, hoursCtx);
+      const candidates = enumerateCandidateStartsInWindows(date, durationMin, windows);
       for (const start of candidates) {
         if (!providerAllowsAppointmentTime(provider, start, durationMin)) continue;
         if (await bucketsFree(db, locationId, providerId, serviceLine, start, durationMin)) {

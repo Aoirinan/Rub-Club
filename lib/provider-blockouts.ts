@@ -2,13 +2,10 @@ import { DateTime } from "luxon";
 import { TIME_ZONE } from "./constants";
 import {
   type ProviderBlockOut,
-  type ProviderDayHours,
   type ProviderHoursContext,
-  type WeekdayKey,
-  dayHoursForDate,
   weekdayKeyFromDate,
 } from "./provider-profile";
-import type { DayWindow } from "./slots-luxon";
+import { type DayWindow, dayEnvelopeFromHours } from "./slots-luxon";
 
 function dateInRange(dateStr: string, start?: string, end?: string): boolean {
   if (!start) return false;
@@ -52,33 +49,17 @@ export function blockOutIntervalsForDay(
   blockOuts: ProviderBlockOut[],
   hoursCtx: ProviderHoursContext,
 ): DayWindow[] {
-  const dayHours = dayHoursForDate(dateStr, hoursCtx);
+  // Spans any midday break on purpose: this mode means "closed all day".
+  const envelope = dayEnvelopeFromHours(dateStr, hoursCtx);
   const intervals: DayWindow[] = [];
   for (const block of blockOuts) {
     if (!blockAppliesOnDate(block, dateStr)) continue;
     if (block.mode === "office_hours") {
-      if (dayHours?.open) {
-        const day = DateTime.fromISO(dateStr, { zone: TIME_ZONE }).startOf("day");
-        intervals.push({
-          open: day.set({
-            hour: dayHours.openHour,
-            minute: dayHours.openMinute,
-            second: 0,
-            millisecond: 0,
-          }),
-          close: day.set({
-            hour: dayHours.closeHour,
-            minute: dayHours.closeMinute,
-            second: 0,
-            millisecond: 0,
-          }),
-        });
+      if (envelope.close > envelope.open) {
+        intervals.push(envelope);
       } else {
         const day = DateTime.fromISO(dateStr, { zone: TIME_ZONE }).startOf("day");
-        intervals.push({
-          open: day,
-          close: day.plus({ days: 1 }),
-        });
+        intervals.push({ open: day, close: day.plus({ days: 1 }) });
       }
       continue;
     }

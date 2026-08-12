@@ -12,9 +12,11 @@ import {
   type ProviderCalendarVisibility,
   type ProviderDayHours,
   type ProviderNotificationWindows,
+  type ProviderTimeRange,
   type ProviderWeeklyHours,
   type WeekdayKey,
   defaultWeeklyHoursFromLegacy,
+  rangeIsValid,
   resolveWeeklyHours,
 } from "@/lib/provider-profile";
 import { newBlockOutId } from "@/lib/provider-blockouts";
@@ -62,7 +64,54 @@ function emptyDay(closed = false): ProviderDayHours {
     openMinute: 0,
     closeHour: 17,
     closeMinute: 0,
+    ranges: [{ openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 0 }],
   };
+}
+
+/**
+ * Ranges exactly as stored, without the merging `dayHoursRanges` does — the
+ * editor has to show what the user typed, including a half-finished range.
+ */
+function editableRanges(day: ProviderDayHours): ProviderTimeRange[] {
+  if (day.ranges?.length) return day.ranges;
+  return [
+    {
+      openHour: day.openHour,
+      openMinute: day.openMinute,
+      closeHour: day.closeHour,
+      closeMinute: day.closeMinute,
+    },
+  ];
+}
+
+const timeValue = (hour: number, minute: number) =>
+  `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+
+function TimeInput({
+  label,
+  hour,
+  minute,
+  onChange,
+}: {
+  label: string;
+  hour: number;
+  minute: number;
+  onChange: (hour: number, minute: number) => void;
+}) {
+  return (
+    <label className="flex items-center gap-1">
+      {label}
+      <input
+        type="time"
+        className="rounded border border-slate-300 px-1 py-0.5"
+        value={timeValue(hour, minute)}
+        onChange={(e) => {
+          const [h, m] = e.target.value.split(":").map(Number);
+          if (Number.isFinite(h) && Number.isFinite(m)) onChange(h, m);
+        }}
+      />
+    </label>
+  );
 }
 
 export function providerToProfileDraft(p: {
@@ -124,6 +173,19 @@ export function ProviderProfileEditor({
     onChange({
       ...draft,
       weeklyHours: { ...draft.weeklyHours, [key]: { ...prev, ...patch } },
+    });
+  };
+
+  /** Keeps the legacy open/close fields mirroring the first range. */
+  const setDayRanges = (key: WeekdayKey, ranges: ProviderTimeRange[]) => {
+    if (ranges.length === 0) return;
+    const first = ranges[0]!;
+    patchDay(key, {
+      openHour: first.openHour,
+      openMinute: first.openMinute,
+      closeHour: first.closeHour,
+      closeMinute: first.closeMinute,
+      ranges,
     });
   };
 
@@ -299,32 +361,10 @@ export function ProviderProfileEditor({
                     Open
                   </label>
                   {day.open ? (
-                    <>
-                      <label className="flex items-center gap-1">
-                        From
-                        <input
-                          type="time"
-                          className="rounded border border-slate-300 px-1 py-0.5"
-                          value={`${String(day.openHour).padStart(2, "0")}:${String(day.openMinute).padStart(2, "0")}`}
-                          onChange={(e) => {
-                            const [h, m] = e.target.value.split(":").map(Number);
-                            patchDay(key, { openHour: h, openMinute: m });
-                          }}
-                        />
-                      </label>
-                      <label className="flex items-center gap-1">
-                        To
-                        <input
-                          type="time"
-                          className="rounded border border-slate-300 px-1 py-0.5"
-                          value={`${String(day.closeHour).padStart(2, "0")}:${String(day.closeMinute).padStart(2, "0")}`}
-                          onChange={(e) => {
-                            const [h, m] = e.target.value.split(":").map(Number);
-                            patchDay(key, { closeHour: h, closeMinute: m });
-                          }}
-                        />
-                      </label>
-                    </>
+                    <DayRangesEditor
+                      ranges={editableRanges(day)}
+                      onChange={(ranges) => setDayRanges(key, ranges)}
+                    />
                   ) : (
                     <span className="text-slate-500">Closed</span>
                   )}
@@ -406,6 +446,82 @@ export function ProviderProfileEditor({
           </ul>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * One or more bookable windows for a single day. A second window creates a
+ * split shift — the gap between them is unbookable, and an appointment may not
+ * span it.
+ */
+function DayRangesEditor({
+  ranges,
+  onChange,
+}: {
+  ranges: ProviderTimeRange[];
+  onChange: (next: ProviderTimeRange[]) => void;
+}) {
+  const patch = (index: number, next: Partial<ProviderTimeRange>) => {
+    onChange(ranges.map((r, i) => (i === index ? { ...r, ...next } : r)));
+  };
+
+  const addRange = () => {
+    const last = ranges[ranges.length - 1]!;
+    const startHour = Math.min(23, last.closeHour + 1);
+    onChange([
+      ...ranges,
+      {
+        openHour: startHour,
+        openMinute: 0,
+        closeHour: Math.min(23, startHour + 3),
+        closeMinute: 0,
+      },
+    ]);
+  };
+
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-2">
+      {ranges.map((range, index) => {
+        const invalid = !rangeIsValid(range);
+        return (
+          <div key={index} className="flex flex-wrap items-center gap-3">
+            <TimeInput
+              label="From"
+              hour={range.openHour}
+              minute={range.openMinute}
+              onChange={(openHour, openMinute) => patch(index, { openHour, openMinute })}
+            />
+            <TimeInput
+              label="To"
+              hour={range.closeHour}
+              minute={range.closeMinute}
+              onChange={(closeHour, closeMinute) => patch(index, { closeHour, closeMinute })}
+            />
+            {invalid ? (
+              <span className="text-xs font-semibold text-rose-600">
+                End must be after start — this window will be ignored.
+              </span>
+            ) : null}
+            {ranges.length > 1 ? (
+              <button
+                type="button"
+                className="text-xs font-semibold text-rose-600 underline"
+                onClick={() => onChange(ranges.filter((_, i) => i !== index))}
+              >
+                Remove
+              </button>
+            ) : null}
+          </div>
+        );
+      })}
+      <button
+        type="button"
+        className="self-start text-xs font-semibold text-slate-600 underline"
+        onClick={addRange}
+      >
+        + Add another window (split shift)
+      </button>
     </div>
   );
 }

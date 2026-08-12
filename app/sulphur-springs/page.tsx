@@ -75,10 +75,11 @@ export default async function SulphurSpringsPage() {
       <PracticeHero data={page.hero} utility={page.utilityBar} />
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
         <QuickActionsRow data={page.quickActions} />
-        <ServicesGrid data={page.servicesGrid} derivedCards={ssServiceCards} />
+        {/* Welcome copy sits directly under the hero, as it did on the legacy site. */}
         {page.aboutBlocks.map((block) => (
           <AboutWelcome key={block.id} data={block} phone={ss.phonePrimary} />
         ))}
+        <ServicesGrid data={page.servicesGrid} derivedCards={ssServiceCards} />
         {page.teamSections.map((section) => (
           <TeamStrip
             key={section.id}

@@ -1,4 +1,4 @@
-import type { OfficeHoursRow } from "@/lib/office-hours";
+import { hoursShifts, type OfficeHoursRow } from "@/lib/office-hours";
 
 type Props = {
   rows: readonly OfficeHoursRow[];
@@ -15,12 +15,25 @@ export function OfficeHoursTable({
 }: Props) {
   return (
     <dl className="space-y-1">
-      {rows.map((row) => (
-        <div key={`${row.day}-${row.hours}`} className={rowClassName}>
-          <dt className={dayClassName}>{row.day}</dt>
-          <dd className={hoursClassName}>{row.hours || "—"}</dd>
-        </div>
-      ))}
+      {rows.map((row) => {
+        const shifts = hoursShifts(row.hours);
+        return (
+          <div key={`${row.day}-${row.hours}`} className={rowClassName}>
+            <dt className={dayClassName}>{row.day}</dt>
+            <dd className={`${hoursClassName} text-right`}>
+              {shifts.length === 0 ? (
+                "—"
+              ) : (
+                shifts.map((shift) => (
+                  <span key={shift} className="block whitespace-nowrap">
+                    {shift}
+                  </span>
+                ))
+              )}
+            </dd>
+          </div>
+        );
+      })}
     </dl>
   );
 }

@@ -84,8 +84,9 @@ const LEGACY_PRIMARY_REDIRECTS: Record<string, string> = {
   "/prenatal-massage": "/services/massage",
   "/products.php": "/services",
   "/q-and-a": "/faq",
-  "/relaxation-massage": "/services/massage",
-  "/swedish-massage": "/services/massage",
+  // Relaxation was retired; Swedish is the closest live equivalent.
+  "/relaxation-massage": "/services/massage/swedish-massage",
+  "/swedish-massage": "/services/massage/swedish-massage",
   "/thai-massage": "/services/massage",
   "/sports-massage": "/services/massage",
   "/what-is-chiropractic-massage-therapy": "/services/massage",
@@ -153,7 +154,6 @@ const MASSAGE_LEGACY_PAGE_SLUGS = [
   "deep-tissue-massage",
   "degenerative-disc-disease",
   "electrical-muscle-stimulation",
-  "gentle-massage-therapy",
   "hot-stone-massage",
   "ice-pack-cryotherapy",
   "injury-pain-relief",
@@ -166,7 +166,6 @@ const MASSAGE_LEGACY_PAGE_SLUGS = [
   "neck-pain-relief",
   "personal-injury",
   "prenatal-massage",
-  "relaxation-massage",
   "sciatica",
   "spinal-decompression",
   "sports-injury",
@@ -194,6 +193,11 @@ const LEGACY_MASSAGE_REDIRECTS: Record<string, string> = {
   "/patient-forms": "/patient-forms",
   "/burn-scar-massage": "/services/massage",
   "/thai-massage": "/services/massage",
+  // Retired modalities — sent straight to Swedish so these resolve in one hop.
+  // Both are excluded from MASSAGE_LEGACY_PAGE_SLUGS above; the spread below is
+  // last and would otherwise override these keys.
+  "/relaxation-massage": "/services/massage/swedish-massage",
+  "/gentle-massage-therapy": "/services/massage/swedish-massage",
   ...Object.fromEntries(
     MASSAGE_LEGACY_PAGE_SLUGS.map((slug) => [`/${slug}`, `/services/massage/${slug}`]),
   ),
@@ -321,6 +325,23 @@ const nextConfig: NextConfig = {
         destination,
         permanent: true,
       })),
+      // Retired massage modalities → Swedish, the closest service still offered.
+      {
+        source: "/services/massage/relaxation-massage",
+        destination: "/services/massage/swedish-massage",
+        permanent: true,
+      },
+      {
+        source: "/services/massage/gentle-massage-therapy",
+        destination: "/services/massage/swedish-massage",
+        permanent: true,
+      },
+      // The legacy chiropractic site carried its own copy of the relaxation page.
+      {
+        source: "/services/chiropractic/relaxation-massage",
+        destination: "/services/massage/swedish-massage",
+        permanent: true,
+      },
       { source: "/massage", destination: "/services/massage", permanent: true },
       { source: "/chiropractic", destination: "/services/chiropractic", permanent: true },
       { source: "/meet-the-doctors", destination: "/about", permanent: true },

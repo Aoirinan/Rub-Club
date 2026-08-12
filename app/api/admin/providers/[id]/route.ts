@@ -6,6 +6,7 @@ import { getFirestore } from "@/lib/firebase-admin";
 import type { LocationId, ServiceLine } from "@/lib/constants";
 import { PROVIDER_BG_COLOR_IDS, PROVIDER_TEXT_COLOR_IDS } from "@/lib/provider-colors";
 import { parseProviderDoc } from "@/lib/providers-db";
+import { parseWeeklyHours } from "@/lib/provider-profile";
 import {
   deleteProviderStorageObject,
   uploadProviderPhoto,
@@ -252,8 +253,16 @@ export async function PATCH(req: Request, ctx: Params) {
     }
     if (body.textColor !== undefined) updates.textColor = body.textColor;
     if (body.bgColor !== undefined) updates.bgColor = body.bgColor;
-    if (body.hours !== undefined) updates.hours = body.hours;
-    if (body.weeklyHours !== undefined) updates.hours = body.weeklyHours;
+    // Normalize before writing so stored days always carry a canonical `ranges`
+    // array with the legacy open/close fields mirroring the first range.
+    const hoursRaw = body.weeklyHours ?? body.hours;
+    if (hoursRaw !== undefined) {
+      const parsed = parseWeeklyHours(hoursRaw);
+      if (!parsed) {
+        return NextResponse.json({ error: "Invalid weekly hours" }, { status: 400 });
+      }
+      updates.hours = parsed;
+    }
     if (body.blockOutTimes !== undefined) updates.blockOutTimes = body.blockOutTimes;
     if (body.notificationWindows !== undefined) {
       updates.notificationWindows = body.notificationWindows;

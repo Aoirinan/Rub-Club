@@ -44,12 +44,6 @@ export const MASSAGE_SERVICE_PAGES: readonly MassageServicePage[] = [
     imageUrl: IMAGES.servicePrenatal,
   },
   {
-    slug: "relaxation-massage",
-    name: "Relaxation Massage",
-    blurb: "Gentle, calming, full-body massage focused purely on unwinding and stress relief.",
-    imageUrl: IMAGES.serviceRelaxation,
-  },
-  {
     slug: "sports-massage",
     name: "Sports Massage",
     blurb: "Pre- and post-event work focused on recovery, range of motion, and getting you back to training.",
@@ -60,12 +54,6 @@ export const MASSAGE_SERVICE_PAGES: readonly MassageServicePage[] = [
     name: "Swedish Massage",
     blurb: "Long, flowing strokes that relax muscles, boost circulation, and melt away everyday stress.",
     imageUrl: IMAGES.serviceSwedish,
-  },
-  {
-    slug: "gentle-massage-therapy",
-    name: "Gentle Massage Therapy",
-    blurb: "Light-pressure massage for sensitive clients, older adults, or anyone easing into bodywork.",
-    imageUrl: IMAGES.serviceGentle,
   },
 ];
 

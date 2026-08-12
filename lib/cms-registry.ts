@@ -102,14 +102,19 @@ Sports Massage — Pre- and post-event work focused on recovery, range of motion
 
 Hot Stone Massage — Heated stones paired with hands-on work to warm tight muscles and release deep tension.
 
-Relaxation Massage — Gentle, calming, full-body massage focused purely on unwinding and stress relief.
-
-Gentle Massage Therapy — Light-pressure massage for sensitive clients, older adults, or anyone easing into bodywork.
-
 Trigger Point & Lymphatic — Focused release of stubborn knots, plus gentle lymphatic drainage when appropriate.`;
 
-const SS_HOURS_DEFAULT = `Monday – Friday: 9:00 AM – 5:00 PM
-Saturday – Sunday: Closed`;
+/**
+ * Pipe-delimited so `parseOfficeHoursCms` splits on "|" before it tries the
+ * dash rule — the afternoon range would otherwise be mistaken for the day.
+ */
+export const SS_HOURS_DEFAULT_TEXT = `Monday|8:00 AM – 1:00 PM, 2:00 PM – 5:00 PM
+Tuesday|9:00 AM – 1:00 PM
+Wednesday|9:00 AM – 12:00 PM, 1:00 PM – 5:00 PM
+Thursday|8:00 AM – 1:00 PM, 2:00 PM – 5:00 PM
+Friday|9:00 AM – 1:00 PM, 2:00 PM – 6:00 PM
+Saturday|Closed
+Sunday|Closed`;
 
 const paris = LOCATIONS.paris;
 const ss = LOCATIONS.sulphur_springs;
@@ -457,7 +462,7 @@ export const DEFAULTS: Record<string, string> = {
   ss_hero_heading: "Chiropractic Care Created Precisely For You",
   ss_intro_body:
     "Welcome to our practice! We hope that you will find this website helpful in learning more about our office, our chiropractic care, and how chiropractic care can improve your quality of life.\n\nWe understand that although our patients may be diagnosed with the same condition, they may respond differently to treatments. For this reason, we tailor a specific plan of action to meet your needs, goals and unique condition.",
-  ss_hours: SS_HOURS_DEFAULT,
+  ss_hours: SS_HOURS_DEFAULT_TEXT,
 
   ss_massage_hero_heading: "Massage Therapy in Sulphur Springs, TX",
   ss_massage_hero_subheading:

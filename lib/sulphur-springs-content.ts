@@ -15,6 +15,11 @@ export type SSService = {
   title: string;
   metaDescription: string;
   body: string;
+  /**
+   * Keep the detail page live and indexed, but drop it from the services grid
+   * and the nav dropdown. Matches how Paris treats the same two services.
+   */
+  unlisted?: boolean;
 };
 
 export const SS_SERVICES: readonly SSService[] = [
@@ -150,6 +155,7 @@ Interested in learning more about the power of ice pack cryotherapy? Contact you
   {
     slug: "postural-rehabilitation",
     title: "Postural Rehabilitation",
+    unlisted: true,
     metaDescription:
       "Postural rehabilitation and Posture Pro assessment at our Sulphur Springs chiropractic office. Digital posture analysis and one-on-one rehab exercises.",
     body: `Spinal rehabilitation is offered at Chiropractic Associates. This service, called Posture Pro, assesses your posture via digital images to determine if areas of your spine are weak or suffering from an imbalance.
@@ -202,6 +208,7 @@ No matter what type of exercise is prescribed to remedy a patient's specific con
   {
     slug: "therapeutic-ultrasound",
     title: "Therapeutic Ultrasound",
+    unlisted: true,
     metaDescription:
       "Therapeutic ultrasound treatment at our Sulphur Springs chiropractic office. Non-invasive therapy for soft tissue injuries, joint pain, and muscle spasms.",
     body: `Therapeutic ultrasound is utilized for injuries related to most soft tissues, joints and muscle spasms. While it shares the same name, this ultrasound is not the same as that used diagnostically to screen the body internally.
@@ -434,7 +441,7 @@ export const SS_QA: readonly FaqEntry[] = [
 /*  Navigation helpers                                                 */
 /* ------------------------------------------------------------------ */
 
-export const SS_SERVICE_NAV = SS_SERVICES.map((s) => ({
+export const SS_SERVICE_NAV = SS_SERVICES.filter((s) => !s.unlisted).map((s) => ({
   href: `/sulphur-springs/${s.slug}`,
   label: s.title,
 }));

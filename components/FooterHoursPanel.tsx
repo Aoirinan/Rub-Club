@@ -7,7 +7,7 @@ import type { DomainContextValue } from "@/lib/domain-context";
 import { useSiteBusinessContext } from "@/lib/use-site-business-context";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
 import { footerHoursFocus, type FooterHoursFocus } from "@/lib/footer-hours-context";
-import type { OfficeHoursRow } from "@/lib/office-hours";
+import { hoursShifts, type OfficeHoursRow } from "@/lib/office-hours";
 
 function HoursTable({ rows }: { rows: readonly OfficeHoursRow[] }) {
   return (
@@ -15,7 +15,13 @@ function HoursTable({ rows }: { rows: readonly OfficeHoursRow[] }) {
       {rows.map((row) => (
         <div key={row.day} className="flex justify-between gap-3 border-b border-white/10 py-1">
           <dt className="font-bold text-white">{row.day}</dt>
-          <dd className="text-white/80">{row.hours}</dd>
+          <dd className="text-right text-white/80">
+            {hoursShifts(row.hours).map((shift) => (
+              <span key={shift} className="block whitespace-nowrap">
+                {shift}
+              </span>
+            ))}
+          </dd>
         </div>
       ))}
     </dl>
@@ -28,11 +34,9 @@ function shortDay(day: string): string {
 }
 
 /** "9:00 AM – 6:00 PM" -> "9am–6pm", "Closed" -> "Closed" — compact enough for a narrow column. */
-function shortHours(hours: string): string {
-  const trimmed = hours.trim();
-  if (!trimmed || /closed/i.test(trimmed)) return trimmed || "—";
-  const times = trimmed.split(/[–-]/).map((t) => t.trim());
-  if (times.length !== 2) return trimmed;
+function shortShift(shift: string): string {
+  const times = shift.split(/[–-]/).map((t) => t.trim());
+  if (times.length !== 2) return shift;
   const compact = (t: string) => {
     const m = t.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
     if (!m) return t;
@@ -40,6 +44,13 @@ function shortHours(hours: string): string {
     return `${h}${min && min !== "00" ? `:${min}` : ""}${ampm ? ampm.toLowerCase() : ""}`;
   };
   return `${compact(times[0]!)}–${compact(times[1]!)}`;
+}
+
+/** One entry per shift so a split schedule stacks instead of wrapping mid-range. */
+function shortHoursLines(hours: string): string[] {
+  const trimmed = hours.trim();
+  if (!trimmed || /closed/i.test(trimmed)) return [trimmed || "—"];
+  return hoursShifts(trimmed).map(shortShift);
 }
 
 /** Two hours sets shown side by side, one row per day, to keep the footer column short. */
@@ -73,8 +84,15 @@ function TwoBusinessHoursTable({
               className="flex justify-between gap-2 border-b border-white/10 py-1 text-xs"
             >
               <dt className="w-8 font-bold text-white">{shortDay(row.day)}</dt>
-              <dd className="flex-1 text-right text-white/80">{shortHours(row.hours)}</dd>
-              <dd className="flex-1 text-right text-white/80">{shortHours(rightHours)}</dd>
+              {[row.hours, rightHours].map((value, col) => (
+                <dd key={col} className="flex-1 text-right text-white/80">
+                  {shortHoursLines(value).map((line) => (
+                    <span key={line} className="block whitespace-nowrap">
+                      {line}
+                    </span>
+                  ))}
+                </dd>
+              ))}
             </div>
           );
         })}

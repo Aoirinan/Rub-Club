@@ -7,7 +7,9 @@ import { buildParisChiroNavChildren } from "@/lib/paris-chiro-services";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
 import { SS_SERVICES } from "@/lib/sulphur-springs-content";
 
-const SS_SERVICES_NAV_CHILDREN: ServicesNavChild[] = SS_SERVICES.map((s) => ({
+const SS_SERVICES_NAV_CHILDREN: ServicesNavChild[] = SS_SERVICES.filter(
+  (s) => !s.unlisted,
+).map((s) => ({
   href: `/sulphur-springs/${s.slug}`,
   label: s.title,
 }));

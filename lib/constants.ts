@@ -121,12 +121,16 @@ export const LOCATIONS: Record<LocationId, LocationInfo> = {
     geo: { latitude: 33.1387, longitude: -95.6011 },
     mapsUrl:
       "https://www.google.com/maps/search/?api=1&query=207+Jefferson+St+E+Sulphur+Springs+TX",
+    // Split shifts: the office closes over the midday break, so each half of the
+    // day is its own specification. Keep in sync with SS_HOURS_DEFAULT_TEXT.
     openingHours: [
-      {
-        days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-        opens: "09:00",
-        closes: "17:00",
-      },
+      { days: ["Mon", "Thu"], opens: "08:00", closes: "13:00" },
+      { days: ["Mon", "Thu"], opens: "14:00", closes: "17:00" },
+      { days: ["Tue"], opens: "09:00", closes: "13:00" },
+      { days: ["Wed"], opens: "09:00", closes: "12:00" },
+      { days: ["Wed"], opens: "13:00", closes: "17:00" },
+      { days: ["Fri"], opens: "09:00", closes: "13:00" },
+      { days: ["Fri"], opens: "14:00", closes: "18:00" },
     ],
   },
 };

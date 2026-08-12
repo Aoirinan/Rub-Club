@@ -5,7 +5,7 @@ import {
   type ServiceLine,
   TIME_ZONE,
 } from "./constants";
-import { dayHoursForDate, type ProviderHoursContext } from "./provider-profile";
+import { dayHoursForDate, dayHoursRanges, type ProviderHoursContext } from "./provider-profile";
 import type { BufferSpec } from "./appointment-buffers";
 import { blockedSlotStartsForAppointment } from "./appointment-buffers";
 import type { ProviderDaySchedule } from "./provider-types";
@@ -144,32 +144,31 @@ function dayBoundsFromSchedule(dateStr: string, schedule: ProviderDaySchedule): 
   return { open, close };
 }
 
-export function effectiveDayWindowFromHours(
+/**
+ * Every bookable window on a day, one per range. A day with a midday break
+ * yields two; a closed day yields none.
+ */
+export function effectiveDayWindowsFromHours(
+  dateStr: string,
+  hoursCtx: ProviderHoursContext,
+): DayWindow[] {
+  const day = dayHoursForDate(dateStr, hoursCtx);
+  return dayHoursRanges(day).map((r) => dayBoundsFromSchedule(dateStr, r));
+}
+
+/**
+ * Earliest open to latest close, spanning any midday break. For rendering and
+ * whole-day blockouts only — never for deciding whether a time is bookable,
+ * since it includes the break.
+ */
+export function dayEnvelopeFromHours(
   dateStr: string,
   hoursCtx: ProviderHoursContext,
 ): DayWindow {
-  const day = dayHoursForDate(dateStr, hoursCtx);
-  if (!day || !day.open) {
-    const d = DateTime.fromISO(dateStr, { zone: TIME_ZONE }).startOf("day");
-    return { open: d, close: d };
-  }
-  return dayBoundsFromSchedule(dateStr, {
-    openHour: day.openHour,
-    openMinute: day.openMinute,
-    closeHour: day.closeHour,
-    closeMinute: day.closeMinute,
-  });
-}
-
-/** @deprecated Use effectiveDayWindowFromHours with providerHoursContext(). */
-export function effectiveDayWindow(
-  dateStr: string,
-  schedule: ProviderDaySchedule | null | undefined,
-): DayWindow {
-  return effectiveDayWindowFromHours(dateStr, {
-    weeklyHours: null,
-    legacySchedule: schedule ?? null,
-  });
+  const windows = effectiveDayWindowsFromHours(dateStr, hoursCtx);
+  const midnight = DateTime.fromISO(dateStr, { zone: TIME_ZONE }).startOf("day");
+  if (windows.length === 0) return { open: midnight, close: midnight };
+  return { open: windows[0]!.open, close: windows[windows.length - 1]!.close };
 }
 
 export function enumerateCandidateStartsInWindow(
@@ -190,6 +189,26 @@ export function enumerateCandidateStartsInWindow(
     t = t.plus({ minutes: BUSINESS.slotStepMinutes });
   }
   return out;
+}
+
+/**
+ * Starts across several windows on the same day, deduped and sorted. An
+ * appointment must fit entirely inside one window, so nothing straddles a
+ * midday break.
+ */
+export function enumerateCandidateStartsInWindows(
+  dateStr: string,
+  durationMin: number,
+  windows: DayWindow[],
+): DateTime[] {
+  const unique = new Map<string, DateTime>();
+  for (const w of windows) {
+    for (const t of enumerateCandidateStartsInWindow(dateStr, durationMin, w)) {
+      const k = t.toUTC().toISO()!;
+      if (!unique.has(k)) unique.set(k, t);
+    }
+  }
+  return Array.from(unique.values()).sort((a, b) => a.toMillis() - b.toMillis());
 }
 
 /** Default site hours (no per-provider override). */
@@ -218,10 +237,8 @@ export function unionCandidateStartsFromHoursContexts(
 ): DateTime[] {
   const unique = new Map<string, DateTime>();
   for (const ctx of contexts) {
-    const w = effectiveDayWindowFromHours(dateStr, ctx);
-    if (!w.open.isValid || w.close <= w.open) continue;
-    const starts = enumerateCandidateStartsInWindow(dateStr, durationMin, w);
-    for (const t of starts) {
+    const windows = effectiveDayWindowsFromHours(dateStr, ctx);
+    for (const t of enumerateCandidateStartsInWindows(dateStr, durationMin, windows)) {
       const k = t.toUTC().toISO()!;
       if (!unique.has(k)) unique.set(k, t);
     }
@@ -259,10 +276,12 @@ export function isWithinProviderHours(
 ): boolean {
   const z = start.setZone(TIME_ZONE);
   const dateStr = z.toFormat("yyyy-LL-dd");
-  const { open, close } = effectiveDayWindowFromHours(dateStr, hoursCtx);
-  if (close <= open) return false;
   const end = z.plus({ minutes: durationMin });
-  return z >= open && z < close && end <= close && end > z;
+  if (end <= z) return false;
+  // Must fit inside a single window — an appointment may not span the break.
+  return effectiveDayWindowsFromHours(dateStr, hoursCtx).some(
+    ({ open, close }) => close > open && z >= open && z < close && end <= close,
+  );
 }
 
 /** @deprecated Prefer isWithinScheduleWindow; kept for call sites using default hours only. */

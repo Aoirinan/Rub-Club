@@ -6,15 +6,90 @@ import type { ProviderDaySchedule } from "./provider-types";
 export const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 export type WeekdayKey = (typeof WEEKDAY_KEYS)[number];
 
-export type ProviderDayHours = {
-  open: boolean;
+/** One continuous bookable stretch within a day. */
+export type ProviderTimeRange = {
   openHour: number;
   openMinute: number;
   closeHour: number;
   closeMinute: number;
 };
 
+export type ProviderDayHours = {
+  open: boolean;
+  /**
+   * The first range, mirrored onto these fields so documents stay readable by
+   * anything written before split shifts existed. `ranges` is authoritative.
+   */
+  openHour: number;
+  openMinute: number;
+  closeHour: number;
+  closeMinute: number;
+  /**
+   * Split shifts, e.g. 8:00-13:00 and 14:00-17:00. Absent on older documents,
+   * in which case the single open/close pair above is the only range.
+   */
+  ranges?: ProviderTimeRange[];
+};
+
 export type ProviderWeeklyHours = Partial<Record<WeekdayKey, ProviderDayHours>>;
+
+const minutesOf = (hour: number, minute: number): number => hour * 60 + minute;
+
+export function rangeIsValid(r: ProviderTimeRange): boolean {
+  return minutesOf(r.closeHour, r.closeMinute) > minutesOf(r.openHour, r.openMinute);
+}
+
+/**
+ * Bookable ranges for a day, sorted and with overlaps merged so a slot can
+ * never be produced twice. Returns [] for a closed day.
+ */
+export function dayHoursRanges(day: ProviderDayHours | null | undefined): ProviderTimeRange[] {
+  if (!day || !day.open) return [];
+  const raw = day.ranges?.length
+    ? day.ranges
+    : [
+        {
+          openHour: day.openHour,
+          openMinute: day.openMinute,
+          closeHour: day.closeHour,
+          closeMinute: day.closeMinute,
+        },
+      ];
+  const sorted = raw
+    .filter(rangeIsValid)
+    .sort((a, b) => minutesOf(a.openHour, a.openMinute) - minutesOf(b.openHour, b.openMinute));
+
+  const merged: ProviderTimeRange[] = [];
+  for (const r of sorted) {
+    const prev = merged[merged.length - 1];
+    if (prev && minutesOf(r.openHour, r.openMinute) <= minutesOf(prev.closeHour, prev.closeMinute)) {
+      if (minutesOf(r.closeHour, r.closeMinute) > minutesOf(prev.closeHour, prev.closeMinute)) {
+        prev.closeHour = r.closeHour;
+        prev.closeMinute = r.closeMinute;
+      }
+      continue;
+    }
+    merged.push({ ...r });
+  }
+  return merged;
+}
+
+/** Build a day whose legacy open/close fields mirror the first range. */
+export function makeDayHours(open: boolean, ranges: ProviderTimeRange[]): ProviderDayHours {
+  const valid = ranges.filter(rangeIsValid);
+  // Fall back to the raw first range so a closed day keeps its stored times and
+  // the admin inputs repopulate correctly when it is reopened.
+  const first = valid[0] ??
+    ranges[0] ?? { openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 0 };
+  return {
+    open: open && valid.length > 0,
+    openHour: first.openHour,
+    openMinute: first.openMinute,
+    closeHour: first.closeHour,
+    closeMinute: first.closeMinute,
+    ranges: valid.length > 0 ? valid.map((r) => ({ ...r })) : [{ ...first }],
+  };
+}
 
 export type ProviderBlockOut = {
   id: string;
@@ -92,18 +167,34 @@ export function weekdayKeyFromMillis(ms: number): WeekdayKey {
   return weekdayKeyFromDate(DateTime.fromMillis(ms).setZone(TIME_ZONE).toFormat("yyyy-LL-dd"));
 }
 
-function parseDayHours(raw: unknown): ProviderDayHours | null {
+const RANGE_KEYS = ["openHour", "openMinute", "closeHour", "closeMinute"] as const;
+
+function parseTimeRange(raw: unknown): ProviderTimeRange | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
-  if (typeof o.open !== "boolean") return null;
-  const nums = ["openHour", "openMinute", "closeHour", "closeMinute"] as const;
-  const parts: Partial<ProviderDayHours> = { open: o.open };
-  for (const k of nums) {
+  const parts: Partial<ProviderTimeRange> = {};
+  for (const k of RANGE_KEYS) {
     const n = o[k];
     if (typeof n !== "number" || !Number.isFinite(n)) return null;
     parts[k] = Math.trunc(n);
   }
-  return parts as ProviderDayHours;
+  // Validity is enforced later, so a closed day stored as 9:00-9:00 still
+  // round-trips instead of being dropped and falling back to default hours.
+  return parts as ProviderTimeRange;
+}
+
+function parseDayHours(raw: unknown): ProviderDayHours | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  if (typeof o.open !== "boolean") return null;
+  const legacy = parseTimeRange(o);
+  const parsedRanges = Array.isArray(o.ranges)
+    ? o.ranges.map(parseTimeRange).filter((r): r is ProviderTimeRange => r !== null)
+    : [];
+
+  const ranges = parsedRanges.length > 0 ? parsedRanges : legacy ? [legacy] : [];
+  if (ranges.length === 0) return null;
+  return makeDayHours(o.open, ranges);
 }
 
 export function parseWeeklyHours(raw: unknown): ProviderWeeklyHours | null {
