@@ -9,7 +9,7 @@ import { getContentMany, renderRichText } from "@/lib/cms";
 import { DOCTOR_CMS_KEYS, getDoctorsForMarketing } from "@/lib/cms-doctors";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { CHIRO } from "@/lib/home-verbatim";
-import { IMAGES } from "@/lib/home-images";
+import { getSitePhotos } from "@/lib/site-photos-server";
 import { organizationJsonLd } from "@/lib/structured-data";
 
 export const revalidate = 60;
@@ -33,6 +33,7 @@ export default async function AboutPage() {
     doctorMedia = [];
   }
   const doctors = await getDoctorsForMarketing(c, doctorMedia);
+  const photos = await getSitePhotos();
   const bodyParagraphs = (c.about_body ?? "").split(/\n\n+/).filter(Boolean);
 
   return (
@@ -61,7 +62,7 @@ export default async function AboutPage() {
           </div>
           <div className="relative aspect-[4/3] overflow-hidden shadow-lg lg:aspect-auto lg:min-h-[360px]">
             <Image
-              src={IMAGES.chiroBlade}
+              src={photos.chiroBlade}
               alt="Chiropractic Associates team at the Paris office"
               fill
               className="object-cover"
@@ -71,17 +72,13 @@ export default async function AboutPage() {
         </section>
 
         <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#4a1515]">Our Paris chiropractors</h2>
+          <h2 className="text-2xl font-black text-[#4a1515]">Our Paris Chiropractors</h2>
           <p className="mt-2 max-w-2xl text-sm text-stone-600">
             Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins practice in Paris.{" "}
             <Link href="/locations/paris/staff" className="font-bold text-[#c0392b] underline">
               About us — Paris office
             </Link>
-            .{" "}
-            <Link href="/sulphur-springs/staff" className="font-bold text-[#c0392b] underline">
-              Dr. Conner Collins
-            </Link>{" "}
-            serves patients at our Sulphur Springs office.
+            .
           </p>
           <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {doctors.map((member) => (

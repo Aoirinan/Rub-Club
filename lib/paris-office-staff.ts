@@ -14,7 +14,7 @@ export const PARIS_STAFF_PAGE_DEFAULTS = {
 
     "Get to know our Paris chiropractors and the office team behind your care — insurance, personal injury, front desk, therapy, and more.",
 
-  doctorsHeading: "Our Paris chiropractors",
+  doctorsHeading: "Our Paris Chiropractors",
 
   sectionHeading: "Our office team",
 

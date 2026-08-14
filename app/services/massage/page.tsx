@@ -18,6 +18,7 @@ import { getPageBlockOrder } from "@/lib/page-layout-db";
 import { ServicePageVisualSection } from "@/components/ServicePageVisualSection";
 import { MassageReviews } from "@/components/marketing/MassageReviews";
 import { getMassageReviews } from "@/lib/massage-reviews";
+import { getSitePhotos } from "@/lib/site-photos-server";
 import { MassagePageBlock } from "./MassagePageBlocks";
 
 export const revalidate = 60;
@@ -43,16 +44,17 @@ export default async function MassageServicePage() {
     "massage_services_list",
     "massage_cta_heading",
   ]);
-  const [massageTeam, blockOrder, visual, displayLocs] = await Promise.all([
+  const [massageTeam, blockOrder, visual, displayLocs, photos] = await Promise.all([
     getMassageTeamForMarketing(),
     getPageBlockOrder("massage"),
     getScopeVisualLayout("massage"),
     getDisplayLocations(),
+    getSitePhotos(),
   ]);
   const paris = displayLocs.paris;
   const introParagraphs = (c.massage_intro_body ?? "").split(/\n\n+/).filter(Boolean);
   const serviceLines = (c.massage_services_list ?? "").split(/\n\n+/).filter(Boolean);
-  const blockData = { introParagraphs, serviceLines, massageTeam, paris };
+  const blockData = { introParagraphs, serviceLines, massageTeam, paris, photos };
   const cmsMap = c as Record<string, string>;
   const massageReviews = getMassageReviews();
 

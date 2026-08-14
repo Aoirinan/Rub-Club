@@ -5,14 +5,9 @@ import type { LocationInfo } from "@/lib/constants";
 import type { HeaderColorConfig } from "@/lib/header-colors";
 import { buildParisChiroNavChildren } from "@/lib/paris-chiro-services";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
-import { SS_SERVICES } from "@/lib/sulphur-springs-content";
+import { buildSSChiroNavChildren } from "@/lib/sulphur-springs-content";
 
-const SS_SERVICES_NAV_CHILDREN: ServicesNavChild[] = SS_SERVICES.filter(
-  (s) => !s.unlisted,
-).map((s) => ({
-  href: `/sulphur-springs/${s.slug}`,
-  label: s.title,
-}));
+const SS_SERVICES_NAV_CHILDREN: ServicesNavChild[] = buildSSChiroNavChildren();
 
 /** Wellness Plan dropdown items for the Sulphur Springs section of the site. */
 const SS_WELLNESS_NAV_CHILDREN: ServicesNavChild[] = [

@@ -16,8 +16,8 @@ import { parseChiroTreatments } from "@/lib/chiro-treatments";
 import { parisChiroServiceSlugForName } from "@/lib/paris-chiro-services";
 import { SS_INJURIES, SS_SERVICES } from "@/lib/sulphur-springs-content";
 import { ssPageCardBlurbId, ssPageCardImageId, ssPageMetaId } from "@/lib/ss-cms-registry";
+import { resolveSitePhotos, SITE_PHOTO_FIELD_IDS } from "@/lib/site-photos";
 import { CHIRO, HOME_INTRO, MASSAGE } from "@/lib/home-verbatim";
-import { IMAGES, PARIS_HOME_HERO_IMAGES } from "@/lib/home-images";
 import {
   FACEBOOK_URL,
   INSTAGRAM_URL,
@@ -105,7 +105,8 @@ const SS_INTRO_EXTRA_PARAGRAPHS = [
 ] as const;
 
 async function buildParisChiroDefaults(): Promise<PracticePageDoc> {
-  const c = await getContentMany([...PARIS_DEFAULT_CMS_IDS]);
+  const c = await getContentMany([...PARIS_DEFAULT_CMS_IDS, ...SITE_PHOTO_FIELD_IDS]);
+  const photos = resolveSitePhotos(c);
   const paris = LOCATIONS.paris;
   const ss = LOCATIONS.sulphur_springs;
   const parisPhone = c.footer_paris_phone?.trim() || paris.phonePrimary;
@@ -160,7 +161,7 @@ async function buildParisChiroDefaults(): Promise<PracticePageDoc> {
       eyebrow: "Chiropractic Associates · Paris, TX",
       heading: c.chiro_hero_heading ?? "",
       tagline: c.chiro_hero_subheading ?? "",
-      imageUrl: IMAGES.chiroBg,
+      imageUrl: photos.chiroBg,
       slides: [],
       ctaLabel: "Request Appointment",
       ctaUrl: "",
@@ -189,7 +190,7 @@ async function buildParisChiroDefaults(): Promise<PracticePageDoc> {
         heading: c.chiro_choose_title ?? "",
         body: c.chiro_intro_body ?? "",
         bullets: conditions,
-        imageUrl: IMAGES.chiroBlade,
+        imageUrl: photos.chiroBlade,
         phoneCtaLabel: "Call Paris Office",
         ctaLabel: "Meet Our Doctors",
         ctaUrl: "/locations/paris/staff",
@@ -206,7 +207,7 @@ async function buildParisChiroDefaults(): Promise<PracticePageDoc> {
       {
         id: "doctors",
         published: true,
-        heading: c.chiro_doctors_heading ?? "Our Paris chiropractors",
+        heading: c.chiro_doctors_heading ?? "Our Paris Chiropractors",
         intro: c.chiro_doctors_intro ?? "",
         source: "paris-doctors",
         variant: "cards",
@@ -263,7 +264,8 @@ async function buildParisChiroDefaults(): Promise<PracticePageDoc> {
 }
 
 async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
-  const c = await getContentMany([...HOME_DEFAULT_CMS_IDS]);
+  const c = await getContentMany([...HOME_DEFAULT_CMS_IDS, ...SITE_PHOTO_FIELD_IDS]);
+  const photos = resolveSitePhotos(c);
   const paris = LOCATIONS.paris;
   const ss = LOCATIONS.sulphur_springs;
   const parisPhone = c.footer_paris_phone?.trim() || paris.phonePrimary;
@@ -299,8 +301,8 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
       heading: "Efficient, evidence-informed chiropractic care",
       tagline:
         "Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins serve patients across Northeast Texas from Paris and Sulphur Springs.",
-      imageUrl: PARIS_HOME_HERO_IMAGES[0],
-      slides: [...PARIS_HOME_HERO_IMAGES.slice(1)],
+      imageUrl: photos.parisHero1,
+      slides: [photos.parisHero2, photos.parisHero3, photos.parisHero4],
       ctaLabel: c.home_hero_cta_label?.trim() || "Book Now",
       ctaUrl: "",
       callPhone: parisPhone,
@@ -308,7 +310,7 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
     quickActions: {
       published: true,
       items: [
-        { label: "About Us", icon: "team", url: "/locations/paris/staff" },
+        { label: "Meet Our Team", icon: "team", url: "/locations/paris/staff" },
         { label: "New Patient Forms", icon: "forms", url: "/patient-forms" },
         { label: "Office Hours", icon: "hours", url: "/locations/paris" },
         { label: "Schedule Appointment", icon: "calendar", url: "/book" },
@@ -327,7 +329,7 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
         {
           name: "Chiropractic Care",
           blurb: "Adjustments, spinal decompression, and therapy from our Paris chiropractors.",
-          imageUrl: IMAGES.massageChiroTile,
+          imageUrl: photos.massageChiroTile,
           href: "/services/chiropractic",
         },
         {
@@ -339,7 +341,7 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
         {
           name: "Massage",
           blurb: "Deep tissue, prenatal, sports, and relaxation massage at The Rub Club.",
-          imageUrl: IMAGES.serviceDeepTissue,
+          imageUrl: photos.serviceDeepTissue,
           href: "/services/massage",
         },
       ],
@@ -351,7 +353,7 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
         heading: "Two practices, one address",
         body: c.about_body ?? "",
         bullets: [],
-        imageUrl: IMAGES.chiroBlade,
+        imageUrl: photos.chiroBlade,
         phoneCtaLabel: "",
         ctaLabel: "",
         ctaUrl: "",
@@ -362,7 +364,7 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
         heading: c.chiro_choose_title ?? CHIRO.chooseTitle,
         body: c.chiro_intro_body ?? "",
         bullets: conditions,
-        imageUrl: IMAGES.chiroBg,
+        imageUrl: photos.chiroBg,
         phoneCtaLabel: "",
         ctaLabel: "Explore chiropractic care",
         ctaUrl: "/services/chiropractic",
@@ -373,7 +375,7 @@ async function buildParisHomeDefaults(): Promise<PracticePageDoc> {
         heading: MASSAGE.stressTitle,
         body: MASSAGE.stressParas.join("\n\n"),
         bullets: [],
-        imageUrl: IMAGES.massagePatient,
+        imageUrl: photos.massagePatient,
         phoneCtaLabel: "",
         ctaLabel: "Explore massage services",
         ctaUrl: "/services/massage",
@@ -471,7 +473,9 @@ async function buildSulphurSpringsDefaults(): Promise<PracticePageDoc> {
     ...SS_DEFAULT_CMS_IDS,
     "footer_paris_phone",
     "footer_massage_phone",
+    ...SITE_PHOTO_FIELD_IDS,
   ]);
+  const photos = resolveSitePhotos(c);
   const paris = LOCATIONS.paris;
   const ss = LOCATIONS.sulphur_springs;
   const parisPhone = c.footer_paris_phone?.trim() || paris.phonePrimary;
@@ -517,12 +521,33 @@ async function buildSulphurSpringsDefaults(): Promise<PracticePageDoc> {
         { label: "Schedule Appointment", icon: "calendar", url: "/sulphur-springs/contact" },
       ],
     },
+    // Three featured cards, matching the Paris home page. The full Sulphur
+    // Springs catalog lives in the Services menu rather than on this grid.
     servicesGrid: {
       published: true,
       heading: "Our Services",
       intro: `We offer a variety of services to treat common conditions and injuries. Call ${ssPhone} for more information.`,
-      mode: "ss-services",
-      cards: [],
+      mode: "custom",
+      cards: [
+        {
+          name: "Chiropractic Care",
+          blurb: "Adjustments, spinal decompression, and therapy at our Sulphur Springs office.",
+          imageUrl: photos.massageChiroTile,
+          href: "/sulphur-springs/adjustments-and-manipulation",
+        },
+        {
+          name: "Stretch & Flex Rehab",
+          blurb: "Assisted stretching and rehab movement to restore mobility and ease pain.",
+          imageUrl: "/images/legacy/stretch-flex-gallery-1.webp",
+          href: "/sulphur-springs/stretch-and-flex-rehab",
+        },
+        {
+          name: "Massage",
+          blurb: "Deep tissue, prenatal, sports, and relaxation massage from licensed therapists.",
+          imageUrl: photos.serviceDeepTissue,
+          href: "/sulphur-springs/massage",
+        },
+      ],
     },
     aboutBlocks: [
       {

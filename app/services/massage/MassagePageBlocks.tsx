@@ -4,11 +4,11 @@ import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { MassageTeamGrid } from "@/components/marketing/MassageTeamGrid";
 import { ServicesGrid } from "@/components/practice/ServicesGrid";
 import { BookingCta } from "@/components/BookingCta";
-import { IMAGES } from "@/lib/home-images";
 import { renderRichText } from "@/lib/cms";
 import { MASSAGE } from "@/lib/home-verbatim";
-import { MASSAGE_SERVICE_PAGES } from "@/lib/massage-services";
+import { massageServicePagesWithPhotos } from "@/lib/massage-services";
 import type { MassageTeamCard } from "@/lib/massage-team-data";
+import type { SitePhotos } from "@/lib/site-photos";
 import { telHref, type LocationInfo } from "@/lib/constants";
 
 export type MassagePageData = {
@@ -16,6 +16,7 @@ export type MassagePageData = {
   serviceLines: string[];
   massageTeam: MassageTeamCard[];
   paris: LocationInfo;
+  photos: SitePhotos;
 };
 
 export function MassagePageBlock({ id, data }: { id: string; data: MassagePageData }) {
@@ -35,7 +36,7 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
           </div>
           <div className="relative aspect-[4/3] overflow-hidden shadow-md lg:min-h-[360px]">
             <Image
-              src={IMAGES.massagePatient}
+              src={data.photos.massagePatient}
               alt="A licensed massage therapist working on a client's shoulders at The Rub Club"
               fill
               className="object-cover"
@@ -55,7 +56,7 @@ export function MassagePageBlock({ id, data }: { id: string; data: MassagePageDa
               heading: "Services we offer",
               intro: "",
               mode: "custom",
-              cards: MASSAGE_SERVICE_PAGES.map((s) => ({
+              cards: massageServicePagesWithPhotos(data.photos).map((s) => ({
                 name: s.name,
                 blurb: s.blurb,
                 imageUrl: s.imageUrl,

@@ -27,6 +27,7 @@ import {
   buildParisChiroCmsRegistry,
 } from "@/lib/paris-chiro-cms-registry";
 import { buildSSStaffCmsDefaults, buildSSStaffCmsRegistry } from "@/lib/ss-staff-cms-registry";
+import { buildSitePhotoCmsRegistry, buildSitePhotoDefaults } from "@/lib/site-photos";
 import {
   STATIC_PAGES_CMS_REGISTRY,
   buildStaticPagesCmsDefaults,
@@ -65,6 +66,7 @@ export type ContentPageKey =
   | "Footer"
   | "Navigation"
   | "Doctors"
+  | "Photos"
   | "Wellness care plans";
 
 export type ContentFieldMeta = {
@@ -385,6 +387,7 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   ...buildParisStaffCmsRegistry(),
   ...buildSSStaffCmsRegistry(),
   ...STATIC_PAGES_CMS_REGISTRY,
+  ...buildSitePhotoCmsRegistry(),
 ];
 
 export const DEFAULTS: Record<string, string> = {
@@ -404,7 +407,7 @@ export const DEFAULTS: Record<string, string> = {
   chiro_choose_title: CHIRO.chooseTitle,
   chiro_intro_body: `${CHIRO.chooseLead}\n\n${CHIRO.chooseP2}\n\n${CHIRO.chooseP3}`,
   chiro_conditions_list: CHIRO.conditions.join(", "),
-  chiro_doctors_heading: "Our Paris chiropractors",
+  chiro_doctors_heading: "Our Paris Chiropractors",
   chiro_doctors_intro:
     "Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins practice at our Paris office.",
   chiro_treatments_heading: "Treatments we offer",
@@ -531,6 +534,7 @@ Trigger Point & Lymphatic — Focused release of stubborn knots, plus gentle lym
   ...buildParisStaffCmsDefaults(),
   ...buildSSStaffCmsDefaults(),
   ...buildStaticPagesCmsDefaults(),
+  ...buildSitePhotoDefaults(),
 };
 
 export const CONTENT_IDS = CONTENT_REGISTRY.map((f) => f.id);

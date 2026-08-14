@@ -5,6 +5,7 @@
  */
 
 import type { FaqEntry } from "@/lib/faqs";
+import { buildSSServiceAdditions } from "@/lib/ss-chiro-service-additions";
 
 /* ------------------------------------------------------------------ */
 /*  Services                                                           */
@@ -22,7 +23,7 @@ export type SSService = {
   unlisted?: boolean;
 };
 
-export const SS_SERVICES: readonly SSService[] = [
+const SS_SERVICES_CORE: readonly SSService[] = [
   {
     slug: "adjustments-and-manipulation",
     title: "Adjustments and Manipulation",
@@ -225,6 +226,16 @@ An ultrasound emitting 'wand' will be passed over your skin across the pain poin
 
 Therapeutic ultrasound has been shown to facilitate the body's healing process at the most basic cellular level. Contact our office today to discuss whether therapeutic ultrasound may be beneficial to you on your road to recovery.`,
   },
+] as const;
+
+/**
+ * The Sulphur Springs office performs the same services as Paris, so the
+ * catalog is the original Sulphur Springs pages plus the Paris services that
+ * were missing here (see `lib/ss-chiro-service-additions.ts`).
+ */
+export const SS_SERVICES: readonly SSService[] = [
+  ...SS_SERVICES_CORE,
+  ...buildSSServiceAdditions(),
 ] as const;
 
 /* ------------------------------------------------------------------ */
@@ -450,3 +461,71 @@ export const SS_INJURY_NAV = SS_INJURIES.map((i) => ({
   href: `/sulphur-springs/${i.slug}`,
   label: i.title,
 }));
+
+/** Services featured on the Sulphur Springs home page grid, mirroring Paris. */
+export const SS_FEATURED_SERVICE_SLUGS = [
+  "adjustments-and-manipulation",
+  "stretch-and-flex-rehab",
+] as const;
+
+/**
+ * Grouped Services mega-menu for the Sulphur Springs section, mirroring the
+ * Paris menu shape in `buildParisChiroNavChildren()`. Unlisted services stay
+ * out of the menu but keep their pages live.
+ */
+export function buildSSChiroNavChildren(): { href: string; label: string; group?: string }[] {
+  const ss = (slug: string) => `/sulphur-springs/${slug}`;
+  const care = "Chiropractic Services";
+  const electrical = "Electrical Stimulation";
+
+  const grouped: Record<string, string> = {
+    "ice-pack-cryotherapy": "Cryotherapy",
+    "electrical-muscle-stimulation": electrical,
+    "interferential-current-therapy": electrical,
+    "microcurrent-therapy": electrical,
+  };
+
+  // Match the Paris menu order: injuries, massage, then therapies.
+  const careOrder = [
+    "stretch-and-flex-rehab",
+    "adjustments-and-manipulation",
+    "spinal-decompression",
+    "common-chiropractic-conditions",
+    "therapeutic-exercise",
+    "degenerative-disc-disease",
+    "pediatric-care",
+    "prenatal-chiropractic",
+    "spine-care",
+    "injury-rehab",
+    "acupuncture",
+    "therapeutic-massage",
+  ];
+
+  const listed = SS_SERVICES.filter((s) => !s.unlisted);
+  const bySlug = new Map(listed.map((s) => [s.slug, s]));
+
+  const children: { href: string; label: string; group?: string }[] = [
+    ...SS_INJURIES.map((i) => ({ href: ss(i.slug), label: i.title, group: "Injuries" })),
+    { href: ss("massage"), label: "Massage Therapy", group: "Therapeutic Massage" },
+  ];
+
+  for (const [slug, group] of Object.entries(grouped)) {
+    const svc = bySlug.get(slug);
+    if (svc) children.push({ href: ss(slug), label: svc.title, group });
+  }
+
+  for (const slug of careOrder) {
+    const svc = bySlug.get(slug);
+    if (svc) children.push({ href: ss(slug), label: svc.title, group: care });
+  }
+
+  // Anything listed that the explicit ordering above missed still shows up.
+  const placed = new Set([...Object.keys(grouped), ...careOrder]);
+  for (const svc of listed) {
+    if (!placed.has(svc.slug)) {
+      children.push({ href: ss(svc.slug), label: svc.title, group: care });
+    }
+  }
+
+  return children;
+}

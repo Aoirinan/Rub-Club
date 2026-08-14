@@ -29,6 +29,9 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
   const [syncingProviders, setSyncingProviders] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [reordering, setReordering] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const [newName, setNewName] = useState("");
   const [newBio, setNewBio] = useState("");
@@ -371,6 +374,61 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
     }
   }
 
+  /**
+   * Persist a new display order. The list is reordered locally first so the
+   * drag feels instant, then rolled back to the server's copy if the save
+   * fails — otherwise the admin would keep seeing an order the site doesn't use.
+   */
+  async function persistOrder(next: MassageTeamMemberStored[]) {
+    setSectionAlert(null);
+    onNotify(null);
+    const user = auth?.currentUser;
+    if (!user) return;
+    const previous = members;
+    setMembers(next);
+    setReordering(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/admin/massage-team/reorder", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ orderedIds: next.map((m) => m.id) }),
+      });
+      const data = await parseAdminJson(res);
+      if (!res.ok) {
+        setMembers(previous);
+        setSectionAlert({
+          kind: "error",
+          text: typeof data.error === "string" ? data.error : "Could not save the new order.",
+        });
+        return;
+      }
+      const saved = data.members as MassageTeamMemberStored[] | undefined;
+      if (saved) setMembers(saved);
+      setSectionAlert({ kind: "success", text: "New order saved — the website now shows this order." });
+    } catch {
+      setMembers(previous);
+      setSectionAlert({
+        kind: "error",
+        text: "Network error while saving the new order. Nothing was changed.",
+      });
+    } finally {
+      setReordering(false);
+    }
+  }
+
+  function moveMember(from: number, to: number) {
+    if (from === to || from < 0 || to < 0 || from >= members.length || to >= members.length) return;
+    const next = [...members];
+    const [moved] = next.splice(from, 1);
+    if (!moved) return;
+    next.splice(to, 0, moved);
+    void persistOrder(next);
+  }
+
   function openEdit(row: MassageTeamMemberStored) {
     setSectionAlert(null);
     onNotify(null);
@@ -410,7 +468,10 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           </p>
         ) : (
           <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
-            Using the default team — sync from scheduling or import the built-in roster below.
+            The website is showing the built-in team, which cannot be edited or reordered. Click
+            <strong> Import default team from website</strong> below to turn the current therapists
+            into editable entries — then you can change each name, bio, and photo, and drag them
+            into any order.
           </p>
         )}
       </div>
@@ -567,19 +628,58 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
         </div>
       ) : null}
 
+      {members.length > 1 ? (
+        <p className="text-xs text-slate-600">
+          Drag a row by the <span aria-hidden="true">⠿</span> handle to change the order on the
+          website, or use the ↑ ↓ buttons. The top row shows first.
+          {reordering ? <span className="ml-2 font-semibold text-slate-800">Saving order…</span> : null}
+        </p>
+      ) : null}
+
       <ul className="space-y-2 text-sm text-slate-700">
-        {members.map((m) => (
+        {members.map((m, index) => (
           <li
             key={m.id}
-            className="flex flex-wrap items-start justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2"
+            draggable
+            onDragStart={() => setDragIndex(index)}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOverIndex(index);
+            }}
+            onDragLeave={() => setDragOverIndex((cur) => (cur === index ? null : cur))}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (dragIndex !== null) moveMember(dragIndex, index);
+              setDragIndex(null);
+              setDragOverIndex(null);
+            }}
+            onDragEnd={() => {
+              setDragIndex(null);
+              setDragOverIndex(null);
+            }}
+            className={`flex flex-wrap items-start justify-between gap-3 rounded-lg px-3 py-2 ${
+              dragOverIndex === index && dragIndex !== index
+                ? "bg-emerald-50 ring-2 ring-emerald-400"
+                : "bg-slate-50"
+            } ${dragIndex === index ? "opacity-50" : ""}`}
           >
             <div className="flex min-w-0 flex-1 gap-3">
+              <span
+                aria-hidden="true"
+                title="Drag to reorder"
+                className="mt-1 shrink-0 cursor-grab select-none px-1 text-lg leading-none text-slate-400 active:cursor-grabbing"
+              >
+                ⠿
+              </span>
               <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded border border-slate-200 bg-slate-200">
                 {/* eslint-disable-next-line @next/next/no-img-element -- admin-only previews; URLs include Storage */}
                 <img src={m.photoUrl} alt="" className="h-full w-full object-cover object-top" />
               </div>
               <div className="min-w-0 space-y-1">
-                <div className="font-semibold text-slate-900">{m.name}</div>
+                <div className="font-semibold text-slate-900">
+                  <span className="mr-2 text-xs font-normal text-slate-500">#{index + 1}</span>
+                  {m.name}
+                </div>
                 <div className="text-xs text-slate-600">
                   sort {m.sortOrder}
                   {m.role ? ` · ${m.role}` : ""} · id <span className="font-mono">{m.id}</span>
@@ -587,6 +687,24 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
               </div>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
+              <button
+                type="button"
+                aria-label={`Move ${m.name} up`}
+                disabled={index === 0 || reordering}
+                onClick={() => moveMember(index, index - 1)}
+                className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 hover:border-slate-400 disabled:opacity-40"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                aria-label={`Move ${m.name} down`}
+                disabled={index === members.length - 1 || reordering}
+                onClick={() => moveMember(index, index + 1)}
+                className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 hover:border-slate-400 disabled:opacity-40"
+              >
+                ↓
+              </button>
               <button
                 type="button"
                 onClick={() => openEdit(m)}

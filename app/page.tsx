@@ -15,7 +15,7 @@ import {
 import { getContentMany, renderRichText } from "@/lib/cms";
 import { DOCTOR_CMS_KEYS, doctorVideoItems, getDoctorsForMarketing } from "@/lib/cms-doctors";
 import { CHIRO } from "@/lib/home-verbatim";
-import { PARIS_HOME_HERO_IMAGES } from "@/lib/home-images";
+import { getSitePhotos } from "@/lib/site-photos-server";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { getLayoutCmsContent } from "@/lib/cms-display";
 import { getParisChiroOfficeHours, getParisOfficeHours } from "@/lib/office-hours";
@@ -84,9 +84,10 @@ export default async function Home() {
   const paris = displayLocs.paris;
   const ss = displayLocs.sulphur_springs;
 
-  const [massageTeam, doctors] = await Promise.all([
+  const [massageTeam, doctors, photos] = await Promise.all([
     getMassageTeamForMarketing(),
     getDoctorsForMarketing(c, doctorMedia),
+    getSitePhotos(),
   ]);
 
   const membersBySource: Partial<Record<string, PracticeTeamMember[]>> = {
@@ -125,8 +126,8 @@ export default async function Home() {
   const otherExtras = page.extras.filter((e) => e.id !== "awards" && e.id !== "wellness");
   const hero = {
     ...page.hero,
-    imageUrl: PARIS_HOME_HERO_IMAGES[0],
-    slides: [...PARIS_HOME_HERO_IMAGES.slice(1)],
+    imageUrl: photos.parisHero1,
+    slides: [photos.parisHero2, photos.parisHero3, photos.parisHero4],
   };
 
   return (
