@@ -21,7 +21,8 @@ export type ContentScopeId =
   | "contact"
   | "footer"
   | "navigation"
-  | "doctors-global";
+  | "doctors-global"
+  | "photos";
 
 export type PageBuilderScopeId = PageLayoutId | ContentScopeId | "faq-items" | "massage-team";
 
@@ -43,7 +44,8 @@ export function isContentScopeId(v: string): v is ContentScopeId {
     v === "contact" ||
     v === "footer" ||
     v === "navigation" ||
-    v === "doctors-global"
+    v === "doctors-global" ||
+    v === "photos"
   );
 }
 
@@ -82,6 +84,7 @@ const CONTENT_SCOPE_PAGES: Record<ContentScopeId, ContentPageKey[]> = {
   footer: ["Footer"],
   navigation: ["Navigation"],
   "doctors-global": ["Doctors"],
+  photos: ["Photos"],
 };
 
 export type ContentScopeSection = {
@@ -142,7 +145,10 @@ export const CONTENT_SCOPES: ContentScopeDef[] = (
                   : id === "footer"
                     ? "Header & footer"
                     : id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, " "),
-  description: `Edit ${pageLabels.join(", ")} copy`,
+  description:
+    id === "photos"
+      ? "Swap any marketing photo on the site"
+      : `Edit ${pageLabels.join(", ")} copy`,
   sections: buildSectionsForPageLabels(pageLabels),
 }));
 

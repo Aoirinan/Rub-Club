@@ -57,6 +57,7 @@ function scopeLivePath(scope: PageBuilderScopeId): string | null {
   if (scope === "paris-staff") return "/locations/paris/staff";
   if (scope === "ss-staff") return "/sulphur-springs/staff";
   if (scope === "ss-subpages") return "/sulphur-springs";
+  if (scope === "photos") return "/";
   return null;
 }
 
