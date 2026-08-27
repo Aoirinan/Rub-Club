@@ -16,7 +16,9 @@ function primaryNavActiveLabel(
 ): string | null {
   const path = normalizePath(pathname);
 
-  if (path.startsWith("/patient-forms")) return "Patient Forms";
+  if (path.startsWith("/patient-forms") || path.startsWith("/sulphur-springs/patient-forms")) {
+    return "Patient Forms";
+  }
 
   if (
     path.startsWith("/services/chiropractic/wellness-care-plans") ||
@@ -65,6 +67,9 @@ function primaryNavActiveLabel(
       "q-and-a",
       "massage",
       "wellness-care-plans",
+      "insurance",
+      "reviews",
+      "patient-forms",
     ]);
     if (nonService.has(segment)) return null;
     return businessContext === "sulphur_springs" ? "Services" : "Chiropractic";

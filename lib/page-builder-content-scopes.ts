@@ -10,51 +10,78 @@ export type ContentScopeId =
   | "paris-office"
   | "paris-chiro-pages"
   | "paris-staff"
+  | "paris-header"
+  | "paris-photos"
   | "ss-staff"
   | "ss-subpages"
+  | "ss-conditions"
+  | "ss-resources"
+  | "ss-wellness"
+  | "ss-prices"
+  | "ss-doctors"
+  | "ss-office"
   | "ss-massage"
   | "ss-contact"
+  | "ss-insurance"
+  | "ss-reviews"
+  | "ss-patient-forms"
+  | "ss-header"
+  | "ss-photos"
   | "insurance"
-  | "services-hub"
   | "reviews"
   | "patient-forms"
   | "about"
   | "faq-copy"
   | "contact"
-  | "footer"
-  | "navigation"
   | "doctors-global"
-  | "photos";
+  | "site-settings";
 
-export type PageBuilderScopeId = PageLayoutId | ContentScopeId | "faq-items" | "massage-team";
+export type PageBuilderScopeId =
+  | PageLayoutId
+  | ContentScopeId
+  | "faq-items"
+  | "ss-faq-items"
+  | "massage-team";
+
+const CONTENT_SCOPE_IDS: ReadonlySet<string> = new Set<ContentScopeId>([
+  "home",
+  "wellness",
+  "paris-office",
+  "paris-chiro-pages",
+  "paris-staff",
+  "paris-header",
+  "paris-photos",
+  "ss-staff",
+  "ss-subpages",
+  "ss-conditions",
+  "ss-resources",
+  "ss-wellness",
+  "ss-prices",
+  "ss-doctors",
+  "ss-office",
+  "ss-massage",
+  "ss-contact",
+  "ss-insurance",
+  "ss-reviews",
+  "ss-patient-forms",
+  "ss-header",
+  "ss-photos",
+  "insurance",
+  "reviews",
+  "patient-forms",
+  "about",
+  "faq-copy",
+  "contact",
+  "doctors-global",
+  "site-settings",
+]);
 
 export function isContentScopeId(v: string): v is ContentScopeId {
-  return (
-    v === "home" ||
-    v === "wellness" ||
-    v === "paris-office" ||
-    v === "paris-chiro-pages" ||
-    v === "paris-staff" ||
-    v === "ss-staff" ||
-    v === "ss-subpages" ||
-    v === "ss-massage" ||
-    v === "ss-contact" ||
-    v === "insurance" ||
-    v === "services-hub" ||
-    v === "reviews" ||
-    v === "patient-forms" ||
-    v === "about" ||
-    v === "faq-copy" ||
-    v === "contact" ||
-    v === "footer" ||
-    v === "navigation" ||
-    v === "doctors-global" ||
-    v === "photos"
-  );
+  return CONTENT_SCOPE_IDS.has(v);
 }
 
-export function isFaqItemsScope(v: string): v is "faq-items" {
-  return v === "faq-items";
+export function isFaqItemsScope(v: string): v is "faq-items" | "ss-faq-items" {
+  return v === "faq-items" || v === "ss-faq-items";
 }
 
 export function isMassageTeamScope(v: string): v is "massage-team" {
@@ -74,25 +101,33 @@ const CONTENT_SCOPE_PAGES: Record<ContentScopeId, ContentPageKey[]> = {
   home: ["Home"],
   wellness: ["Wellness care plans"],
   "paris-office": ["Paris / main office"],
-  "paris-chiro-pages": ["Paris chiro pages"],
+  "paris-chiro-pages": ["Paris chiro pages", "Services hub"],
   "paris-staff": ["Paris staff"],
+  "paris-header": ["Paris header & footer"],
+  "paris-photos": ["Paris photos"],
   "ss-staff": ["Sulphur staff"],
   "ss-subpages": ["SS subpages"],
-  // Split out of the Sulphur Springs landing scope: both are real pages, and
-  // burying their copy under "Home" made them effectively unfindable.
+  "ss-conditions": ["SS conditions"],
+  "ss-resources": ["SS patient resources"],
+  "ss-wellness": ["SS wellness"],
+  "ss-prices": ["SS prices"],
+  "ss-doctors": ["SS doctors"],
+  "ss-office": ["SS / office"],
   "ss-massage": ["SS massage page"],
   "ss-contact": ["SS contact page"],
+  "ss-insurance": ["SS insurance"],
+  "ss-reviews": ["SS reviews"],
+  "ss-patient-forms": ["SS patient forms"],
+  "ss-header": ["SS header & footer"],
+  "ss-photos": ["SS photos"],
   insurance: ["Insurance"],
-  "services-hub": ["Services hub"],
   reviews: ["Reviews"],
   "patient-forms": ["Patient forms"],
   about: ["About"],
   "faq-copy": ["FAQ"],
   contact: ["Contact"],
-  footer: ["Footer"],
-  navigation: ["Navigation"],
   "doctors-global": ["Doctors"],
-  photos: ["Photos"],
+  "site-settings": ["Site settings"],
 };
 
 export type ContentScopeSection = {
@@ -130,12 +165,22 @@ function buildSectionsForPageLabels(pageLabels: ContentPageKey[]): ContentScopeS
 /** Only ids whose label differs from the auto-generated one are listed. */
 const SCOPE_LABELS: Partial<Record<ContentScopeId, string>> = {
   "faq-copy": "FAQ page copy",
-  "doctors-global": "Doctors (global)",
-  "ss-subpages": "Sulphur subpages",
-  "ss-staff": "Sulphur staff",
-  "ss-massage": "Sulphur massage page",
-  "ss-contact": "Sulphur contact page",
-  footer: "Header & footer",
+  "doctors-global": "Doctors",
+  "ss-subpages": "Services",
+  "ss-conditions": "Conditions",
+  "ss-resources": "Patient resources",
+  "ss-staff": "Staff",
+  "ss-massage": "Massage page",
+  "ss-contact": "Contact",
+  "ss-wellness": "Wellness Plan",
+  "ss-prices": "Prices",
+  "ss-doctors": "Doctors",
+  "ss-office": "Office info",
+  "paris-header": "Header & footer",
+  "ss-header": "Header & footer",
+  "paris-photos": "Photos",
+  "ss-photos": "Photos",
+  "site-settings": "Site settings",
 };
 
 function autoScopeLabel(id: ContentScopeId): string {
@@ -148,8 +193,8 @@ export const CONTENT_SCOPES: ContentScopeDef[] = (
   id,
   label: SCOPE_LABELS[id] ?? autoScopeLabel(id),
   description:
-    id === "photos"
-      ? "Swap any marketing photo on the site"
+    id === "paris-photos" || id === "ss-photos"
+      ? "Swap marketing photos for this office"
       : `Edit ${pageLabels.join(", ")} copy`,
   sections: buildSectionsForPageLabels(pageLabels),
 }));
@@ -168,3 +213,10 @@ export function sectionDef(
 ): ContentScopeSection | undefined {
   return contentScopeDef(scopeId).sections.find((s) => s.id === sectionId);
 }
+
+/** Scopes that list one page at a time via a third dropdown. */
+export const PAGE_PICKER_SCOPES: ReadonlySet<PageBuilderScopeId> = new Set([
+  "paris-chiro-pages",
+  "ss-subpages",
+  "ss-conditions",
+]);

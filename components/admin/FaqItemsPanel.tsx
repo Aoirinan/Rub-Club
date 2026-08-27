@@ -13,9 +13,11 @@ type FaqRow = {
 
 type Props = {
   getIdToken: () => Promise<string | null>;
+  /** When set, only this category is listed, added, and reordered. */
+  category?: string;
 };
 
-export function FaqItemsPanel({ getIdToken }: Props) {
+export function FaqItemsPanel({ getIdToken, category }: Props) {
   const [faqs, setFaqs] = useState<FaqRow[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -28,6 +30,8 @@ export function FaqItemsPanel({ getIdToken }: Props) {
     active: boolean;
   } | null>(null);
 
+  const lockedCategory = category?.trim() || null;
+
   const load = useCallback(async () => {
     const token = await getIdToken();
     if (!token) return;
@@ -35,8 +39,14 @@ export function FaqItemsPanel({ getIdToken }: Props) {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = (await res.json()) as { faqs?: FaqRow[] };
-    if (res.ok && data.faqs) setFaqs(data.faqs);
-  }, [getIdToken]);
+    if (res.ok && data.faqs) {
+      setFaqs(
+        lockedCategory
+          ? data.faqs.filter((f) => f.category === lockedCategory)
+          : data.faqs,
+      );
+    }
+  }, [getIdToken, lockedCategory]);
 
   useEffect(() => {
     void load();
@@ -56,7 +66,7 @@ export function FaqItemsPanel({ getIdToken }: Props) {
       const body = {
         question: faqForm.question,
         answer: faqForm.answer,
-        category: faqForm.category,
+        category: lockedCategory ?? faqForm.category,
         active: faqForm.active,
       };
       const res =
@@ -103,7 +113,10 @@ export function FaqItemsPanel({ getIdToken }: Props) {
         Authorization: `Bearer ${token}`,
         "content-type": "application/json",
       },
-      body: JSON.stringify({ orderedIds: next.map((f) => f.id) }),
+      body: JSON.stringify({
+        orderedIds: next.map((f) => f.id),
+        category: lockedCategory ?? undefined,
+      }),
     });
     await load();
   }
@@ -114,8 +127,11 @@ export function FaqItemsPanel({ getIdToken }: Props) {
         <div>
           <h2 className="text-lg font-bold text-slate-900">FAQ items</h2>
           <p className="mt-1 text-xs text-slate-600">
-            Category <strong>general</strong> shows on /faq. Category <strong>sulphur-springs</strong> shows on
-            /sulphur-springs/q-and-a.
+            {lockedCategory === "sulphur-springs"
+              ? "These questions appear on /sulphur-springs/q-and-a. Uncheck Active to hide one without deleting it."
+              : lockedCategory === "general"
+                ? "These questions appear on /faq. Uncheck Active to hide one without deleting it."
+                : "Category general shows on /faq. Category sulphur-springs shows on /sulphur-springs/q-and-a."}
           </p>
         </div>
         <button
@@ -126,7 +142,7 @@ export function FaqItemsPanel({ getIdToken }: Props) {
               mode: "add",
               question: "",
               answer: "",
-              category: "general",
+              category: lockedCategory ?? "general",
               active: true,
             })
           }
@@ -151,12 +167,14 @@ export function FaqItemsPanel({ getIdToken }: Props) {
             value={faqForm.answer}
             onChange={(e) => setFaqForm({ ...faqForm, answer: e.target.value })}
           />
+          {lockedCategory ? null : (
           <input
             className="w-full rounded border px-3 py-2 text-sm"
             placeholder="Category"
             value={faqForm.category}
             onChange={(e) => setFaqForm({ ...faqForm, category: e.target.value })}
           />
+          )}
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"

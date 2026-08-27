@@ -64,7 +64,9 @@ export const DEFAULT_SULPHUR_SPRINGS_NAV: BusinessNavItem[] = [
     children: [
       { label: "About Chiropractic", href: "/sulphur-springs/patient-resources" },
       { label: "Q & A", href: "/sulphur-springs/q-and-a" },
-      { label: "Patient forms & intake", href: "/patient-forms" },
+      { label: "Patient forms & intake", href: "/sulphur-springs/patient-forms" },
+      { label: "Insurance & billing", href: "/sulphur-springs/insurance" },
+      { label: "Patient reviews", href: "/sulphur-springs/reviews" },
     ],
   },
   { label: "Gift cards", href: GIFT_CARD_ORDER_URL, external: true },

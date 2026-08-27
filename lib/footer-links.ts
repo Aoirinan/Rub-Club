@@ -45,7 +45,12 @@ export const FOOTER_LINKS_SS_TEXT = `Home — /sulphur-springs
 About us — /sulphur-springs/staff
 About chiropractic — /sulphur-springs/patient-resources
 Q & A — /sulphur-springs/q-and-a
-${SHARED_LINK_LINES}
+Insurance & billing — /sulphur-springs/insurance
+Patient forms — /sulphur-springs/patient-forms
+Patient reviews — /sulphur-springs/reviews
+Privacy practices — /privacy
+Website privacy — /website-privacy
+Terms of use — /terms
 Contact — /sulphur-springs/contact`;
 
 const CONTEXT_DEFAULTS: Record<SiteBusinessContext, string> = {

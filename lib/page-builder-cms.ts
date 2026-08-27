@@ -18,12 +18,10 @@ export const LAYOUT_PAGE_CMS: Record<PageLayoutId, PageBuilderLayoutCmsConfig> =
   },
   chiropractic: {
     pageLabels: ["Chiropractic"],
-    extraPageLabels: ["Doctors"],
     heroFieldIds: ["chiro_hero_heading", "chiro_hero_subheading"],
   },
   "sulphur-springs": {
     pageLabels: ["Sulphur Springs"],
-    extraPageLabels: ["Sulphur staff"],
     heroFieldIds: ["ss_hero_heading"],
   },
 };
@@ -71,6 +69,6 @@ export const DOCTORS_BLOCK_FIELD_IDS: string[] = [
 export type BuilderScopeKind = "layout" | "content";
 
 export function scopeKind(scope: string): BuilderScopeKind {
-  if (scope === "faq-items") return "content";
+  if (scope === "faq-items" || scope === "ss-faq-items") return "content";
   return isPageLayoutId(scope) ? "layout" : "content";
 }

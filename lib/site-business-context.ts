@@ -33,12 +33,9 @@ export function businessContextFromPathname(pathname: string): SiteBusinessConte
  * route belongs to the Paris site and resets the context.
  */
 const SHARED_PATH_PREFIXES = [
-  "/patient-forms",
   "/contact",
   "/book",
   "/faq",
-  "/insurance",
-  "/reviews",
   "/about",
   "/privacy",
   "/terms",

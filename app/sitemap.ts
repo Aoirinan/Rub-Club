@@ -56,6 +56,9 @@ const ENTRIES: { path: string; changeFrequency: ChangeFrequency; priority: numbe
   { path: "/sulphur-springs/about-chiropractic", changeFrequency: "monthly", priority: 0.55 },
   { path: "/sulphur-springs/vertebral-subluxation-complex", changeFrequency: "monthly", priority: 0.55 },
   { path: "/sulphur-springs/q-and-a", changeFrequency: "monthly", priority: 0.55 },
+  { path: "/sulphur-springs/insurance", changeFrequency: "monthly", priority: 0.55 },
+  { path: "/sulphur-springs/reviews", changeFrequency: "monthly", priority: 0.55 },
+  { path: "/sulphur-springs/patient-forms", changeFrequency: "yearly", priority: 0.5 },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

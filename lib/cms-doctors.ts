@@ -2,18 +2,22 @@ import { getContentMany } from "@/lib/cms";
 import { IMAGES } from "@/lib/home-images";
 import { DOCTORS } from "@/lib/home-verbatim";
 import type { DoctorMediaItem } from "@/lib/site-owner-config";
+import { parseCmsToggle } from "@/lib/sticky-call-bar";
 
 export const DOCTOR_CMS_KEYS = [
+  "doctor_greg_active",
   "doctor_greg_name",
   "doctor_greg_role",
   "doctor_greg_bio",
   "doctor_greg_photo",
   "doctor_greg_video",
+  "doctor_sean_active",
   "doctor_sean_name",
   "doctor_sean_role",
   "doctor_sean_bio",
   "doctor_sean_photo",
   "doctor_sean_video",
+  "doctor_brandy_active",
   "doctor_brandy_name",
   "doctor_brandy_role",
   "doctor_brandy_bio",
@@ -88,6 +92,7 @@ export async function getDoctorsForMarketing(
     {
       doctorKey: "greg" as const,
       member: DOCTORS[0],
+      active: "doctor_greg_active",
       name: "doctor_greg_name",
       role: "doctor_greg_role",
       bio: "doctor_greg_bio",
@@ -97,6 +102,7 @@ export async function getDoctorsForMarketing(
     {
       doctorKey: "sean" as const,
       member: DOCTORS[1],
+      active: "doctor_sean_active",
       name: "doctor_sean_name",
       role: "doctor_sean_role",
       bio: "doctor_sean_bio",
@@ -106,6 +112,7 @@ export async function getDoctorsForMarketing(
     {
       doctorKey: "brandy" as const,
       member: DOCTORS[2],
+      active: "doctor_brandy_active",
       name: "doctor_brandy_name",
       role: "doctor_brandy_role",
       bio: "doctor_brandy_bio",
@@ -114,7 +121,9 @@ export async function getDoctorsForMarketing(
     },
   ] as const;
 
-  return specs.map(({ doctorKey, member, name, role, bio, photo, video }) => {
+  return specs
+    .filter(({ active }) => parseCmsToggle(c[active]))
+    .map(({ doctorKey, member, name, role, bio, photo, video }) => {
     const { videoUrl, videoFile } = resolveDoctorVideo(c[video] ?? "", member.videoFile);
     return {
       doctorKey,

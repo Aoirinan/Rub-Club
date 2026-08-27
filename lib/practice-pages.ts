@@ -516,7 +516,7 @@ async function buildSulphurSpringsDefaults(): Promise<PracticePageDoc> {
       published: true,
       items: [
         { label: "Meet Our Team", icon: "team", url: "/sulphur-springs/staff" },
-        { label: "New Patient Forms", icon: "forms", url: "/patient-forms" },
+        { label: "New Patient Forms", icon: "forms", url: "/sulphur-springs/patient-forms" },
         { label: "Office Hours", icon: "hours", url: "#location-contact" },
         { label: "Schedule Appointment", icon: "calendar", url: "/sulphur-springs/contact" },
       ],
@@ -568,7 +568,7 @@ async function buildSulphurSpringsDefaults(): Promise<PracticePageDoc> {
       published: true,
       heading: "Patient Reviews",
       linkToReviewsPage: true,
-      reviewsUrl: "/reviews",
+      reviewsUrl: "/sulphur-springs/reviews",
       reviewsLinkLabel: "Read more patient reviews",
     },
     teamSections: [

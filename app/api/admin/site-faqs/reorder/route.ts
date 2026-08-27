@@ -9,6 +9,7 @@ export const runtime = "nodejs";
 
 const schema = z.object({
   orderedIds: z.array(z.string().min(1)),
+  category: z.string().max(80).optional(),
 });
 
 export async function POST(req: Request) {
@@ -30,10 +31,37 @@ export async function POST(req: Request) {
   }
 
   const db = getFirestore();
+  const orderedIds = parsed.data.orderedIds;
+  const category = parsed.data.category?.trim();
+
   const batch = db.batch();
-  parsed.data.orderedIds.forEach((id, index) => {
-    batch.update(db.collection(SITE_FAQS_COLLECTION).doc(id), { order: index });
-  });
+  if (!category) {
+    orderedIds.forEach((id, index) => {
+      batch.update(db.collection(SITE_FAQS_COLLECTION).doc(id), { order: index });
+    });
+  } else {
+    const snap = await db.collection(SITE_FAQS_COLLECTION).get();
+    const all = snap.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        category: typeof data.category === "string" ? data.category : "general",
+        order: typeof data.order === "number" ? data.order : 0,
+      };
+    });
+    const others = all
+      .filter((f) => f.category !== category)
+      .sort((a, b) => a.order - b.order);
+    const slots = all
+      .filter((f) => f.category === category)
+      .sort((a, b) => a.order - b.order)
+      .map((f) => f.order);
+    orderedIds.forEach((id, i) => {
+      batch.update(db.collection(SITE_FAQS_COLLECTION).doc(id), {
+        order: slots[i] ?? others.length + i,
+      });
+    });
+  }
   await batch.commit();
 
   revalidatePath("/faq");

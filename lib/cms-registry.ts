@@ -44,7 +44,9 @@ export type ContentFieldType =
   | "image"
   | "video"
   | "phone"
-  | "url";
+  | "url"
+  /** Stored as the string "true" or "false"; edited with a checkbox. */
+  | "boolean";
 
 export type ContentPageKey =
   | "Home"
@@ -56,8 +58,17 @@ export type ContentPageKey =
   | "Sulphur Springs"
   | "SS massage page"
   | "SS contact page"
+  | "SS doctors"
+  | "SS / office"
   | "Sulphur staff"
   | "SS subpages"
+  | "SS conditions"
+  | "SS patient resources"
+  | "SS wellness"
+  | "SS prices"
+  | "SS insurance"
+  | "SS reviews"
+  | "SS patient forms"
   | "Insurance"
   | "Services hub"
   | "Reviews"
@@ -65,10 +76,12 @@ export type ContentPageKey =
   | "About"
   | "FAQ"
   | "Contact"
-  | "Footer"
-  | "Navigation"
+  | "Paris header & footer"
+  | "SS header & footer"
+  | "Paris photos"
+  | "SS photos"
+  | "Site settings"
   | "Doctors"
-  | "Photos"
   | "Wellness care plans";
 
 export type ContentFieldMeta = {
@@ -160,16 +173,19 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "chiro_testimonial_3_text", pageLabel: "Chiropractic", sectionLabel: "Testimonials", fieldLabel: "Testimonial 3", type: "richtext" },
   { id: "chiro_testimonial_3_attr", pageLabel: "Chiropractic", sectionLabel: "Testimonials", fieldLabel: "Testimonial 3 Attribution", type: "text" },
 
+  { id: "doctor_greg_active", pageLabel: "Doctors", sectionLabel: "Dr. Greg Thompson", fieldLabel: "Show on the public site", type: "boolean" },
   { id: "doctor_greg_name", pageLabel: "Doctors", sectionLabel: "Dr. Greg Thompson", fieldLabel: "Name", type: "text" },
   { id: "doctor_greg_role", pageLabel: "Doctors", sectionLabel: "Dr. Greg Thompson", fieldLabel: "Job title", type: "text" },
   { id: "doctor_greg_bio", pageLabel: "Doctors", sectionLabel: "Dr. Greg Thompson", fieldLabel: "Bio", type: "richtext" },
   { id: "doctor_greg_photo", pageLabel: "Doctors", sectionLabel: "Dr. Greg Thompson", fieldLabel: "Photo", type: "image" },
   { id: "doctor_greg_video", pageLabel: "Doctors", sectionLabel: "Dr. Greg Thompson", fieldLabel: "Intro video", type: "video" },
+  { id: "doctor_sean_active", pageLabel: "Doctors", sectionLabel: "Dr. Sean Welborn", fieldLabel: "Show on the public site", type: "boolean" },
   { id: "doctor_sean_name", pageLabel: "Doctors", sectionLabel: "Dr. Sean Welborn", fieldLabel: "Name", type: "text" },
   { id: "doctor_sean_role", pageLabel: "Doctors", sectionLabel: "Dr. Sean Welborn", fieldLabel: "Job title", type: "text" },
   { id: "doctor_sean_bio", pageLabel: "Doctors", sectionLabel: "Dr. Sean Welborn", fieldLabel: "Bio", type: "richtext" },
   { id: "doctor_sean_photo", pageLabel: "Doctors", sectionLabel: "Dr. Sean Welborn", fieldLabel: "Photo", type: "image" },
   { id: "doctor_sean_video", pageLabel: "Doctors", sectionLabel: "Dr. Sean Welborn", fieldLabel: "Intro video", type: "video" },
+  { id: "doctor_brandy_active", pageLabel: "Doctors", sectionLabel: "Dr. Brandy Collins", fieldLabel: "Show on the public site", type: "boolean" },
   { id: "doctor_brandy_name", pageLabel: "Doctors", sectionLabel: "Dr. Brandy Collins", fieldLabel: "Name", type: "text" },
   { id: "doctor_brandy_role", pageLabel: "Doctors", sectionLabel: "Dr. Brandy Collins", fieldLabel: "Job title", type: "text" },
   { id: "doctor_brandy_bio", pageLabel: "Doctors", sectionLabel: "Dr. Brandy Collins", fieldLabel: "Bio", type: "richtext" },
@@ -200,12 +216,12 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
 
   { id: "ss_hero_heading", pageLabel: "Sulphur Springs", sectionLabel: "Hero", fieldLabel: "Main Heading", type: "text" },
   { id: "ss_intro_body", pageLabel: "Sulphur Springs", sectionLabel: "Intro", fieldLabel: "Body Copy", type: "richtext" },
-  { id: "ss_doctor_heading", pageLabel: "Sulphur Springs", sectionLabel: "Doctor spotlight", fieldLabel: "Section heading", type: "text" },
-  { id: "ss_doctor_intro", pageLabel: "Sulphur Springs", sectionLabel: "Doctor spotlight", fieldLabel: "Intro line (blank = auto from doctor name)", type: "text" },
+  { id: "ss_doctor_heading", pageLabel: "SS doctors", sectionLabel: "Doctor spotlight", fieldLabel: "Section heading", type: "text" },
+  { id: "ss_doctor_intro", pageLabel: "SS doctors", sectionLabel: "Doctor spotlight", fieldLabel: "Intro line (blank = auto from doctor name)", type: "text" },
   {
     id: "ss_hours",
-    pageLabel: "Sulphur Springs",
-    sectionLabel: "Location",
+    pageLabel: "SS / office",
+    sectionLabel: "Hours",
     fieldLabel: "Hours (one line per range: Monday – Friday|9:00 AM – 5:00 PM)",
     type: "richtext",
   },
@@ -226,106 +242,110 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "ss_contact_heading", pageLabel: "SS contact page", sectionLabel: "Hero", fieldLabel: "Heading", type: "text" },
   { id: "ss_contact_subtext", pageLabel: "SS contact page", sectionLabel: "Hero", fieldLabel: "Subtext", type: "text" },
 
-  {
-    id: "header_show_top_phone_bar",
-    pageLabel: "Footer",
-    sectionLabel: "Header",
-    fieldLabel: "Show dark phone bar above logos",
-    type: "text",
-  },
-  { id: "header_chiro_label", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Chiropractic (Paris) label (under logo)", type: "text" },
-  { id: "header_ss_label", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Sulphur Springs label (under logo)", type: "text" },
-  { id: "header_chiro_logo", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Chiropractic (Paris) logo (replaces icon + text lockup)", type: "image" },
-  { id: "header_ss_logo", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Sulphur Springs logo (replaces icon + text lockup)", type: "image" },
-  { id: "header_paris_lockup_title", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Paris lockup title (next to logo)", type: "text" },
-  { id: "header_paris_lockup_subtitle", pageLabel: "Footer", sectionLabel: "Header", fieldLabel: "Paris lockup subtitle (next to logo)", type: "text" },
+  // Header/footer fields are grouped by the office they actually affect. The
+  // handful that render one value everywhere live under "Site settings".
+  { id: "header_chiro_label", pageLabel: "Paris header & footer", sectionLabel: "Header", fieldLabel: "Label under the logo", type: "text" },
+  { id: "header_chiro_logo", pageLabel: "Paris header & footer", sectionLabel: "Header", fieldLabel: "Logo (replaces icon + text lockup)", type: "image" },
+  { id: "header_paris_lockup_title", pageLabel: "Paris header & footer", sectionLabel: "Header", fieldLabel: "Lockup title (next to logo)", type: "text" },
+  { id: "header_paris_lockup_subtitle", pageLabel: "Paris header & footer", sectionLabel: "Header", fieldLabel: "Lockup subtitle (next to logo)", type: "text" },
   {
     id: "header_paris_logo_nav_height_px",
-    pageLabel: "Footer",
+    pageLabel: "Paris header & footer",
     sectionLabel: "Header",
-    fieldLabel: "Paris logo height — desktop nav center (pixels)",
+    fieldLabel: "Logo height — desktop nav center (pixels)",
     type: "text",
   },
   {
     id: "header_paris_logo_mobile_height_px",
-    pageLabel: "Footer",
+    pageLabel: "Paris header & footer",
     sectionLabel: "Header",
-    fieldLabel: "Paris logo height — mobile header (pixels)",
-    type: "text",
-  },
-  {
-    id: "header_ss_logo_nav_height_px",
-    pageLabel: "Footer",
-    sectionLabel: "Header",
-    fieldLabel: "Sulphur Springs logo height — desktop nav center (pixels)",
-    type: "text",
-  },
-  {
-    id: "header_ss_logo_mobile_height_px",
-    pageLabel: "Footer",
-    sectionLabel: "Header",
-    fieldLabel: "Sulphur Springs logo height — mobile header (pixels)",
+    fieldLabel: "Logo height — mobile header (pixels)",
     type: "text",
   },
   {
     id: "sticky_call_bar_paris",
-    pageLabel: "Footer",
+    pageLabel: "Paris header & footer",
     sectionLabel: "Mobile sticky bar",
-    fieldLabel: "Show Call/Book bottom bar — Paris & shared pages (true/false)",
-    type: "text",
+    fieldLabel: "Show Call/Book bottom bar on Paris & shared pages",
+    type: "boolean",
   },
-  {
-    id: "sticky_call_bar_ss",
-    pageLabel: "Footer",
-    sectionLabel: "Mobile sticky bar",
-    fieldLabel: "Show Call/Book bottom bar — Sulphur Springs pages (true/false)",
-    type: "text",
-  },
-  {
-    id: "accessibility_panel_enabled",
-    pageLabel: "Footer",
-    sectionLabel: "Accessibility",
-    fieldLabel: "Show accessibility options button (true/false)",
-    type: "text",
-  },
-  { id: "footer_tagline", pageLabel: "Footer", sectionLabel: "Footer", fieldLabel: "Tagline", type: "text" },
   {
     id: "footer_links_default",
-    pageLabel: "Footer",
+    pageLabel: "Paris header & footer",
     sectionLabel: "Footer links",
     fieldLabel: "Explore links — main site (one per line: Label — /path)",
     type: "richtext",
   },
   {
     id: "footer_links_paris",
-    pageLabel: "Footer",
+    pageLabel: "Paris header & footer",
     sectionLabel: "Footer links",
     fieldLabel: "Explore links — Paris chiropractic pages (one per line: Label — /path)",
     type: "richtext",
   },
+
+  { id: "header_ss_label", pageLabel: "SS header & footer", sectionLabel: "Header", fieldLabel: "Label under the logo", type: "text" },
+  { id: "header_ss_logo", pageLabel: "SS header & footer", sectionLabel: "Header", fieldLabel: "Logo (replaces icon + text lockup)", type: "image" },
+  {
+    id: "header_ss_logo_nav_height_px",
+    pageLabel: "SS header & footer",
+    sectionLabel: "Header",
+    fieldLabel: "Logo height — desktop nav center (pixels)",
+    type: "text",
+  },
+  {
+    id: "header_ss_logo_mobile_height_px",
+    pageLabel: "SS header & footer",
+    sectionLabel: "Header",
+    fieldLabel: "Logo height — mobile header (pixels)",
+    type: "text",
+  },
+  {
+    id: "sticky_call_bar_ss",
+    pageLabel: "SS header & footer",
+    sectionLabel: "Mobile sticky bar",
+    fieldLabel: "Show Call/Book bottom bar on Sulphur Springs pages",
+    type: "boolean",
+  },
   {
     id: "footer_links_ss",
-    pageLabel: "Footer",
+    pageLabel: "SS header & footer",
     sectionLabel: "Footer links",
     fieldLabel: "Explore links — Sulphur Springs pages (one per line: Label — /path)",
     type: "richtext",
   },
-  { id: "footer_paris_address", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Address (header, footer, contact pages + location sections)", type: "text" },
-  { id: "footer_paris_phone", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Phone (header, footer, contact pages + location sections)", type: "phone" },
-  { id: "footer_massage_phone", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Massage Desk Phone (header, footer + Contact menu)", type: "phone" },
-  { id: "footer_paris_maps_url", pageLabel: "Footer", sectionLabel: "Paris", fieldLabel: "Google Maps directions link", type: "text" },
-  { id: "footer_ss_address", pageLabel: "Footer", sectionLabel: "Sulphur Springs", fieldLabel: "Address (header, footer, contact pages + location sections)", type: "text" },
-  { id: "footer_ss_phone", pageLabel: "Footer", sectionLabel: "Sulphur Springs", fieldLabel: "Phone (header, footer, contact pages + location sections)", type: "phone" },
-  { id: "footer_ss_maps_url", pageLabel: "Footer", sectionLabel: "Sulphur Springs", fieldLabel: "Google Maps directions link", type: "text" },
 
-  { id: "location_section_heading", pageLabel: "Footer", sectionLabel: "Location & hours sections", fieldLabel: "Location heading (subpage bottom sections)", type: "text" },
-  { id: "hours_section_heading", pageLabel: "Footer", sectionLabel: "Location & hours sections", fieldLabel: "Hours heading (subpage bottom sections)", type: "text" },
-  { id: "footer_copyright", pageLabel: "Footer", sectionLabel: "Footer", fieldLabel: "Copyright Text", type: "text" },
-  { id: "social_bar_label", pageLabel: "Footer", sectionLabel: "Social bar", fieldLabel: "Social bar label (e.g. \"Follow us on social media\")", type: "text" },
+  // Address and phone belong with the office they describe, not with the footer.
+  { id: "footer_paris_address", pageLabel: "Paris / main office", sectionLabel: "Address & phone", fieldLabel: "Address (header, footer, contact pages + location sections)", type: "text" },
+  { id: "footer_paris_phone", pageLabel: "Paris / main office", sectionLabel: "Address & phone", fieldLabel: "Phone (header, footer, contact pages + location sections)", type: "phone" },
+  { id: "footer_massage_phone", pageLabel: "Paris / main office", sectionLabel: "Address & phone", fieldLabel: "Massage Desk Phone (header, footer + Contact menu)", type: "phone" },
+  { id: "footer_paris_maps_url", pageLabel: "Paris / main office", sectionLabel: "Address & phone", fieldLabel: "Google Maps directions link", type: "text" },
+  { id: "footer_ss_address", pageLabel: "SS / office", sectionLabel: "Address & phone", fieldLabel: "Address (header, footer, contact pages + location sections)", type: "text" },
+  { id: "footer_ss_phone", pageLabel: "SS / office", sectionLabel: "Address & phone", fieldLabel: "Phone (header, footer, contact pages + location sections)", type: "phone" },
+  { id: "footer_ss_maps_url", pageLabel: "SS / office", sectionLabel: "Address & phone", fieldLabel: "Google Maps directions link", type: "text" },
 
-  { id: "nav_giftcard_url", pageLabel: "Navigation", sectionLabel: "Links", fieldLabel: "Gift Card URL", type: "url" },
-  { id: "nav_book_url", pageLabel: "Navigation", sectionLabel: "Links", fieldLabel: "Book Now URL", type: "url" },
-  { id: "nav_staff_label", pageLabel: "Navigation", sectionLabel: "Links", fieldLabel: "About Us nav label", type: "text" },
+  {
+    id: "header_show_top_phone_bar",
+    pageLabel: "Site settings",
+    sectionLabel: "Header",
+    fieldLabel: "Show dark phone bar above logos",
+    type: "boolean",
+  },
+  {
+    id: "accessibility_panel_enabled",
+    pageLabel: "Site settings",
+    sectionLabel: "Accessibility",
+    fieldLabel: "Show accessibility options button",
+    type: "boolean",
+  },
+  { id: "footer_tagline", pageLabel: "Site settings", sectionLabel: "Footer", fieldLabel: "Tagline", type: "text" },
+  { id: "footer_copyright", pageLabel: "Site settings", sectionLabel: "Footer", fieldLabel: "Copyright Text", type: "text" },
+  { id: "social_bar_label", pageLabel: "Site settings", sectionLabel: "Social bar", fieldLabel: "Social bar label (e.g. \"Follow us on social media\")", type: "text" },
+  { id: "location_section_heading", pageLabel: "Site settings", sectionLabel: "Location & hours sections", fieldLabel: "Location heading (subpage bottom sections)", type: "text" },
+  { id: "hours_section_heading", pageLabel: "Site settings", sectionLabel: "Location & hours sections", fieldLabel: "Hours heading (subpage bottom sections)", type: "text" },
+  { id: "nav_giftcard_url", pageLabel: "Site settings", sectionLabel: "Header links", fieldLabel: "Gift Card URL", type: "url" },
+  { id: "nav_book_url", pageLabel: "Site settings", sectionLabel: "Header links", fieldLabel: "Book Now URL", type: "url" },
+  { id: "nav_staff_label", pageLabel: "Site settings", sectionLabel: "Header links", fieldLabel: "About Us nav label", type: "text" },
 
   { id: "chiro_wellness_teaser_heading", pageLabel: "Chiropractic", sectionLabel: "Wellness teaser", fieldLabel: "Heading", type: "text" },
   { id: "chiro_wellness_teaser_body", pageLabel: "Chiropractic", sectionLabel: "Wellness teaser", fieldLabel: "Body copy", type: "text" },
@@ -434,16 +454,19 @@ export const DEFAULTS: Record<string, string> = {
   chiro_testimonial_3_text: CHIRO_TESTIMONIAL_DEFAULTS[2].text,
   chiro_testimonial_3_attr: CHIRO_TESTIMONIAL_DEFAULTS[2].attr,
 
+  doctor_greg_active: "true",
   doctor_greg_name: DOCTORS[0].name,
   doctor_greg_role: DOCTORS[0].role,
   doctor_greg_bio: DOCTORS[0].bio,
   doctor_greg_photo: IMAGES.doctorGreg,
   doctor_greg_video: "",
+  doctor_sean_active: "true",
   doctor_sean_name: DOCTORS[1].name,
   doctor_sean_role: DOCTORS[1].role,
   doctor_sean_bio: DOCTORS[1].bio,
   doctor_sean_photo: IMAGES.doctorSean,
   doctor_sean_video: "",
+  doctor_brandy_active: "true",
   doctor_brandy_name: DOCTORS[2].name,
   doctor_brandy_role: DOCTORS[2].role,
   doctor_brandy_bio: DOCTORS[2].bio,

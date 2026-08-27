@@ -220,7 +220,7 @@ export const PAGE_LAYOUT_PAGES: PageLayoutPageDef[] = [
         id: "intro",
         label: "Intro & office hours",
         description: "Welcome copy and hours table",
-        cmsFieldIds: ["ss_intro_body", "ss_hours"],
+        cmsFieldIds: ["ss_intro_body"],
         siteContentPage: "Sulphur Springs",
         previewKey: "hoursIntro",
       },

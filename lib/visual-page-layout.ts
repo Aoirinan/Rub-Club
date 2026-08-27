@@ -47,7 +47,7 @@ export type VisualPageLayout = {
   layers: VisualLayer[];
 };
 
-export type VisualScopeId = Exclude<PageBuilderScopeId, "faq-items" | "massage-team">;
+export type VisualScopeId = Exclude<PageBuilderScopeId, "faq-items" | "ss-faq-items" | "massage-team">;
 
 export function isVisualScopeId(v: string): v is VisualScopeId {
   return isPageBuilderScopeId(v) && !isFaqItemsScope(v) && !isMassageTeamScope(v);
@@ -161,8 +161,9 @@ export const VISUAL_SCOPE_REVALIDATE_PATHS: Partial<Record<VisualScopeId, string
   chiropractic: "/services/chiropractic",
   "sulphur-springs": "/sulphur-springs",
   home: "/",
-  footer: "/",
-  navigation: "/",
+  "paris-header": "/",
+  "ss-header": "/sulphur-springs",
+  "site-settings": "/",
   about: "/about",
   contact: "/contact",
   wellness: "/wellness-care-plans",
@@ -170,6 +171,8 @@ export const VISUAL_SCOPE_REVALIDATE_PATHS: Partial<Record<VisualScopeId, string
   reviews: "/reviews",
   "patient-forms": "/patient-forms",
   "faq-copy": "/faq",
-  "services-hub": "/services",
   "paris-chiro-pages": "/services/chiropractic",
+  "ss-insurance": "/sulphur-springs/insurance",
+  "ss-reviews": "/sulphur-springs/reviews",
+  "ss-patient-forms": "/sulphur-springs/patient-forms",
 };

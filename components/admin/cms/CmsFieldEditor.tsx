@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { HEADER_SHOW_TOP_PHONE_BAR_FIELD } from "@/lib/header-top-phone-bar";
+import { parseCmsToggle } from "@/lib/sticky-call-bar";
 import type { SiteContentFieldRow } from "./useSiteContentFields";
 import { RichTextArea } from "./RichTextArea";
 
@@ -22,15 +22,10 @@ export function CmsFieldEditor({ field, busy, onSave, onReset, compact }: Props)
     setDraft(field.value);
   }, [field.id, field.value]);
 
-  const isTopPhoneBarToggle = field.id === HEADER_SHOW_TOP_PHONE_BAR_FIELD;
+  const isBoolean = field.type === "boolean";
 
-  function isTopPhoneBarEnabled(value: string): boolean {
-    const v = value.trim().toLowerCase();
-    return v !== "false" && v !== "no";
-  }
-
-  const valuePreview = isTopPhoneBarToggle
-    ? isTopPhoneBarEnabled(field.value)
+  const valuePreview = isBoolean
+    ? parseCmsToggle(field.value)
       ? "On"
       : "Off"
     : field.value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) ||
@@ -54,18 +49,18 @@ export function CmsFieldEditor({ field, busy, onSave, onReset, compact }: Props)
       </button>
       {expanded ? (
         <div className="space-y-2 border-t border-slate-200 px-3 py-3">
-          {isTopPhoneBarToggle ? (
+          {isBoolean ? (
             <label className="flex items-center gap-2 text-sm text-slate-800">
               <input
                 type="checkbox"
                 className="h-4 w-4 rounded border-slate-300 text-[#c0392b] focus:ring-[#c0392b]"
-                checked={isTopPhoneBarEnabled(draft)}
+                checked={parseCmsToggle(draft)}
                 onChange={(e) => setDraft(e.target.checked ? "true" : "false")}
               />
-              <span>Show the dark phone bar above the logos on every page</span>
+              <span>{field.fieldLabel}</span>
             </label>
           ) : null}
-          {!isTopPhoneBarToggle && (field.type === "text" || field.type === "phone") ? (
+          {field.type === "text" || field.type === "phone" ? (
             <input
               type={field.type === "phone" ? "tel" : "text"}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"

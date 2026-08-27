@@ -281,6 +281,11 @@ export function HeaderLogoSizeEditor({ fields, busy, onSave }: Props) {
   );
   const ssLogoUrl = fieldValue(fields, "header_ss_logo", "");
 
+  const visibleBrands = BRANDS.filter((brand) => {
+    const defs = HEADER_LOGO_HEIGHT_FIELDS[brand.key];
+    return fields.some((f) => f.id === defs.nav || f.id === defs.mobile);
+  });
+
   if (!hasHeightFields) return null;
 
   async function commitHeight(brand: HeaderBrandKey, slot: SlotKey, px: number) {
@@ -298,7 +303,7 @@ export function HeaderLogoSizeEditor({ fields, busy, onSave }: Props) {
         </p>
       </header>
 
-      {BRANDS.map((brand) => (
+      {visibleBrands.map((brand) => (
         <div key={brand.key} className="space-y-3">
           <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500">{brand.label}</h4>
           <div className="grid gap-3 sm:grid-cols-2">

@@ -15,14 +15,20 @@ export type ReviewsPageContent = {
   testimonials: Testimonial[];
 };
 
-export async function getReviewsPageContent(): Promise<ReviewsPageContent> {
-  const cms = await getContentMany([...STATIC_PAGES_CMS_IDS]);
+export async function getReviewsPageContent(
+  prefix: "" | "ss_" = "",
+): Promise<ReviewsPageContent> {
+  const cms = await getContentMany(
+    STATIC_PAGES_CMS_IDS.filter((id) =>
+      prefix ? id.startsWith(`${prefix}reviews_`) : id.startsWith("reviews_") && !id.startsWith("ss_"),
+    ),
+  );
   const defaults = buildStaticPagesCmsDefaults();
 
   const testimonials = REVIEWS_TESTIMONIAL_SLOTS.map(({ n, testimonial: t }) => {
-    const quote = cms[`reviews_testimonial_${n}_quote`]?.trim();
-    const author = cms[`reviews_testimonial_${n}_author`]?.trim();
-    const context = cms[`reviews_testimonial_${n}_context`]?.trim();
+    const quote = cms[`${prefix}reviews_testimonial_${n}_quote`]?.trim();
+    const author = cms[`${prefix}reviews_testimonial_${n}_author`]?.trim();
+    const context = cms[`${prefix}reviews_testimonial_${n}_context`]?.trim();
     return {
       quote: quote || t.quote,
       author: author || t.author,
@@ -33,11 +39,11 @@ export async function getReviewsPageContent(): Promise<ReviewsPageContent> {
   }).filter((t) => t.quote.length > 0);
 
   return {
-    heroEyebrow: cms.reviews_hero_eyebrow?.trim() || defaults.reviews_hero_eyebrow,
-    heroTitle: cms.reviews_hero_title?.trim() || defaults.reviews_hero_title,
-    heroLede: cms.reviews_hero_lede?.trim() || defaults.reviews_hero_lede,
-    ctaHeading: cms.reviews_cta_heading?.trim() || defaults.reviews_cta_heading,
-    ctaBody: cms.reviews_cta_body?.trim() || defaults.reviews_cta_body,
+    heroEyebrow: cms[`${prefix}reviews_hero_eyebrow`]?.trim() || defaults[`${prefix}reviews_hero_eyebrow`],
+    heroTitle: cms[`${prefix}reviews_hero_title`]?.trim() || defaults[`${prefix}reviews_hero_title`],
+    heroLede: cms[`${prefix}reviews_hero_lede`]?.trim() || defaults[`${prefix}reviews_hero_lede`],
+    ctaHeading: cms[`${prefix}reviews_cta_heading`]?.trim() || defaults[`${prefix}reviews_cta_heading`],
+    ctaBody: cms[`${prefix}reviews_cta_body`]?.trim() || defaults[`${prefix}reviews_cta_body`],
     testimonials,
   };
 }
@@ -64,19 +70,23 @@ const INSURANCE_IDS = [
   "insurance_verify_body",
 ] as const;
 
-export async function getInsurancePageContent(): Promise<InsurancePageContent> {
-  const cms = await getContentMany([...INSURANCE_IDS]);
+export async function getInsurancePageContent(
+  prefix: "" | "ss_" = "",
+): Promise<InsurancePageContent> {
+  const ids = INSURANCE_IDS.map((id) => `${prefix}${id}`);
+  const cms = await getContentMany(ids);
+  const defaults = buildStaticPagesCmsDefaults();
+  const g = (id: (typeof INSURANCE_IDS)[number]) =>
+    cms[`${prefix}${id}`]?.trim() || defaults[`${prefix}${id}`] || defaults[id] || "";
   return {
-    heroTitle: cms.insurance_hero_title?.trim() || "Plain-language insurance answers",
-    heroLede:
-      cms.insurance_hero_lede?.trim() ||
-      "We work with most major medical plans for chiropractic care and file claims on your behalf. Massage therapy is generally self-pay.",
-    chiroHeading: cms.insurance_chiro_heading?.trim() || "Chiropractic coverage",
-    chiroBody: cms.insurance_chiro_body?.trim() || "",
-    massageHeading: cms.insurance_massage_heading?.trim() || "Massage therapy",
-    massageBody: cms.insurance_massage_body?.trim() || "",
-    verifyHeading: cms.insurance_verify_heading?.trim() || "Verify before your visit",
-    verifyBody: cms.insurance_verify_body?.trim() || "",
+    heroTitle: g("insurance_hero_title") || "Plain-language insurance answers",
+    heroLede: g("insurance_hero_lede"),
+    chiroHeading: g("insurance_chiro_heading") || "Chiropractic coverage",
+    chiroBody: g("insurance_chiro_body"),
+    massageHeading: g("insurance_massage_heading") || "Massage therapy",
+    massageBody: g("insurance_massage_body"),
+    verifyHeading: g("insurance_verify_heading") || "Verify before your visit",
+    verifyBody: g("insurance_verify_body"),
   };
 }
 
@@ -145,22 +155,23 @@ const PATIENT_FORMS_IDS = [
   "patient_forms_inperson_bullets",
 ] as const;
 
-export async function getPatientFormsContent(): Promise<PatientFormsContent> {
-  const cms = await getContentMany([...PATIENT_FORMS_IDS]);
+export async function getPatientFormsContent(
+  prefix: "" | "ss_" = "",
+): Promise<PatientFormsContent> {
+  const cms = await getContentMany(PATIENT_FORMS_IDS.map((id) => `${prefix}${id}`));
   const defaults = buildStaticPagesCmsDefaults();
+  const g = (id: (typeof PATIENT_FORMS_IDS)[number]) =>
+    cms[`${prefix}${id}`]?.trim() || defaults[`${prefix}${id}`] || defaults[id] || "";
   return {
-    heroEyebrow: cms.patient_forms_hero_eyebrow?.trim() || defaults.patient_forms_hero_eyebrow,
-    heroTitle: cms.patient_forms_hero_title?.trim() || defaults.patient_forms_hero_title,
-    heroLede: cms.patient_forms_hero_lede?.trim() || defaults.patient_forms_hero_lede,
-    chiroHeading: cms.patient_forms_chiro_heading?.trim() || defaults.patient_forms_chiro_heading,
-    chiroIntro: cms.patient_forms_chiro_intro?.trim() || defaults.patient_forms_chiro_intro,
-    chiroBullets: cms.patient_forms_chiro_bullets?.trim() || defaults.patient_forms_chiro_bullets,
-    massageHeading:
-      cms.patient_forms_massage_heading?.trim() || defaults.patient_forms_massage_heading,
-    massageBody: cms.patient_forms_massage_body?.trim() || defaults.patient_forms_massage_body,
-    inpersonHeading:
-      cms.patient_forms_inperson_heading?.trim() || defaults.patient_forms_inperson_heading,
-    inpersonBullets:
-      cms.patient_forms_inperson_bullets?.trim() || defaults.patient_forms_inperson_bullets,
+    heroEyebrow: g("patient_forms_hero_eyebrow"),
+    heroTitle: g("patient_forms_hero_title"),
+    heroLede: g("patient_forms_hero_lede"),
+    chiroHeading: g("patient_forms_chiro_heading"),
+    chiroIntro: g("patient_forms_chiro_intro"),
+    chiroBullets: g("patient_forms_chiro_bullets"),
+    massageHeading: g("patient_forms_massage_heading"),
+    massageBody: g("patient_forms_massage_body"),
+    inpersonHeading: g("patient_forms_inperson_heading"),
+    inpersonBullets: g("patient_forms_inperson_bullets"),
   };
 }

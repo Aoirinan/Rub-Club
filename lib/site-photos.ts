@@ -21,10 +21,12 @@ export type SitePhotoSpec = {
   label: string;
   /** Bundled default served when no override is set. */
   defaultPath: string;
+  /** Which office's Photos screen this uploader belongs on. */
+  office: "paris" | "sulphur";
 };
 
 const MASSAGE = "Massage photos";
-const SS_MASSAGE = "Sulphur Springs massage photos";
+const SS_MASSAGE = "Massage photos";
 const CHIRO = "Chiropractic photos";
 const HERO = "Home page hero carousel";
 
@@ -35,34 +37,34 @@ const HERO = "Home page hero carousel";
  * portraits under Site staff — those all have their own uploaders already.
  */
 export const SITE_PHOTOS: readonly SitePhotoSpec[] = [
-  { key: "serviceTherapeutic", fieldId: "site_photo_service_therapeutic", section: MASSAGE, label: "Therapeutic massage card", defaultPath: IMAGES.serviceTherapeutic },
-  { key: "serviceDeepTissue", fieldId: "site_photo_service_deep_tissue", section: MASSAGE, label: "Deep tissue massage card (also the Massage service card on both home pages)", defaultPath: IMAGES.serviceDeepTissue },
-  { key: "serviceHotStone", fieldId: "site_photo_service_hot_stone", section: MASSAGE, label: "Hot stone massage card", defaultPath: IMAGES.serviceHotStone },
-  { key: "servicePrenatal", fieldId: "site_photo_service_prenatal", section: MASSAGE, label: "Prenatal massage card", defaultPath: IMAGES.servicePrenatal },
-  { key: "serviceSports", fieldId: "site_photo_service_sports", section: MASSAGE, label: "Sports massage card", defaultPath: IMAGES.serviceSports },
-  { key: "serviceSwedish", fieldId: "site_photo_service_swedish", section: MASSAGE, label: "Swedish massage card", defaultPath: IMAGES.serviceSwedish },
-  { key: "massagePatient", fieldId: "site_photo_massage_patient", section: MASSAGE, label: "Massage page photo (next to the intro text)", defaultPath: IMAGES.massagePatient },
-  { key: "massageChiroTile", fieldId: "site_photo_massage_chiro_tile", section: MASSAGE, label: "Chiropractic Care service card (both home pages)", defaultPath: IMAGES.massageChiroTile },
+  { key: "serviceTherapeutic", fieldId: "site_photo_service_therapeutic", section: MASSAGE, label: "Therapeutic massage card", defaultPath: IMAGES.serviceTherapeutic, office: "paris" },
+  { key: "serviceDeepTissue", fieldId: "site_photo_service_deep_tissue", section: MASSAGE, label: "Deep tissue massage card (also the Massage service card on the home page)", defaultPath: IMAGES.serviceDeepTissue, office: "paris" },
+  { key: "serviceHotStone", fieldId: "site_photo_service_hot_stone", section: MASSAGE, label: "Hot stone massage card", defaultPath: IMAGES.serviceHotStone, office: "paris" },
+  { key: "servicePrenatal", fieldId: "site_photo_service_prenatal", section: MASSAGE, label: "Prenatal massage card", defaultPath: IMAGES.servicePrenatal, office: "paris" },
+  { key: "serviceSports", fieldId: "site_photo_service_sports", section: MASSAGE, label: "Sports massage card", defaultPath: IMAGES.serviceSports, office: "paris" },
+  { key: "serviceSwedish", fieldId: "site_photo_service_swedish", section: MASSAGE, label: "Swedish massage card", defaultPath: IMAGES.serviceSwedish, office: "paris" },
+  { key: "massagePatient", fieldId: "site_photo_massage_patient", section: MASSAGE, label: "Massage page photo (next to the intro text)", defaultPath: IMAGES.massagePatient, office: "paris" },
+  { key: "massageChiroTile", fieldId: "site_photo_massage_chiro_tile", section: MASSAGE, label: "Chiropractic Care service card (home page)", defaultPath: IMAGES.massageChiroTile, office: "paris" },
 
   // Sulphur Springs starts from the same artwork as Paris so the page looks
   // finished on day one, but each slot is separate so the two offices can use
   // their own rooms and staff later without affecting each other.
-  { key: "ssMassagePatient", fieldId: "site_photo_ss_massage_patient", section: SS_MASSAGE, label: "Massage page photo (next to the intro text)", defaultPath: IMAGES.massagePatient },
-  { key: "ssMassageTherapeutic", fieldId: "site_photo_ss_massage_therapeutic", section: SS_MASSAGE, label: "Therapeutic massage card", defaultPath: IMAGES.serviceTherapeutic },
-  { key: "ssMassageDeepTissue", fieldId: "site_photo_ss_massage_deep_tissue", section: SS_MASSAGE, label: "Deep tissue massage card", defaultPath: IMAGES.serviceDeepTissue },
-  { key: "ssMassageTriggerPoint", fieldId: "site_photo_ss_massage_trigger_point", section: SS_MASSAGE, label: "Trigger point & lymphatic card", defaultPath: IMAGES.serviceSports },
-  { key: "ssMassagePrenatal", fieldId: "site_photo_ss_massage_prenatal", section: SS_MASSAGE, label: "Prenatal massage card", defaultPath: IMAGES.servicePrenatal },
-  { key: "ssMassageSports", fieldId: "site_photo_ss_massage_sports", section: SS_MASSAGE, label: "Sports massage card", defaultPath: IMAGES.serviceSports },
-  { key: "ssMassageSwedish", fieldId: "site_photo_ss_massage_swedish", section: SS_MASSAGE, label: "Swedish massage card", defaultPath: IMAGES.serviceSwedish },
-  { key: "ssMassageHotStone", fieldId: "site_photo_ss_massage_hot_stone", section: SS_MASSAGE, label: "Hot stone massage card", defaultPath: IMAGES.serviceHotStone },
+  { key: "ssMassagePatient", fieldId: "site_photo_ss_massage_patient", section: SS_MASSAGE, label: "Massage page photo (next to the intro text)", defaultPath: IMAGES.massagePatient, office: "sulphur" },
+  { key: "ssMassageTherapeutic", fieldId: "site_photo_ss_massage_therapeutic", section: SS_MASSAGE, label: "Therapeutic massage card", defaultPath: IMAGES.serviceTherapeutic, office: "sulphur" },
+  { key: "ssMassageDeepTissue", fieldId: "site_photo_ss_massage_deep_tissue", section: SS_MASSAGE, label: "Deep tissue massage card", defaultPath: IMAGES.serviceDeepTissue, office: "sulphur" },
+  { key: "ssMassageTriggerPoint", fieldId: "site_photo_ss_massage_trigger_point", section: SS_MASSAGE, label: "Trigger point & lymphatic card", defaultPath: IMAGES.serviceSports, office: "sulphur" },
+  { key: "ssMassagePrenatal", fieldId: "site_photo_ss_massage_prenatal", section: SS_MASSAGE, label: "Prenatal massage card", defaultPath: IMAGES.servicePrenatal, office: "sulphur" },
+  { key: "ssMassageSports", fieldId: "site_photo_ss_massage_sports", section: SS_MASSAGE, label: "Sports massage card", defaultPath: IMAGES.serviceSports, office: "sulphur" },
+  { key: "ssMassageSwedish", fieldId: "site_photo_ss_massage_swedish", section: SS_MASSAGE, label: "Swedish massage card", defaultPath: IMAGES.serviceSwedish, office: "sulphur" },
+  { key: "ssMassageHotStone", fieldId: "site_photo_ss_massage_hot_stone", section: SS_MASSAGE, label: "Hot stone massage card", defaultPath: IMAGES.serviceHotStone, office: "sulphur" },
 
-  { key: "chiroBlade", fieldId: "site_photo_chiro_blade", section: CHIRO, label: "About page photo / \"Two practices, one address\"", defaultPath: IMAGES.chiroBlade },
-  { key: "chiroBg", fieldId: "site_photo_chiro_bg", section: CHIRO, label: "Chiropractic page hero photo", defaultPath: IMAGES.chiroBg },
+  { key: "chiroBlade", fieldId: "site_photo_chiro_blade", section: CHIRO, label: "About page photo / \"Two practices, one address\"", defaultPath: IMAGES.chiroBlade, office: "paris" },
+  { key: "chiroBg", fieldId: "site_photo_chiro_bg", section: CHIRO, label: "Chiropractic page hero photo", defaultPath: IMAGES.chiroBg, office: "paris" },
 
-  { key: "parisHero1", fieldId: "site_photo_paris_hero_1", section: HERO, label: "Hero slide 1 (reception)", defaultPath: PARIS_HOME_HERO_IMAGES[0] },
-  { key: "parisHero2", fieldId: "site_photo_paris_hero_2", section: HERO, label: "Hero slide 2 (waiting room)", defaultPath: PARIS_HOME_HERO_IMAGES[1] },
-  { key: "parisHero3", fieldId: "site_photo_paris_hero_3", section: HERO, label: "Hero slide 3 (massage hallway)", defaultPath: PARIS_HOME_HERO_IMAGES[2] },
-  { key: "parisHero4", fieldId: "site_photo_paris_hero_4", section: HERO, label: "Hero slide 4 (rehab station)", defaultPath: PARIS_HOME_HERO_IMAGES[3] },
+  { key: "parisHero1", fieldId: "site_photo_paris_hero_1", section: HERO, label: "Hero slide 1 (reception)", defaultPath: PARIS_HOME_HERO_IMAGES[0], office: "paris" },
+  { key: "parisHero2", fieldId: "site_photo_paris_hero_2", section: HERO, label: "Hero slide 2 (waiting room)", defaultPath: PARIS_HOME_HERO_IMAGES[1], office: "paris" },
+  { key: "parisHero3", fieldId: "site_photo_paris_hero_3", section: HERO, label: "Hero slide 3 (massage hallway)", defaultPath: PARIS_HOME_HERO_IMAGES[2], office: "paris" },
+  { key: "parisHero4", fieldId: "site_photo_paris_hero_4", section: HERO, label: "Hero slide 4 (rehab station)", defaultPath: PARIS_HOME_HERO_IMAGES[3], office: "paris" },
 ] as const;
 
 export type SitePhotos = Record<string, string>;
@@ -73,7 +75,7 @@ export const SITE_PHOTO_FIELD_IDS: readonly string[] = SITE_PHOTOS.map((p) => p.
 export function buildSitePhotoCmsRegistry(): ContentFieldMeta[] {
   return SITE_PHOTOS.map((p) => ({
     id: p.fieldId,
-    pageLabel: "Photos",
+    pageLabel: p.office === "paris" ? ("Paris photos" as const) : ("SS photos" as const),
     sectionLabel: p.section,
     fieldLabel: p.label,
     type: "image" as const,

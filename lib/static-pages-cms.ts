@@ -24,7 +24,7 @@ export const REVIEWS_TESTIMONIAL_SLOTS: ReadonlyArray<{
   return slots;
 })();
 
-export const STATIC_PAGES_CMS_REGISTRY: ContentFieldMeta[] = [
+export const PARIS_STATIC_PAGES_CMS_REGISTRY: ContentFieldMeta[] = [
   {
     id: "insurance_hero_title",
     pageLabel: "Insurance",
@@ -265,6 +265,37 @@ export const STATIC_PAGES_CMS_REGISTRY: ContentFieldMeta[] = [
   },
 ];
 
+function clonePageFields(
+  fields: ContentFieldMeta[],
+  pageLabel: ContentFieldMeta["pageLabel"],
+  idPrefix: string,
+): ContentFieldMeta[] {
+  return fields.map((f) => ({
+    ...f,
+    id: `${idPrefix}${f.id}`,
+    pageLabel,
+  }));
+}
+
+export const STATIC_PAGES_CMS_REGISTRY: ContentFieldMeta[] = [
+  ...PARIS_STATIC_PAGES_CMS_REGISTRY,
+  ...clonePageFields(
+    PARIS_STATIC_PAGES_CMS_REGISTRY.filter((f) => f.pageLabel === "Insurance"),
+    "SS insurance",
+    "ss_",
+  ),
+  ...clonePageFields(
+    PARIS_STATIC_PAGES_CMS_REGISTRY.filter((f) => f.pageLabel === "Reviews"),
+    "SS reviews",
+    "ss_",
+  ),
+  ...clonePageFields(
+    PARIS_STATIC_PAGES_CMS_REGISTRY.filter((f) => f.pageLabel === "Patient forms"),
+    "SS patient forms",
+    "ss_",
+  ),
+];
+
 export function buildStaticPagesCmsDefaults(): Record<string, string> {
   const defaults: Record<string, string> = {
     insurance_hero_title: "Plain-language insurance answers",
@@ -324,6 +355,16 @@ export function buildStaticPagesCmsDefaults(): Record<string, string> {
     defaults[`reviews_testimonial_${n}_author`] = t.author;
     defaults[`reviews_testimonial_${n}_context`] = t.context ?? "";
   });
+
+  for (const [id, value] of Object.entries(defaults)) {
+    if (
+      id.startsWith("insurance_") ||
+      id.startsWith("reviews_") ||
+      id.startsWith("patient_forms_")
+    ) {
+      defaults[`ss_${id}`] = value;
+    }
+  }
 
   return defaults;
 }

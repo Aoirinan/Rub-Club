@@ -26,6 +26,8 @@ type Props = {
   onReset: (id: string, label: string) => Promise<void>;
   /** Field ids to hide (e.g. legacy fields superseded by the practice editor). */
   excludeFieldIds?: string[];
+  /** When set, only this section is shown (used by the service-page picker). */
+  onlySectionId?: string | null;
 };
 
 type SectionDef = {
@@ -107,6 +109,7 @@ export function ScopeFieldForm({
   onSave,
   onReset,
   excludeFieldIds,
+  onlySectionId,
 }: Props) {
   const sections = useMemo<SectionDef[]>(() => {
     const base = isPageLayoutId(scope)
@@ -114,12 +117,12 @@ export function ScopeFieldForm({
       : isContentScopeId(scope)
         ? sectionsForContentScope(scope)
         : [];
-    if (!excludeFieldIds?.length) return base;
-    const hidden = new Set(excludeFieldIds);
+    const hidden = new Set(excludeFieldIds ?? []);
     return base
       .map((s) => ({ ...s, fieldIds: s.fieldIds.filter((id) => !hidden.has(id)) }))
-      .filter((s) => s.fieldIds.length > 0);
-  }, [scope, excludeFieldIds]);
+      .filter((s) => s.fieldIds.length > 0)
+      .filter((s) => !onlySectionId || s.id === onlySectionId);
+  }, [scope, excludeFieldIds, onlySectionId]);
 
   if (sections.length === 0) {
     return (

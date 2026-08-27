@@ -3,12 +3,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Auth } from "firebase/auth";
 import type { SiteStaffBrand, SiteStaffMemberStored } from "@/lib/site-staff";
+import { isMassageStaffTitle } from "@/lib/site-staff";
 
 type Props = {
   auth: Auth | null;
   onNotify: (message: string | null) => void;
   /** When set (Website editor → Paris/Sulphur staff), list and add form target one location. */
   locationFocus?: "paris" | "sulphur";
+  /** When set, only people whose title matches this kind are listed. */
+  roleFilter?: "massage";
+  heading?: string;
 };
 
 type BrandFilter = "all" | SiteStaffBrand;
@@ -29,7 +33,13 @@ function brandLabel(brand: SiteStaffBrand): string {
   return "Both locations";
 }
 
-export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) {
+export function SiteStaffAdminSection({
+  auth,
+  onNotify,
+  locationFocus,
+  roleFilter,
+  heading,
+}: Props) {
   const [members, setMembers] = useState<SiteStaffMemberStored[]>([]);
   const [siteUsesCustomList, setSiteUsesCustomList] = useState(false);
   const [brandFilter, setBrandFilter] = useState<BrandFilter>(locationFocus ?? "all");
@@ -43,7 +53,7 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [newName, setNewName] = useState("");
-  const [newTitle, setNewTitle] = useState("");
+  const [newTitle, setNewTitle] = useState(roleFilter === "massage" ? "Massage Therapist" : "");
   const [newBio, setNewBio] = useState("");
   const [newBrand, setNewBrand] = useState<SiteStaffBrand>(locationFocus ?? "paris");
   const [newSpecialties, setNewSpecialties] = useState("");
@@ -113,9 +123,15 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
   }, [locationFocus]);
 
   const filteredMembers = useMemo(() => {
-    if (brandFilter === "all") return members;
-    return members.filter((m) => m.brand === brandFilter || m.brand === "both");
-  }, [members, brandFilter]);
+    let list =
+      brandFilter === "all"
+        ? members
+        : members.filter((m) => m.brand === brandFilter || m.brand === "both");
+    if (roleFilter === "massage") {
+      list = list.filter((m) => isMassageStaffTitle(m.title));
+    }
+    return list;
+  }, [members, brandFilter, roleFilter]);
 
   async function postReorder(orderedIds: string[]) {
     const user = auth?.currentUser;
@@ -384,7 +400,9 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
       <div>
         <h2 className="text-lg font-semibold text-slate-900">
-          {locationFocus === "paris"
+          {heading
+            ? heading
+            : locationFocus === "paris"
             ? "Office staff — Paris"
             : locationFocus === "sulphur"
               ? "Office staff — Sulphur Springs"
@@ -394,7 +412,8 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
           {staffPath ? (
             <>
               Manage who appears on{" "}
-              <code className="rounded bg-slate-100 px-1">{staffPath}</code>.
+              <code className="rounded bg-slate-100 px-1">{staffPath}</code>
+              {roleFilter === "massage" ? " (massage therapists only)" : ""}. Uncheck Active to hide someone without deleting them.
             </>
           ) : (
             <>
@@ -403,7 +422,9 @@ export function SiteStaffAdminSection({ auth, onNotify, locationFocus }: Props) 
               <code className="rounded bg-slate-100 px-1">/sulphur-springs/staff</code>.
             </>
           )}{" "}
-          Massage therapists are managed separately in Website editor → Massage page.
+          {roleFilter === "massage"
+            ? null
+            : "Paris massage therapists are managed separately under Paris → Massage team."}
         </p>
         {sectionAlert ? (
           <div

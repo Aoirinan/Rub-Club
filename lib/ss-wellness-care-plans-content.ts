@@ -100,20 +100,26 @@ export function buildSSWellnessCarePlansContent(
   };
 }
 
-/** CMS registry fields for the Sulphur Springs wellness care plans page. */
+/**
+ * CMS registry fields for the Sulphur Springs wellness care plans page.
+ *
+ * One section per plan, mirroring the Paris wellness scope. These previously
+ * shared a single "Wellness care plans" section under the Sulphur services
+ * label, which buried 18 fields under one collapsed header.
+ */
 export function buildSSWellnessCmsRegistry(): ContentFieldMeta[] {
   const fields: ContentFieldMeta[] = [
     {
       id: "ss_wellness_hero_eyebrow",
-      pageLabel: "SS subpages",
-      sectionLabel: "Wellness care plans",
+      pageLabel: "SS wellness",
+      sectionLabel: "Hero",
       fieldLabel: "Hero eyebrow",
       type: "text",
     },
     {
       id: "ss_wellness_page_lede",
-      pageLabel: "SS subpages",
-      sectionLabel: "Wellness care plans",
+      pageLabel: "SS wellness",
+      sectionLabel: "Hero",
       fieldLabel: "Page lede",
       type: "richtext",
     },
@@ -122,23 +128,23 @@ export function buildSSWellnessCmsRegistry(): ContentFieldMeta[] {
     fields.push(
       {
         id: ssWellnessSectionFieldId(spec.id, "title"),
-        pageLabel: "SS subpages",
-        sectionLabel: "Wellness care plans",
-        fieldLabel: `${spec.title} - title`,
+        pageLabel: "SS wellness",
+        sectionLabel: spec.title,
+        fieldLabel: "Title",
         type: "text",
       },
       {
         id: ssWellnessSectionFieldId(spec.id, "subtitle"),
-        pageLabel: "SS subpages",
-        sectionLabel: "Wellness care plans",
-        fieldLabel: `${spec.title} - subtitle (optional)`,
+        pageLabel: "SS wellness",
+        sectionLabel: spec.title,
+        fieldLabel: "Subtitle (optional)",
         type: "text",
       },
       {
         id: ssWellnessSectionFieldId(spec.id, "lines"),
-        pageLabel: "SS subpages",
-        sectionLabel: "Wellness care plans",
-        fieldLabel: `${spec.title} - price lines (one per line)`,
+        pageLabel: "SS wellness",
+        sectionLabel: spec.title,
+        fieldLabel: "Price lines (one per line)",
         type: "richtext",
       },
     );
@@ -146,29 +152,29 @@ export function buildSSWellnessCmsRegistry(): ContentFieldMeta[] {
   fields.push(
     {
       id: "ss_wellness_closing_headline",
-      pageLabel: "SS subpages",
-      sectionLabel: "Wellness care plans",
+      pageLabel: "SS wellness",
+      sectionLabel: "Closing",
       fieldLabel: "Closing headline",
       type: "text",
     },
     {
       id: "ss_wellness_closing_lines",
-      pageLabel: "SS subpages",
-      sectionLabel: "Wellness care plans",
+      pageLabel: "SS wellness",
+      sectionLabel: "Closing",
       fieldLabel: "Closing lines (one per line)",
       type: "richtext",
     },
     {
       id: "ss_wellness_cta_title",
-      pageLabel: "SS subpages",
-      sectionLabel: "Wellness care plans",
+      pageLabel: "SS wellness",
+      sectionLabel: "Bottom CTA",
       fieldLabel: "CTA title",
       type: "text",
     },
     {
       id: "ss_wellness_cta_body",
-      pageLabel: "SS subpages",
-      sectionLabel: "Wellness care plans",
+      pageLabel: "SS wellness",
+      sectionLabel: "Bottom CTA",
       fieldLabel: "CTA body",
       type: "text",
     },

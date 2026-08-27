@@ -9,6 +9,8 @@ import { PracticePagesEditor } from "@/components/admin/practice-pages/PracticeP
 import { useSiteContentFields } from "@/components/admin/cms/useSiteContentFields";
 import {
   CONTENT_SCOPES,
+  PAGE_PICKER_SCOPES,
+  contentScopeDef,
   isContentScopeId,
   isFaqItemsScope,
   isMassageTeamScope,
@@ -38,8 +40,10 @@ type Props = {
 };
 
 function parseInitialScope(raw?: string): PageBuilderScopeId {
-  // Legacy bookmark: the header-layout editor was removed (header logos/labels live under Footer → Header).
-  if (raw === "header-branding") return "footer";
+  if (raw === "header-branding" || raw === "footer" || raw === "navigation") return "paris-header";
+  if (raw === "photos") return "paris-photos";
+  if (raw === "services-hub") return "paris-chiro-pages";
+  if (raw === "faq-items") return "faq-copy";
   if (raw && isPageLayoutId(raw)) return raw;
   if (raw && isFaqItemsScope(raw)) return raw;
   if (raw && isMassageTeamScope(raw)) return raw;
@@ -52,8 +56,8 @@ function scopeLivePath(scope: PageBuilderScopeId): string | null {
     return PAGE_LAYOUT_PAGES.find((p) => p.id === scope)?.path ?? null;
   }
   if (scope === "home") return "/";
-  if (scope === "footer") return "/";
-  if (scope === "navigation") return "/";
+  if (scope === "paris-header" || scope === "site-settings") return "/";
+  if (scope === "ss-header") return "/sulphur-springs";
   if (scope === "about") return "/about";
   if (scope === "contact") return "/contact";
   if (scope === "wellness") return "/wellness-care-plans";
@@ -61,16 +65,26 @@ function scopeLivePath(scope: PageBuilderScopeId): string | null {
   if (scope === "reviews") return "/reviews";
   if (scope === "patient-forms") return "/patient-forms";
   if (scope === "faq-copy") return "/faq";
+  if (scope === "ss-faq-items") return "/sulphur-springs/q-and-a";
   if (scope === "massage-team") return "/services/massage";
-  if (scope === "services-hub") return "/services";
   if (scope === "paris-office") return "/locations/paris";
   if (scope === "paris-chiro-pages") return "/services/chiropractic/stretch-and-flex-rehab";
   if (scope === "paris-staff") return "/locations/paris/staff";
+  if (scope === "paris-photos") return "/";
   if (scope === "ss-staff") return "/sulphur-springs/staff";
   if (scope === "ss-subpages") return "/sulphur-springs";
+  if (scope === "ss-conditions") return "/sulphur-springs/common-chiropractic-conditions";
+  if (scope === "ss-resources") return "/sulphur-springs/patient-resources";
+  if (scope === "ss-wellness") return "/sulphur-springs/wellness-care-plans";
+  if (scope === "ss-prices") return "/sulphur-springs/massage/prices";
+  if (scope === "ss-doctors") return "/sulphur-springs/staff";
+  if (scope === "ss-office") return "/sulphur-springs";
   if (scope === "ss-massage") return "/sulphur-springs/massage";
   if (scope === "ss-contact") return "/sulphur-springs/contact";
-  if (scope === "photos") return "/";
+  if (scope === "ss-insurance") return "/sulphur-springs/insurance";
+  if (scope === "ss-reviews") return "/sulphur-springs/reviews";
+  if (scope === "ss-patient-forms") return "/sulphur-springs/patient-forms";
+  if (scope === "ss-photos") return "/sulphur-springs/massage";
   return null;
 }
 
@@ -88,7 +102,7 @@ function scopeLabel(scope: PageBuilderScopeId, pages: { id: string; label: strin
   if (isPageLayoutId(scope)) {
     return pages.find((p) => p.id === scope)?.label ?? scope;
   }
-  if (scope === "faq-items") return "FAQ items";
+  if (scope === "faq-items" || scope === "ss-faq-items") return "FAQ";
   if (scope === "massage-team") return "Massage team";
   return CONTENT_SCOPES.find((s) => s.id === scope)?.label ?? scope;
 }
@@ -157,6 +171,7 @@ const SUPERSEDED_FIELD_IDS: Record<string, string[]> = {
     "ss_intro_body",
     "ss_doctor_heading",
     "ss_doctor_intro",
+    "ss_hours",
   ],
 };
 
@@ -170,6 +185,10 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
   });
   const [previewKey, setPreviewKey] = useState(0);
   const [auth, setAuth] = useState<Auth | null>(null);
+  const [sectionId, setSectionId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return new URL(window.location.href).searchParams.get("section");
+  });
 
   useEffect(() => {
     const a = getFirebaseClientAuth();
@@ -194,24 +213,36 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
   );
 
   const officePages = useMemo(() => entriesForOffice(office), [office]);
+  const pickerSections = useMemo(() => {
+    if (!PAGE_PICKER_SCOPES.has(scope) || !isContentScopeId(scope)) return [];
+    return contentScopeDef(scope).sections;
+  }, [scope]);
+  const activeSectionId =
+    pickerSections.length === 0
+      ? null
+      : pickerSections.some((s) => s.id === sectionId)
+        ? sectionId
+        : (pickerSections[0]?.id ?? null);
 
   // The scope was previously read once at load and never written back, so a
   // selection could not be bookmarked or survive a refresh.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
-    if (url.searchParams.get("scope") === scope) return;
     url.searchParams.set("scope", scope);
     url.searchParams.delete("page");
+    if (activeSectionId) url.searchParams.set("section", activeSectionId);
+    else url.searchParams.delete("section");
     window.history.replaceState(null, "", url);
-  }, [scope]);
+  }, [scope, activeSectionId]);
 
   const chooseOffice = useCallback(
     (next: EditorOffice) => {
       setOffice(next);
-      setScope((current) =>
-        officeForScope(current) === next ? current : firstScopeForOffice(next),
-      );
+      setScope((current) => {
+        if (current === "site-settings") return current;
+        return officeForScope(current) === next ? current : firstScopeForOffice(next);
+      });
     },
     [],
   );
@@ -232,17 +263,83 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
     Boolean(practiceLocation) ||
     Boolean(staffFocus) ||
     scope === "massage-team" ||
-    scope === "footer";
+    scope === "ss-massage" ||
+    scope === "paris-header" ||
+    scope === "ss-header" ||
+    scope === "faq-copy" ||
+    scope === "ss-faq-items";
+
+  const headerForm =
+    scope === "paris-header" || scope === "ss-header" ? (
+      <div className="space-y-6">
+        <HeaderLogoSizeEditor
+          fields={cms.fields}
+          busy={cms.busy}
+          onSave={async (id, value) => {
+            await cms.saveField(id, value);
+            setPreviewKey((k) => k + 1);
+          }}
+        />
+        <ScopeFieldForm
+          scope={scope}
+          fields={cms.fields}
+          busy={cms.busy}
+          message={cms.message}
+          onSave={cms.saveField}
+          onReset={cms.resetField}
+          excludeFieldIds={ALL_HEADER_LOGO_HEIGHT_FIELD_IDS}
+        />
+      </div>
+    ) : null;
 
   let main: React.ReactNode = null;
-  if (scope === "faq-items") {
-    main = <FaqItemsPanel getIdToken={getIdToken} />;
+  if (scope === "faq-copy") {
+    main = (
+      <div className="space-y-6">
+        <ScopeFieldForm
+          scope={scope}
+          fields={cms.fields}
+          busy={cms.busy}
+          message={cms.message}
+          onSave={cms.saveField}
+          onReset={cms.resetField}
+        />
+        <FaqItemsPanel getIdToken={getIdToken} category="general" />
+      </div>
+    );
+  } else if (scope === "ss-faq-items" || scope === "faq-items") {
+    main = (
+      <FaqItemsPanel
+        getIdToken={getIdToken}
+        category={scope === "ss-faq-items" ? "sulphur-springs" : undefined}
+      />
+    );
   } else if (scope === "massage-team") {
     main = (
       <MassageTeamAdminSection
         auth={auth}
         onNotify={() => setPreviewKey((k) => k + 1)}
       />
+    );
+  } else if (scope === "ss-massage") {
+    main = (
+      <div className="space-y-6">
+        <ScopeFieldForm
+          scope={scope}
+          fields={cms.fields}
+          busy={cms.busy}
+          message={cms.message}
+          onSave={cms.saveField}
+          onReset={cms.resetField}
+        />
+        <SiteStaffAdminSection
+          auth={auth}
+          locationFocus="sulphur"
+          roleFilter="massage"
+          heading="Massage therapists — Sulphur Springs"
+          onNotify={() => setPreviewKey((k) => k + 1)}
+        />
+      </div>
     );
   } else if (practiceLocation) {
     main = (
@@ -281,28 +378,8 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
         />
       </div>
     );
-  } else if (scope === "footer") {
-    main = (
-      <div className="space-y-6">
-        <HeaderLogoSizeEditor
-          fields={cms.fields}
-          busy={cms.busy}
-          onSave={async (id, value) => {
-            await cms.saveField(id, value);
-            setPreviewKey((k) => k + 1);
-          }}
-        />
-        <ScopeFieldForm
-          scope={scope}
-          fields={cms.fields}
-          busy={cms.busy}
-          message={cms.message}
-          onSave={cms.saveField}
-          onReset={cms.resetField}
-          excludeFieldIds={ALL_HEADER_LOGO_HEIGHT_FIELD_IDS}
-        />
-      </div>
-    );
+  } else if (headerForm) {
+    main = headerForm;
   } else {
     main = (
       <ScopeFieldForm
@@ -312,6 +389,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
         message={cms.message}
         onSave={cms.saveField}
         onReset={cms.resetField}
+        onlySectionId={activeSectionId}
       />
     );
   }
@@ -355,6 +433,22 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
               ))}
             </select>
           </label>
+          {pickerSections.length > 0 ? (
+            <label className="text-sm">
+              <span className="sr-only">Which page</span>
+              <select
+                className="max-w-[280px] rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+                value={activeSectionId ?? ""}
+                onChange={(e) => setSectionId(e.target.value)}
+              >
+                {pickerSections.map((section) => (
+                  <option key={section.id} value={section.id}>
+                    {section.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           {livePath ? (
             <a
               href={livePath}

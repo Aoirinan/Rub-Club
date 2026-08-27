@@ -1,4 +1,4 @@
-import type { ContentFieldMeta } from "@/lib/cms-registry";
+import type { ContentFieldMeta, ContentPageKey } from "@/lib/cms-registry";
 import { IMAGES } from "@/lib/home-images";
 import { MASSAGE_PRICES_DEFAULT } from "@/lib/massage-prices-content";
 import {
@@ -28,99 +28,72 @@ export function ssPageCardImageId(slug: string): string {
   return `ss_page_${slug}_card_image`;
 }
 
+/**
+ * One page's worth of fields. Each page gets its own `sectionLabel` (its title)
+ * so the editor's page picker can show a single page at a time instead of one
+ * 100-field scroll.
+ */
+function pageFields(
+  page: { slug: string; title: string },
+  pageLabel: ContentPageKey,
+  opts: { cards: boolean },
+): ContentFieldMeta[] {
+  const fields: ContentFieldMeta[] = [
+    {
+      id: ssPageBodyId(page.slug),
+      pageLabel,
+      sectionLabel: page.title,
+      fieldLabel: "Page body (## headings, - bullets, blank line between paragraphs)",
+      type: "richtext",
+    },
+    {
+      id: ssPageMetaId(page.slug),
+      pageLabel,
+      sectionLabel: page.title,
+      fieldLabel: "SEO meta description (optional override)",
+      type: "text",
+    },
+  ];
+  // Resource articles have no card on any services grid.
+  if (opts.cards) {
+    fields.push(
+      {
+        id: ssPageCardBlurbId(page.slug),
+        pageLabel,
+        sectionLabel: page.title,
+        fieldLabel: "Services grid card blurb (optional; falls back to meta description)",
+        type: "text",
+      },
+      {
+        id: ssPageCardImageId(page.slug),
+        pageLabel,
+        sectionLabel: page.title,
+        fieldLabel: "Photo (optional; shows on this page and on its services grid card)",
+        type: "image",
+      },
+    );
+  }
+  return fields;
+}
+
 /** CMS registry fields for Sulphur Springs treatment, injury, and patient resources pages. */
 export function buildSSCmsRegistry(): ContentFieldMeta[] {
   const fields: ContentFieldMeta[] = [];
 
   for (const s of SS_SERVICES) {
-    fields.push(
-      {
-        id: ssPageBodyId(s.slug),
-        pageLabel: "SS subpages",
-        sectionLabel: s.title,
-        fieldLabel: "Page body (## headings, - bullets, blank line between paragraphs)",
-        type: "richtext",
-      },
-      {
-        id: ssPageMetaId(s.slug),
-        pageLabel: "SS subpages",
-        sectionLabel: s.title,
-        fieldLabel: "SEO meta description (optional override)",
-        type: "text",
-      },
-      {
-        id: ssPageCardBlurbId(s.slug),
-        pageLabel: "SS subpages",
-        sectionLabel: s.title,
-        fieldLabel: "Services grid card blurb (optional; falls back to meta description)",
-        type: "text",
-      },
-      {
-        id: ssPageCardImageId(s.slug),
-        pageLabel: "SS subpages",
-        sectionLabel: s.title,
-        fieldLabel: "Photo (optional; shows on this page and on its services grid card)",
-        type: "image",
-      },
-    );
+    fields.push(...pageFields(s, "SS subpages", { cards: true }));
   }
-
   for (const i of SS_INJURIES) {
-    fields.push(
-      {
-        id: ssPageBodyId(i.slug),
-        pageLabel: "SS subpages",
-        sectionLabel: i.title,
-        fieldLabel: "Page body (## headings, - bullets, blank line between paragraphs)",
-        type: "richtext",
-      },
-      {
-        id: ssPageMetaId(i.slug),
-        pageLabel: "SS subpages",
-        sectionLabel: i.title,
-        fieldLabel: "SEO meta description (optional override)",
-        type: "text",
-      },
-      {
-        id: ssPageCardBlurbId(i.slug),
-        pageLabel: "SS subpages",
-        sectionLabel: i.title,
-        fieldLabel: "Services grid card blurb (optional; falls back to meta description)",
-        type: "text",
-      },
-      {
-        id: ssPageCardImageId(i.slug),
-        pageLabel: "SS subpages",
-        sectionLabel: i.title,
-        fieldLabel: "Photo (optional; shows on this page and on its services grid card)",
-        type: "image",
-      },
-    );
+    fields.push(...pageFields(i, "SS conditions", { cards: true }));
   }
-
   for (const a of SS_RESOURCE_ARTICLES) {
-    fields.push(
-      {
-        id: ssPageBodyId(a.slug),
-        pageLabel: "SS subpages",
-        sectionLabel: a.title,
-        fieldLabel: "Page body (## headings, - bullets, blank line between paragraphs)",
-        type: "richtext",
-      },
-      {
-        id: ssPageMetaId(a.slug),
-        pageLabel: "SS subpages",
-        sectionLabel: a.title,
-        fieldLabel: "SEO meta description (optional override)",
-        type: "text",
-      },
-    );
+    fields.push(...pageFields(a, "SS patient resources", { cards: false }));
   }
 
   fields.push({
     id: "ss_patient_resources_intro",
-    pageLabel: "SS subpages",
-    sectionLabel: "Patient resources",
+    pageLabel: "SS patient resources",
+    sectionLabel: "Patient resources landing page",
     fieldLabel: "Intro paragraph",
     type: "richtext",
   });
@@ -129,7 +102,7 @@ export function buildSSCmsRegistry(): ContentFieldMeta[] {
 
   fields.push({
     id: "ss_massage_prices_body",
-    pageLabel: "SS subpages",
+    pageLabel: "SS prices",
     sectionLabel: "Massage prices",
     fieldLabel: "Prices page body (markdown)",
     type: "richtext",
