@@ -1,4 +1,5 @@
 import type { ContentFieldMeta } from "@/lib/cms-registry";
+import { IMAGES } from "@/lib/home-images";
 import { MASSAGE_PRICES_DEFAULT } from "@/lib/massage-prices-content";
 import {
   buildSSWellnessCmsRegistry,
@@ -137,6 +138,16 @@ export function buildSSCmsRegistry(): ContentFieldMeta[] {
   return fields;
 }
 
+/**
+ * Starting photos for Sulphur Springs service pages, so a page isn't blank
+ * before anyone uploads. Only slugs with clearly matching artwork are listed —
+ * a wrong-but-present photo on a clinical page is worse than an icon. Every
+ * other page still gets an upload slot in the editor.
+ */
+const SS_PAGE_DEFAULT_PHOTOS: Record<string, string> = {
+  "therapeutic-massage": IMAGES.serviceTherapeutic,
+};
+
 export function buildSSCmsDefaults(): Record<string, string> {
   const defaults: Record<string, string> = {
     ss_patient_resources_intro: SS_PATIENT_RESOURCES.intro,
@@ -146,7 +157,7 @@ export function buildSSCmsDefaults(): Record<string, string> {
     defaults[ssPageBodyId(s.slug)] = s.body;
     defaults[ssPageMetaId(s.slug)] = s.metaDescription;
     defaults[ssPageCardBlurbId(s.slug)] = "";
-    defaults[ssPageCardImageId(s.slug)] = "";
+    defaults[ssPageCardImageId(s.slug)] = SS_PAGE_DEFAULT_PHOTOS[s.slug] ?? "";
   }
   for (const i of SS_INJURIES) {
     defaults[ssPageBodyId(i.slug)] = i.body;
