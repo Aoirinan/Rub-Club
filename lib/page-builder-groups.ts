@@ -42,7 +42,9 @@ const ENTRIES: EditorEntry[] = [
   { scope: "paris-staff", label: "Staff", office: "paris" },
   { scope: "wellness", label: "Wellness Plan", office: "paris" },
 
+  { scope: "ss-contact", label: "Contact", office: "sulphur" },
   { scope: "sulphur-springs", label: "Home", office: "sulphur" },
+  { scope: "ss-massage", label: "Massage", office: "sulphur" },
   { scope: "ss-subpages", label: "Services", office: "sulphur" },
   { scope: "ss-staff", label: "Staff", office: "sulphur" },
 

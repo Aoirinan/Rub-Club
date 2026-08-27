@@ -12,6 +12,8 @@ export type ContentScopeId =
   | "paris-staff"
   | "ss-staff"
   | "ss-subpages"
+  | "ss-massage"
+  | "ss-contact"
   | "insurance"
   | "services-hub"
   | "reviews"
@@ -35,6 +37,8 @@ export function isContentScopeId(v: string): v is ContentScopeId {
     v === "paris-staff" ||
     v === "ss-staff" ||
     v === "ss-subpages" ||
+    v === "ss-massage" ||
+    v === "ss-contact" ||
     v === "insurance" ||
     v === "services-hub" ||
     v === "reviews" ||
@@ -74,6 +78,10 @@ const CONTENT_SCOPE_PAGES: Record<ContentScopeId, ContentPageKey[]> = {
   "paris-staff": ["Paris staff"],
   "ss-staff": ["Sulphur staff"],
   "ss-subpages": ["SS subpages"],
+  // Split out of the Sulphur Springs landing scope: both are real pages, and
+  // burying their copy under "Home" made them effectively unfindable.
+  "ss-massage": ["SS massage page"],
+  "ss-contact": ["SS contact page"],
   insurance: ["Insurance"],
   "services-hub": ["Services hub"],
   reviews: ["Reviews"],
@@ -119,32 +127,26 @@ function buildSectionsForPageLabels(pageLabels: ContentPageKey[]): ContentScopeS
   });
 }
 
+/** Only ids whose label differs from the auto-generated one are listed. */
+const SCOPE_LABELS: Partial<Record<ContentScopeId, string>> = {
+  "faq-copy": "FAQ page copy",
+  "doctors-global": "Doctors (global)",
+  "ss-subpages": "Sulphur subpages",
+  "ss-staff": "Sulphur staff",
+  "ss-massage": "Sulphur massage page",
+  "ss-contact": "Sulphur contact page",
+  footer: "Header & footer",
+};
+
+function autoScopeLabel(id: ContentScopeId): string {
+  return id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, " ");
+}
+
 export const CONTENT_SCOPES: ContentScopeDef[] = (
   Object.entries(CONTENT_SCOPE_PAGES) as [ContentScopeId, ContentPageKey[]][]
 ).map(([id, pageLabels]) => ({
   id,
-  label:
-    id === "faq-copy"
-      ? "FAQ page copy"
-      : id === "doctors-global"
-        ? "Doctors (global)"
-        : id === "ss-subpages"
-          ? "Sulphur subpages"
-          : id === "paris-office"
-            ? "Paris office"
-            : id === "paris-chiro-pages"
-              ? "Paris chiro pages"
-              : id === "paris-staff"
-              ? "Paris staff"
-              : id === "ss-staff"
-                ? "Sulphur staff"
-                : id === "services-hub"
-                ? "Services hub"
-                : id === "patient-forms"
-                  ? "Patient forms"
-                  : id === "footer"
-                    ? "Header & footer"
-                    : id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, " "),
+  label: SCOPE_LABELS[id] ?? autoScopeLabel(id),
   description:
     id === "photos"
       ? "Swap any marketing photo on the site"

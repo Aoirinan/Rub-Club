@@ -54,6 +54,8 @@ export type ContentPageKey =
   | "Paris chiro pages"
   | "Paris staff"
   | "Sulphur Springs"
+  | "SS massage page"
+  | "SS contact page"
   | "Sulphur staff"
   | "SS subpages"
   | "Insurance"
@@ -207,10 +209,10 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
     fieldLabel: "Hours (one line per range: Monday – Friday|9:00 AM – 5:00 PM)",
     type: "richtext",
   },
-  { id: "ss_massage_hero_heading", pageLabel: "Sulphur Springs", sectionLabel: "Massage page", fieldLabel: "Hero heading", type: "text" },
-  { id: "ss_massage_hero_subheading", pageLabel: "Sulphur Springs", sectionLabel: "Massage page", fieldLabel: "Hero subheading", type: "text" },
-  { id: "ss_massage_intro_body", pageLabel: "Sulphur Springs", sectionLabel: "Massage page", fieldLabel: "Intro body copy", type: "richtext" },
-  { id: "ss_massage_services_list", pageLabel: "Sulphur Springs", sectionLabel: "Massage page", fieldLabel: "Services (one per line: Name — Description)", type: "richtext" },
+  { id: "ss_massage_hero_heading", pageLabel: "SS massage page", sectionLabel: "Hero", fieldLabel: "Hero heading", type: "text" },
+  { id: "ss_massage_hero_subheading", pageLabel: "SS massage page", sectionLabel: "Hero", fieldLabel: "Hero subheading", type: "text" },
+  { id: "ss_massage_intro_body", pageLabel: "SS massage page", sectionLabel: "Intro", fieldLabel: "Intro body copy", type: "richtext" },
+  { id: "ss_massage_services_list", pageLabel: "SS massage page", sectionLabel: "Massage services", fieldLabel: "Services (one per line: Name — Description)", type: "richtext" },
 
   { id: "about_heading", pageLabel: "About", sectionLabel: "Hero", fieldLabel: "Main Heading", type: "text" },
   { id: "about_body", pageLabel: "About", sectionLabel: "Story", fieldLabel: "Body Copy", type: "richtext" },
@@ -221,8 +223,8 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "contact_heading", pageLabel: "Contact", sectionLabel: "Hero", fieldLabel: "Heading", type: "text" },
   { id: "contact_subtext", pageLabel: "Contact", sectionLabel: "Hero", fieldLabel: "Subtext", type: "text" },
 
-  { id: "ss_contact_heading", pageLabel: "Sulphur Springs", sectionLabel: "Contact page", fieldLabel: "Heading", type: "text" },
-  { id: "ss_contact_subtext", pageLabel: "Sulphur Springs", sectionLabel: "Contact page", fieldLabel: "Subtext", type: "text" },
+  { id: "ss_contact_heading", pageLabel: "SS contact page", sectionLabel: "Hero", fieldLabel: "Heading", type: "text" },
+  { id: "ss_contact_subtext", pageLabel: "SS contact page", sectionLabel: "Hero", fieldLabel: "Subtext", type: "text" },
 
   {
     id: "header_show_top_phone_bar",
