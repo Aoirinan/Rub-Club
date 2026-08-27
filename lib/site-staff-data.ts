@@ -36,10 +36,6 @@ export type SiteStaffDisplayMember = {
   featured: boolean;
 };
 
-export function isMassageStaffTitle(title: string): boolean {
-  return /massage/i.test(title);
-}
-
 const BRANDS: SiteStaffBrand[] = ["paris", "sulphur", "both"];
 
 function normalizeBrand(raw: unknown): SiteStaffBrand | null {

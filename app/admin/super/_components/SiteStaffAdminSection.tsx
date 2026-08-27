@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Auth } from "firebase/auth";
 import type { SiteStaffBrand, SiteStaffMemberStored } from "@/lib/site-staff";
-import { isMassageStaffTitle } from "@/lib/site-staff";
 
 type Props = {
   auth: Auth | null;
@@ -31,6 +30,10 @@ function brandLabel(brand: SiteStaffBrand): string {
   if (brand === "paris") return "Paris";
   if (brand === "sulphur") return "Sulphur Springs";
   return "Both locations";
+}
+
+function isMassageStaffTitle(title: string): boolean {
+  return /massage/i.test(title);
 }
 
 export function SiteStaffAdminSection({
