@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { notFound } from "next/navigation";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
@@ -9,7 +10,9 @@ import { LegacyPageBody } from "@/components/LegacyPageBody";
 import { telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
+import { getContent } from "@/lib/cms";
 import { allSSPageSlugs, getSSPageContent } from "@/lib/ss-cms-content";
+import { ssPageCardImageId } from "@/lib/ss-cms-registry";
 import { getPublishedLegacyPage, listPublishedLegacyPagesForSite } from "@/lib/legacy-pages";
 
 export const revalidate = 60;
@@ -47,12 +50,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SulphurSpringsSubpage({ params }: Props) {
   const { slug } = await params;
-  const [page, ssHours, displayLocs] = await Promise.all([
+  const [page, ssHours, displayLocs, cardImage] = await Promise.all([
     getSSPageContent(slug),
     getSulphurOfficeHours(),
     getDisplayLocations(),
+    getContent(ssPageCardImageId(slug)),
   ]);
   const ss = displayLocs.sulphur_springs;
+  const photo = cardImage.trim();
 
   // Curated SS page missing -> fall back to a verbatim legacy page (CURSOR_PROMPT §5).
   if (!page) {
@@ -109,6 +114,18 @@ export default async function SulphurSpringsSubpage({ params }: Props) {
       <PageHero variant="sulphur" eyebrow="Chiropractic Associates · Sulphur Springs" title={page.title} />
       <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
         <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
+          {photo ? (
+            <div className="relative mb-8 aspect-[3/2] w-full overflow-hidden rounded-lg bg-stone-100">
+              <Image
+                src={photo}
+                alt={page.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 896px) 100vw, 896px"
+                unoptimized={/^https?:\/\//i.test(photo)}
+              />
+            </div>
+          ) : null}
           <div className="prose prose-stone max-w-none">
             <SsMarkdownBody body={page.body} />
           </div>

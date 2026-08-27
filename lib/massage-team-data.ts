@@ -22,6 +22,8 @@ export type MassageTeamMemberStored = {
   photoUrl: string;
   photoStoragePath?: string;
   sortOrder: number;
+  /** Soft hide, so a therapist can be taken off the site and brought back later. */
+  active: boolean;
 };
 
 export function defaultMassageTeamCards(): MassageTeamCard[] {
@@ -58,6 +60,8 @@ export function parseMassageTeamDoc(
     photoUrl,
     ...(photoStoragePath ? { photoStoragePath } : {}),
     sortOrder,
+    // Existing docs predate the flag, so a missing value means visible.
+    active: data.active !== false,
   };
 }
 
@@ -109,7 +113,10 @@ export async function resolveMassageTeamCardsUncached(): Promise<MassageTeamCard
     const db = getFirestore();
     const rows = await listMassageTeamMembers(db);
     if (rows.length > 0) {
-      return rows.map(storedToCard);
+      // Hiding is checked after the roster-exists check on purpose: a roster
+      // where everyone is hidden is a deliberate empty state, and falling back
+      // to the built-in list here would silently undo the hiding.
+      return rows.filter((row) => row.active).map(storedToCard);
     }
   } catch {
     /* fall through to defaults */

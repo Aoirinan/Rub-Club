@@ -24,6 +24,7 @@ export type SitePhotoSpec = {
 };
 
 const MASSAGE = "Massage photos";
+const SS_MASSAGE = "Sulphur Springs massage photos";
 const CHIRO = "Chiropractic photos";
 const HERO = "Home page hero carousel";
 
@@ -42,6 +43,18 @@ export const SITE_PHOTOS: readonly SitePhotoSpec[] = [
   { key: "serviceSwedish", fieldId: "site_photo_service_swedish", section: MASSAGE, label: "Swedish massage card", defaultPath: IMAGES.serviceSwedish },
   { key: "massagePatient", fieldId: "site_photo_massage_patient", section: MASSAGE, label: "Massage page photo (next to the intro text)", defaultPath: IMAGES.massagePatient },
   { key: "massageChiroTile", fieldId: "site_photo_massage_chiro_tile", section: MASSAGE, label: "Chiropractic Care service card (both home pages)", defaultPath: IMAGES.massageChiroTile },
+
+  // Sulphur Springs starts from the same artwork as Paris so the page looks
+  // finished on day one, but each slot is separate so the two offices can use
+  // their own rooms and staff later without affecting each other.
+  { key: "ssMassagePatient", fieldId: "site_photo_ss_massage_patient", section: SS_MASSAGE, label: "Massage page photo (next to the intro text)", defaultPath: IMAGES.massagePatient },
+  { key: "ssMassageTherapeutic", fieldId: "site_photo_ss_massage_therapeutic", section: SS_MASSAGE, label: "Therapeutic massage card", defaultPath: IMAGES.serviceTherapeutic },
+  { key: "ssMassageDeepTissue", fieldId: "site_photo_ss_massage_deep_tissue", section: SS_MASSAGE, label: "Deep tissue massage card", defaultPath: IMAGES.serviceDeepTissue },
+  { key: "ssMassageTriggerPoint", fieldId: "site_photo_ss_massage_trigger_point", section: SS_MASSAGE, label: "Trigger point & lymphatic card", defaultPath: IMAGES.serviceSports },
+  { key: "ssMassagePrenatal", fieldId: "site_photo_ss_massage_prenatal", section: SS_MASSAGE, label: "Prenatal massage card", defaultPath: IMAGES.servicePrenatal },
+  { key: "ssMassageSports", fieldId: "site_photo_ss_massage_sports", section: SS_MASSAGE, label: "Sports massage card", defaultPath: IMAGES.serviceSports },
+  { key: "ssMassageSwedish", fieldId: "site_photo_ss_massage_swedish", section: SS_MASSAGE, label: "Swedish massage card", defaultPath: IMAGES.serviceSwedish },
+  { key: "ssMassageHotStone", fieldId: "site_photo_ss_massage_hot_stone", section: SS_MASSAGE, label: "Hot stone massage card", defaultPath: IMAGES.serviceHotStone },
 
   { key: "chiroBlade", fieldId: "site_photo_chiro_blade", section: CHIRO, label: "About page photo / \"Two practices, one address\"", defaultPath: IMAGES.chiroBlade },
   { key: "chiroBg", fieldId: "site_photo_chiro_bg", section: CHIRO, label: "Chiropractic page hero photo", defaultPath: IMAGES.chiroBg },

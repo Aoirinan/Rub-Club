@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import type { MassageTeamCard } from "@/lib/massage-team";
 
 type Variant = "home" | "service";
+/** Paris (Rub Club red) or Sulphur Springs (blue), matching the host page. */
+type Accent = "paris" | "sulphur";
 
 type Props = {
   members: MassageTeamCard[];
@@ -11,6 +13,12 @@ type Props = {
   footnote?: ReactNode;
   titleAs?: "h1" | "h2";
   variant?: Variant;
+  accent?: Accent;
+};
+
+const ACCENTS: Record<Accent, { border: string; heading: string }> = {
+  paris: { border: "border-[#c0392b]", heading: "text-[#4a1515]" },
+  sulphur: { border: "border-[#2980b9]", heading: "text-[#0c2d3a]" },
 };
 
 export function MassageTeamGrid({
@@ -20,18 +28,18 @@ export function MassageTeamGrid({
   footnote,
   titleAs = "h2",
   variant = "home",
+  accent = "paris",
 }: Props) {
   const TitleTag = titleAs;
   const isHome = variant === "home";
+  const theme = ACCENTS[accent];
 
   return (
-    <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
+    <section className={`border-t-4 ${theme.border} bg-white p-6 shadow-md sm:p-10`}>
       <TitleTag
-        className={
-          isHome
-            ? "text-center text-3xl font-black text-[#4a1515]"
-            : "text-2xl font-black text-[#4a1515]"
-        }
+        className={`${theme.heading} ${
+          isHome ? "text-center text-3xl font-black" : "text-2xl font-black"
+        }`}
       >
         {title}
       </TitleTag>
@@ -67,7 +75,7 @@ export function MassageTeamGrid({
               />
             </div>
             <div className="flex flex-1 flex-col p-5">
-              <h3 className="text-lg font-black text-[#4a1515]">{member.name}</h3>
+              <h3 className={`text-lg font-black ${theme.heading}`}>{member.name}</h3>
               {member.role ? <p className="text-sm font-bold text-stone-600">{member.role}</p> : null}
               <p className="mt-3 flex-1 text-sm leading-relaxed text-stone-700">{member.bio}</p>
             </div>

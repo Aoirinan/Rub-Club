@@ -58,7 +58,7 @@ export function buildSSCmsRegistry(): ContentFieldMeta[] {
         id: ssPageCardImageId(s.slug),
         pageLabel: "SS subpages",
         sectionLabel: s.title,
-        fieldLabel: "Services grid card image (optional)",
+        fieldLabel: "Photo (optional; shows on this page and on its services grid card)",
         type: "image",
       },
     );
@@ -91,7 +91,7 @@ export function buildSSCmsRegistry(): ContentFieldMeta[] {
         id: ssPageCardImageId(i.slug),
         pageLabel: "SS subpages",
         sectionLabel: i.title,
-        fieldLabel: "Services grid card image (optional)",
+        fieldLabel: "Photo (optional; shows on this page and on its services grid card)",
         type: "image",
       },
     );

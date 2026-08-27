@@ -119,6 +119,7 @@ export async function POST(req: Request) {
       photoUrl,
       photoStoragePath,
       sortOrder,
+      active: true,
       updatedAt: FieldValue.serverTimestamp(),
       updatedByUid: staff.uid,
     });
@@ -182,6 +183,7 @@ export async function POST(req: Request) {
         ...("role" in member && member.role ? { role: member.role } : {}),
         photoUrl: IMAGES[member.imageKey],
         sortOrder: i * 10,
+        active: true,
         updatedAt: FieldValue.serverTimestamp(),
         updatedByUid: staff.uid,
       });
@@ -208,6 +210,7 @@ export async function POST(req: Request) {
     ...(body.role?.trim() ? { role: body.role.trim() } : {}),
     photoUrl: body.photoUrl.trim(),
     sortOrder,
+    active: true,
     updatedAt: FieldValue.serverTimestamp(),
     updatedByUid: staff.uid,
   });

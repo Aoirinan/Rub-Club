@@ -44,6 +44,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
   const [editBio, setEditBio] = useState("");
   const [editRole, setEditRole] = useState("");
   const [editSort, setEditSort] = useState("");
+  const [editActive, setEditActive] = useState(true);
   const [editPhoto, setEditPhoto] = useState<File | null>(null);
 
   const load = useCallback(async () => {
@@ -290,6 +291,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
         if (editSort.trim() !== "" && Number.isFinite(sn)) {
           form.set("sortOrder", String(sn));
         }
+        form.set("active", editActive ? "true" : "false");
         form.set("photo", editPhoto);
         const res = await fetch(`/api/admin/massage-team/${encodeURIComponent(editing.id)}`, {
           method: "PATCH",
@@ -311,10 +313,12 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           bio: string;
           role: string | null;
           sortOrder?: number;
+          active: boolean;
         } = {
           name: editName.trim(),
           bio: editBio.trim(),
           role: editRole.trim() || null,
+          active: editActive,
         };
         if (editSort.trim() !== "" && Number.isFinite(sn)) {
           body.sortOrder = sn;
@@ -437,6 +441,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
     setEditBio(row.bio);
     setEditRole(row.role ?? "");
     setEditSort(String(row.sortOrder));
+    setEditActive(row.active);
     setEditPhoto(null);
   }
 
@@ -596,6 +601,21 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
               onChange={(e) => setEditSort(e.target.value)}
             />
           </label>
+          <label className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={editActive}
+              onChange={(e) => setEditActive(e.target.checked)}
+            />
+            <span>
+              <span className="font-medium text-slate-800">Active on public site</span>
+              <span className="block text-xs text-slate-600">
+                Uncheck to take someone off the website without deleting them. Their photo and bio
+                are kept, so you can turn them back on later.
+              </span>
+            </span>
+          </label>
           <label className="block space-y-1">
             <span className="font-medium text-slate-800">New portrait (optional)</span>
             <input
@@ -679,6 +699,9 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
                 <div className="font-semibold text-slate-900">
                   <span className="mr-2 text-xs font-normal text-slate-500">#{index + 1}</span>
                   {m.name}
+                  {!m.active ? (
+                    <span className="ml-2 text-xs font-semibold text-amber-700">(hidden)</span>
+                  ) : null}
                 </div>
                 <div className="text-xs text-slate-600">
                   sort {m.sortOrder}

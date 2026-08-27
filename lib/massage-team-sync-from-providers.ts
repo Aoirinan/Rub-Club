@@ -86,6 +86,7 @@ export async function syncMassageTeamFromProviders(
       ...(role ? { role } : {}),
       photoUrl,
       sortOrder: provider.sortOrder,
+      active: true,
       updatedAt: FieldValue.serverTimestamp(),
       updatedByUid,
     });

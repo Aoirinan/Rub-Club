@@ -14,6 +14,16 @@ import {
   isMassageTeamScope,
 } from "@/lib/page-builder-content-scopes";
 import { isPageLayoutId, PAGE_LAYOUT_PAGES } from "@/lib/page-layout";
+import {
+  EDITOR_OFFICES,
+  entriesForOffice,
+  entryLabel,
+  firstScopeForOffice,
+  isEditorOffice,
+  officeForScope,
+  officeLabel,
+  type EditorOffice,
+} from "@/lib/page-builder-groups";
 import type { PageBuilderScopeId } from "@/lib/page-builder-content-scopes";
 import type { PracticeLocationId } from "@/lib/practice-pages-shared";
 import { FaqItemsPanel } from "@/components/admin/FaqItemsPanel";
@@ -24,6 +34,7 @@ import { ALL_HEADER_LOGO_HEIGHT_FIELD_IDS } from "@/lib/header-logo-sizes";
 type Props = {
   getIdToken: () => Promise<string | null>;
   initialScope?: string;
+  initialOffice?: string;
 };
 
 function parseInitialScope(raw?: string): PageBuilderScopeId {
@@ -70,6 +81,8 @@ function officeStaffLocationFocus(
 }
 
 function scopeLabel(scope: PageBuilderScopeId, pages: { id: string; label: string }[]): string {
+  const grouped = entryLabel(scope);
+  if (grouped) return `${officeLabel(officeForScope(scope))} · ${grouped}`;
   if (isPageLayoutId(scope)) {
     return pages.find((p) => p.id === scope)?.label ?? scope;
   }
@@ -145,8 +158,14 @@ const SUPERSEDED_FIELD_IDS: Record<string, string[]> = {
   ],
 };
 
-export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
+export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }: Props) {
   const [scope, setScope] = useState<PageBuilderScopeId>(() => parseInitialScope(initialScope));
+  const [office, setOffice] = useState<EditorOffice>(() => {
+    // An explicit ?office= only wins when no scope was requested, so existing
+    // ?scope= bookmarks still land on the list that actually owns the page.
+    if (!initialScope && initialOffice && isEditorOffice(initialOffice)) return initialOffice;
+    return officeForScope(parseInitialScope(initialScope));
+  });
   const [previewKey, setPreviewKey] = useState(0);
   const [auth, setAuth] = useState<Auth | null>(null);
 
@@ -169,6 +188,29 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
 
   const pages = useMemo(
     () => PAGE_LAYOUT_PAGES.map((p) => ({ id: p.id, label: p.label })),
+    [],
+  );
+
+  const officePages = useMemo(() => entriesForOffice(office), [office]);
+
+  // The scope was previously read once at load and never written back, so a
+  // selection could not be bookmarked or survive a refresh.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("scope") === scope) return;
+    url.searchParams.set("scope", scope);
+    url.searchParams.delete("page");
+    window.history.replaceState(null, "", url);
+  }, [scope]);
+
+  const chooseOffice = useCallback(
+    (next: EditorOffice) => {
+      setOffice(next);
+      setScope((current) =>
+        officeForScope(current) === next ? current : firstScopeForOffice(next),
+      );
+    },
     [],
   );
 
@@ -281,28 +323,34 @@ export function StructuredSiteEditor({ getIdToken, initialScope }: Props) {
         </span>
         <div className="flex flex-1 flex-wrap items-center justify-end gap-3">
           <label className="text-sm">
+            <span className="sr-only">Office</span>
+            <select
+              className="max-w-[180px] rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+              value={office}
+              onChange={(e) => {
+                const next = e.target.value;
+                if (isEditorOffice(next)) chooseOffice(next);
+              }}
+            >
+              {EDITOR_OFFICES.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm">
             <span className="sr-only">Page or section</span>
             <select
-              className="max-w-[260px] rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+              className="max-w-[240px] rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
               value={scope}
               onChange={(e) => setScope(parseInitialScope(e.target.value))}
             >
-              <optgroup label="Service pages">
-                {pages.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.label}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Site copy">
-                {CONTENT_SCOPES.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.label}
-                  </option>
-                ))}
-                <option value="faq-items">FAQ items</option>
-                <option value="massage-team">Massage team</option>
-              </optgroup>
+              {officePages.map((entry) => (
+                <option key={entry.scope} value={entry.scope}>
+                  {entry.label}
+                </option>
+              ))}
             </select>
           </label>
           {livePath ? (

@@ -1,16 +1,25 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import { BookingCta } from "@/components/BookingCta";
 import { LocationHoursSection } from "@/components/LocationHoursSection";
+import { MassageTeamGrid } from "@/components/marketing/MassageTeamGrid";
+import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
+import { ServicesGrid } from "@/components/practice/ServicesGrid";
+import { practiceThemeStyle } from "@/components/practice/theme";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
 import { getContentMany, renderRichText } from "@/lib/cms";
 import { parseChiroTreatments } from "@/lib/chiro-treatments";
 import { telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
+import { MASSAGE } from "@/lib/home-verbatim";
 import { pageKeywords } from "@/lib/seo-keywords";
+import { listActiveSiteStaffForBrand } from "@/lib/site-staff";
+import { getSitePhotos } from "@/lib/site-photos-server";
+import { ssMassagePhotoFor } from "@/lib/ss-massage-services";
 import { serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
 
@@ -26,8 +35,13 @@ export const metadata: Metadata = buildPageMetadata({
     "Therapeutic massage in Sulphur Springs, TX — coordinated with your chiropractic care.",
 });
 
+/** Sulphur Springs therapists live in the shared staff roster, tagged by job title. */
+function isMassageRole(role: string): boolean {
+  return /massage/i.test(role);
+}
+
 export default async function SulphurSpringsMassagePage() {
-  const [c, ssHours, displayLocs] = await Promise.all([
+  const [c, ssHours, displayLocs, photos, ssStaff] = await Promise.all([
     getContentMany([
       "ss_massage_hero_heading",
       "ss_massage_hero_subheading",
@@ -36,13 +50,25 @@ export default async function SulphurSpringsMassagePage() {
     ]),
     getSulphurOfficeHours(),
     getDisplayLocations(),
+    getSitePhotos(),
+    listActiveSiteStaffForBrand("sulphur"),
   ]);
   const ss = displayLocs.sulphur_springs;
   const introParagraphs = (c.ss_massage_intro_body ?? "").split(/\n\n+/).filter(Boolean);
   const services = parseChiroTreatments(c.ss_massage_services_list ?? "");
+  const therapists = ssStaff
+    .filter((m) => isMassageRole(m.role))
+    .map((m) => ({
+      id: m.id,
+      name: m.name,
+      bio: m.bio,
+      ...(m.role ? { role: m.role } : {}),
+      imageSrc: m.image ?? "",
+    }))
+    .filter((m) => m.imageSrc);
 
   return (
-    <div className="bg-[#f4f2ea]">
+    <div className="bg-[#f4f2ea]" style={practiceThemeStyle("sulphur-springs")}>
       <JsonLd
         data={serviceJsonLd({
           name: "Massage Therapy",
@@ -68,8 +94,8 @@ export default async function SulphurSpringsMassagePage() {
 
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
         {introParagraphs.length > 0 ? (
-          <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
-            <div className="max-w-3xl space-y-4 leading-relaxed text-stone-700">
+          <section className="grid gap-10 border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="space-y-4 leading-relaxed text-stone-700">
               {introParagraphs.map((p, idx) => (
                 <p
                   key={`ss-massage-intro-${idx}`}
@@ -77,24 +103,69 @@ export default async function SulphurSpringsMassagePage() {
                 />
               ))}
             </div>
+            <div className="relative aspect-[4/3] overflow-hidden shadow-md lg:min-h-[360px]">
+              <Image
+                src={photos.ssMassagePatient}
+                alt="A licensed massage therapist working on a client's shoulders"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+            </div>
           </section>
         ) : null}
 
         {services.length > 0 ? (
           <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
-            <h2 className="text-2xl font-black text-[#0c2d3a]">Massage services</h2>
-            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {services.map((s, idx) => (
-                <article
-                  key={`${idx}-${s.name}`}
-                  className="border border-stone-200 bg-stone-50 p-5 shadow-sm"
-                >
-                  <h3 className="text-lg font-black text-[#0c2d3a]">{s.name}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-stone-700">{s.desc}</p>
-                </article>
-              ))}
-            </div>
+            <ServicesGrid
+              data={{
+                published: true,
+                heading: "Massage services",
+                intro: "",
+                mode: "custom",
+                cards: services.map((s) => ({
+                  name: s.name,
+                  blurb: s.desc,
+                  imageUrl: ssMassagePhotoFor(s.name, photos),
+                  href: "",
+                })),
+              }}
+            />
+            <p className="mt-6 text-sm leading-relaxed text-stone-700">
+              Need more than soft-tissue work?{" "}
+              <Link href="/sulphur-springs" className="font-bold text-[#2980b9] underline">
+                Explore our chiropractic care
+              </Link>{" "}
+              — our massage and chiropractic teams coordinate care under one roof.
+            </p>
           </section>
+        ) : null}
+
+        <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
+          <h2 className="text-2xl font-black text-[#0c2d3a]">When to get a massage</h2>
+          <p className="mt-4 max-w-3xl leading-relaxed text-stone-700">{MASSAGE.whenBody}</p>
+        </section>
+
+        {therapists.length > 0 ? (
+          <MassageTeamGrid
+            members={therapists}
+            title="Meet the team"
+            subtitle="Licensed massage therapists in Sulphur Springs"
+            variant="service"
+            accent="sulphur"
+            footnote={
+              <>
+                For our chiropractor, front desk, and rehab team, see{" "}
+                <Link
+                  href="/sulphur-springs/staff"
+                  className="font-bold text-[#2980b9] underline"
+                >
+                  About us — Sulphur Springs
+                </Link>
+                .
+              </>
+            }
+          />
         ) : null}
 
         <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
@@ -115,6 +186,12 @@ export default async function SulphurSpringsMassagePage() {
               variant="teal"
             />
             <Link
+              href="/sulphur-springs/massage/prices"
+              className="focus-ring border-2 border-[#2980b9] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#2980b9] hover:bg-[#0c2d3a]/5"
+            >
+              View prices
+            </Link>
+            <Link
               href="/sulphur-springs"
               className="focus-ring border-2 border-[#2980b9] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#2980b9] hover:bg-[#0c2d3a]/5"
             >
@@ -124,6 +201,16 @@ export default async function SulphurSpringsMassagePage() {
         </section>
 
         <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
+
+        <ScheduleCtaCard
+          title="Have a question first?"
+          body="Our front desk can verify available times and answer questions about specific conditions."
+          variant="sulphur"
+          secondary={{
+            label: `Call ${ss.phonePrimary}`,
+            href: telHref(ss.phonePrimary),
+          }}
+        />
       </div>
     </div>
   );

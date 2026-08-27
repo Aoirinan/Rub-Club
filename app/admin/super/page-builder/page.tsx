@@ -10,7 +10,9 @@ function PageBuilderInner() {
   const searchParams = useSearchParams();
   const pageParam = searchParams.get("page");
   const scopeParam = searchParams.get("scope");
-  const initialScope = scopeParam ?? pageParam ?? "home";
+  // Left undefined when absent so a bare ?office= can pick the starting list.
+  const initialScope = scopeParam ?? pageParam ?? undefined;
+  const initialOffice = searchParams.get("office") ?? undefined;
 
   const [user, setUser] = useState<User | null>(null);
 
@@ -32,7 +34,13 @@ function PageBuilderInner() {
     );
   }
 
-  return <StructuredSiteEditor getIdToken={getIdToken} initialScope={initialScope} />;
+  return (
+    <StructuredSiteEditor
+      getIdToken={getIdToken}
+      initialScope={initialScope}
+      initialOffice={initialOffice}
+    />
+  );
 }
 
 export default function PageBuilderPage() {

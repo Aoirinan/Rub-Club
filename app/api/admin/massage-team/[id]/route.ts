@@ -14,7 +14,7 @@ import {
   uploadMassageTeamPhoto,
 } from "@/lib/massage-team-upload";
 import { requireStaff } from "@/lib/staff-auth";
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 export const runtime = "nodejs";
 
@@ -26,12 +26,16 @@ const patchJsonSchema = z.object({
   role: z.string().max(120).nullable().optional(),
   photoUrl: httpsUrl.optional(),
   sortOrder: z.number().optional(),
+  active: z.boolean().optional(),
 });
 
 type Params = { params: Promise<{ id: string }> };
 
 function bumpCache(): void {
   revalidateTag(MASSAGE_TEAM_CACHE_TAG);
+  // Hiding a therapist has to reach the rendered pages, not just the data tag.
+  revalidatePath("/");
+  revalidatePath("/services/massage");
 }
 
 export async function PATCH(req: Request, ctx: Params) {
@@ -87,6 +91,9 @@ export async function PATCH(req: Request, ctx: Params) {
     }
     if (typeof sortOrder === "number" && Number.isFinite(sortOrder)) {
       updates.sortOrder = sortOrder;
+    }
+    if (form.has("active")) {
+      updates.active = String(form.get("active") ?? "") === "true";
     }
 
     if (file instanceof File && file.size > 0) {
@@ -157,6 +164,7 @@ export async function PATCH(req: Request, ctx: Params) {
     updates.photoStoragePath = FieldValue.delete();
   }
   if (body.sortOrder !== undefined) updates.sortOrder = body.sortOrder;
+  if (body.active !== undefined) updates.active = body.active;
 
   if (Object.keys(updates).length <= 2) {
     return NextResponse.json({ error: "No changes" }, { status: 400 });
