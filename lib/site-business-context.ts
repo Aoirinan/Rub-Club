@@ -47,6 +47,10 @@ const SHARED_PATH_PREFIXES = [
   // current brand color instead of forcing Paris.
   "/services/chiropractic/wellness-care-plans",
   "/services/massage/prices",
+  // Staff pages (sign-in, scheduler) are reached from either site's footer:
+  // keep the visitor's brand rather than snapping back to Paris.
+  "/admin",
+  "/superadmin",
 ] as const;
 
 export function isSharedPathname(pathname: string): boolean {

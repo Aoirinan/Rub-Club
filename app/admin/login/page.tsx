@@ -108,9 +108,9 @@ export default function AdminLoginPage() {
   return (
     <div className="bg-[#f4f2ea]">
       <div className="mx-auto max-w-md space-y-6 px-4 py-16">
-        <div className="border-t-4 border-[#c0392b] bg-white p-6 text-center shadow-md">
-          <p className="text-sm font-black uppercase tracking-[0.22em] text-[#c0392b]">Staff Login</p>
-          <h1 className="mt-2 text-2xl font-black text-[#4a1515]">Staff sign-in</h1>
+        <div className="border-t-4 border-[var(--login-accent,#c0392b)] bg-white p-6 text-center shadow-md">
+          <p className="text-sm font-black uppercase tracking-[0.22em] text-[var(--login-accent,#c0392b)]">Staff Login</p>
+          <h1 className="mt-2 text-2xl font-black text-[var(--login-heading,#4a1515)]">Staff sign-in</h1>
           <p className="mt-2 text-sm text-stone-700">
             Use the email and password your administrator created for you. If you were just invited,
             open the link in your invite email to set your password first.
@@ -121,9 +121,9 @@ export default function AdminLoginPage() {
           </p>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4 border-t-4 border-[#c0392b] bg-white p-6 shadow-md">
+        <form onSubmit={onSubmit} className="space-y-4 border-t-4 border-[var(--login-accent,#c0392b)] bg-white p-6 shadow-md">
           <label className="block space-y-1 text-sm">
-            <span className="font-bold text-[#4a1515]">Email</span>
+            <span className="font-bold text-[var(--login-heading,#4a1515)]">Email</span>
             <input
               className="w-full border border-stone-300 px-3 py-2"
               value={email}
@@ -133,7 +133,7 @@ export default function AdminLoginPage() {
             />
           </label>
           <label className="block space-y-1 text-sm">
-            <span className="font-bold text-[#4a1515]">Password</span>
+            <span className="font-bold text-[var(--login-heading,#4a1515)]">Password</span>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -145,7 +145,7 @@ export default function AdminLoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#c0392b] underline"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-[var(--login-accent,#c0392b)] underline"
                 aria-pressed={showPassword}
               >
                 {showPassword ? "Hide" : "Show"}
@@ -158,7 +158,7 @@ export default function AdminLoginPage() {
                 Enter your staff email and we&apos;ll send a reset link when an account exists.{" "}
                 <button
                   type="button"
-                  className="font-semibold text-[#c0392b] underline"
+                  className="font-semibold text-[var(--login-accent,#c0392b)] underline"
                   onClick={() => {
                     setShowForgot(false);
                     setForgotMessage(null);
@@ -172,7 +172,7 @@ export default function AdminLoginPage() {
                 Forgot your password?{" "}
                 <button
                   type="button"
-                  className="font-semibold text-[#c0392b] underline"
+                  className="font-semibold text-[var(--login-accent,#c0392b)] underline"
                   onClick={() => {
                     setShowForgot(true);
                     setForgotMessage(null);
@@ -191,7 +191,7 @@ export default function AdminLoginPage() {
                 type="button"
                 disabled={forgotBusy || !email.trim()}
                 onClick={() => void requestPasswordReset()}
-                className="w-full border border-[#c0392b] bg-white py-2 text-sm font-bold uppercase tracking-wide text-[#c0392b] hover:bg-[#fdf6f5] disabled:opacity-50"
+                className="w-full border border-[var(--login-accent,#c0392b)] bg-white py-2 text-sm font-bold uppercase tracking-wide text-[var(--login-accent,#c0392b)] hover:bg-[var(--login-tint,#fdf6f5)] disabled:opacity-50"
               >
                 {forgotBusy ? "Sending…" : "Email reset link"}
               </button>
@@ -214,7 +214,7 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={busy}
-            className="w-full bg-[#c0392b] py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[#962d22] disabled:opacity-50"
+            className="w-full bg-[var(--login-accent,#c0392b)] py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[var(--login-accent-hover,#962d22)] disabled:opacity-50"
           >
             {busy ? "Signing in…" : "Sign in"}
           </button>
@@ -223,7 +223,7 @@ export default function AdminLoginPage() {
         <div className="space-y-2 border-t border-stone-300 pt-4 text-center text-xs text-stone-600">
           <p>For Chiropractic Associates staff only. Unauthorized access is prohibited.</p>
           <p>
-            <Link href="/website-privacy" className="font-semibold text-[#c0392b] underline">
+            <Link href="/website-privacy" className="font-semibold text-[var(--login-accent,#c0392b)] underline">
               Website privacy &amp; cookies
             </Link>
           </p>
