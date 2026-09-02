@@ -22,7 +22,11 @@ export async function GET(req: Request) {
 
   const db = getFirestore();
   await ensureSchedulerServicesSeeded(db);
-  let services = (await fetchAllSchedulerServices(db)).filter(isCustomerVisibleService);
+  // The public wizard books on a 30-minute slot grid; a service whose length is
+  // not a multiple of 30 cannot be offered online (the slot API rejects it).
+  let services = (await fetchAllSchedulerServices(db)).filter(
+    (s) => isCustomerVisibleService(s) && s.durationMinutes % 30 === 0,
+  );
   if (serviceLine) {
     services = services.filter((s) => schedulerServiceMatchesLine(s, serviceLine));
   }

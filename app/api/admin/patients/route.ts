@@ -15,7 +15,7 @@ import {
 export const runtime = "nodejs";
 
 const createSchema = z.object({
-  firstName: z.string().min(1).max(80),
+  firstName: z.string().trim().min(1).max(80),
   lastName: z.string().max(80).optional(),
   phone: z.string().min(7).max(40),
   email: z.string().max(200).optional(),

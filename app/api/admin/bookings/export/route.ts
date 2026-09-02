@@ -9,8 +9,10 @@ import { TIME_ZONE } from "@/lib/constants";
 
 export const runtime = "nodejs";
 
+const EXPORT_LIMIT = 5000;
+
 export async function GET(req: Request) {
-  const staff = await requireStaff(req.headers.get("authorization"), "front_desk");
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -20,13 +22,16 @@ export async function GET(req: Request) {
   const toStr = searchParams.get("to");
   const statusStr = searchParams.get("status");
   const locationId = searchParams.get("locationId");
+  const providerId = searchParams.get("providerId");
+  const q = searchParams.get("q");
 
-  const from = fromStr
-    ? Timestamp.fromMillis(Date.parse(fromStr))
-    : Timestamp.fromMillis(Date.now() - 90 * 24 * 60 * 60 * 1000);
-  const to = toStr
-    ? Timestamp.fromMillis(Date.parse(toStr))
-    : Timestamp.fromMillis(Date.now() + 90 * 24 * 60 * 60 * 1000);
+  const fromMs = fromStr ? Date.parse(fromStr) : Date.now() - 90 * 24 * 60 * 60 * 1000;
+  const toMs = toStr ? Date.parse(toStr) : Date.now() + 90 * 24 * 60 * 60 * 1000;
+  if (!Number.isFinite(fromMs) || !Number.isFinite(toMs)) {
+    return NextResponse.json({ error: "Invalid date range." }, { status: 400 });
+  }
+  const from = Timestamp.fromMillis(fromMs);
+  const to = Timestamp.fromMillis(toMs);
 
   const statuses: BookingStatus[] = statusStr
     ? statusStr.split(",").map((s) => s.trim()).filter(isBookingStatus)
@@ -38,12 +43,14 @@ export async function GET(req: Request) {
     .where("startAt", ">=", from)
     .where("startAt", "<=", to)
     .orderBy("startAt", "asc")
-    .limit(5000)
+    .limit(EXPORT_LIMIT)
     .get();
 
   const csv = buildBookingsExportCsv(snap.docs, {
     statuses,
     locationId: locationId || null,
+    providerId: providerId || null,
+    q: q || null,
   });
   const filename = `bookings-export-${DateTime.now().setZone(TIME_ZONE).toFormat("yyyy-LL-dd")}.csv`;
 
@@ -51,6 +58,8 @@ export async function GET(req: Request) {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${filename}"`,
+      // Set when the date range held more rows than the export limit.
+      ...(snap.size >= EXPORT_LIMIT ? { "X-Export-Truncated": "1" } : {}),
     },
   });
 }

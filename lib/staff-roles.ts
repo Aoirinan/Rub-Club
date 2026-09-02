@@ -53,6 +53,19 @@ export function canAssignRole(actor: StaffRole, target: StaffRole): boolean {
   return staffMeetsMin(actor, "manager");
 }
 
+/**
+ * Whether `actor` may change or remove a staff member whose *current* role is
+ * `targetCurrentRole`. Only superadmins may touch an existing superadmin.
+ */
+export function canModifyStaffMember(
+  actor: StaffRole,
+  targetCurrentRole: StaffRole | null,
+): boolean {
+  if (!staffMeetsMin(actor, "manager")) return false;
+  if (targetCurrentRole === "superadmin") return actor === "superadmin";
+  return true;
+}
+
 export const STAFF_ROLE_OPTIONS: {
   value: StaffRole;
   label: string;

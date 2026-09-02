@@ -9,6 +9,7 @@ import {
   STAFF_ROLES,
   STAFF_LOCATION_SCOPES,
   canAssignRole,
+  canModifyStaffMember,
   normalizeStaffRole,
   normalizeStaffLocationScope,
   staffMeetsMin,
@@ -77,11 +78,30 @@ export async function POST(req: Request) {
     );
   }
 
+  const db = getFirestore();
+  const existingSnap = await db.collection("staff").doc(uid).get();
+  const existingRole = existingSnap.exists ? normalizeStaffRole(existingSnap.get("role")) : null;
+  if (!canModifyStaffMember(staff.role, existingRole)) {
+    return NextResponse.json(
+      { error: "Only a superadmin can change another superadmin's access." },
+      { status: 403 },
+    );
+  }
+  if (existingRole === "superadmin" && parsed.data.role !== "superadmin") {
+    const superadmins = await db.collection("staff").where("role", "==", "superadmin").limit(50).get();
+    if (superadmins.size <= 1) {
+      return NextResponse.json(
+        { error: "Cannot demote the last superadmin. Promote another superadmin first." },
+        { status: 400 },
+      );
+    }
+  }
+
   const linkedProviderId =
     parsed.data.role === "massage_therapist" ? parsed.data.linkedProviderId!.trim() : undefined;
   const locationScope = normalizeStaffLocationScope(parsed.data.locationScope);
 
-  await getFirestore()
+  await db
     .collection("staff")
     .doc(uid)
     .set(
@@ -97,7 +117,7 @@ export async function POST(req: Request) {
     );
 
   if (parsed.data.role !== "massage_therapist") {
-    await getFirestore().collection("staff").doc(uid).update({ linkedProviderId: FieldValue.delete() });
+    await db.collection("staff").doc(uid).update({ linkedProviderId: FieldValue.delete() });
   }
 
   return NextResponse.json({ ok: true, uid, role: parsed.data.role });
@@ -143,6 +163,12 @@ export async function DELETE(req: Request) {
   }
 
   const targetRole = normalizeStaffRole(targetSnap.get("role"));
+  if (!canModifyStaffMember(actor.role, targetRole)) {
+    return NextResponse.json(
+      { error: "Only a superadmin can remove another superadmin." },
+      { status: 403 },
+    );
+  }
   if (targetRole === "superadmin") {
     const superadmins = await db.collection("staff").where("role", "==", "superadmin").limit(50).get();
     if (superadmins.size <= 1) {

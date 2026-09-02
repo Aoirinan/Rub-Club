@@ -114,6 +114,7 @@ export function buildDefaultNavItems(
           ],
           fax: paris.fax,
           mapsUrl: paris.mapsUrl,
+          contactHref: "/contact",
         };
         const ssClinic = {
           name: "Sulphur Springs (second location)",
@@ -121,6 +122,7 @@ export function buildDefaultNavItems(
           phones: [{ label: "Office", number: sulphur.phonePrimary }],
           fax: sulphur.fax,
           mapsUrl: sulphur.mapsUrl,
+          contactHref: "/sulphur-springs/contact",
         };
         return onSulphur ? [ssClinic, parisClinic] : [parisClinic, ssClinic];
       })(),

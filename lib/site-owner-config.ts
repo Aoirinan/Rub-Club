@@ -1,5 +1,8 @@
+import { createHash } from "node:crypto";
 import { FieldValue, type Firestore } from "firebase-admin/firestore";
+import { DateTime } from "luxon";
 import { mergeBusinessNavigationConfig } from "@/lib/business-nav-defaults";
+import { TIME_ZONE } from "@/lib/constants";
 import { getFirestore } from "@/lib/firebase-admin";
 import {
   mergeHeaderColors,
@@ -212,8 +215,22 @@ export async function setSiteOwnerConfigPatch(
 export function bannerIsActivePublic(banner: BannerConfig, now: Date = new Date()): boolean {
   if (!banner.enabled || !banner.html.trim()) return false;
   if (!banner.expiresAt) return true;
-  const end = new Date(banner.expiresAt);
-  if (Number.isNaN(end.getTime())) return true;
-  end.setHours(23, 59, 59, 999);
-  return now <= end;
+  // The expiry is a calendar date chosen by the office; treat it as end of that
+  // day in the clinic's time zone (not UTC midnight + server-local hours).
+  const raw = banner.expiresAt.trim();
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(raw);
+  const end = dateOnly
+    ? DateTime.fromISO(raw, { zone: TIME_ZONE }).endOf("day")
+    : DateTime.fromISO(raw, { zone: TIME_ZONE });
+  if (!end.isValid) return true;
+  return now.getTime() <= end.toMillis();
+}
+
+/**
+ * Key under which a visitor's banner dismissal is remembered. Changes whenever
+ * the banner text or expiry changes, so an edited banner shows again.
+ */
+export function bannerDismissKey(banner: Pick<BannerConfig, "html" | "expiresAt">): string {
+  const digest = createHash("sha256").update(banner.html).digest("hex").slice(0, 12);
+  return `${digest}_${banner.expiresAt ?? "x"}`;
 }

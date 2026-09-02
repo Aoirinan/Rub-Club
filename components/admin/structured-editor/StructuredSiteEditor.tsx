@@ -274,6 +274,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
       <div className="space-y-6">
         <HeaderLogoSizeEditor
           fields={cms.fields}
+          brands={scope === "ss-header" ? ["ss"] : ["chiro"]}
           busy={cms.busy}
           onSave={async (id, value) => {
             await cms.saveField(id, value);

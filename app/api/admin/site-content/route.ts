@@ -4,7 +4,6 @@ import {
   CONTENT_REGISTRY,
   DEFAULTS,
   SITE_CONTENT_COLLECTION,
-  getContentMany,
 } from "@/lib/cms";
 import { requireStaff } from "@/lib/staff-auth";
 
@@ -16,22 +15,24 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const ids = CONTENT_REGISTRY.map((f) => f.id);
-  const values = await getContentMany(ids);
+  // One collection read instead of two document reads per registry id.
   const db = getFirestore();
-  const metaSnaps = await Promise.all(
-    ids.map((id) => db.collection(SITE_CONTENT_COLLECTION).doc(id).get()),
-  );
+  const snap = await db.collection(SITE_CONTENT_COLLECTION).get();
+  const docs = new Map(snap.docs.map((d) => [d.id, d.data()] as const));
 
-  const fields = CONTENT_REGISTRY.map((field, i) => {
-    const snap = metaSnaps[i];
-    const data = snap.data();
+  const fields = CONTENT_REGISTRY.map((field) => {
+    const data = docs.get(field.id);
+    const stored = data?.value;
+    const value =
+      data !== undefined
+        ? (typeof stored === "string" ? stored : DEFAULTS[field.id]) || ""
+        : DEFAULTS[field.id] ?? "";
     return {
       ...field,
-      value: values[field.id] ?? "",
+      value,
       updatedAt: data?.updatedAt?.toDate?.()?.toISOString() ?? null,
       updatedBy: typeof data?.updatedBy === "string" ? data.updatedBy : null,
-      hasFirestoreDoc: snap.exists,
+      hasFirestoreDoc: data !== undefined,
     };
   });
 

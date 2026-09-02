@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireStaff } from "@/lib/staff-auth";
 import { uploadSiteContentMedia } from "@/lib/cms-upload";
+import { resolveMassageTeamImageContentType } from "@/lib/massage-team-upload";
 
 export const runtime = "nodejs";
 
@@ -24,15 +25,21 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   if (file.size > MAX_BYTES) {
     return NextResponse.json({ error: "File too large (max 12MB)" }, { status: 400 });
   }
-  if (!file.type.startsWith("image/")) {
-    return NextResponse.json({ error: "Images only" }, { status: 400 });
+  const safeId = id.replace(/[^a-zA-Z0-9_-]/g, "");
+  if (!safeId) {
+    return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
+  // Some browsers send an empty File.type for valid JPEGs: sniff magic bytes.
+  const contentType = resolveMassageTeamImageContentType(file.type, buffer);
+  if (!contentType) {
+    return NextResponse.json({ error: "Unsupported image type. Use JPEG, PNG, or WebP." }, { status: 400 });
+  }
   try {
     const url = await uploadSiteContentMedia({
-      fieldId: `stretch_flex/${id}`,
-      contentType: file.type,
+      fieldId: `stretch_flex/${safeId}`,
+      contentType,
       buffer,
       originalFilename: file.name || "photo",
     });

@@ -33,7 +33,12 @@ function safeContinuePath(raw: string | null): string {
   if (!raw) return "/auth/password-reset-complete";
   try {
     const url = new URL(raw);
-    if (url.pathname.startsWith("/")) return url.pathname;
+    const path = url.pathname;
+    // Must be a single-slash absolute path: "//evil.com" or backslashes would
+    // be treated as a protocol-relative URL by location.assign.
+    if (path.startsWith("/") && !path.startsWith("//") && !path.includes("\\")) {
+      return path;
+    }
   } catch {
     /* ignore */
   }

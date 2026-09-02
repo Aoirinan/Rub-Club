@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authorizeCronRequest } from "@/lib/cron-auth";
 import { Timestamp } from "firebase-admin/firestore";
 import { DateTime } from "luxon";
 import { getFirestore } from "@/lib/firebase-admin";
@@ -16,23 +17,8 @@ export const runtime = "nodejs";
  * booking (guarded by `survey_sent` events).
  */
 export async function GET(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET?.trim();
-  const isVercelProduction = process.env.VERCEL_ENV === "production";
-
-  if (isVercelProduction) {
-    if (!cronSecret) {
-      return NextResponse.json(
-        { error: "CRON_SECRET must be set for production cron." },
-        { status: 503 },
-      );
-    }
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-  } else if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = await authorizeCronRequest(req);
+  if (denied) return denied;
 
   const db = getFirestore();
   const now = DateTime.now().setZone(TIME_ZONE);
@@ -98,12 +84,17 @@ export async function GET(req: Request) {
 
     try {
       const { subject, text, html } = postVisitSurveyEmail(emailCtx);
-      await sendBookingNotification({
+      const delivered = await sendBookingNotification({
         to: emailCtx.email,
         subject,
         text,
         html,
       });
+      if (!delivered) {
+        // Don't record survey_sent: leave the booking eligible for the next run.
+        errors.push(`${doc.id}: email provider did not accept the message`);
+        continue;
+      }
       await recordBookingEvent(db, doc.id, {
         type: "survey_sent",
         byUid: null,

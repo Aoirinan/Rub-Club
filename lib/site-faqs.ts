@@ -16,6 +16,9 @@ export async function getActiveFaqs(): Promise<FaqEntry[]> {
   try {
     const snap = await getFirestore().collection(SITE_FAQS_COLLECTION).get();
     if (snap.empty) return [...FAQS];
+    // Built-in FAQs are only a fallback for a site that has never stored any
+    // Paris FAQ. Once any exist, an all-hidden list renders empty ("hide all").
+    let stored = 0;
     const rows = snap.docs
       .map((d) => {
         const data = d.data();
@@ -24,13 +27,14 @@ export async function getActiveFaqs(): Promise<FaqEntry[]> {
         const category = typeof data.category === "string" ? data.category : "general";
         const order = typeof data.order === "number" ? data.order : 0;
         const active = data.active !== false;
-        if (!active || !q.trim() || !a.trim()) return null;
         if (category === "sulphur-springs") return null;
+        stored += 1;
+        if (!active || !q.trim() || !a.trim()) return null;
         return { q, a, order };
       })
       .filter((r): r is { q: string; a: string; order: number } => r !== null)
       .sort((a, b) => a.order - b.order);
-    if (rows.length === 0) return [...FAQS];
+    if (stored === 0) return [...FAQS];
     return rows.map(({ q, a }) => ({ q, a }));
   } catch {
     return [...FAQS];
@@ -41,11 +45,13 @@ export async function getActiveFaqs(): Promise<FaqEntry[]> {
 export async function getSulphurSpringsFaqs(): Promise<FaqEntry[]> {
   try {
     const snap = await getFirestore().collection(SITE_FAQS_COLLECTION).get();
+    let stored = 0;
     const rows = snap.docs
       .map((d) => {
         const data = d.data();
         const category = typeof data.category === "string" ? data.category : "";
         if (category !== "sulphur-springs") return null;
+        stored += 1;
         const q = typeof data.question === "string" ? data.question : "";
         const a = typeof data.answer === "string" ? data.answer : "";
         const order = typeof data.order === "number" ? data.order : 0;
@@ -55,7 +61,7 @@ export async function getSulphurSpringsFaqs(): Promise<FaqEntry[]> {
       })
       .filter((r): r is { q: string; a: string; order: number } => r !== null)
       .sort((a, b) => a.order - b.order);
-    if (rows.length === 0) return [...SS_QA];
+    if (stored === 0) return [...SS_QA];
     return rows.map(({ q, a }) => ({ q, a }));
   } catch {
     return [...SS_QA];

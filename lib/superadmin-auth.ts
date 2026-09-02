@@ -33,6 +33,23 @@ function timingSafeEqualBase64Url(a: string, b: string): boolean {
   return out === 0;
 }
 
+/**
+ * Constant-time comparison of two secrets (password, shared secret). Hashes both
+ * sides first so the comparison length does not leak the secret's length.
+ */
+export async function secretsMatch(provided: string, expected: string): Promise<boolean> {
+  if (!provided || !expected) return false;
+  const [a, b] = await Promise.all([
+    crypto.subtle.digest("SHA-256", textEncoder.encode(provided)),
+    crypto.subtle.digest("SHA-256", textEncoder.encode(expected)),
+  ]);
+  const av = new Uint8Array(a);
+  const bv = new Uint8Array(b);
+  let out = 0;
+  for (let i = 0; i < av.length; i++) out |= av[i] ^ bv[i];
+  return out === 0;
+}
+
 export async function signSuperadminSession(): Promise<string | null> {
   const pw = adminPassword();
   if (!pw) return null;
@@ -65,7 +82,15 @@ export function parseCookieHeader(cookieHeader: string | null, name: string): st
   const parts = cookieHeader.split(";").map((s) => s.trim());
   const prefix = `${name}=`;
   for (const p of parts) {
-    if (p.startsWith(prefix)) return decodeURIComponent(p.slice(prefix.length));
+    if (p.startsWith(prefix)) {
+      const raw = p.slice(prefix.length);
+      try {
+        return decodeURIComponent(raw);
+      } catch {
+        // Malformed percent-encoding: treat as absent rather than throwing.
+        return null;
+      }
+    }
   }
   return null;
 }

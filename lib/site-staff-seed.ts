@@ -51,7 +51,7 @@ export async function buildSiteStaffSeedRows(): Promise<SiteStaffSeedRow[]> {
   PARIS_OFFICE_STAFF_SEED.forEach((member, index) => {
     const name = cms[parisStaffNameId(member.id)]?.trim() || member.name;
     const title = cms[parisStaffRoleId(member.id)]?.trim() || member.role;
-    const bio = cms[parisStaffBioId(member.id)]?.trim() ?? member.bio;
+    const bio = cms[parisStaffBioId(member.id)]?.trim() || member.bio;
     const photo =
       cms[parisStaffPhotoId(member.id)]?.trim() || PARIS_STAFF_IMAGES[member.imageKey] || "";
     rows.push({
@@ -70,7 +70,7 @@ export async function buildSiteStaffSeedRows(): Promise<SiteStaffSeedRow[]> {
   SS_STAFF_SEED.forEach((member, index) => {
     const name = cms[ssStaffNameId(member.id)]?.trim() || member.name;
     const title = cms[ssStaffRoleId(member.id)]?.trim() || member.role;
-    const bio = cms[ssStaffBioId(member.id)]?.trim() ?? member.bio;
+    const bio = cms[ssStaffBioId(member.id)]?.trim() || member.bio;
     const photo = cms[ssStaffPhotoId(member.id)]?.trim() || member.image || "";
     rows.push({
       name,

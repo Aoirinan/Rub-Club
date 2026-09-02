@@ -40,11 +40,13 @@ export function bucketDocIdsForAppointment(
 
 /**
  * Build the 30-minute slot starts a duration covers, e.g. 60 min at 09:00
- * yields [09:00, 09:30]. Always returns at least one slot.
+ * yields [09:00, 09:30]. Partial slots round UP (40 min blocks two slots) so
+ * the tail of an appointment is never left bookable. Always returns at least
+ * one slot.
  */
 export function enumerateThirtyMinuteStarts(start: DateTime, durationMin: number): DateTime[] {
   const z = start.setZone(TIME_ZONE).startOf("minute");
-  const count = Math.max(1, Math.round(durationMin / 30));
+  const count = Math.max(1, Math.ceil(durationMin / 30));
   const out: DateTime[] = [];
   for (let i = 0; i < count; i++) out.push(z.plus({ minutes: i * 30 }));
   return out;

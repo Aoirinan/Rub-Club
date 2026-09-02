@@ -19,8 +19,12 @@ export async function ServicePageVisualSection({
   renderBlock,
 }: Props) {
   const blockOrder = blockOrderFromVisual(visual, pageId);
-  const fallbackOrder = await getPageBlockOrder(pageId);
-  const order = blockOrder.length > 0 ? blockOrder : fallbackOrder;
+  const hasEmbedLayers = visual.layers.some(
+    (l) => l.type === "embed" && l.blockId && l.blockId !== HERO_BLOCK_ID,
+  );
+  // The stored page layout is only the fallback when the visual layout has no
+  // embed layers; an all-hidden visual layout must render no blocks.
+  const order = hasEmbedLayers ? blockOrder : await getPageBlockOrder(pageId);
 
   const embedLayers = visual.layers.filter(
     (l) =>

@@ -202,7 +202,13 @@ export async function POST(req: Request) {
     }
   }
 
-  if (createdIds.length > 0 && body.phone?.trim() && body.sendFirstTimeNotification !== false) {
+  // Pending (unconfirmed) bookings must not tell the patient the visit is scheduled.
+  if (
+    createdIds.length > 0 &&
+    status === "confirmed" &&
+    body.phone?.trim() &&
+    body.sendFirstTimeNotification !== false
+  ) {
     const phone = body.phone.trim();
     const primaryId = createdIds[0]!;
     const confirmToken = randomBytes(18).toString("hex");

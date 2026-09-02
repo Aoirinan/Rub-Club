@@ -296,6 +296,7 @@ export function BlockTimeDrawer({
 function scopeLabel(scope: Scope): string {
   if (scope === "all") return "all services";
   if (scope === "massage") return "massage";
+  if (scope === "stretch") return "stretch";
   return "chiropractic";
 }
 

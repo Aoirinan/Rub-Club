@@ -448,29 +448,28 @@ function mergeExtra(raw: unknown, d: PracticeExtra): PracticeExtra {
 }
 
 function mergeExtras(raw: unknown, d: PracticeExtra[]): PracticeExtra[] {
+  // No stored array yet: use the defaults. A stored array is authoritative —
+  // a default block the admin removed must stay removed (they can re-add it).
   if (!Array.isArray(raw)) return d;
-  const rawById = new Map<string, Record<string, unknown>>();
+  const defaultsById = new Map(d.map((def) => [def.id, def] as const));
+  const merged: PracticeExtra[] = [];
+  const seen = new Set<string>();
   for (const item of raw.filter(isRecord)) {
     const id = str(item.id, "");
-    if (id) rawById.set(id, item);
-  }
-  const merged = d.map((def) => mergeExtra(rawById.get(def.id), def));
-  const knownIds = new Set(d.map((e) => e.id));
-  for (const item of raw.filter(isRecord)) {
-    const id = str(item.id, "");
-    if (id && !knownIds.has(id)) {
-      merged.push(
-        mergeExtra(item, {
-          id,
-          published: true,
-          heading: "",
-          body: "",
-          ctaLabel: "",
-          ctaUrl: "",
-          links: [],
-        }),
-      );
-    }
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    const def = defaultsById.get(id);
+    merged.push(
+      mergeExtra(item, def ?? {
+        id,
+        published: true,
+        heading: "",
+        body: "",
+        ctaLabel: "",
+        ctaUrl: "",
+        links: [],
+      }),
+    );
   }
   return merged;
 }

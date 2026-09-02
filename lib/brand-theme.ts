@@ -1,7 +1,12 @@
+import { cache } from "react";
 import type { CSSProperties } from "react";
-import { getPracticePage } from "@/lib/practice-pages";
+import { getFirestore } from "@/lib/firebase-admin";
 import { PRACTICE_THEMES } from "@/components/practice/theme";
-import type { PracticeThemeColors } from "@/lib/practice-pages-shared";
+import {
+  PRACTICE_PAGES_COLLECTION,
+  type PracticeLocationId,
+  type PracticeThemeColors,
+} from "@/lib/practice-pages-shared";
 
 const HEX_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 
@@ -16,16 +21,28 @@ function pick(override: string | undefined, fallback: string): string {
  * Applied on <body> so generic subpages (PageHero bands, Book Now buttons,
  * contact forms, CTA cards) follow the same editable palette.
  */
-export async function getBrandThemeStyle(): Promise<CSSProperties> {
+async function readStoredTheme(loc: PracticeLocationId): Promise<Partial<PracticeThemeColors>> {
+  // Only the `theme` map is needed here: read the practice doc directly instead
+  // of building the full page (dozens of CMS reads) on every request.
+  const snap = await getFirestore().collection(PRACTICE_PAGES_COLLECTION).doc(loc).get();
+  const raw = snap.exists ? snap.get("theme") : null;
+  if (!raw || typeof raw !== "object") return {};
+  const out: Partial<PracticeThemeColors> = {};
+  for (const key of ["heading", "accent", "accentHover", "ctaBg", "ctaHover"] as const) {
+    const v = (raw as Record<string, unknown>)[key];
+    if (typeof v === "string") out[key] = v;
+  }
+  return out;
+}
+
+export const getBrandThemeStyle = cache(async function getBrandThemeStyle(): Promise<CSSProperties> {
   let paris: Partial<PracticeThemeColors> = {};
   let ss: Partial<PracticeThemeColors> = {};
   try {
-    const [p, s] = await Promise.all([
-      getPracticePage("paris-home"),
-      getPracticePage("sulphur-springs"),
+    [paris, ss] = await Promise.all([
+      readStoredTheme("paris-home"),
+      readStoredTheme("sulphur-springs"),
     ]);
-    paris = p.theme ?? {};
-    ss = s.theme ?? {};
   } catch {
     // Firestore unavailable: fall back to the default palettes.
   }
@@ -43,4 +60,4 @@ export async function getBrandThemeStyle(): Promise<CSSProperties> {
     "--brand-ss-cta": pick(ss.ctaBg, sd.ctaBg),
     "--brand-ss-cta-hover": pick(ss.ctaHover, sd.ctaHover),
   } as CSSProperties;
-}
+});

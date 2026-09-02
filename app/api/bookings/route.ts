@@ -80,7 +80,7 @@ const bodySchema = z
   });
 
 export async function POST(req: Request) {
-  const rl = await assertRateLimitOk(req.headers);
+  const rl = await assertRateLimitOk(req.headers, { bucket: "booking" });
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many requests. Try again soon." },
@@ -140,20 +140,28 @@ export async function POST(req: Request) {
     if (t < now.plus({ minutes: 2 })) {
       return NextResponse.json({ error: "Start time is in the past" }, { status: 400 });
     }
-    if (t > now.plus({ days: 90 })) {
-      return NextResponse.json({ error: "Start time is too far out" }, { status: 400 });
-    }
+  }
+  // Only the first visit must fall inside the booking window; later occurrences
+  // of a weekly series are allowed to run past it.
+  if (start > now.plus({ days: 90 })) {
+    return NextResponse.json({ error: "Start time is too far out" }, { status: 400 });
   }
 
   const locationId = body.locationId as LocationId;
   const serviceLine = body.serviceLine as ServiceLine;
-  const visitKind: "massage" | "stretch" =
-    serviceLine === "stretch" || body.visitKind === "stretch" ? "stretch" : "massage";
+  const visitKind: "massage" | "stretch" | "chiropractic" =
+    serviceLine === "stretch" || body.visitKind === "stretch"
+      ? "stretch"
+      : serviceLine === "chiropractic"
+        ? "chiropractic"
+        : "massage";
 
   const db = getFirestore();
   const durationMin = body.durationMin;
   let schedulerServiceId: string | undefined;
   let serviceTypeName: string | undefined;
+  let bufferBeforeMinutes = 0;
+  let bufferAfterMinutes = 0;
   if (body.schedulerServiceId?.trim()) {
     const svc = await fetchSchedulerServiceById(db, body.schedulerServiceId.trim());
     if (
@@ -171,10 +179,17 @@ export async function POST(req: Request) {
     }
     schedulerServiceId = svc.id;
     serviceTypeName = svc.name;
+    bufferBeforeMinutes = svc.bufferBeforeMinutes;
+    bufferAfterMinutes = svc.bufferAfterMinutes;
   }
-  const publicServiceFields = schedulerServiceId
-    ? { schedulerServiceId, serviceTypeName: serviceTypeName ?? "" }
-    : {};
+  // Same buffer handling as admin inserts: block the service's buffers and
+  // denormalize them on the booking so reschedules keep them.
+  const buffers = { bufferBeforeMinutes, bufferAfterMinutes };
+  const publicServiceFields = {
+    ...(schedulerServiceId ? { schedulerServiceId, serviceTypeName: serviceTypeName ?? "" } : {}),
+    ...(bufferBeforeMinutes > 0 ? { bufferBeforeMinutes } : {}),
+    ...(bufferAfterMinutes > 0 ? { bufferAfterMinutes } : {}),
+  };
   const eligible = await fetchActiveProvidersForPublicBooking(db, locationId, serviceLine, {
     publicBooking: true,
   });
@@ -237,6 +252,7 @@ export async function POST(req: Request) {
           assignedProviderId,
           thisStart,
           durationMin,
+          buffers,
         );
         const holdIds = holdBucketIdsForPublicBooking(locationId, serviceLine, thisStart, durationMin);
         await db.runTransaction(async (tx) => {
@@ -319,7 +335,7 @@ export async function POST(req: Request) {
           const bucketRefsByProvider: { id: string; name: string; refs: DocumentReference[] }[] = [];
           for (const p of tryOrder) {
             if (!providerAllowsAppointmentTime(p, thisStart, durationMin)) continue;
-            const ids = bucketDocIdsForAppointment(locationId, p.id, thisStart, durationMin);
+            const ids = bucketDocIdsForAppointment(locationId, p.id, thisStart, durationMin, buffers);
             const refs = ids.map((id) => db.collection("slot_buckets").doc(id));
             bucketRefsByProvider.push({ id: p.id, name: p.displayName, refs });
           }
@@ -336,7 +352,13 @@ export async function POST(req: Request) {
           assignedProviderId = picked.id;
           assignedDisplayName = picked.name;
 
-          const bucketIds = bucketDocIdsForAppointment(locationId, assignedProviderId, thisStart, durationMin);
+          const bucketIds = bucketDocIdsForAppointment(
+            locationId,
+            assignedProviderId,
+            thisStart,
+            durationMin,
+            buffers,
+          );
           const startAt = Timestamp.fromDate(thisStart.toUTC().toJSDate());
 
           for (const ref of picked.refs) {
@@ -471,14 +493,14 @@ export async function POST(req: Request) {
 
   try {
     const { subject, text, html } = patientPendingEmail(emailContext, { recurrenceNote });
-    console.log("[booking] Sending patient confirmation to", emailContext.email);
+    console.log("[booking] Sending patient confirmation for", emailContext.bookingId);
     await sendBookingNotification({
       to: emailContext.email,
       subject,
       text,
       html,
     });
-    console.log("[booking] Patient email send completed for", emailContext.email);
+    console.log("[booking] Patient email send completed for", emailContext.bookingId);
   } catch (err) {
     console.error("Patient SendGrid failed", err);
   }

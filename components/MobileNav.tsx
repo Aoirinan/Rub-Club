@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { FACEBOOK_URL, INSTAGRAM_URL, telHref, type LocationInfo } from "@/lib/constants";
 import { track } from "@/lib/analytics";
 import type { NavItem } from "@/components/DesktopNav";
@@ -75,10 +76,12 @@ export function MobileNav({
         </svg>
       </button>
 
-      {open ? (
+      {/* Portaled to <body>: the sticky header is a stacking context (z-40), so the
+          drawer would otherwise render under the bottom call bar / a11y button. */}
+      {open && typeof document !== "undefined" ? createPortal(
         <div
           id="mobile-menu"
-          className="fixed inset-0 z-50 lg:hidden"
+          className="fixed inset-0 z-[110] lg:hidden"
           role="dialog"
           aria-modal="true"
           aria-label="Site navigation"
@@ -355,7 +358,8 @@ export function MobileNav({
               </Link>
             </nav>
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </>
   );

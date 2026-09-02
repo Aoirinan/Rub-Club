@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { LOCATIONS, telHref } from "@/lib/constants";
 
@@ -93,7 +94,9 @@ export function BookingCta({ label, className, variant = "default", brand, child
       <button type="button" className={classes} onClick={() => setOpen(true)} aria-label={label}>
         {children ?? label}
       </button>
-      {open ? (
+      {/* Portaled to <body>: the sticky header is a stacking context (z-40), so a
+          modal rendered inside it would sit under body-level sticky bars. */}
+      {open && typeof document !== "undefined" ? createPortal(
         <div
           className="fixed inset-0 z-[120] flex items-center justify-center bg-black/55 p-4"
           role="dialog"
@@ -126,7 +129,8 @@ export function BookingCta({ label, className, variant = "default", brand, child
               Close
             </button>
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </>
   );

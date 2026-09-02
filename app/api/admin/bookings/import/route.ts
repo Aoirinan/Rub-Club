@@ -8,6 +8,7 @@ import { buildColMap, parseColumnMapJson } from "@/lib/csv-import-columns";
 import { parseCsvRows } from "@/lib/csv-parse";
 import { isAlignedToSlotGrid, parseStartIsoToDateTime } from "@/lib/slots-luxon";
 import { insertAdminBookingInTransaction } from "@/lib/admin-booking-insert";
+import { linkBookingAfterCreate } from "@/lib/patients-db";
 
 export const runtime = "nodejs";
 
@@ -94,7 +95,7 @@ function resolveProvider(
 }
 
 export async function POST(req: Request) {
-  const staff = await requireStaff(req.headers.get("authorization"), "front_desk");
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -289,6 +290,10 @@ export async function POST(req: Request) {
 
       if (ins.status === "ok") {
         createdIds.push(bookingRef.id);
+        // Same patient-record linking the admin create route performs.
+        await linkBookingAfterCreate(db, bookingRef.id, "csv_import").catch((e) =>
+          console.error("[admin/bookings/import] patient link failed", e),
+        );
       } else if (ins.status === "slot_taken") {
         errors.push({ row: excelRow, message: "Slot already taken (or enable skip conflict in the form)." });
       } else {

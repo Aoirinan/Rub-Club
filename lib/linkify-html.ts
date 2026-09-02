@@ -1,4 +1,6 @@
-const URL_RE = /https?:\/\/[^\s<>&"']+/gi;
+// `&` is allowed so query strings (incl. `&amp;`-encoded ones) stay in the link;
+// the URL still stops at whitespace, quotes, and angle brackets.
+const URL_RE = /https?:\/\/[^\s<>"']+/gi;
 
 /** Wrap bare http(s) URLs in anchor tags; skips URLs already inside href or <a> body. */
 export function linkifyHtmlUrls(html: string): string {

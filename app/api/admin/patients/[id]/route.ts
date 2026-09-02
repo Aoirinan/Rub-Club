@@ -7,6 +7,7 @@ import { staffMeetsMin } from "@/lib/staff-roles";
 import { isPatientBusinessTag } from "@/lib/patient-business";
 import {
   deletePatientPermanently,
+  findPatientByPhone,
   getPatientBookings,
   normalizePatientPhone,
   parsePatientDoc,
@@ -17,7 +18,9 @@ import {
 export const runtime = "nodejs";
 
 const patchSchema = z.object({
-  firstName: z.string().min(1).max(80).optional(),
+  // Trim before the length check so a whitespace-only name is rejected here
+  // instead of being written as "" (which makes the record unparseable).
+  firstName: z.string().trim().min(1).max(80).optional(),
   lastName: z.string().max(80).optional(),
   phone: z.string().min(7).max(40).optional(),
   email: z.string().max(200).optional(),
@@ -91,6 +94,13 @@ export async function PATCH(req: Request, ctx: Params) {
     if (!norm) {
       return NextResponse.json({ error: "Invalid phone number" }, { status: 400 });
     }
+    const other = await findPatientByPhone(db, body.phone);
+    if (other && other.id !== id) {
+      return NextResponse.json(
+        { error: "Another patient already uses this phone number.", existingId: other.id },
+        { status: 409 },
+      );
+    }
     updates.phone = norm.phone;
     updates.phoneNormalized = norm.phoneNormalized;
   }
@@ -121,8 +131,15 @@ export async function PATCH(req: Request, ctx: Params) {
   }
 
   if (body.notes !== undefined) {
-    updates.notesUpdatedAt = FieldValue.serverTimestamp();
-    updates.notesUpdatedByEmail = staff.email ?? null;
+    // Only re-attribute the notes when their content actually changed; the
+    // profile editor PATCHes the whole form, notes included.
+    const storedNotes = snap.get("notes");
+    const prevNotes = typeof storedNotes === "string" ? storedNotes : "";
+    const nextNotes = body.notes === null ? "" : body.notes.trim();
+    if (prevNotes !== nextNotes) {
+      updates.notesUpdatedAt = FieldValue.serverTimestamp();
+      updates.notesUpdatedByEmail = staff.email ?? null;
+    }
   }
 
   const managerOnly =

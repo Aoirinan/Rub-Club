@@ -22,7 +22,7 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const rl = await assertRateLimitOk(req.headers);
+  const rl = await assertRateLimitOk(req.headers, { bucket: "contact" });
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many requests. Try again soon." },

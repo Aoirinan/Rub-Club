@@ -11,6 +11,7 @@ import {
   type ContentFieldType,
 } from "@/lib/cms";
 import { uploadSiteContentMedia } from "@/lib/cms-upload";
+import { resolveMassageTeamImageContentType } from "@/lib/massage-team-upload";
 import { requireStaff } from "@/lib/staff-auth";
 
 export const runtime = "nodejs";
@@ -49,12 +50,16 @@ export async function POST(
     return NextResponse.json({ error: "Missing file" }, { status: 400 });
   }
 
-  const contentType = file.type || "application/octet-stream";
+  const buf = Buffer.from(await file.arrayBuffer());
+  // Some browsers send an empty File.type for valid JPEGs: sniff magic bytes for images.
+  const contentType =
+    meta.type === "image"
+      ? resolveMassageTeamImageContentType(file.type, buf) ?? file.type ?? ""
+      : file.type || "application/octet-stream";
   if (!allowedType(meta.type, contentType)) {
     return NextResponse.json({ error: "Unsupported file type" }, { status: 400 });
   }
 
-  const buf = Buffer.from(await file.arrayBuffer());
   const max = meta.type === "image" ? MAX_IMAGE : MAX_VIDEO;
   if (buf.length > max) {
     return NextResponse.json({ error: "File too large" }, { status: 400 });

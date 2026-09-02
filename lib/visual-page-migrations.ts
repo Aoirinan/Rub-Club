@@ -171,15 +171,19 @@ export function buildDefaultVisualLayoutForScope(scope: VisualScopeId): VisualPa
 /** Visible block order derived from embed layers on service pages. */
 export function blockOrderFromVisual(visual: VisualPageLayout, pageId: PageLayoutId): string[] {
   const allowed = new Set(pageLayoutDef(pageId).blocks.map((b) => b.id));
-  const fromLayers = visual.layers
-    .filter((l) => l.type === "embed" && l.blockId && l.blockId !== HERO_BLOCK_ID && !l.hidden)
-    .map((l) => l.blockId!)
-    .filter((id) => allowed.has(id));
+  const embedLayers = visual.layers.filter(
+    (l) => l.type === "embed" && l.blockId && l.blockId !== HERO_BLOCK_ID && allowed.has(l.blockId),
+  );
+  // No embed layers at all: the visual layout says nothing about order.
+  if (embedLayers.length === 0) return defaultBlockOrder(pageId);
+  // Otherwise hidden layers are hidden on purpose — even if that hides every block.
   const unique: string[] = [];
-  for (const id of fromLayers) {
+  for (const l of embedLayers) {
+    if (l.hidden) continue;
+    const id = l.blockId!;
     if (!unique.includes(id)) unique.push(id);
   }
-  return unique.length > 0 ? unique : defaultBlockOrder(pageId);
+  return unique;
 }
 
 export function hiddenBlocksFromVisual(visual: VisualPageLayout, pageId: PageLayoutId): string[] {

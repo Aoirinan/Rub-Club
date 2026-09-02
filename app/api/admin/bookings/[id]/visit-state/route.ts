@@ -72,10 +72,15 @@ export async function POST(req: Request, ctx: Params) {
   }
 
   const hadCheckedIn = snap.get("checkedInAt") instanceof Timestamp;
+  // A booking counts toward the patient's visit total at most once, even if the
+  // check-in box is toggled off and on again.
+  const visitAlreadyCounted = snap.get("visitCountedAt") instanceof Timestamp;
+  const countVisit = parsed.data.checkedIn === true && !hadCheckedIn && !visitAlreadyCounted;
+  if (countVisit) updates.visitCountedAt = FieldValue.serverTimestamp();
   await ref.update(updates);
 
   const next = await ref.get();
-  if (parsed.data.checkedIn === true && !hadCheckedIn) {
+  if (countVisit) {
     const patientId = typeof snap.get("patientId") === "string" ? snap.get("patientId") : null;
     if (patientId) {
       const at = next.get("checkedInAt");

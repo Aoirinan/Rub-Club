@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { bannerIsActivePublic, getSiteOwnerConfig } from "@/lib/site-owner-config";
+import { bannerDismissKey, bannerIsActivePublic, getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
 
 export const runtime = "nodejs";
@@ -15,7 +15,7 @@ export async function GET() {
         banner: {
           show: bannerActive && c.banner.showOnHomepage,
           html: c.banner.html,
-          dismissKey: `${c.banner.html.length}_${c.banner.expiresAt ?? "x"}`,
+          dismissKey: bannerDismissKey(c.banner),
         },
         specials: c.specials,
         testimonialVideos: c.testimonialVideos,

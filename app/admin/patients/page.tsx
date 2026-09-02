@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DateTime } from "luxon";
@@ -74,9 +74,14 @@ function PatientsListContent() {
     return () => unsub();
   }, [auth, router]);
 
+  // Monotonic request id so a slow, older search response can never overwrite
+  // the results of a newer one.
+  const loadSeq = useRef(0);
+
   const load = useCallback(async () => {
     const token = await getIdToken();
     if (!token) return;
+    const seq = ++loadSeq.current;
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -88,9 +93,10 @@ function PatientsListContent() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = (await res.json()) as { patients?: PatientApiRow[] };
+      if (seq !== loadSeq.current) return;
       setPatients(data.patients ?? []);
     } finally {
-      setLoading(false);
+      if (seq === loadSeq.current) setLoading(false);
     }
   }, [debounced, paymentFilter, activeOnly, getIdToken]);
 

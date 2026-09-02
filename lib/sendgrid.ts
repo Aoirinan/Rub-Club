@@ -259,9 +259,9 @@ export async function sendBookingNotification(params: {
   html?: string;
   attachments?: EmailAttachment[];
   fromName?: string;
-}): Promise<void> {
+}): Promise<boolean> {
   const result = await sendOutboundEmail(params);
-  if (!result.ok) return;
+  return result.ok;
 }
 
 function escapeHtml(s: string): string {

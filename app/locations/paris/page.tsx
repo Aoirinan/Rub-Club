@@ -30,7 +30,7 @@ export default async function ParisLocationPage() {
   return (
     <>
       <JsonLd
-        data={[chiropractorJsonLd(paris), massageJsonLd()]}
+        data={[chiropractorJsonLd(paris, chiroHours), massageJsonLd(paris, massageHours)]}
       />
       <Breadcrumbs
         items={[

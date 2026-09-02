@@ -71,6 +71,9 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
       setInfo(row);
       const d = DateTime.fromISO(row.startIso, { zone: "utc" }).setZone(TIME_ZONE);
       setPickDate(d.isValid ? d.toFormat("yyyy-LL-dd") : addDaysIso(0));
+    } catch {
+      setError("Could not load appointment. Check your connection and try again.");
+      setInfo(null);
     } finally {
       setLoading(false);
     }
@@ -102,6 +105,8 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
         return;
       }
       setSlots(data.slots ?? []);
+    } catch {
+      setSlotsError("Could not load times. Check your connection and try again.");
     } finally {
       setSlotsLoading(false);
     }
@@ -140,6 +145,8 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
       }
       setDoneMessage("Your appointment has been cancelled. You can close this page.");
       setInfo(null);
+    } catch {
+      setDoneMessage("Could not cancel. Check your connection and try again.");
     } finally {
       setWorking(false);
     }
@@ -164,6 +171,8 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
       setDoneMessage("Your appointment time has been updated.");
       await loadInfo();
       setSelectedSlot(null);
+    } catch {
+      setDoneMessage("Could not reschedule. Check your connection and try again.");
     } finally {
       setWorking(false);
     }

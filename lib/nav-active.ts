@@ -97,7 +97,16 @@ export function isNavItemActive(
   if (!active) return false;
 
   if (active === "About Us") {
-    return item.label === "About Us" || item.label === "Staff";
+    // The staff item's label is CMS-editable (nav_staff_label), so match on
+    // where it points rather than what it says.
+    const href = normalizePath(item.href);
+    return (
+      item.label === "About Us" ||
+      item.label === "Staff" ||
+      href === "/locations/paris/staff" ||
+      href === "/sulphur-springs/staff" ||
+      href === "/about"
+    );
   }
 
   return item.label === active;

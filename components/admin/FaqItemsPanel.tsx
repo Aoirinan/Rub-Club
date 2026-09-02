@@ -40,10 +40,15 @@ export function FaqItemsPanel({ getIdToken, category }: Props) {
     });
     const data = (await res.json()) as { faqs?: FaqRow[] };
     if (res.ok && data.faqs) {
+      // The public /faq page shows every category except sulphur-springs, so
+      // the Paris editor must list the same set or stray categories become
+      // uneditable.
       setFaqs(
-        lockedCategory
-          ? data.faqs.filter((f) => f.category === lockedCategory)
-          : data.faqs,
+        lockedCategory === "general"
+          ? data.faqs.filter((f) => f.category !== "sulphur-springs")
+          : lockedCategory
+            ? data.faqs.filter((f) => f.category === lockedCategory)
+            : data.faqs,
       );
     }
   }, [getIdToken, lockedCategory]);

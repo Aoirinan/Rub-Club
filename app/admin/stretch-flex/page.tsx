@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import { AdminAuthGate } from "@/app/admin/_components/AdminAuthGate";
@@ -52,8 +52,12 @@ function StretchFlexEditor() {
   const patch = useCallback((id: string, changes: Partial<Row>) => {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...changes, _dirty: true } : r)));
   }, []);
+  const rowsRef = useRef<Row[]>([]);
+  rowsRef.current = rows;
 
-  const save = useCallback(async (row: Row) => {
+  const save = useCallback(async (clicked: Row) => {
+    // Always send what is in state now, not the row captured when the button rendered.
+    const row = rowsRef.current.find((r) => r.id === clicked.id) ?? clicked;
     setBusyId(row.id);
     setMessage(null);
     try {
@@ -96,8 +100,12 @@ function StretchFlexEditor() {
         });
         const data = (await res.json()) as { url?: string; error?: string };
         if (!res.ok || !data.url) throw new Error(data.error ?? "Upload failed");
-        const nextImages: StretchFlexImage[] = [...row.images, { url: data.url, alt: "", caption: "" }];
-        patch(row.id, { images: nextImages });
+        // Read the latest images from state: edits made while the upload was
+        // in flight must not be overwritten by the snapshot captured at click.
+        const newImg: StretchFlexImage = { url: data.url, alt: "", caption: "" };
+        setRows((prev) =>
+          prev.map((r) => (r.id === row.id ? { ...r, images: [...r.images, newImg], _dirty: true } : r)),
+        );
         setMessage({ kind: "ok", text: "Uploaded — remember to Save" });
       } catch (e) {
         setMessage({ kind: "err", text: e instanceof Error ? e.message : "Upload failed" });
@@ -105,7 +113,7 @@ function StretchFlexEditor() {
         setBusyId(null);
       }
     },
-    [patch],
+    [],
   );
 
   const editImage = useCallback(

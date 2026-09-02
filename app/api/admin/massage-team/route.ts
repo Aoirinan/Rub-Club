@@ -19,7 +19,7 @@ import {
   uploadMassageTeamPhoto,
 } from "@/lib/massage-team-upload";
 import { requireStaff } from "@/lib/staff-auth";
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 export const runtime = "nodejs";
 
@@ -43,6 +43,9 @@ const syncFromProvidersSchema = z.object({
 
 function bumpCache(): void {
   revalidateTag(MASSAGE_TEAM_CACHE_TAG);
+  // Path revalidation is required for the rendered pages, not just the data tag.
+  revalidatePath("/");
+  revalidatePath("/services/massage");
 }
 
 export async function GET(req: Request) {
@@ -78,8 +81,9 @@ export async function POST(req: Request) {
     const bio = String(form.get("bio") ?? "").trim();
     const roleRaw = String(form.get("role") ?? "").trim();
     const sortRaw = form.get("sortOrder");
+    // Missing/blank sortOrder => "not provided" (Number(null) is 0).
     const sortParsed =
-      typeof sortRaw === "string" && sortRaw.length > 0 ? Number(sortRaw) : Number(sortRaw);
+      typeof sortRaw === "string" && sortRaw.trim().length > 0 ? Number(sortRaw) : NaN;
     const sortOrder =
       typeof sortParsed === "number" && Number.isFinite(sortParsed)
         ? sortParsed

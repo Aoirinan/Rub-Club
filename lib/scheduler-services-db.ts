@@ -85,19 +85,21 @@ export async function fetchSchedulerServiceById(
 }
 
 export async function ensureSchedulerServicesSeeded(db: Firestore): Promise<boolean> {
-  const snap = await db.collection(COLLECTION).limit(1).get();
-  if (!snap.empty) return false;
-  const batch = db.batch();
-  SCHEDULER_SERVICE_SEED.forEach((seed, idx) => {
-    const ref = db.collection(COLLECTION).doc();
-    batch.set(ref, {
-      ...seed,
-      sortOrder: idx,
-      createdAt: FieldValue.serverTimestamp(),
+  // Check-and-seed inside one transaction so two concurrent first requests
+  // cannot both seed the catalog.
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(db.collection(COLLECTION).limit(1));
+    if (!snap.empty) return false;
+    SCHEDULER_SERVICE_SEED.forEach((seed, idx) => {
+      const ref = db.collection(COLLECTION).doc();
+      tx.set(ref, {
+        ...seed,
+        sortOrder: idx,
+        createdAt: FieldValue.serverTimestamp(),
+      });
     });
+    return true;
   });
-  await batch.commit();
-  return true;
 }
 
 export async function reorderSchedulerServices(

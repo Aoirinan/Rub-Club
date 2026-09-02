@@ -2,7 +2,10 @@ import { DateTime } from "luxon";
 import { TIME_ZONE } from "@/lib/constants";
 import type { PatientDoc } from "@/lib/patients-db";
 
-function escapeCsvCell(value: string): string {
+function escapeCsvCell(raw: string): string {
+  // Spreadsheet formula injection guard: a leading = + - @ tab or CR would be
+  // evaluated by Excel/Sheets. Names and notes are patient-supplied text.
+  const value = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
   if (/[",\n\r]/.test(value)) return `"${value.replace(/"/g, '""')}"`;
   return value;
 }

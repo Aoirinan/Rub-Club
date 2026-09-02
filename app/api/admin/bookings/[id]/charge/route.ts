@@ -88,13 +88,12 @@ export async function POST(req: Request, ctx: Params) {
       paymentUrl: linkResult.url,
       description: body.description,
     });
-    await sendBookingNotification({
+    emailSent = await sendBookingNotification({
       to: emailCtx.email,
       subject,
       text,
       html,
     });
-    emailSent = true;
   } catch (err) {
     console.error("Payment request email failed:", err);
   }

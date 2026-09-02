@@ -4,7 +4,7 @@ import { chiropractorJsonLd } from "@/lib/structured-data";
 import { pageKeywords } from "@/lib/seo-keywords";
 import { getDisplayLocations } from "@/lib/cms-display";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
-import { resolveSiteStaffForBrand } from "@/lib/site-staff";
+import { resolveSiteStaffForBrand, siteStaffExistsForBrand } from "@/lib/site-staff";
 import { SS_STAFF_SEED } from "@/lib/site-staff-seed-rosters";
 import {
   getPracticePage,
@@ -45,11 +45,12 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function SulphurSpringsPage() {
-  const [page, ssServiceCards, ssHours, staff, displayLocs, testimonials] = await Promise.all([
+  const [page, ssServiceCards, ssHours, staff, hasAnySsStaff, displayLocs, testimonials] = await Promise.all([
     getPracticePage("sulphur-springs"),
     getSSServiceCards(),
     getSulphurOfficeHours(),
     resolveSiteStaffForBrand("sulphur"),
+    siteStaffExistsForBrand("sulphur"),
     getDisplayLocations(),
     listPracticeTestimonials("sulphur-springs", { publishedOnly: true }),
   ]);
@@ -66,12 +67,14 @@ export default async function SulphurSpringsPage() {
             featured: m.featured,
             videos: m.videoUrl ? [{ src: m.videoUrl, label: `Meet ${m.name}` }] : [],
           }))
-        : [SS_DOCTOR_FALLBACK],
+        : hasAnySsStaff
+          ? [] // every member hidden on purpose: don't resurrect the built-in doctor
+          : [SS_DOCTOR_FALLBACK],
   };
 
   return (
     <div className="bg-[#f4f2ea]" style={practiceThemeStyle("sulphur-springs", page.theme)}>
-      <JsonLd data={chiropractorJsonLd(ss)} />
+      <JsonLd data={chiropractorJsonLd(ss, ssHours)} />
       <PracticeHero data={page.hero} utility={page.utilityBar} />
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16 pt-12">
         <QuickActionsRow data={page.quickActions} />

@@ -8,6 +8,8 @@ import { TIME_ZONE } from "@/lib/constants";
 
 export const runtime = "nodejs";
 
+const LIST_LIMIT = 1000;
+
 type StaffActor = {
   uid: string | null;
   email: string | null;
@@ -142,12 +144,13 @@ export async function GET(req: Request) {
       ? todayEnd.toMillis()
       : Date.now() + 30 * 24 * 60 * 60 * 1000;
 
-  const from = fromStr
-    ? Timestamp.fromMillis(Date.parse(fromStr))
-    : Timestamp.fromMillis(defaultFrom);
-  const to = toStr
-    ? Timestamp.fromMillis(Date.parse(toStr))
-    : Timestamp.fromMillis(defaultTo);
+  const fromMs = fromStr ? Date.parse(fromStr) : defaultFrom;
+  const toMs = toStr ? Date.parse(toStr) : defaultTo;
+  if (!Number.isFinite(fromMs) || !Number.isFinite(toMs)) {
+    return NextResponse.json({ error: "Invalid date range." }, { status: 400 });
+  }
+  const from = Timestamp.fromMillis(fromMs);
+  const to = Timestamp.fromMillis(toMs);
 
   const statuses: BookingStatus[] = statusStr
     ? statusStr
@@ -162,7 +165,7 @@ export async function GET(req: Request) {
     .where("startAt", ">=", from)
     .where("startAt", "<=", to)
     .orderBy("startAt", "asc")
-    .limit(1000)
+    .limit(LIST_LIMIT)
     .get();
 
   const rows: BookingRowDto[] = [];
@@ -244,5 +247,5 @@ export async function GET(req: Request) {
     rows.push(row);
   }
 
-  return NextResponse.json({ bookings: rows });
+  return NextResponse.json({ bookings: rows, truncated: snap.size >= LIST_LIMIT });
 }

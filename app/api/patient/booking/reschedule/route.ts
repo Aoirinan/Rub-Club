@@ -5,6 +5,7 @@ import { rescheduleBookingForStartChange } from "@/lib/booking-reschedule";
 import { sendRescheduleNotifications } from "@/lib/booking-reschedule-notify";
 import { findBookingByPortalToken } from "@/lib/patient-portal-lookup";
 import { assertRateLimitOk } from "@/lib/rate-limit";
+import { recomputeNextAppointmentForBooking } from "@/lib/patients-db";
 
 export const runtime = "nodejs";
 
@@ -33,7 +34,7 @@ function messageFor(code: string): string {
 }
 
 export async function POST(req: Request) {
-  const rl = await assertRateLimitOk(req.headers);
+  const rl = await assertRateLimitOk(req.headers, { bucket: "patient-portal" });
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many requests. Try again soon." },
@@ -87,6 +88,8 @@ export async function POST(req: Request) {
       console.error("[patient/reschedule] email failed", err);
     }
   }
+
+  await recomputeNextAppointmentForBooking(db, snap.id).catch(() => {});
 
   return NextResponse.json({ ok: true });
 }

@@ -19,8 +19,13 @@ export const revalidate = 60;
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
-  const pages = await listPublishedLegacyPagesForSite("massage-paris");
-  return pages.map((p) => ({ slug: p.slug }));
+  try {
+    const pages = await listPublishedLegacyPagesForSite("massage-paris");
+    return pages.map((p) => ({ slug: p.slug }));
+  } catch {
+    // Firestore unavailable at build — pages render on demand instead of failing the build.
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

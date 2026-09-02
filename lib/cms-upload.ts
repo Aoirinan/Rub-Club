@@ -32,7 +32,14 @@ export async function uploadSiteContentMedia(opts: {
     throw new Error(isImage ? "Unsupported image type" : "Unsupported video type");
   }
   const base = safeFilename(opts.originalFilename.replace(/\.[^.]+$/, "")) || "file";
-  const path = `site_content/${opts.fieldId}/${base}-${randomBytes(6).toString("hex")}.${ext}`;
+  // fieldId may be namespaced ("stretch_flex/<id>"); keep each segment safe.
+  const safeFieldId =
+    opts.fieldId
+      .split("/")
+      .map((seg) => seg.replace(/[^a-zA-Z0-9_-]/g, ""))
+      .filter(Boolean)
+      .join("/") || "field";
+  const path = `site_content/${safeFieldId}/${base}-${randomBytes(6).toString("hex")}.${ext}`;
   const bucket = getStorageBucket();
   const file = bucket.file(path);
   await file.save(opts.buffer, {

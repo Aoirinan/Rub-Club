@@ -12,8 +12,76 @@ import {
   siteUrl,
 } from "@/lib/site-content";
 import type { FaqEntry } from "@/lib/faqs";
+import type { OfficeHoursRow } from "@/lib/office-hours";
+import { hoursShifts } from "@/lib/office-hours-format";
+import { CHIRO, MASSAGE } from "@/lib/home-verbatim";
 
 type JsonLd = Record<string, unknown>;
+
+const DAY_NAME_TO_SCHEMA: Record<string, string> = {
+  monday: "Monday",
+  mon: "Monday",
+  tuesday: "Tuesday",
+  tue: "Tuesday",
+  tues: "Tuesday",
+  wednesday: "Wednesday",
+  wed: "Wednesday",
+  thursday: "Thursday",
+  thu: "Thursday",
+  thur: "Thursday",
+  thurs: "Thursday",
+  friday: "Friday",
+  fri: "Friday",
+  saturday: "Saturday",
+  sat: "Saturday",
+  sunday: "Sunday",
+  sun: "Sunday",
+};
+
+/** "9:00 AM" / "12 pm" / "17:00" -> "HH:MM" (24h), or null when unparseable. */
+function to24h(raw: string): string | null {
+  const m = raw
+    .trim()
+    .toLowerCase()
+    .match(/^(\d{1,2})(?::(\d{2}))?\s*(a\.?m\.?|p\.?m\.?)?$/);
+  if (!m) return null;
+  let h = Number(m[1]);
+  const min = m[2] ? Number(m[2]) : 0;
+  const mer = m[3]?.replace(/\./g, "");
+  if (Number.isNaN(h) || Number.isNaN(min) || h > 24 || min > 59) return null;
+  if (mer === "pm" && h < 12) h += 12;
+  if (mer === "am" && h === 12) h = 0;
+  if (h === 24) h = 0;
+  return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+}
+
+/**
+ * Turn the displayed office-hours rows (CMS text such as
+ * "Monday | 9:00 AM – 6:00 PM, 2:00 PM – 5:00 PM") into schema.org
+ * OpeningHoursSpecification entries so JSON-LD matches what the page shows.
+ * Rows that cannot be parsed (e.g. "Closed") are skipped.
+ */
+export function openingHoursSpecFromRows(rows: readonly OfficeHoursRow[]): JsonLd[] {
+  const out: JsonLd[] = [];
+  for (const row of rows) {
+    const day = DAY_NAME_TO_SCHEMA[row.day.trim().toLowerCase().replace(/[.:]/g, "")];
+    if (!day) continue;
+    for (const shift of hoursShifts(row.hours)) {
+      const parts = shift.split(/\s*(?:–|—|-|to)\s*/i);
+      if (parts.length !== 2) continue;
+      const opens = to24h(parts[0]!);
+      const closes = to24h(parts[1]!);
+      if (!opens || !closes) continue;
+      out.push({
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: [day],
+        opens,
+        closes,
+      });
+    }
+  }
+  return out;
+}
 
 const WEEKDAY_TO_SCHEMA: Record<Weekday, string> = {
   Mon: "Monday",
@@ -53,9 +121,22 @@ function geo(location: LocationInfo): JsonLd {
   };
 }
 
-/** Chiropractic clinic JSON-LD entity for one location. */
-export function chiropractorJsonLd(location: LocationInfo): JsonLd {
+/**
+ * Chiropractic clinic JSON-LD entity for one location.
+ * Pass the CMS-resolved `hours` rows the page displays so structured data
+ * stays in sync with edits; without them the Paris entity uses the same
+ * default chiropractic schedule the page renders (CHIRO.hours), and Sulphur
+ * Springs uses the constants that mirror SS_HOURS_DEFAULT_TEXT.
+ */
+export function chiropractorJsonLd(
+  location: LocationInfo,
+  hours?: readonly OfficeHoursRow[],
+): JsonLd {
   const url = siteUrl(`/locations/${location.slug}`);
+  const hoursRows = hours ?? (location.id === "paris" ? CHIRO.hours : undefined);
+  const openingHours = hoursRows
+    ? openingHoursSpecFromRows(hoursRows)
+    : openingHoursSpec(location);
   return {
     "@context": "https://schema.org",
     "@type": ["Chiropractor", "MedicalBusiness", "LocalBusiness"],
@@ -74,17 +155,25 @@ export function chiropractorJsonLd(location: LocationInfo): JsonLd {
     address: postalAddress(location),
     geo: geo(location),
     hasMap: location.mapsUrl,
-    openingHoursSpecification: openingHoursSpec(location),
+    openingHoursSpecification: openingHours.length ? openingHours : openingHoursSpec(location),
     areaServed: ["Paris, TX", "Sulphur Springs, TX", "Northeast Texas"],
-    medicalSpecialty: ["Chiropractic", "PhysicalTherapy"],
+    // schema.org MedicalSpecialty enumeration values (no "Chiropractic"/"PhysicalTherapy" members).
+    medicalSpecialty: ["Musculoskeletal", "Physiotherapy"],
     sameAs: getSocialProfiles(),
   };
 }
 
-/** Massage therapy business JSON-LD (Paris only). */
-export function massageJsonLd(parisOverride?: LocationInfo): JsonLd {
+/**
+ * Massage therapy business JSON-LD (Paris only). Pass the CMS-resolved
+ * location (phone overrides) and the displayed hours rows when available.
+ */
+export function massageJsonLd(
+  parisOverride?: LocationInfo,
+  hours?: readonly OfficeHoursRow[],
+): JsonLd {
   const loc = parisOverride ?? LOCATIONS.paris;
   const url = siteUrl(`/locations/${loc.slug}`);
+  const openingHours = openingHoursSpecFromRows(hours ?? MASSAGE.hours);
   return {
     "@context": "https://schema.org",
     "@type": ["HealthAndBeautyBusiness", "LocalBusiness"],
@@ -100,7 +189,7 @@ export function massageJsonLd(parisOverride?: LocationInfo): JsonLd {
     address: postalAddress(loc),
     geo: geo(loc),
     hasMap: loc.mapsUrl,
-    openingHoursSpecification: openingHoursSpec(loc),
+    openingHoursSpecification: openingHours.length ? openingHours : openingHoursSpec(loc),
     areaServed: ["Paris, TX", "Northeast Texas"],
     sameAs: getSocialProfiles(),
   };

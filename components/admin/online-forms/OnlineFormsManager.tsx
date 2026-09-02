@@ -58,10 +58,12 @@ export function OnlineFormsManager() {
     }
   }
 
-  if (loading) {
+  // Only show the placeholder on the first load. Later reloads (after a save)
+  // keep the editors mounted so "Saved." feedback and open panels survive.
+  if (loading && !data) {
     return <p className="px-4 py-10 text-sm text-slate-600">Loading…</p>;
   }
-  if (error || !data) {
+  if (!data) {
     return <p className="px-4 py-10 text-sm text-red-700">{error ?? "No data."}</p>;
   }
 
@@ -180,7 +182,8 @@ function FormRow({
 
   async function toggleEnabled(next: boolean) {
     setEnabled(next);
-    await patch({ enabled: next });
+    const ok = await patch({ enabled: next });
+    if (!ok) setEnabled(!next);
   }
 
   async function saveCopy() {

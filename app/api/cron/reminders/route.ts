@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authorizeCronRequest } from "@/lib/cron-auth";
 
 export const runtime = "nodejs";
 
@@ -8,23 +9,8 @@ export const runtime = "nodejs";
  * are never fired on a silent timer.
  */
 export async function GET(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET?.trim();
-  const isVercelProduction = process.env.VERCEL_ENV === "production";
-
-  if (isVercelProduction) {
-    if (!cronSecret) {
-      return NextResponse.json(
-        { error: "CRON_SECRET must be set for production cron." },
-        { status: 503 },
-      );
-    }
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-  } else if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = await authorizeCronRequest(req);
+  if (denied) return denied;
 
   return NextResponse.json({
     ok: true,

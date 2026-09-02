@@ -35,16 +35,36 @@ export type PatientCsvImportResult = {
   updated: number;
   skipped: number;
   errors: string[];
+  /** Data rows examined (excludes the header). */
+  processed: number;
+  /** Data rows in the file (excludes the header). */
+  totalRows: number;
+  /** True when the time budget ran out before every row was examined. */
+  stoppedEarly: boolean;
 };
+
+/** Rows written concurrently; keeps a large file inside the function timeout. */
+const CONCURRENCY = 5;
+/** Stop before the serverless timeout so a partial summary is returned. */
+const TIME_BUDGET_MS = 45_000;
 
 export async function importPatientsFromCsv(
   db: Firestore,
   csvText: string,
   updateExisting: boolean,
 ): Promise<PatientCsvImportResult> {
+  const startedAt = Date.now();
   const grid = parseCsvRows(csvText);
   if (grid.length < 2) {
-    return { created: 0, updated: 0, skipped: 0, errors: ["CSV must include a header row and at least one data row."] };
+    return {
+      created: 0,
+      updated: 0,
+      skipped: 0,
+      errors: ["CSV must include a header row and at least one data row."],
+      processed: 0,
+      totalRows: Math.max(0, grid.length - 1),
+      stoppedEarly: false,
+    };
   }
 
   const headers = grid[0]!.map((h) => h.trim());
@@ -69,36 +89,49 @@ export async function importPatientsFromCsv(
       updated: 0,
       skipped: 0,
       errors: ["CSV must include First Name and Phone columns."],
+      processed: 0,
+      totalRows: grid.length - 1,
+      stoppedEarly: false,
     };
   }
 
   let created = 0;
   let updated = 0;
   let skipped = 0;
+  let processed = 0;
+  let stoppedEarly = false;
   const errors: string[] = [];
+  const totalRows = grid.length - 1;
 
+  // Pre-validate every row so the concurrent phase only sees usable rows.
+  type Pending = { r: number; row: string[]; firstName: string; phone: string; key: string };
+  const pending: Pending[] = [];
   for (let r = 1; r < grid.length; r++) {
     const row = grid[r]!;
     const firstName = cell(row, col.firstName);
     const phone = cell(row, col.phone);
     if (!firstName || !phone) {
       skipped++;
+      processed++;
       continue;
     }
-
     const norm = normalizePatientPhone(phone);
     if (!norm) {
       errors.push(`Row ${r + 1}: invalid phone "${phone}"`);
       skipped++;
+      processed++;
       continue;
     }
+    pending.push({ r, row, firstName, phone, key: norm.phoneNormalized });
+  }
 
+  const importRow = async ({ r, row, firstName, phone }: Pending): Promise<void> => {
     try {
       const existing = await findPatientByPhone(db, phone);
       if (existing) {
         if (!updateExisting) {
           skipped++;
-          continue;
+          return;
         }
         const patch: Record<string, unknown> = { updatedAt: FieldValue.serverTimestamp() };
         const lastName = cell(row, col.lastName);
@@ -129,7 +162,7 @@ export async function importPatientsFromCsv(
         } else {
           skipped++;
         }
-        continue;
+        return;
       }
 
       await createPatient(db, {
@@ -151,7 +184,35 @@ export async function importPatientsFromCsv(
     } catch (e) {
       errors.push(`Row ${r + 1}: ${e instanceof Error ? e.message : "import failed"}`);
     }
+  };
+
+  // Process in small concurrent chunks. Rows that share a phone number are
+  // never in the same chunk, so the phone-based dedupe stays reliable.
+  let i = 0;
+  while (i < pending.length) {
+    if (Date.now() - startedAt > TIME_BUDGET_MS) {
+      stoppedEarly = true;
+      break;
+    }
+    const chunk: Pending[] = [];
+    const keys = new Set<string>();
+    while (i < pending.length && chunk.length < CONCURRENCY) {
+      const next = pending[i]!;
+      if (keys.has(next.key)) break;
+      keys.add(next.key);
+      chunk.push(next);
+      i++;
+    }
+    await Promise.all(chunk.map(importRow));
+    processed += chunk.length;
   }
 
-  return { created, updated, skipped, errors };
+  if (stoppedEarly) {
+    errors.push(
+      `Stopped after ${processed} of ${totalRows} rows to stay within the time limit. ` +
+        `Re-upload the same file with "Update existing patients" checked to continue; rows already imported are skipped.`,
+    );
+  }
+
+  return { created, updated, skipped, errors, processed, totalRows, stoppedEarly };
 }

@@ -49,8 +49,12 @@ export async function POST(
     .doc(location)
     .collection(PRACTICE_TESTIMONIALS_SUBCOLLECTION);
 
+  // A stale tab may still list a deleted review: never create phantom docs.
+  const existingSnap = await col.get();
+  const knownIds = new Set(existingSnap.docs.map((d) => d.id));
+
   const batch = db.batch();
-  parsed.data.orderedIds.forEach((id, idx) => {
+  parsed.data.orderedIds.filter((id) => knownIds.has(id)).forEach((id, idx) => {
     batch.set(
       col.doc(id),
       {

@@ -19,6 +19,8 @@ type Props = {
   fields: SiteContentFieldRow[];
   busy: boolean;
   onSave: (id: string, value: string) => Promise<void>;
+  /** Restrict to the brand(s) of the active editor scope (default: any with height fields). */
+  brands?: HeaderBrandKey[];
 };
 
 type SlotKey = "nav" | "mobile";
@@ -80,6 +82,7 @@ function ResizableLogoSlot({
   renderPreview: (displayPx: number) => React.ReactNode;
 }) {
   const [draftStored, setDraftStored] = useState(storedHeightPx);
+  const [typedPx, setTypedPx] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const startY = useRef(0);
   const startStored = useRef(0);
@@ -133,11 +136,14 @@ function ResizableLogoSlot({
             type="number"
             min={min}
             max={max}
-            value={draftStored}
+            value={typedPx ?? draftStored}
             disabled={busy}
-            onChange={(e) => setDraftStored(clampStored(Number(e.target.value)))}
+            onChange={(e) => setTypedPx(e.target.value)}
             onBlur={async () => {
-              const next = clampStored(draftStored);
+              // Clamp once the user is done typing, not on every keystroke.
+              const raw = typedPx === null || typedPx.trim() === "" ? NaN : Number(typedPx);
+              const next = clampStored(Number.isFinite(raw) ? raw : draftStored);
+              setTypedPx(null);
               setDraftStored(next);
               if (next !== storedHeightPx) await onCommit(next);
             }}
@@ -248,7 +254,7 @@ function SulphurLogoPreview({
   );
 }
 
-export function HeaderLogoSizeEditor({ fields, busy, onSave }: Props) {
+export function HeaderLogoSizeEditor({ fields, busy, onSave, brands }: Props) {
   const hasHeightFields = ALL_HEADER_LOGO_HEIGHT_FIELD_IDS.some((id) =>
     fields.some((f) => f.id === id),
   );
@@ -282,6 +288,7 @@ export function HeaderLogoSizeEditor({ fields, busy, onSave }: Props) {
   const ssLogoUrl = fieldValue(fields, "header_ss_logo", "");
 
   const visibleBrands = BRANDS.filter((brand) => {
+    if (brands && !brands.includes(brand.key)) return false;
     const defs = HEADER_LOGO_HEIGHT_FIELDS[brand.key];
     return fields.some((f) => f.id === defs.nav || f.id === defs.mobile);
   });

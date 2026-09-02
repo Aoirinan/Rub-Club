@@ -4,6 +4,7 @@ import { getFirestore } from "@/lib/firebase-admin";
 import { rescheduleBookingForStartChange } from "@/lib/booking-reschedule";
 import { sendRescheduleNotifications } from "@/lib/booking-reschedule-notify";
 import { requireStaff } from "@/lib/staff-auth";
+import { recomputeNextAppointmentForBooking } from "@/lib/patients-db";
 
 export const runtime = "nodejs";
 
@@ -35,7 +36,7 @@ function messageFor(code: string): string {
 }
 
 export async function POST(req: Request, ctx: Params) {
-  const staff = await requireStaff(req.headers.get("authorization"), "front_desk");
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -82,6 +83,8 @@ export async function POST(req: Request, ctx: Params) {
       console.error("[admin/reschedule] email failed", err);
     }
   }
+
+  await recomputeNextAppointmentForBooking(db, id).catch(() => {});
 
   return NextResponse.json({ ok: true });
 }

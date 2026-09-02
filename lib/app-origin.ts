@@ -48,7 +48,9 @@ function trustedAppHostnames(): Set<string> {
 function isTrustedAppHostname(host: string): boolean {
   const h = host.toLowerCase();
   if (h === "localhost" || h === "127.0.0.1") return true;
-  if (h.endsWith(".vercel.app")) return true;
+  // Only the configured canonical host and this deployment's exact VERCEL_URL
+  // are trusted; an attacker-supplied Origin on another *.vercel.app host must
+  // not become the continueUrl for password-reset emails.
   return trustedAppHostnames().has(h);
 }
 

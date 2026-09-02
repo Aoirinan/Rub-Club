@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import { AdminAuthGate } from "@/app/admin/_components/AdminAuthGate";
@@ -53,9 +53,13 @@ function LegacyPagesEditor() {
   const patch = useCallback((id: string, changes: Partial<Row>) => {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...changes, _dirty: true } : r)));
   }, []);
+  const rowsRef = useRef<Row[]>([]);
+  rowsRef.current = rows;
 
   const save = useCallback(
-    async (row: Row) => {
+    async (clicked: Row) => {
+      // Always send what is in state now, not the row captured when the button rendered.
+      const row = rowsRef.current.find((r) => r.id === clicked.id) ?? clicked;
       setSavingId(row.id);
       setMessage(null);
       try {

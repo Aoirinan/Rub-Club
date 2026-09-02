@@ -20,8 +20,13 @@ export const revalidate = 60;
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
-  const legacy = await listPublishedLegacyPagesForSite("chiro-sulphur");
-  const slugs = new Set([...allSSPageSlugs(), ...legacy.map((p) => p.slug)]);
+  const slugs = new Set(allSSPageSlugs());
+  try {
+    const legacy = await listPublishedLegacyPagesForSite("chiro-sulphur");
+    for (const p of legacy) slugs.add(p.slug);
+  } catch {
+    // Firestore unavailable at build — static slugs still ship; legacy pages render on demand.
+  }
   return [...slugs].map((slug) => ({ slug }));
 }
 

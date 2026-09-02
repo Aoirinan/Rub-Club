@@ -14,6 +14,7 @@ import {
 } from "@/lib/site-staff";
 import { seedSiteStaffCollection } from "@/lib/site-staff-seed";
 import {
+  deleteSiteStaffStorageObject,
   resolveSiteStaffImageContentType,
   resolveSiteStaffVideoContentType,
   uploadSiteStaffPhoto,
@@ -55,6 +56,7 @@ function bumpCache(): void {
   revalidatePath("/locations/paris/staff");
   revalidatePath("/sulphur-springs/staff");
   revalidatePath("/sulphur-springs");
+  revalidatePath("/sulphur-springs/massage");
 }
 
 export async function GET(req: Request) {
@@ -94,8 +96,10 @@ export async function POST(req: Request) {
     const activeRaw = form.get("active");
     const featuredRaw = form.get("featured");
     const orderRaw = form.get("order");
+    // Missing/blank order => "not provided" (Number(null) is 0, which would pin
+    // every new member to the top of the roster).
     const orderParsed =
-      typeof orderRaw === "string" && orderRaw.length > 0 ? Number(orderRaw) : Number(orderRaw);
+      typeof orderRaw === "string" && orderRaw.trim().length > 0 ? Number(orderRaw) : NaN;
     const specialtiesRaw = String(form.get("specialties") ?? "").trim();
 
     if (!name || !title) {
@@ -139,6 +143,8 @@ export async function POST(req: Request) {
     if (videoFile instanceof File && videoFile.size > 0) {
       const videoContentType = resolveSiteStaffVideoContentType(videoFile.type);
       if (!videoContentType) {
+        // The doc is never created on this path: don't leave the portrait orphaned.
+        await deleteSiteStaffStorageObject(photoStoragePath).catch(() => {});
         return NextResponse.json(
           { error: "Unsupported video type. Use MP4, MOV, or WebM." },
           { status: 400 },
@@ -153,6 +159,7 @@ export async function POST(req: Request) {
         videoUrl = up.videoUrl;
         videoStoragePath = up.videoStoragePath;
       } catch (e) {
+        await deleteSiteStaffStorageObject(photoStoragePath).catch(() => {});
         const msg = e instanceof Error ? e.message : "Video upload failed";
         return NextResponse.json({ error: msg }, { status: 400 });
       }

@@ -7,6 +7,7 @@ import { recordBookingEventInTx } from "@/lib/booking-events";
 import { bookingDocToEmailContext } from "@/lib/booking-doc";
 import { patientDeclinedEmail } from "@/lib/email-templates";
 import { sendBookingNotification } from "@/lib/sendgrid";
+import { recomputeNextAppointmentForBooking } from "@/lib/patients-db";
 
 export const runtime = "nodejs";
 
@@ -42,6 +43,7 @@ export async function POST(req: Request, ctx: Params) {
   const { id } = await ctx.params;
   const db = getFirestore();
   const bookingRef = db.collection("bookings").doc(id);
+  let alreadyDeclined = false;
 
   try {
     await db.runTransaction(async (tx) => {
@@ -51,6 +53,7 @@ export async function POST(req: Request, ctx: Params) {
       }
       const prev = snap.get("status");
       if (prev === "declined") {
+        alreadyDeclined = true;
         return;
       }
       if (prev !== "pending") {
@@ -58,8 +61,11 @@ export async function POST(req: Request, ctx: Params) {
       }
       const bucketIds = snap.get("bucketIds") as string[] | undefined;
       if (bucketIds?.length) {
-        for (const bid of bucketIds) {
-          tx.delete(db.collection("slot_buckets").doc(bid));
+        // Only release buckets this booking actually owns (see cancel route).
+        const bucketRefs = bucketIds.map((bid) => db.collection("slot_buckets").doc(bid));
+        const bucketSnaps = await Promise.all(bucketRefs.map((r) => tx.get(r)));
+        for (const bs of bucketSnaps) {
+          if (bs.exists && bs.get("bookingId") === id) tx.delete(bs.ref);
         }
       }
       tx.update(bookingRef, {
@@ -92,6 +98,10 @@ export async function POST(req: Request, ctx: Params) {
     return NextResponse.json({ error: "Could not decline" }, { status: 500 });
   }
 
+  if (alreadyDeclined) {
+    return NextResponse.json({ ok: true, alreadyDeclined: true });
+  }
+
   try {
     const fresh = await bookingRef.get();
     const emailCtx = bookingDocToEmailContext(fresh);
@@ -107,6 +117,8 @@ export async function POST(req: Request, ctx: Params) {
   } catch (err) {
     console.error("Decline email failed", err);
   }
+
+  await recomputeNextAppointmentForBooking(db, id).catch(() => {});
 
   return NextResponse.json({ ok: true });
 }

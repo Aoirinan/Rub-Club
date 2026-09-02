@@ -577,12 +577,51 @@ export function parseConditionsList(value: string): string[] {
     .filter(Boolean);
 }
 
-/** Escape HTML and convert newlines to breaks for simple richtext stored as plain text. */
+/**
+ * Escape HTML and convert newlines to breaks for simple richtext stored as
+ * plain text. Understands the three marks the admin toolbar inserts:
+ * `**bold**`, `_italic_`, and lines starting with `- ` (bullets).
+ */
 export function renderRichText(value: string): string {
   const escaped = value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-  return escaped.replace(/\n/g, "<br />");
+  const inline = (line: string) =>
+    line
+      .replace(/\*\*([^*\n]+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[\s(])_([^_\n]+?)_(?=$|[\s.,;:!?)])/g, "$1<em>$2</em>");
+  const lines = escaped.split("\n");
+  const out: string[] = [];
+  let listOpen = false;
+  for (const line of lines) {
+    const bullet = /^\s*-\s+(.*)$/.exec(line);
+    if (bullet) {
+      if (!listOpen) {
+        out.push("<ul>");
+        listOpen = true;
+      }
+      out.push(`<li>${inline(bullet[1] ?? "")}</li>`);
+      continue;
+    }
+    if (listOpen) {
+      out.push("</ul>");
+      listOpen = false;
+      if (line.trim() === "") continue; // the newline before/after a list is layout, not a break
+    }
+    out.push(inline(line));
+  }
+  if (listOpen) out.push("</ul>");
+  // Non-list lines keep the original <br /> joins; list markup stands on its own.
+  let html = "";
+  for (let i = 0; i < out.length; i++) {
+    const cur = out[i]!;
+    const prev = out[i - 1];
+    const isBlock = (s: string | undefined) =>
+      s === "<ul>" || s === "</ul>" || (s?.startsWith("<li>") ?? false);
+    if (i > 0 && !isBlock(cur) && !isBlock(prev)) html += "<br />";
+    html += cur;
+  }
+  return html;
 }

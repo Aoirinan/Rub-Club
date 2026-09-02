@@ -7,6 +7,7 @@ import type {
   BannerConfig,
   DoctorMediaItem,
   SiteOwnerSingleton,
+  SpecialsConfig,
   SpecialsPopupVariant,
   TestimonialVideoItem,
 } from "@/lib/site-owner-config";
@@ -110,10 +111,15 @@ export function OwnerMarketingPanel() {
 
   async function saveSpecials() {
     if (!config) return;
+    // Only the text fields are edited here; image url/path are owned by the
+    // upload/remove controls (a stale tab must not clear a fresh upload).
+    const { massageHtml, chiroHtml, generalHtml, modalTitle, closeLabel } = config.specials;
     const res = await ownerMarketingFetch("/api/superadmin/config", {
       method: "PATCH",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ specials: config.specials }),
+      body: JSON.stringify({
+        specials: { massageHtml, chiroHtml, generalHtml, modalTitle, closeLabel },
+      }),
       credentials: "include",
     });
     const data = (await res.json()) as { config?: SiteOwnerSingleton; error?: string };
@@ -562,7 +568,25 @@ export function OwnerMarketingPanel() {
               <SpecialsPopupImageControls
                 variant={variant}
                 imageUrl={config.specials[imageUrlKey]}
-                onReload={loadConfig}
+                onImageChange={(next) =>
+                  // Merge only the image fields so unsaved popup text survives.
+                  setConfig((cur) =>
+                    cur
+                      ? {
+                          ...cur,
+                          specials: {
+                            ...cur.specials,
+                            massageImageUrl: next.massageImageUrl,
+                            massageImageStoragePath: next.massageImageStoragePath,
+                            chiroImageUrl: next.chiroImageUrl,
+                            chiroImageStoragePath: next.chiroImageStoragePath,
+                            generalImageUrl: next.generalImageUrl,
+                            generalImageStoragePath: next.generalImageStoragePath,
+                          },
+                        }
+                      : cur,
+                  )
+                }
                 onMessage={setMsg}
               />
             </div>
@@ -870,12 +894,12 @@ function OnlineBookingSettingsBlock({
 function SpecialsPopupImageControls({
   variant,
   imageUrl,
-  onReload,
+  onImageChange,
   onMessage,
 }: {
   variant: SpecialsPopupVariant;
   imageUrl: string;
-  onReload: () => Promise<void>;
+  onImageChange: (specials: SpecialsConfig) => void;
   onMessage: (s: string | null) => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -898,14 +922,17 @@ function SpecialsPopupImageControls({
         body: fd,
         credentials: "include",
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        specials?: SpecialsConfig;
+      };
       if (!res.ok) {
         onMessage(data.error ?? "Upload failed");
         return;
       }
       onMessage("Image saved.");
       setFile(null);
-      await onReload();
+      if (data.specials) onImageChange(data.specials);
     } finally {
       setBusy(false);
     }
@@ -919,13 +946,16 @@ function SpecialsPopupImageControls({
         method: "DELETE",
         credentials: "include",
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        specials?: SpecialsConfig;
+      };
       if (!res.ok) {
         onMessage(data.error ?? "Remove failed");
         return;
       }
       onMessage("Image removed.");
-      await onReload();
+      if (data.specials) onImageChange(data.specials);
     } finally {
       setBusy(false);
     }

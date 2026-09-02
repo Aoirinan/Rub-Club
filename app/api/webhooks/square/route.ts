@@ -9,6 +9,7 @@ import {
 } from "@/lib/email-templates";
 import { buildIcs } from "@/lib/ics";
 import { generatePatientPortalToken, hashPatientPortalToken } from "@/lib/patient-portal-token";
+import { linkBookingAfterCreate, onBookingStatusChange } from "@/lib/patients-db";
 import { sendBookingNotification } from "@/lib/sendgrid";
 import { siteUrl } from "@/lib/site-content";
 import { verifySquareWebhook } from "@/lib/square";
@@ -65,62 +66,131 @@ export async function POST(req: Request) {
 
   const db = getFirestore();
   const bookingRef = db.collection("bookings").doc(bookingId);
-  const snap = await bookingRef.get();
 
-  if (!snap.exists) {
-    console.warn("[square-webhook] Booking not found:", bookingId);
-    return NextResponse.json({ ok: true, skipped: true });
-  }
+  // Read-check-write inside one transaction so a redelivered webhook cannot
+  // double-confirm or mint a second portal token.
+  type TxOutcome =
+    | { kind: "skipped"; reason: string }
+    | {
+        kind: "recorded";
+        autoConfirm: boolean;
+        prevStatus: string | undefined;
+        portalPlain: string | null;
+        underpaid: boolean;
+        expectedCents: number | null;
+      };
 
-  const existingPayId = snap.get("squarePaymentId");
-  if (typeof existingPayId === "string" && existingPayId.length > 0) {
-    if (existingPayId === squarePaymentId) {
-      return NextResponse.json({ ok: true, skipped: true });
+  const outcome: TxOutcome = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(bookingRef);
+    if (!snap.exists) return { kind: "skipped", reason: "not_found" };
+
+    const existingPayId = snap.get("squarePaymentId");
+    if (typeof existingPayId === "string" && existingPayId.length > 0) {
+      return {
+        kind: "skipped",
+        reason: existingPayId === squarePaymentId ? "duplicate" : "other_payment",
+      };
     }
-    console.warn("[square-webhook] Booking already linked to a different payment; ignoring.", bookingId);
+
+    const prepaidOnline = snap.get("prepaidOnline") === true;
+    const bookingStatus = snap.get("status") as string | undefined;
+    const expectedRaw = snap.get("paymentAmountCents");
+    const expectedCents =
+      typeof expectedRaw === "number" && Number.isFinite(expectedRaw) && expectedRaw > 0
+        ? Math.round(expectedRaw)
+        : null;
+    // Never auto-confirm on a payment smaller than what the office asked for.
+    const underpaid = expectedCents !== null && amountCents < expectedCents;
+    const autoConfirm = prepaidOnline && bookingStatus === "pending" && !underpaid;
+
+    let portalPlain: string | null = null;
+    let portalHash: string | null = null;
+    if (autoConfirm) {
+      portalPlain = generatePatientPortalToken();
+      portalHash = hashPatientPortalToken(portalPlain);
+    }
+
+    const paymentUpdate: Record<string, unknown> = {
+      paidAt: FieldValue.serverTimestamp(),
+      paidAmountCents: amountCents,
+      squarePaymentId,
+      ...(underpaid ? { paymentUnderpaid: true } : {}),
+    };
+    if (autoConfirm && portalHash) {
+      paymentUpdate.status = "confirmed";
+      paymentUpdate.acceptedAt = FieldValue.serverTimestamp();
+      paymentUpdate.acceptedByUid = null;
+      paymentUpdate.acceptedByEmail = "square_prepay";
+      paymentUpdate.patientPortalTokenHash = portalHash;
+    }
+    tx.update(bookingRef, paymentUpdate);
+
+    return {
+      kind: "recorded",
+      autoConfirm,
+      prevStatus: bookingStatus,
+      portalPlain,
+      underpaid,
+      expectedCents,
+    };
+  });
+
+  if (outcome.kind === "skipped") {
+    if (outcome.reason === "not_found") {
+      console.warn("[square-webhook] Booking not found:", bookingId);
+    } else if (outcome.reason === "other_payment") {
+      console.warn("[square-webhook] Booking already linked to a different payment; ignoring.", bookingId);
+    }
     return NextResponse.json({ ok: true, skipped: true });
   }
 
-  const prepaidOnline = snap.get("prepaidOnline") === true;
-  const bookingStatus = snap.get("status");
-  const autoConfirm = prepaidOnline && bookingStatus === "pending";
-  let portalPlain: string | null = null;
-  let portalHash: string | null = null;
-  if (autoConfirm) {
-    portalPlain = generatePatientPortalToken();
-    portalHash = hashPatientPortalToken(portalPlain);
+  const { autoConfirm, prevStatus, portalPlain, underpaid, expectedCents } = outcome;
+  if (underpaid) {
+    console.warn("[square-webhook] Payment below requested amount; not auto-confirming.", {
+      bookingId,
+      amountCents,
+      expectedCents,
+    });
   }
-
-  const paymentUpdate: Record<string, unknown> = {
-    paidAt: FieldValue.serverTimestamp(),
-    paidAmountCents: amountCents,
-    squarePaymentId,
-  };
-  if (autoConfirm && portalHash) {
-    paymentUpdate.status = "confirmed";
-    paymentUpdate.acceptedAt = FieldValue.serverTimestamp();
-    paymentUpdate.acceptedByUid = null;
-    paymentUpdate.acceptedByEmail = "square_prepay";
-    paymentUpdate.patientPortalTokenHash = portalHash;
-  }
-
-  await bookingRef.update(paymentUpdate);
 
   await recordBookingEvent(db, bookingId, {
     type: "payment_completed",
     byUid: null,
     byEmail: null,
-    meta: { amountCents, squarePaymentId },
+    meta: {
+      amountCents,
+      squarePaymentId,
+      ...(expectedCents !== null ? { expectedCents } : {}),
+      ...(underpaid ? { underpaid: true } : {}),
+    },
   }).catch((err) => console.error("Failed to log payment_completed event:", err));
 
-  if (autoConfirm && portalHash) {
+  if (autoConfirm) {
     await recordBookingEvent(db, bookingId, {
       type: "accepted",
       byUid: null,
       byEmail: "square_prepay",
       meta: { prevStatus: "pending", via: "square_prepay" },
     }).catch((err) => console.error("Failed to log accepted event:", err));
+
+    // Keep patient records in step with the manual accept route.
+    try {
+      let after = await bookingRef.get();
+      let patientId = typeof after.get("patientId") === "string" ? after.get("patientId") : null;
+      if (!patientId) {
+        await linkBookingAfterCreate(db, bookingId, "online_booking");
+        after = await bookingRef.get();
+        patientId = typeof after.get("patientId") === "string" ? after.get("patientId") : null;
+      }
+      if (patientId) {
+        await onBookingStatusChange(db, patientId, prevStatus, "confirmed");
+      }
+    } catch (err) {
+      console.error("[square-webhook] patient link failed", err);
+    }
   }
+
+  const snap = await bookingRef.get();
 
   try {
     const emailCtx = bookingDocToEmailContext(snap);

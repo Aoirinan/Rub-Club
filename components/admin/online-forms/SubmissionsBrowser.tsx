@@ -40,6 +40,37 @@ export function SubmissionsBrowser({ slug }: { slug: string }) {
   const [sortNewestFirst, setSortNewestFirst] = useState(true);
   const [selected, setSelected] = useState<IntakeSubmissionRecord | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  // The export route requires the staff bearer token, which a plain link
+  // navigation cannot send — fetch it and hand the browser a blob instead.
+  async function downloadCsv() {
+    setExporting(true);
+    setExportError(null);
+    try {
+      const res = await adminFetch(
+        `/api/admin/online-forms/submissions/export?slug=${encodeURIComponent(slug)}`,
+      );
+      if (!res.ok) {
+        setExportError("Could not download the CSV.");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${slug}-submissions.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportError("Could not download the CSV.");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   const loadList = useCallback(async () => {
     setLoading(true);
@@ -118,12 +149,17 @@ export function SubmissionsBrowser({ slug }: { slug: string }) {
           </Link>
           <h1 className="text-2xl font-black text-slate-900">{def.title} — Submissions</h1>
         </div>
-        <a
-          href={`/api/admin/online-forms/submissions/export?slug=${encodeURIComponent(slug)}`}
-          className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
-        >
-          Download CSV
-        </a>
+        <div className="flex flex-col items-end gap-1">
+          <button
+            type="button"
+            onClick={() => void downloadCsv()}
+            disabled={exporting}
+            className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+          >
+            {exporting ? "Preparing…" : "Download CSV"}
+          </button>
+          {exportError ? <p className="text-xs text-red-700">{exportError}</p> : null}
+        </div>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[20rem_1fr]">

@@ -12,7 +12,9 @@ import {
   STAFF_ROLES,
   STAFF_LOCATION_SCOPES,
   canAssignRole,
+  canModifyStaffMember,
   normalizeStaffLocationScope,
+  normalizeStaffRole,
   type StaffRole,
   type StaffLocationScope,
 } from "@/lib/staff-roles";
@@ -124,6 +126,26 @@ export async function POST(req: Request) {
       } else {
         console.error(e);
         return NextResponse.json({ error: "Could not create Firebase user." }, { status: 500 });
+      }
+    }
+  }
+
+  if (!createdNewAuthUser) {
+    const existingSnap = await db.collection("staff").doc(uid).get();
+    const existingRole = existingSnap.exists ? normalizeStaffRole(existingSnap.get("role")) : null;
+    if (!canModifyStaffMember(actor.role, existingRole)) {
+      return NextResponse.json(
+        { error: "Only a superadmin can change another superadmin's access." },
+        { status: 403 },
+      );
+    }
+    if (existingRole === "superadmin" && role !== "superadmin") {
+      const superadmins = await db.collection("staff").where("role", "==", "superadmin").limit(50).get();
+      if (superadmins.size <= 1) {
+        return NextResponse.json(
+          { error: "Cannot demote the last superadmin. Promote another superadmin first." },
+          { status: 400 },
+        );
       }
     }
   }

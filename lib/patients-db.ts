@@ -308,32 +308,66 @@ export async function findOrCreatePatientFromBooking(
   return patientId;
 }
 
+/**
+ * Move `nextAppointmentDate` forward to `startAt` when the stored value is
+ * missing, already in the past, or later than this new appointment.
+ */
 export async function maybeUpdateNextAppointment(
   db: Firestore,
   patientId: string,
   startAt: Timestamp,
 ): Promise<void> {
-  const now = Timestamp.now();
-  if (startAt.toMillis() <= now.toMillis()) return;
+  const nowMs = Date.now();
+  if (startAt.toMillis() <= nowMs) return;
 
   const ref = db.collection(PATIENTS_COLLECTION).doc(patientId);
   const snap = await ref.get();
   if (!snap.exists) return;
   const cur = snap.get("nextAppointmentDate");
-  if (cur instanceof Timestamp && cur.toMillis() <= startAt.toMillis()) return;
-  if (cur instanceof Timestamp && cur.toMillis() < startAt.toMillis()) {
-    await ref.update({
-      nextAppointmentDate: startAt,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-    return;
+  const curMs = cur instanceof Timestamp ? cur.toMillis() : null;
+  const stale = curMs === null || curMs <= nowMs || curMs > startAt.toMillis();
+  if (!stale) return;
+  await ref.update({
+    nextAppointmentDate: startAt,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
+
+/**
+ * Recompute `nextAppointmentDate` from the patient's earliest upcoming booking
+ * that is still pending or confirmed. Call this after a booking is cancelled,
+ * declined, or rescheduled so the field never points at a dead appointment.
+ */
+export async function recomputePatientNextAppointment(
+  db: Firestore,
+  patientId: string,
+): Promise<void> {
+  const id = patientId.trim();
+  if (!id) return;
+  const ref = db.collection(PATIENTS_COLLECTION).doc(id);
+  const patientSnap = await ref.get();
+  if (!patientSnap.exists) return;
+
+  const snap = await db.collection("bookings").where("patientId", "==", id).get();
+  const nowMs = Date.now();
+  let next: Timestamp | null = null;
+  for (const doc of snap.docs) {
+    const d = doc.data();
+    const status = typeof d.status === "string" ? d.status : "pending";
+    if (status !== "pending" && status !== "confirmed") continue;
+    const startAt = d.startAt instanceof Timestamp ? d.startAt : null;
+    if (!startAt || startAt.toMillis() <= nowMs) continue;
+    if (!next || startAt.toMillis() < next.toMillis()) next = startAt;
   }
-  if (!(cur instanceof Timestamp)) {
-    await ref.update({
-      nextAppointmentDate: startAt,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-  }
+
+  const cur = patientSnap.get("nextAppointmentDate");
+  const curMs = cur instanceof Timestamp ? cur.toMillis() : null;
+  const nextMs = next ? next.toMillis() : null;
+  if (curMs === nextMs) return;
+  await ref.update({
+    nextAppointmentDate: next,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
 }
 
 export async function linkBookingToPatient(
@@ -439,6 +473,21 @@ export async function onBookingCheckedIn(
   });
 }
 
+/**
+ * Convenience wrapper: look up the booking's `patientId` and recompute that
+ * patient's `nextAppointmentDate`. Safe to call when the booking has no patient.
+ */
+export async function recomputeNextAppointmentForBooking(
+  db: Firestore,
+  bookingId: string,
+): Promise<void> {
+  const snap = await db.collection("bookings").doc(bookingId).get();
+  if (!snap.exists) return;
+  const patientId = snap.get("patientId");
+  if (typeof patientId !== "string" || !patientId.trim()) return;
+  await recomputePatientNextAppointment(db, patientId);
+}
+
 export async function onBookingStatusChange(
   db: Firestore,
   patientId: string,
@@ -518,9 +567,12 @@ export async function getPatientBookings(
   limit = 200,
 ): Promise<Record<string, unknown>[]> {
   const db = getFirestore();
+  // Newest first before limiting so a long history never drops recent visits
+  // (composite index: patientId asc + startAt desc).
   const snap = await db
     .collection("bookings")
     .where("patientId", "==", patientId)
+    .orderBy("startAt", "desc")
     .limit(limit)
     .get();
 

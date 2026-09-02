@@ -61,11 +61,14 @@ export async function PATCH(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
+  // Omitting hiddenBlocks must not un-hide everything: keep the stored value.
+  const hiddenBlocks =
+    parsed.data.hiddenBlocks ?? (await getPageLayout(parsed.data.page)).hiddenBlocks;
   const saved = await savePageLayout(
     parsed.data.page,
     {
       blockOrder: parsed.data.blockOrder,
-      hiddenBlocks: parsed.data.hiddenBlocks ?? [],
+      hiddenBlocks,
     },
     staff.email ?? staff.uid,
   );

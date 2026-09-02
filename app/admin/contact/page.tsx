@@ -207,18 +207,20 @@ function ContactInbox() {
         delivery?: DeliveryStatus;
       };
       if (!res.ok) throw new Error(data.error ?? "Could not load messages");
-      setSubmissions(data.submissions ?? []);
+      const list = data.submissions ?? [];
+      setSubmissions(list);
       setNewCount(data.newCount ?? 0);
       setDelivery(data.delivery ?? null);
-      if (data.submissions?.length && !data.submissions.some((s) => s.id === selectedId)) {
-        setSelectedId(data.submissions[0]!.id);
-      }
+      // Keep the current selection when it is still in the list; otherwise
+      // fall back to the first message. Read via updater so `selectedId` is not
+      // a dependency (that made every click refetch and jump the reader pane).
+      setSelectedId((prev) => (list.some((s) => s.id === prev) ? prev : (list[0]?.id ?? null)));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Load failed");
     } finally {
       setLoading(false);
     }
-  }, [auth, filter, locationFilter, me?.locationScope, selectedId]);
+  }, [auth, filter, locationFilter, me?.locationScope]);
 
   useEffect(() => {
     if (me?.role) void load();
@@ -234,7 +236,17 @@ function ContactInbox() {
       body: JSON.stringify({ status }),
     });
     if (!res.ok) return;
-    await load();
+    // Update in place instead of refetching so the message just opened stays
+    // visible even when the "new" filter would no longer include it.
+    setSubmissions((prev) => {
+      const before = prev.find((s) => s.id === id);
+      if (before && before.status === "new" && status !== "new") {
+        setNewCount((n) => Math.max(0, n - 1));
+      } else if (before && before.status !== "new" && status === "new") {
+        setNewCount((n) => n + 1);
+      }
+      return prev.map((s) => (s.id === id ? { ...s, status } : s));
+    });
   }
 
   const selected = submissions.find((s) => s.id === selectedId) ?? submissions[0] ?? null;

@@ -2,8 +2,16 @@ import type { MetadataRoute } from "next";
 import { allParisChiroServiceSlugs } from "@/lib/paris-chiro-services";
 import { getSiteOrigin } from "@/lib/site-content";
 import { listAllPublishedLegacyPages } from "@/lib/legacy-pages";
+import { allSSPageSlugs } from "@/lib/ss-cms-content";
+import { SS_RESOURCE_ARTICLES } from "@/lib/sulphur-springs-content";
 
 export const revalidate = 3600;
+
+/**
+ * Stable lastModified: the deploy time, not the request time. Stamping every
+ * URL with "now" on each regeneration makes crawlers ignore the field.
+ */
+const BUILD_LAST_MODIFIED = new Date();
 
 type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]["changeFrequency"]>;
 
@@ -40,21 +48,14 @@ const ENTRIES: { path: string; changeFrequency: ChangeFrequency; priority: numbe
   { path: "/sulphur-springs/massage/prices", changeFrequency: "monthly", priority: 0.6 },
   { path: "/sulphur-springs/wellness-care-plans", changeFrequency: "monthly", priority: 0.7 },
   { path: "/sulphur-springs/staff", changeFrequency: "monthly", priority: 0.7 },
-  { path: "/sulphur-springs/adjustments-and-manipulation", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/sulphur-springs/common-chiropractic-conditions", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/sulphur-springs/degenerative-disc-disease", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/sulphur-springs/electrical-muscle-stimulation", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/sulphur-springs/ice-pack-cryotherapy", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/sulphur-springs/postural-rehabilitation", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/sulphur-springs/spinal-decompression", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/sulphur-springs/therapeutic-exercise", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/sulphur-springs/therapeutic-ultrasound", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/sulphur-springs/auto-injury", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/sulphur-springs/personal-injury", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/sulphur-springs/sports-injury", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/sulphur-springs/contact", changeFrequency: "monthly", priority: 0.7 },
+  // Every SS service / injury / resource slug rendered by app/sulphur-springs/[slug].
+  ...allSSPageSlugs().map((slug) => ({
+    path: `/sulphur-springs/${slug}`,
+    changeFrequency: "monthly" as ChangeFrequency,
+    priority: SS_RESOURCE_ARTICLES.some((a) => a.slug === slug) ? 0.55 : 0.6,
+  })),
   { path: "/sulphur-springs/patient-resources", changeFrequency: "monthly", priority: 0.55 },
-  { path: "/sulphur-springs/about-chiropractic", changeFrequency: "monthly", priority: 0.55 },
-  { path: "/sulphur-springs/vertebral-subluxation-complex", changeFrequency: "monthly", priority: 0.55 },
   { path: "/sulphur-springs/q-and-a", changeFrequency: "monthly", priority: 0.55 },
   { path: "/sulphur-springs/insurance", changeFrequency: "monthly", priority: 0.55 },
   { path: "/sulphur-springs/reviews", changeFrequency: "monthly", priority: 0.55 },
@@ -63,9 +64,14 @@ const ENTRIES: { path: string; changeFrequency: ChangeFrequency; priority: numbe
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = getSiteOrigin();
-  const lastModified = new Date();
+  const lastModified = BUILD_LAST_MODIFIED;
 
-  const staticEntries = ENTRIES.map((e) => ({
+  const seen = new Set<string>();
+  const staticEntries = ENTRIES.filter((e) => {
+    if (seen.has(e.path)) return false;
+    seen.add(e.path);
+    return true;
+  }).map((e) => ({
     url: `${origin}${e.path}`,
     lastModified,
     changeFrequency: e.changeFrequency,

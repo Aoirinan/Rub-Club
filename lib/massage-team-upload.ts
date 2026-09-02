@@ -77,7 +77,8 @@ export async function uploadMassageTeamPhoto(opts: {
   await file.makePublic().catch(() => {
     /* uniform bucket-level access: rely on Storage rules / IAM for public read */
   });
-  const photoUrl = publicObjectUrl(bucket.name, storagePath);
+  // Deterministic key + 1h cache: bust browser/CDN caches on replace.
+  const photoUrl = `${publicObjectUrl(bucket.name, storagePath)}?v=${Date.now()}`;
   return { photoUrl, photoStoragePath: storagePath };
 }
 

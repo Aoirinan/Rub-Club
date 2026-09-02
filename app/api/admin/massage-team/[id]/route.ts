@@ -115,7 +115,8 @@ export async function PATCH(req: Request, ctx: Params) {
       }
       updates.photoUrl = photoUrl;
       updates.photoStoragePath = photoStoragePath;
-      if (typeof oldPath === "string") {
+      // Same extension ⇒ same deterministic key: never delete the object just written.
+      if (typeof oldPath === "string" && oldPath !== photoStoragePath) {
         await deleteMassageTeamStorageObject(oldPath).catch(() => {});
       }
     }
@@ -162,6 +163,10 @@ export async function PATCH(req: Request, ctx: Params) {
   if (body.photoUrl !== undefined) {
     updates.photoUrl = body.photoUrl.trim();
     updates.photoStoragePath = FieldValue.delete();
+    const oldPath = existing.get("photoStoragePath");
+    if (typeof oldPath === "string") {
+      await deleteMassageTeamStorageObject(oldPath).catch(() => {});
+    }
   }
   if (body.sortOrder !== undefined) updates.sortOrder = body.sortOrder;
   if (body.active !== undefined) updates.active = body.active;

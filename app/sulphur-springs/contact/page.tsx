@@ -34,7 +34,7 @@ export default async function SulphurSpringsContactPage() {
 
   return (
     <>
-      <JsonLd data={chiropractorJsonLd(ss)} />
+      <JsonLd data={chiropractorJsonLd(ss, ssHours)} />
       <Breadcrumbs
         items={[
           { name: "Home", url: "/" },

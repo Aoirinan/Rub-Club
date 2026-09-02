@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { Firestore } from "firebase-admin/firestore";
-import type { DateTime } from "luxon";
+import { DateTime } from "luxon";
 import { getFirestore } from "@/lib/firebase-admin";
 import type { LocationId, ServiceLine } from "@/lib/constants";
 import { isValidBookingDurationMin } from "@/lib/booking-duration";
@@ -16,6 +16,8 @@ import {
   effectiveDayWindowsFromHours,
 } from "@/lib/slots-luxon";
 import { getPublicBookingConfig, isPublicBookingEnabled } from "@/lib/public-booking-settings";
+import { assertRateLimitOk } from "@/lib/rate-limit";
+import { TIME_ZONE } from "@/lib/constants";
 
 export const runtime = "nodejs";
 
@@ -39,6 +41,13 @@ async function bucketsFree(
 
 export async function GET(req: Request) {
   try {
+    const rl = await assertRateLimitOk(req.headers, { bucket: "slots", maxPerWindow: 300 });
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: "Too many requests. Try again soon.", slots: [] },
+        { status: 429, headers: { "retry-after": String(rl.retryAfterSec) } },
+      );
+    }
     const { searchParams } = new URL(req.url);
     const previewOnly = searchParams.get("preview") === "1";
     const publicBooking = await getPublicBookingConfig();
@@ -76,9 +85,14 @@ export async function GET(req: Request) {
     }
 
     const db = getFirestore();
+    // Specific-provider lookups (including existing patients rescheduling with
+    // their current therapist) may target a provider who is no longer taking
+    // NEW clients; the booking route still enforces that filter for new bookings.
     const eligible = await fetchActiveProvidersForPublicBooking(db, locationId, serviceLine, {
-      publicBooking: true,
+      publicBooking: providerMode !== "specific",
     });
+    // Never offer a start that has already passed (or is about to).
+    const earliest = DateTime.now().setZone(TIME_ZONE).plus({ minutes: 2 });
 
     if (eligible.length === 0) {
       return NextResponse.json({
@@ -101,6 +115,7 @@ export async function GET(req: Request) {
       const windows = effectiveDayWindowsFromHours(date, hoursCtx);
       const candidates = enumerateCandidateStartsInWindows(date, durationMin, windows);
       for (const start of candidates) {
+        if (start < earliest) continue;
         if (!providerAllowsAppointmentTime(provider, start, durationMin)) continue;
         if (await bucketsFree(db, locationId, providerId, serviceLine, start, durationMin)) {
           available.push({
@@ -113,6 +128,7 @@ export async function GET(req: Request) {
       const contexts = eligible.map((p) => providerHoursContext(p));
       const candidates = unionCandidateStartsFromHoursContexts(date, durationMin, contexts);
       for (const start of candidates) {
+        if (start < earliest) continue;
         const usable = eligible.filter((p) => providerAllowsAppointmentTime(p, start, durationMin));
         let open = false;
         for (const p of usable) {

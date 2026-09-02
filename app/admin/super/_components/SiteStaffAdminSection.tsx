@@ -165,10 +165,15 @@ export function SiteStaffAdminSection({
   }
 
   function moveMember(id: string, direction: -1 | 1) {
+    // Neighbours come from the *visible* list so a filtered view (one office,
+    // massage only) never swaps with a hidden member of the other office.
+    const visIdx = filteredMembers.findIndex((m) => m.id === id);
+    if (visIdx < 0) return;
+    const visTarget = visIdx + direction;
+    if (visTarget < 0 || visTarget >= filteredMembers.length) return;
     const idx = members.findIndex((m) => m.id === id);
-    if (idx < 0) return;
-    const target = idx + direction;
-    if (target < 0 || target >= members.length) return;
+    const target = members.findIndex((m) => m.id === filteredMembers[visTarget]!.id);
+    if (idx < 0 || target < 0) return;
     const next = [...members];
     const tmp = next[idx];
     next[idx] = next[target]!;
@@ -699,8 +704,7 @@ export function SiteStaffAdminSection({
       ) : null}
 
       <ul className="space-y-2 text-sm text-slate-700">
-        {filteredMembers.map((m) => {
-          const globalIndex = members.findIndex((x) => x.id === m.id);
+        {filteredMembers.map((m, visibleIndex) => {
           return (
             <li
               key={m.id}
@@ -732,7 +736,7 @@ export function SiteStaffAdminSection({
               <div className="flex shrink-0 flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  disabled={reordering || globalIndex <= 0}
+                  disabled={reordering || visibleIndex <= 0}
                   onClick={() => moveMember(m.id, -1)}
                   className="rounded border border-slate-300 bg-white px-2 py-1 text-xs disabled:opacity-40"
                   aria-label="Move up"
@@ -741,7 +745,7 @@ export function SiteStaffAdminSection({
                 </button>
                 <button
                   type="button"
-                  disabled={reordering || globalIndex < 0 || globalIndex >= members.length - 1}
+                  disabled={reordering || visibleIndex >= filteredMembers.length - 1}
                   onClick={() => moveMember(m.id, 1)}
                   className="rounded border border-slate-300 bg-white px-2 py-1 text-xs disabled:opacity-40"
                   aria-label="Move down"

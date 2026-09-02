@@ -75,8 +75,10 @@ function AdminPatientContent() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/patient?q=${encodeURIComponent(searchQuery)}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch("/api/admin/patient", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ q: searchQuery }),
       });
       const data = (await res.json()) as {
         error?: string;

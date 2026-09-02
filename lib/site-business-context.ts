@@ -41,6 +41,8 @@ const SHARED_PATH_PREFIXES = [
   "/terms",
   "/website-privacy",
   "/auth",
+  "/patient-forms",
+  "/reviews",
   // Single pages with one URL but relevant to both sites — keep the visitor's
   // current brand color instead of forcing Paris.
   "/services/chiropractic/wellness-care-plans",

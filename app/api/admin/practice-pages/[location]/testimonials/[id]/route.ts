@@ -20,6 +20,7 @@ const patchSchema = z.object({
   quote: z.string().min(1).max(4000).optional(),
   order: z.number().int().min(0).optional(),
   published: z.boolean().optional(),
+  location: z.enum(["paris", "sulphur-springs", "massage"]).optional(),
 });
 
 function testimonialRef(loc: PracticeLocationId, id: string) {
@@ -71,6 +72,12 @@ export async function PATCH(
   if (parsed.data.quote !== undefined) updates.quote = parsed.data.quote.trim();
   if (parsed.data.order !== undefined) updates.order = parsed.data.order;
   if (parsed.data.published !== undefined) updates.published = parsed.data.published;
+  if (parsed.data.location !== undefined) {
+    updates.location = parsed.data.location;
+  } else if (typeof snap.get("location") !== "string") {
+    // Legacy untagged rows are hidden by the public location filter; tag on edit.
+    updates.location = location === "sulphur-springs" ? "sulphur-springs" : "paris";
+  }
 
   await ref.set(updates, { merge: true });
 

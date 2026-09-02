@@ -364,6 +364,11 @@ export function BookingWizard({
       setRepeatWeeklyCount(1);
       setSelectedSlot(null);
       setSlots(null);
+    } catch (e) {
+      const msg =
+        e instanceof Error && e.message ? e.message : "Could not reach the server. Please try again.";
+      setSubmitMessage(msg);
+      track("booking_failed", { error: msg });
     } finally {
       setSubmitting(false);
     }

@@ -50,8 +50,12 @@ export async function PATCH(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const data: Record<string, unknown> = { ...parsed.data };
+  if (typeof parsed.data.category === "string") {
+    data.category = parsed.data.category.trim() || "general";
+  }
   await ref.update({
-    ...parsed.data,
+    ...data,
     updatedAt: FieldValue.serverTimestamp(),
     updatedBy: staff.email ?? staff.uid,
   });

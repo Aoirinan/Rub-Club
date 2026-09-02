@@ -11,7 +11,9 @@ import type { IntakeSubmissionRecord } from "@/lib/intakeForms/types";
 
 export const runtime = "nodejs";
 
-function csvCell(value: string): string {
+function csvCell(raw: string): string {
+  // Spreadsheet formula injection guard: intake answers are public text.
+  const value = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
   const needsQuotes = /[",\n\r]/.test(value);
   const escaped = value.replace(/"/g, '""');
   return needsQuotes ? `"${escaped}"` : escaped;
@@ -37,15 +39,29 @@ export async function GET(req: Request) {
   const records = await listSubmissions(parsed.data.slug, { status: "all", limit: 500 });
   const fields = flattenFields(def);
 
+  // Several blocks share a label (e.g. four "Signature" blocks), so number the
+  // repeats to keep every column header distinct.
+  const exportable = fields.filter((f) => !["heading", "note", "legal-text"].includes(f.type));
+  const labelTotals = new Map<string, number>();
+  for (const f of exportable) labelTotals.set(f.label, (labelTotals.get(f.label) ?? 0) + 1);
+  const labelSeen = new Map<string, number>();
+  const columnLabel = (f: (typeof exportable)[number]): string => {
+    const total = labelTotals.get(f.label) ?? 1;
+    if (total <= 1) return f.label;
+    const n = (labelSeen.get(f.label) ?? 0) + 1;
+    labelSeen.set(f.label, n);
+    return `${f.label} ${n}`;
+  };
+
   const headers: string[] = ["Submission ID", "Submitted At", "Status", "Patient Name", "IP Address"];
-  for (const f of fields) {
-    if (["heading", "note", "legal-text"].includes(f.type)) continue;
+  for (const f of exportable) {
+    const label = columnLabel(f);
     if (f.type === "signature-block") {
-      headers.push(`${f.label} - Signed`, `${f.label} - Printed Name`, `${f.label} - Email`, `${f.label} - Date`);
+      headers.push(`${label} - Signed`, `${label} - Printed Name`, `${label} - Email`, `${label} - Date`);
     } else if (f.type === "body-diagram") {
-      headers.push(`${f.label} - Marked`);
+      headers.push(`${label} - Marked`);
     } else {
-      headers.push(f.label);
+      headers.push(label);
     }
   }
 

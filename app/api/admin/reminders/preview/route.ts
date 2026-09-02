@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
+import { DateTime } from "luxon";
 import { getFirestore } from "@/lib/firebase-admin";
 import { requireStaff } from "@/lib/staff-auth";
 import { bookingDocToEmailContext } from "@/lib/booking-doc";
 import { formatChicagoDateTimeLong } from "@/lib/chicago-datetime-format";
 import { providerAllowsReminderChannel } from "@/lib/provider-reminders";
+import { TIME_ZONE } from "@/lib/constants";
 
 export const runtime = "nodejs";
 
@@ -31,12 +33,16 @@ export async function GET(req: Request) {
   for (const doc of snap.docs) {
     const data = doc.data();
     const phone = typeof data.phone === "string" ? data.phone.trim() : "";
+    const email = typeof data.email === "string" ? data.email.trim().toLowerCase() : "";
     const startAt = data.startAt as Timestamp | undefined;
-    if (!phone || !startAt) continue;
+    if (!startAt) continue;
     const startMs = startAt.toMillis();
-    const dayKey = new Date(startMs).toISOString().slice(0, 10);
+    // De-dupe per patient per Chicago-local day (not UTC day).
+    const dayKey = DateTime.fromMillis(startMs).setZone(TIME_ZONE).toISODate() ?? "";
     const digits = phone.replace(/\D/g, "").slice(-10);
-    const key = `${digits}__${dayKey}`;
+    const contactKey = digits || (email ? `email:${email}` : "");
+    if (!contactKey) continue;
+    const key = `${contactKey}__${dayKey}`;
     const prev = byPhoneDay.get(key);
     if (!prev || startMs < prev.startMs) {
       byPhoneDay.set(key, { docId: doc.id, startMs });

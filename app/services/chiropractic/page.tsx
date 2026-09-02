@@ -68,7 +68,7 @@ export default async function ChiropracticServicePage() {
     <>
       <JsonLd
         data={[
-          chiropractorJsonLd(paris),
+          chiropractorJsonLd(paris, parisHours),
           serviceJsonLd({
             name: "Chiropractic Care",
             description:

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { DateTime } from "luxon";
+import { TIME_ZONE } from "@/lib/constants";
 import { assertRateLimitOk, getClientIp } from "@/lib/rate-limit";
-import { getFormDefinition } from "@/lib/intakeForms/definitions";
+import { getFormDefinition, flattenFields } from "@/lib/intakeForms/definitions";
 import {
   getFormConfig,
   getGlobalConfig,
@@ -53,7 +55,7 @@ function cleanImage(value: string | undefined): string {
 }
 
 export async function POST(req: Request) {
-  const rl = await assertRateLimitOk(req.headers);
+  const rl = await assertRateLimitOk(req.headers, { bucket: "intake" });
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many requests. Please try again soon." },
@@ -98,14 +100,28 @@ export async function POST(req: Request) {
     );
   }
 
+  // "Date signed" is set from the server clock (office time zone), never from
+  // the device clock the client sent. Same format the signature block displays.
+  const signedToday = DateTime.now()
+    .setZone(TIME_ZONE)
+    .setLocale("en-US")
+    .toLocaleString(DateTime.DATE_FULL);
+  const signatureFieldsById = new Map(
+    flattenFields(definition)
+      .filter((f) => f.type === "signature-block")
+      .map((f) => [f.id, f] as const),
+  );
+
   // Sanitize images.
   const signatures: Record<string, IntakeSignatureValue> = {};
   for (const [key, sig] of Object.entries(body.signatures)) {
+    const fieldDef = signatureFieldsById.get(key);
+    const includeDate = fieldDef ? fieldDef.includeDate !== false : Boolean(sig.dateSigned?.trim());
     signatures[key] = {
       signatureImage: cleanImage(sig.signatureImage),
       printedName: sig.printedName?.trim() || undefined,
       email: sig.email?.trim() || undefined,
-      dateSigned: sig.dateSigned?.trim() || undefined,
+      dateSigned: includeDate ? signedToday : undefined,
       typedName: sig.typedName?.trim() || undefined,
     };
   }

@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(req: Request, ctx: Params) {
-  const staff = await requireStaff(req.headers.get("authorization"), "front_desk");
+  const staff = await requireStaff(req.headers.get("authorization"), "massage_therapist");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -18,6 +18,13 @@ export async function GET(req: Request, ctx: Params) {
   const bookingSnap = await db.collection("bookings").doc(id).get();
   if (!bookingSnap.exists) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  // Therapists may only read history for their own bookings.
+  if (staff.role === "massage_therapist") {
+    const providerId = bookingSnap.get("providerId");
+    if (!staff.linkedProviderId || providerId !== staff.linkedProviderId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
   }
 
   const events = await listBookingEvents(db, id);

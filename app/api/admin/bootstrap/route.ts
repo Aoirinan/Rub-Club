@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
+import { assertRateLimitOk } from "@/lib/rate-limit";
 import { verifyBearerUid } from "@/lib/staff-auth";
+import { secretsMatch } from "@/lib/superadmin-auth";
 
 export const runtime = "nodejs";
 
@@ -20,6 +22,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Bootstrap disabled" }, { status: 403 });
   }
 
+  const rl = await assertRateLimitOk(req.headers, { bucket: "bootstrap", maxPerWindow: 5 });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many attempts. Try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
+  }
+
   let json: unknown;
   try {
     json = await req.json();
@@ -31,7 +41,7 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
-  if (parsed.data.secret !== expected) {
+  if (!(await secretsMatch(parsed.data.secret, expected))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

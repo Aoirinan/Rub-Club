@@ -4,6 +4,9 @@ import { requireStaff } from "@/lib/staff-auth";
 import { importPatientsFromCsv } from "@/lib/patients-csv-import";
 
 export const runtime = "nodejs";
+// Large spreadsheets take a while; the importer itself stops early (with a
+// partial summary) well before this limit.
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   const staff = await requireStaff(req.headers.get("authorization"), "manager");

@@ -29,7 +29,8 @@ const createSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  const staff = await requireStaff(req.headers.get("authorization"), "front_desk");
+  // Therapists need the provider list to render their own Day view column.
+  const staff = await requireStaff(req.headers.get("authorization"), "massage_therapist");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

@@ -189,6 +189,21 @@ export async function listActiveSiteStaffForBrand(
   }
 }
 
+/** True when at least one member (active or hidden) is stored for this brand. */
+export async function siteStaffExistsForBrand(pageBrand: "paris" | "sulphur"): Promise<boolean> {
+  try {
+    const db = getFirestore();
+    const snap = await db.collection(SITE_STAFF_COLLECTION).get();
+    for (const doc of snap.docs) {
+      const row = parseSiteStaffDoc(doc.id, doc.data());
+      if (row && memberMatchesBrand(row.brand, pageBrand)) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 /** Active staff for a location page (Firestore only). */
 export async function resolveSiteStaffForBrand(
   pageBrand: "paris" | "sulphur",

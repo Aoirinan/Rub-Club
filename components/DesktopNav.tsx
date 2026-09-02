@@ -103,7 +103,17 @@ function ContactPanel({
         <div className="grid grid-cols-2 gap-x-6">
           {item.clinics!.map((clinic) => (
             <div key={clinic.name} className="text-white">
-              <p className="text-xs font-black uppercase tracking-[0.18em]">{clinic.name}</p>
+              {clinic.contactHref ? (
+                <Link
+                  href={clinic.contactHref}
+                  className="block text-xs font-black uppercase tracking-[0.18em] underline-offset-4 hover:underline"
+                  onClick={onClose}
+                >
+                  {clinic.name}
+                </Link>
+              ) : (
+                <p className="text-xs font-black uppercase tracking-[0.18em]">{clinic.name}</p>
+              )}
               <address className="mt-2 not-italic text-xs font-semibold leading-relaxed text-white/85">
                 {clinic.addressLines.map((line) => (
                   <span key={line} className="block">
@@ -138,6 +148,15 @@ function ContactPanel({
                 >
                   Get directions
                 </a>
+                {clinic.contactHref ? (
+                  <Link
+                    href={clinic.contactHref}
+                    className="inline-block text-xs font-bold underline hover:text-white/80"
+                    onClick={onClose}
+                  >
+                    {item.label}
+                  </Link>
+                ) : null}
               </div>
             </div>
           ))}

@@ -87,6 +87,17 @@ export function SignaturePad({
     onChange({ ...current(), signatureImage: image });
   }, [current, onChange]);
 
+  // Switching to "type your name" unmounts the canvas and clears the stored
+  // image; when the user comes back, repaint the kept strokes and store the
+  // image again so the "Signature captured." label and the value agree.
+  useEffect(() => {
+    if (useTyped) return;
+    if (strokesRef.current.length === 0) return;
+    redraw();
+    commitImage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [useTyped]);
+
   const pointFromEvent = (e: React.PointerEvent<HTMLCanvasElement>): Point => {
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();

@@ -24,6 +24,7 @@ type Props = {
 function scopeLabel(s: HoldRow["scope"]): string {
   if (s === "all") return "All services";
   if (s === "massage") return "Massage only";
+  if (s === "stretch") return "Stretch only";
   return "Chiropractic only";
 }
 

@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const rl = await assertRateLimitOk(req.headers);
+  const rl = await assertRateLimitOk(req.headers, { bucket: "staff-sms" });
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many requests. Try again soon." },

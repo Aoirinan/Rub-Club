@@ -50,13 +50,12 @@ export async function POST(req: Request, ctx: Params) {
 
   try {
     const { subject, text, html } = patientReminderEmail(emailCtx);
-    await sendBookingNotification({
+    emailSent = await sendBookingNotification({
       to: emailCtx.email,
       subject,
       text,
       html,
     });
-    emailSent = true;
   } catch (err) {
     console.error("Reminder email failed:", err);
   }

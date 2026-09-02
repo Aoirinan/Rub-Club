@@ -51,6 +51,7 @@ function bumpCache(): void {
   revalidatePath("/locations/paris/staff");
   revalidatePath("/sulphur-springs/staff");
   revalidatePath("/sulphur-springs");
+  revalidatePath("/sulphur-springs/massage");
 }
 
 export async function PATCH(req: Request, ctx: Params) {
@@ -137,7 +138,8 @@ export async function PATCH(req: Request, ctx: Params) {
         const up = await uploadSiteStaffPhoto({ memberId: id, buffer: buf, contentType });
         updates.photoUrl = up.photoUrl;
         updates.photoStoragePath = up.photoStoragePath;
-        if (typeof oldPath === "string") {
+        // Same extension ⇒ same deterministic key: never delete the object just written.
+        if (typeof oldPath === "string" && oldPath !== up.photoStoragePath) {
           await deleteSiteStaffStorageObject(oldPath).catch(() => {});
         }
       } catch (e) {
@@ -221,6 +223,10 @@ export async function PATCH(req: Request, ctx: Params) {
   if (body.photoUrl !== undefined) {
     updates.photoUrl = body.photoUrl.trim();
     updates.photoStoragePath = FieldValue.delete();
+    const oldPath = existing.get("photoStoragePath");
+    if (typeof oldPath === "string") {
+      await deleteSiteStaffStorageObject(oldPath).catch(() => {});
+    }
   }
   if (body.removeVideo === true) {
     const oldVideoPath = existing.get("videoStoragePath");

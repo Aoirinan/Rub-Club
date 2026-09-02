@@ -7,6 +7,7 @@ import {
   type ContactSubmissionStatus,
 } from "@/lib/contact-submissions";
 import { requireStaff } from "@/lib/staff-auth";
+import { getContactRoutingEmails } from "@/lib/contact-routing";
 import {
   getSendgridApiKey,
   getSendgridFromEmailNormalized,
@@ -50,7 +51,13 @@ export async function GET(req: Request) {
   });
   const newCount = await countNewContactSubmissions(scope);
 
-  const officeConfigured = Boolean(process.env.OFFICE_NOTIFICATION_EMAIL?.trim());
+  // Per-location routing addresses count as configured too (they take
+  // precedence over the env fallback when a message is delivered).
+  const routing = await getContactRoutingEmails();
+  const officeConfigured =
+    Boolean(process.env.OFFICE_NOTIFICATION_EMAIL?.trim()) ||
+    Boolean(routing.parisEmail) ||
+    Boolean(routing.sulphurEmail);
   const sendgridConfigured =
     Boolean(getSendgridApiKey()) && isValidOutboundFromEmail(getSendgridFromEmailNormalized());
 

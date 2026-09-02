@@ -7,7 +7,11 @@ import { recordBookingEventInTx } from "@/lib/booking-events";
 import { bookingDocToEmailContext } from "@/lib/booking-doc";
 import { patientCancelledEmail } from "@/lib/email-templates";
 import { sendBookingNotification } from "@/lib/sendgrid";
-import { linkBookingAfterCreate, onBookingStatusChange } from "@/lib/patients-db";
+import {
+  linkBookingAfterCreate,
+  onBookingStatusChange,
+  recomputeNextAppointmentForBooking,
+} from "@/lib/patients-db";
 
 export const runtime = "nodejs";
 
@@ -44,6 +48,7 @@ export async function POST(req: Request, ctx: Params) {
   const db = getFirestore();
   const bookingRef = db.collection("bookings").doc(id);
   let prevStatus: string | undefined;
+  let alreadyCancelled = false;
 
   try {
     await db.runTransaction(async (tx) => {
@@ -54,6 +59,7 @@ export async function POST(req: Request, ctx: Params) {
       const prev = snap.get("status");
       prevStatus = typeof prev === "string" ? prev : undefined;
       if (prev === "cancelled") {
+        alreadyCancelled = true;
         return;
       }
       // Cancelling a pending request is also allowed (acts like decline-without-email)
@@ -65,8 +71,12 @@ export async function POST(req: Request, ctx: Params) {
       }
       const bucketIds = snap.get("bucketIds") as string[] | undefined;
       if (bucketIds?.length) {
-        for (const bid of bucketIds) {
-          tx.delete(db.collection("slot_buckets").doc(bid));
+        // Only release buckets this booking actually owns. Bookings created with
+        // "allow double-booking" may list bucket ids that belong to another booking.
+        const bucketRefs = bucketIds.map((bid) => db.collection("slot_buckets").doc(bid));
+        const bucketSnaps = await Promise.all(bucketRefs.map((r) => tx.get(r)));
+        for (const bs of bucketSnaps) {
+          if (bs.exists && bs.get("bookingId") === id) tx.delete(bs.ref);
         }
       }
       tx.update(bookingRef, {
@@ -99,6 +109,10 @@ export async function POST(req: Request, ctx: Params) {
     return NextResponse.json({ error: "Could not cancel" }, { status: 500 });
   }
 
+  if (alreadyCancelled) {
+    return NextResponse.json({ ok: true, alreadyCancelled: true });
+  }
+
   const freshCancel = await bookingRef.get();
   let cancelPatientId =
     typeof freshCancel.get("patientId") === "string" ? freshCancel.get("patientId") : null;
@@ -115,17 +129,9 @@ export async function POST(req: Request, ctx: Params) {
   try {
     const fresh = freshCancel;
     const emailCtx = bookingDocToEmailContext(fresh);
-    // Only email the patient if they previously saw a confirmation. The transaction
-    // already updated the booking, so read prevStatus from the last event we wrote.
+    // Only email the patient if they previously saw a confirmation. prevStatus was
+    // captured inside the transaction that performed this cancellation.
     if (emailCtx) {
-      const lastEvent = await db
-        .collection("bookings")
-        .doc(id)
-        .collection("events")
-        .orderBy("at", "desc")
-        .limit(1)
-        .get();
-      const prevStatus = lastEvent.docs[0]?.get("meta.prevStatus") as string | undefined;
       if (prevStatus === "confirmed") {
         const { subject, text, html } = patientCancelledEmail(emailCtx, reason);
         await sendBookingNotification({
@@ -139,6 +145,8 @@ export async function POST(req: Request, ctx: Params) {
   } catch (err) {
     console.error("Cancel email failed", err);
   }
+
+  await recomputeNextAppointmentForBooking(db, id).catch(() => {});
 
   return NextResponse.json({ ok: true });
 }

@@ -63,11 +63,13 @@ async function getParisChiroPageContent(slug: string): Promise<ParisChiroPageCon
 }
 
 export async function generateStaticParams() {
-  const legacy = await listPublishedLegacyPagesForSite("chiro-paris");
-  const slugs = new Set([
-    ...allParisChiroServiceSlugs(),
-    ...legacy.map((p) => p.slug),
-  ]);
+  const slugs = new Set(allParisChiroServiceSlugs());
+  try {
+    const legacy = await listPublishedLegacyPagesForSite("chiro-paris");
+    for (const p of legacy) slugs.add(p.slug);
+  } catch {
+    // Firestore unavailable at build — static slugs still ship; legacy pages render on demand.
+  }
   return [...slugs].map((slug) => ({ slug }));
 }
 

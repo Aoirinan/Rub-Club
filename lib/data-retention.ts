@@ -102,14 +102,35 @@ async function purgeOldBookings(
   truncated: boolean;
   patientIdsTouched: Set<string>;
 }> {
-  const snap = await db
+  const byStartAt = await db
     .collection("bookings")
     .where("startAt", "<", cutoff)
     .limit(maxBookings + 1)
     .get();
 
-  const truncated = snap.size > maxBookings;
-  const docs = snap.docs.slice(0, maxBookings);
+  // Imported/legacy bookings may lack `startAt`; the `startAt <` query never
+  // returns those, so also look them up by `createdAt` (the retention fallback
+  // in bookingRetentionTimestamp) and let the per-doc check below decide.
+  const seen = new Set<string>(byStartAt.docs.map((d) => d.id));
+  const candidates: QueryDocumentSnapshot[] = [...byStartAt.docs];
+  let fallbackTruncated = false;
+  if (candidates.length <= maxBookings) {
+    const byCreatedAt = await db
+      .collection("bookings")
+      .where("createdAt", "<", cutoff)
+      .limit(maxBookings + 1)
+      .get();
+    for (const doc of byCreatedAt.docs) {
+      if (seen.has(doc.id)) continue;
+      if (doc.data().startAt instanceof Timestamp) continue; // covered by the startAt query
+      seen.add(doc.id);
+      candidates.push(doc);
+    }
+    fallbackTruncated = byCreatedAt.size > maxBookings;
+  }
+
+  const truncated = candidates.length > maxBookings || fallbackTruncated;
+  const docs = candidates.slice(0, maxBookings);
 
   let deletedBookings = 0;
   let deletedEvents = 0;

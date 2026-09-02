@@ -52,11 +52,16 @@ export function ConditionalMarketingChrome({
     return <div className="min-h-screen bg-slate-50">{children}</div>;
   }
 
-  const contentPad = giftVisible
-    ? "pb-[4.25rem]"
-    : callBarActive
-      ? "pb-14 md:pb-0"
-      : undefined;
+  // Both bars on a phone: the gift banner sits above the call bar, so reserve
+  // room for the stack (52px + 56px) on mobile and just the banner on desktop.
+  const contentPad =
+    giftVisible && callBarActive
+      ? "pb-[7.75rem] md:pb-[4.25rem]"
+      : giftVisible
+        ? "pb-[4.25rem]"
+        : callBarActive
+          ? "pb-14 md:pb-0"
+          : undefined;
 
   return (
     <MassageGiftCardNavProvider>
@@ -64,7 +69,9 @@ export function ConditionalMarketingChrome({
       {hideSocialBar ? null : <SiteSocialBar label={socialBarLabel} />}
       <div className={contentPad}>{children}</div>
       {footer}
-      {hideGiftBanner ? null : <GiftCardStickyBanner {...giftProps} />}
+      {hideGiftBanner ? null : (
+        <GiftCardStickyBanner {...giftProps} aboveMobileCallBar={callBarActive} />
+      )}
       {stickyCallBar ? <MobileStickyCallBar {...stickyCallBar} /> : null}
       {accessibilityPanelEnabled && !pathname.startsWith("/admin") ? <AccessibilityPanel /> : null}
     </MassageGiftCardNavProvider>

@@ -44,7 +44,8 @@ export async function uploadSiteStaffPhoto(opts: {
     resumable: false,
   });
   await file.makePublic().catch(() => {});
-  const photoUrl = publicObjectUrl(bucket.name, storagePath);
+  // Deterministic key + 1h cache: bust browser/CDN caches on replace.
+  const photoUrl = `${publicObjectUrl(bucket.name, storagePath)}?v=${Date.now()}`;
   return { photoUrl, photoStoragePath: storagePath };
 }
 

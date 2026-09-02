@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { readDomainContextCookie } from "@/lib/domain-context";
 import { linkifyHtmlUrls } from "@/lib/linkify-html";
 import type { SpecialsConfig } from "@/lib/site-owner-config";
@@ -15,9 +16,13 @@ export function DomainSpecialsPopup() {
   const [closeLabel, setCloseLabel] = useState("Close");
 
   const ctx = useMemo(() => readDomainContextCookie(), []);
+  const pathname = usePathname() ?? "";
+  // Marketing popup is for visitors, never for staff screens.
+  const suppressed = pathname.startsWith("/admin") || pathname.startsWith("/superadmin");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (suppressed) return;
     try {
       if (sessionStorage.getItem(SESSION_KEY) === "1") return;
     } catch {
@@ -58,7 +63,7 @@ export function DomainSpecialsPopup() {
     return () => {
       cancelled = true;
     };
-  }, [ctx]);
+  }, [ctx, suppressed]);
 
   function close() {
     try {
@@ -69,7 +74,7 @@ export function DomainSpecialsPopup() {
     setOpen(false);
   }
 
-  if (!open || (!bodyHtml && !imageUrl)) return null;
+  if (suppressed || !open || (!bodyHtml && !imageUrl)) return null;
 
   return (
     <div

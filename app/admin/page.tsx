@@ -110,6 +110,10 @@ function AdminDashboard() {
   const [csvImportDraft, setCsvImportDraft] = useState<CsvImportDraft | null>(null);
   const csvImportInputRef = useRef<HTMLInputElement>(null);
   const seenBookingIdsRef = useRef<Set<string> | null>(null);
+  // Monotonic request counters so a slow, older response can never overwrite a newer one.
+  const bookingsReqSeqRef = useRef(0);
+  const holdsReqSeqRef = useRef(0);
+  const [bookingsTruncated, setBookingsTruncated] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [reminderOpen, setReminderOpen] = useState(false);
   const [reminderPreview, setReminderPreview] = useState<{
@@ -216,16 +220,19 @@ function AdminDashboard() {
       const token = await getIdToken();
       if (!token) return;
       if (!opts?.silent) setLoading(true);
+      const seq = ++bookingsReqSeqRef.current;
       try {
         const { qs } = bookingsApiQuery(filters);
         const res = await fetch(`/api/admin/bookings?${qs}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        if (seq !== bookingsReqSeqRef.current) return; // a newer request superseded this one
         if (!res.ok) {
           if (!opts?.silent) setError("Could not load bookings.");
           return;
         }
-        const payload = (await res.json()) as { bookings: BookingRow[] };
+        const payload = (await res.json()) as { bookings: BookingRow[]; truncated?: boolean };
+        if (seq !== bookingsReqSeqRef.current) return;
         const next = payload.bookings;
         if (opts?.silent && seenBookingIdsRef.current !== null) {
           const prev = seenBookingIdsRef.current;
@@ -234,9 +241,10 @@ function AdminDashboard() {
         }
         seenBookingIdsRef.current = new Set(next.map((b) => b.id));
         setBookings(next);
+        setBookingsTruncated(payload.truncated === true);
         setError(null);
       } finally {
-        if (!opts?.silent) setLoading(false);
+        if (!opts?.silent && seq === bookingsReqSeqRef.current) setLoading(false);
       }
     },
     [filters, getIdToken],
@@ -269,14 +277,17 @@ function AdminDashboard() {
     if (!token) return;
     const qs = new URLSearchParams({ date: filters.date });
     if (filters.locationId !== "all") qs.set("locationId", filters.locationId);
+    const seq = ++holdsReqSeqRef.current;
     const res = await fetch(`/api/admin/holds?${qs.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
+    if (seq !== holdsReqSeqRef.current) return;
     if (!res.ok) {
       setHolds([]);
       return;
     }
     const payload = (await res.json()) as { holds: HoldRow[] };
+    if (seq !== holdsReqSeqRef.current) return;
     setHolds(payload.holds ?? []);
   }, [getIdToken, filters.date, filters.locationId]);
 
@@ -303,6 +314,11 @@ function AdminDashboard() {
     [getIdToken, refreshBookings],
   );
 
+  // Latest refreshers, read from the auth listener below so that changing a
+  // filter does not tear down and re-run the whole sign-in bootstrap.
+  const refreshersRef = useRef({ refreshProviders, refreshSchedulerServices, refreshBookings, refreshHolds });
+  refreshersRef.current = { refreshProviders, refreshSchedulerServices, refreshBookings, refreshHolds };
+
   useEffect(() => {
     if (!auth) return;
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -322,13 +338,14 @@ function AdminDashboard() {
         setError("Your account is signed in but not yet granted staff access.");
         return;
       }
-      await refreshProviders();
-      await refreshSchedulerServices();
-      await refreshBookings();
-      await refreshHolds();
+      const r = refreshersRef.current;
+      await r.refreshProviders();
+      await r.refreshSchedulerServices();
+      await r.refreshBookings();
+      await r.refreshHolds();
     });
     return () => unsub();
-  }, [auth, router, refreshBookings, refreshProviders, refreshSchedulerServices, refreshHolds]);
+  }, [auth, router]);
 
   useEffect(() => {
     if (!me?.role) return;
@@ -556,6 +573,7 @@ function AdminDashboard() {
             setToastMessage("Appointment export failed.");
             return;
           }
+          const exportTruncated = res.headers.get("x-export-truncated") === "1";
           const blob = await res.blob();
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
@@ -563,7 +581,11 @@ function AdminDashboard() {
           a.download = `appointments-export.csv`;
           a.click();
           URL.revokeObjectURL(url);
-          setToastMessage("Appointment export started");
+          setToastMessage(
+            exportTruncated
+              ? "Appointment export started (limited to the first 5,000 rows — narrow the date range for the rest)."
+              : "Appointment export started",
+          );
         }}
         onImportAppointmentsClick={() => csvImportInputRef.current?.click()}
         onRefresh={() => void refreshBookings()}
@@ -617,6 +639,11 @@ function AdminDashboard() {
                 Invited staff should ask their manager to re-send the invite.
               </p>
             ) : null}
+          </div>
+        ) : null}
+        {bookingsTruncated ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-950">
+            Showing the first 1,000 appointments in this range. Narrow the date range to see the rest.
           </div>
         ) : null}
 

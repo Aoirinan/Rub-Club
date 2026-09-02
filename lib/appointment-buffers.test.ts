@@ -11,9 +11,30 @@ describe("appointment buffers", () => {
       bufferBeforeMinutes: 15,
       bufferAfterMinutes: 15,
     });
-    expect(starts.length).toBe(3);
-    expect(starts[0].toFormat("HH:mm")).toBe("09:45");
-    expect(starts[starts.length - 1].toFormat("HH:mm")).toBe("10:45");
+    // 09:45–11:15 snapped to the 30-minute grid → 09:30, 10:00, 10:30, 11:00.
+    expect(starts.length).toBe(4);
+    expect(starts[0].toFormat("HH:mm")).toBe("09:30");
+    expect(starts[starts.length - 1].toFormat("HH:mm")).toBe("11:00");
+  });
+
+  it("keeps grid-aligned buffers on the grid", () => {
+    const start = DateTime.fromISO("2026-05-20T10:00:00", { zone: TIME_ZONE });
+    const starts = blockedSlotStartsForAppointment(start, {
+      durationMinutes: 60,
+      bufferBeforeMinutes: 30,
+      bufferAfterMinutes: 0,
+    });
+    expect(starts.map((s) => s.toFormat("HH:mm"))).toEqual(["09:30", "10:00", "10:30"]);
+  });
+
+  it("does not leave the tail of an off-grid duration bookable", () => {
+    const start = DateTime.fromISO("2026-05-20T10:00:00", { zone: TIME_ZONE });
+    const starts = blockedSlotStartsForAppointment(start, {
+      durationMinutes: 40,
+      bufferBeforeMinutes: 0,
+      bufferAfterMinutes: 0,
+    });
+    expect(starts.map((s) => s.toFormat("HH:mm"))).toEqual(["10:00", "10:30"]);
   });
 
   it("returns buffer-only intervals for calendar", () => {

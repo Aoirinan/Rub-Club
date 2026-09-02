@@ -134,9 +134,9 @@ export default async function Home() {
     <div className="bg-[#f4f2ea]" style={practiceThemeStyle("paris-home", page.theme)}>
       <JsonLd
         data={[
-          chiropractorJsonLd(paris),
+          chiropractorJsonLd(paris, chiroHours),
           chiropractorJsonLd(ss),
-          massageJsonLd(paris),
+          massageJsonLd(paris, massageHours),
           faqPageJsonLd(homeFaqs),
         ]}
       />

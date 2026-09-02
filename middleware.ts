@@ -54,6 +54,14 @@ export async function middleware(request: NextRequest) {
   const apiBlock = await blockSuperadminApi(request);
   if (apiBlock) return apiBlock;
 
+  // API calls (client fetches for slots, marketing payload, …) carry cookies
+  // but are not page navigations: never set or clear the brand-context
+  // cookies from them, or a fetch on a Sulphur Springs page would reset the
+  // visitor back to the Paris theme.
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
   // Legacy secondary-domain redirects are handled by next.config.ts `redirects()`
   // (catch-all, cross-domain, permanent). This middleware only resolves the
   // domain-context cookie used for themed specials.

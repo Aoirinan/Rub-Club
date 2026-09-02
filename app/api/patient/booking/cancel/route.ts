@@ -8,6 +8,7 @@ import { patientCancelledEmail } from "@/lib/email-templates";
 import { findBookingByPortalToken } from "@/lib/patient-portal-lookup";
 import { assertRateLimitOk } from "@/lib/rate-limit";
 import { sendBookingNotification } from "@/lib/sendgrid";
+import { recomputeNextAppointmentForBooking } from "@/lib/patients-db";
 
 export const runtime = "nodejs";
 
@@ -17,7 +18,7 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const rl = await assertRateLimitOk(req.headers);
+  const rl = await assertRateLimitOk(req.headers, { bucket: "patient-portal" });
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many requests. Try again soon." },
@@ -114,6 +115,8 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("Patient cancel email failed", err);
   }
+
+  await recomputeNextAppointmentForBooking(db, bookingRef.id).catch(() => {});
 
   return NextResponse.json({ ok: true });
 }

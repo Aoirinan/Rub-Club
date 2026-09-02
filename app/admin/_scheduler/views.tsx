@@ -23,8 +23,8 @@ import {
 import type { SameDayStackMeta } from "./helpers";
 import type { BookingRow, FilterState, ProviderRow } from "./types";
 
-const DAY_OPEN_HOUR = 8;
-const DAY_CLOSE_HOUR = 19;
+const DAY_OPEN_HOUR = 7;
+const DAY_CLOSE_HOUR = 20;
 const SLOT_PX = 44;
 
 const ROW_LABELS: { hour: number; label: string }[] = (() => {

@@ -56,6 +56,17 @@ function groupBlocks(blocks: LegacyBlock[]): RenderNode[] {
   return nodes;
 }
 
+const OPTIMIZABLE_HOSTS = new Set(["storage.googleapis.com", "firebasestorage.googleapis.com"]);
+
+function isOptimizableImageSrc(src: string): boolean {
+  if (src.startsWith("/")) return true;
+  try {
+    return OPTIMIZABLE_HOSTS.has(new URL(src).hostname);
+  } catch {
+    return false;
+  }
+}
+
 export function LegacyPageBody({
   blocks,
   heroImage,
@@ -69,6 +80,9 @@ export function LegacyPageBody({
 }) {
   const nodes = groupBlocks(blocks);
   const gallery = (images ?? []).filter((img) => img.url && img.url !== heroImage);
+  // next/image only optimizes allow-listed hosts (see next.config.ts); anything
+  // else must be served as-is or the page 500s.
+  const heroUnoptimized = heroImage ? !isOptimizableImageSrc(heroImage) : false;
 
   return (
     <div className="space-y-4">
@@ -77,6 +91,7 @@ export function LegacyPageBody({
           <Image
             src={heroImage}
             alt={images?.find((i) => i.url === heroImage)?.alt || ""}
+            unoptimized={heroUnoptimized}
             fill
             sizes="(max-width: 768px) 100vw, 768px"
             className="object-cover"

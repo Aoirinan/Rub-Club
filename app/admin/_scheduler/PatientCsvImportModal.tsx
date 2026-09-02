@@ -7,6 +7,9 @@ type ImportResult = {
   updated: number;
   skipped: number;
   errors: string[];
+  processed?: number;
+  totalRows?: number;
+  stoppedEarly?: boolean;
 };
 
 type Props = {
@@ -55,14 +58,25 @@ export function PatientCsvImportModal({ open, getIdToken, onDismiss, onBusy }: P
         headers: { Authorization: `Bearer ${token}` },
         body: fd,
       });
-      const data = (await res.json()) as ImportResult & { error?: string };
-      if (!res.ok) {
-        setError(typeof data.error === "string" ? data.error : "Import failed.");
+      let data: (ImportResult & { error?: string }) | null = null;
+      try {
+        data = (await res.json()) as ImportResult & { error?: string };
+      } catch {
+        data = null;
+      }
+      if (!res.ok || !data) {
+        setError(
+          typeof data?.error === "string"
+            ? data.error
+            : "Import did not finish (the request timed out or failed). Some rows may already be saved — re-upload the same file with \"Update existing patients\" checked to safely continue.",
+        );
         return;
       }
       setResult(data);
     } catch {
-      setError("Import failed.");
+      setError(
+        "Import did not finish (network error). Some rows may already be saved — re-upload the same file with \"Update existing patients\" checked to safely continue.",
+      );
     } finally {
       setBusyState(false);
     }
@@ -148,8 +162,11 @@ export function PatientCsvImportModal({ open, getIdToken, onDismiss, onBusy }: P
           {result ? (
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-950">
               <p className="font-semibold">
-                Import complete: {result.created} created, {result.updated} updated, {result.skipped}{" "}
-                skipped
+                {result.stoppedEarly ? "Import stopped early" : "Import complete"}: {result.created} created,{" "}
+                {result.updated} updated, {result.skipped} skipped
+                {typeof result.processed === "number" && typeof result.totalRows === "number"
+                  ? ` (${result.processed} of ${result.totalRows} rows examined)`
+                  : null}
               </p>
               {result.errors.length > 0 ? (
                 <ul className="mt-2 max-h-32 list-disc overflow-y-auto pl-5 text-rose-900">

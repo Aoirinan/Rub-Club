@@ -8,7 +8,7 @@ import { providerAllowsAppointmentTime } from "./provider-scheduling";
 import { fetchActiveProvidersForService } from "./providers-db";
 import {
   bucketDocIdsForAppointment,
-  holdBucketIdsForAppointment,
+  holdBucketIdsForPublicBooking,
   isAlignedToSlotGrid,
   parseStartIsoToDateTime,
 } from "./slots-luxon";
@@ -42,7 +42,10 @@ function isBookingFieldOk(
   return (
     (locationId === "paris" || locationId === "sulphur_springs") &&
     (serviceLine === "massage" || serviceLine === "chiropractic" || serviceLine === "stretch") &&
-    (durationMin === 30 || durationMin === 60)
+    typeof durationMin === "number" &&
+    Number.isInteger(durationMin) &&
+    durationMin > 0 &&
+    durationMin <= 480
   );
 }
 
@@ -153,11 +156,17 @@ export async function rescheduleBookingForStartChange(
         bufferBeforeMinutes: bufferBefore,
         bufferAfterMinutes: bufferAfter,
       });
-      const hids = holdBucketIdsForAppointment(locId, svc, nStart, dur);
+      // Same hold scoping as slot listing and admin create (stretch also
+      // honors massage-scope holds).
+      const hids = holdBucketIdsForPublicBooking(locId, svc, nStart, dur);
       const bucketRefs = nb.map((id) => db.collection("slot_buckets").doc(id));
       const holdRefs = hids.map((id) => db.collection("slot_buckets").doc(id));
       const combined = [...bucketRefs, ...holdRefs];
-      const reads = await Promise.all(combined.map((r) => tx.get(r)));
+      const oldBucketRefs = oldBucketIds.map((id) => db.collection("slot_buckets").doc(id));
+      const [reads, oldReads] = await Promise.all([
+        Promise.all(combined.map((r) => tx.get(r))),
+        Promise.all(oldBucketRefs.map((r) => tx.get(r))),
+      ]);
       for (const s of reads) {
         if (!s.exists) continue;
         if (s.get("holdId")) {
@@ -169,8 +178,12 @@ export async function rescheduleBookingForStartChange(
         }
       }
 
-      for (const bid of oldBucketIds) {
-        tx.delete(db.collection("slot_buckets").doc(bid));
+      // Only release buckets this booking actually owns — a booking created
+      // with "allow double-booking" may list ids that belong to another visit.
+      for (const s of oldReads) {
+        if (!s.exists) continue;
+        if (s.get("bookingId") !== bookingId) continue;
+        tx.delete(s.ref);
       }
 
       const startAt = Timestamp.fromDate(nStart.toUTC().toJSDate());

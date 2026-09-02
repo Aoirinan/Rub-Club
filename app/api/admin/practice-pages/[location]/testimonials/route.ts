@@ -11,6 +11,7 @@ import {
   isPracticeLocationId,
   parsePracticeTestimonialDoc,
   type PracticeLocationId,
+  type PracticeTestimonialLocation,
 } from "@/lib/practice-pages-shared";
 
 export const runtime = "nodejs";
@@ -21,7 +22,13 @@ const testimonialSchema = z.object({
   quote: z.string().min(1).max(4000),
   order: z.number().int().min(0).optional(),
   published: z.boolean().default(false),
+  location: z.enum(["paris", "sulphur-springs", "massage"]).optional(),
 });
+
+/** Public pages filter on `location`; untagged rows are hidden, so tag by page. */
+function defaultTestimonialLocation(loc: PracticeLocationId): PracticeTestimonialLocation {
+  return loc === "sulphur-springs" ? "sulphur-springs" : "paris";
+}
 
 function testimonialsCol(loc: PracticeLocationId) {
   return getFirestore()
@@ -93,6 +100,7 @@ export async function POST(
     quote: parsed.data.quote.trim(),
     order,
     published: parsed.data.published,
+    location: parsed.data.location ?? defaultTestimonialLocation(location),
     updatedAt: FieldValue.serverTimestamp(),
     updatedBy: staff.email ?? staff.uid,
   });

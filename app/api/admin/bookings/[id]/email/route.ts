@@ -50,12 +50,15 @@ export async function POST(req: Request, ctx: Params) {
       subject: body.subject.trim(),
       message: body.message.trim(),
     });
-    await sendBookingNotification({
+    const sent = await sendBookingNotification({
       to: emailCtx.email,
       subject,
       text,
       html,
     });
+    if (!sent) {
+      return NextResponse.json({ error: "Failed to send email." }, { status: 502 });
+    }
   } catch (err) {
     console.error("Custom email failed:", err);
     return NextResponse.json({ error: "Failed to send email." }, { status: 502 });

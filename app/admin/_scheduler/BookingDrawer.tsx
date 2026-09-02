@@ -64,6 +64,9 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken, 
     setNotesDraft(booking?.internalNotes ?? "");
   }, [booking?.id, booking?.internalNotes]);
 
+  // Keyed on the booking *id*: the scheduler re-fetches bookings every 15 s and
+  // hands us a fresh object each time, which must not wipe in-progress input.
+  const bookingId = booking?.id ?? null;
   useEffect(() => {
     setEvents([]);
     setAction(null);
@@ -75,14 +78,14 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken, 
     setChargeDescription("");
     setEmailSubject("");
     setEmailMessage("");
-    if (!booking) return;
+    if (!bookingId) return;
     let cancelled = false;
     (async () => {
       setLoadingEvents(true);
       try {
         const token = await getIdToken();
         if (!token) return;
-        const res = await fetch(`/api/admin/bookings/${booking.id}/events`, {
+        const res = await fetch(`/api/admin/bookings/${bookingId}/events`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) {
@@ -98,7 +101,7 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken, 
     return () => {
       cancelled = true;
     };
-  }, [booking, getIdToken]);
+  }, [bookingId, getIdToken]);
 
   async function pushDeskFlags(patch: { checkedIn?: boolean; needsReschedule?: boolean }) {
     const b = booking;
@@ -469,7 +472,7 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken, 
           </DetailRow>
         </section>
 
-        {status === "pending" || status === "confirmed" ? (
+        {!readOnly && (status === "pending" || status === "confirmed") ? (
           <section className="space-y-4 border-b border-slate-200 px-6 py-4 text-sm">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Visit / front desk

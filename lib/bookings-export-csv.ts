@@ -11,10 +11,13 @@ function tsToChicago(value: unknown): string {
 }
 
 export function escapeCsvCell(value: string): string {
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    return `"${value.replace(/"/g, '""')}"`;
+  // Neutralize spreadsheet formula injection: a leading = + - @ or control
+  // character would otherwise be evaluated when opened in Excel / Sheets.
+  const v = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  if (v.includes(",") || v.includes('"') || v.includes("\n") || v.includes("\r") || v.startsWith("'")) {
+    return `"${v.replace(/"/g, '""')}"`;
   }
-  return value;
+  return v;
 }
 
 function prettyLocation(id: string | undefined): string {
@@ -96,7 +99,29 @@ export function bookingRowToCsvCells(id: string, data: Record<string, unknown>):
 export type BookingExportFilter = {
   statuses: BookingStatus[];
   locationId?: string | null;
+  providerId?: string | null;
+  /** Free-text search (same fields as the scheduler list). */
+  q?: string | null;
 };
+
+function matchesExportQuery(id: string, data: Record<string, unknown>, q: string): boolean {
+  const needle = q.trim().toLowerCase();
+  if (!needle) return true;
+  const hay = [
+    data.name,
+    data.phone,
+    data.email,
+    data.providerDisplayName,
+    id,
+    data.notes,
+    data.internalNotes,
+    data.squarePaymentId,
+  ]
+    .filter((s): s is string => typeof s === "string")
+    .join(" ")
+    .toLowerCase();
+  return hay.includes(needle);
+}
 
 export function buildBookingsExportCsv(docs: QueryDocumentSnapshot[], filter: BookingExportFilter): string {
   const lines: string[] = [BOOKING_EXPORT_CSV_HEADERS.map(escapeCsvCell).join(",")];
@@ -108,6 +133,8 @@ export function buildBookingsExportCsv(docs: QueryDocumentSnapshot[], filter: Bo
       if (!filter.statuses.includes(data.status)) continue;
     }
     if (filter.locationId && data.locationId !== filter.locationId) continue;
+    if (filter.providerId && data.providerId !== filter.providerId) continue;
+    if (filter.q && !matchesExportQuery(d.id, data, filter.q)) continue;
     lines.push(bookingRowToCsvCells(d.id, data).map(escapeCsvCell).join(","));
   }
 

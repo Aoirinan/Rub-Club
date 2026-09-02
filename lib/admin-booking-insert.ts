@@ -118,7 +118,9 @@ export async function insertAdminBookingInTransaction(
         durationMin,
         startIso: thisStart.toUTC().toISO(),
         startAt,
-        bucketIds,
+        // Only record buckets this booking actually wrote; a double-booked
+        // insert must not claim (and later delete) another booking's buckets.
+        bucketIds: skipConflictCheck ? [] : bucketIds,
         providerMode: "specific",
         providerId,
         providerDisplayName,

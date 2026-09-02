@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { assertRateLimitOk } from "@/lib/rate-limit";
 import {
   isSuperadminConfigured,
+  secretsMatch,
   signSuperadminSession,
   SUPERADMIN_COOKIE,
   superadminCookieOptions,
@@ -15,6 +17,13 @@ export async function POST(req: Request) {
       { status: 503 },
     );
   }
+  const rl = await assertRateLimitOk(req.headers, { bucket: "superadmin-login", maxPerWindow: 10 });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many sign-in attempts. Try again later." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+    );
+  }
   let body: { password?: string };
   try {
     body = (await req.json()) as { password?: string };
@@ -23,7 +32,7 @@ export async function POST(req: Request) {
   }
   const want = process.env.ADMIN_PASSWORD!.trim();
   const got = typeof body.password === "string" ? body.password : "";
-  if (!got || got !== want) {
+  if (!got || !(await secretsMatch(got, want))) {
     return NextResponse.json({ error: "Invalid password" }, { status: 401 });
   }
   const token = await signSuperadminSession();

@@ -22,7 +22,7 @@ import {
   organizationJsonLd,
   websiteJsonLd,
 } from "@/lib/structured-data";
-import { getSiteOwnerConfig, bannerIsActivePublic } from "@/lib/site-owner-config";
+import { getSiteOwnerConfig, bannerIsActivePublic, bannerDismissKey } from "@/lib/site-owner-config";
 import { mergeHeaderColors } from "@/lib/header-colors";
 import {
   getLayoutCmsContent,
@@ -140,7 +140,7 @@ export default async function RootLayout({
     if (bannerIsActivePublic(cfg.banner) && cfg.banner.showOnHomepage && cfg.banner.html.trim()) {
       salesBanner = {
         html: cfg.banner.html,
-        dismissKey: `${cfg.banner.html.length}_${cfg.banner.expiresAt ?? "x"}`,
+        dismissKey: bannerDismissKey(cfg.banner),
       };
     }
   } catch {

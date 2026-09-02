@@ -62,7 +62,7 @@ export default async function MassageServicePage() {
     <>
       <JsonLd
         data={[
-          massageJsonLd(),
+          massageJsonLd(paris),
           serviceJsonLd({
             name: "Massage Therapy",
             description:

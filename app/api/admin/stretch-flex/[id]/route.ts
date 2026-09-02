@@ -37,10 +37,12 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  await getFirestore()
-    .collection(STRETCH_FLEX_COLLECTION)
-    .doc(id)
-    .set(
+  const ref = getFirestore().collection(STRETCH_FLEX_COLLECTION).doc(id);
+  if (!(await ref.get()).exists) {
+    // Never create phantom exercises from an arbitrary id.
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  await ref.set(
       { ...parsed.data, updatedAt: FieldValue.serverTimestamp(), updatedBy: staff.email ?? staff.uid },
       { merge: true },
     );

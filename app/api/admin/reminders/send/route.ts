@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
+import { DateTime } from "luxon";
 import { getFirestore } from "@/lib/firebase-admin";
 import { requireStaff } from "@/lib/staff-auth";
 import { bookingDocToEmailContext } from "@/lib/booking-doc";
@@ -7,7 +8,7 @@ import { patientReminderEmail } from "@/lib/email-templates";
 import { sendBookingNotification } from "@/lib/sendgrid";
 import { sendSms } from "@/lib/twilio";
 import { recordBookingEvent } from "@/lib/booking-events";
-import { LOCATIONS } from "@/lib/constants";
+import { LOCATIONS, TIME_ZONE } from "@/lib/constants";
 import { logSmsSent } from "@/lib/sms-audit";
 import { providerAllowsReminderChannel } from "@/lib/provider-reminders";
 import { getNotificationTemplates } from "@/lib/notification-settings-db";
@@ -22,7 +23,7 @@ export const runtime = "nodejs";
  * workflow from the implementation script.
  */
 export async function POST(req: Request) {
-  const staff = await requireStaff(req.headers.get("authorization"), "front_desk");
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -44,12 +45,16 @@ export async function POST(req: Request) {
   for (const doc of snap.docs) {
     const data = doc.data();
     const phone = typeof data.phone === "string" ? data.phone.trim() : "";
+    const email = typeof data.email === "string" ? data.email.trim().toLowerCase() : "";
     const startAt = data.startAt as Timestamp | undefined;
-    if (!phone || !startAt) continue;
+    if (!startAt) continue;
     const startMs = startAt.toMillis();
-    const dayKey = new Date(startMs).toISOString().slice(0, 10);
+    // De-dupe per patient per Chicago-local day (not UTC day).
+    const dayKey = DateTime.fromMillis(startMs).setZone(TIME_ZONE).toISODate() ?? "";
     const digits = phone.replace(/\D/g, "").slice(-10);
-    const key = `${digits}__${dayKey}`;
+    const contactKey = digits || (email ? `email:${email}` : "");
+    if (!contactKey) continue;
+    const key = `${contactKey}__${dayKey}`;
     const prev = byPhoneDay.get(key);
     if (!prev || startMs < prev.startMs) {
       byPhoneDay.set(key, { docId: doc.id, startMs });
@@ -134,14 +139,16 @@ export async function POST(req: Request) {
         }
         emailSubject = subject;
         emailText = text;
-        await sendBookingNotification({
+        emailSent = await sendBookingNotification({
           to: emailCtx.email,
           subject,
           text,
           html,
         });
-        emailSent = true;
-        await logNotificationSent({
+        if (!emailSent) {
+          errors.push(`email-${docId}: email provider did not accept the message`);
+        }
+        if (emailSent) await logNotificationSent({
           type: "email",
           email: emailCtx.email,
           message: emailText,
@@ -176,14 +183,17 @@ export async function POST(req: Request) {
       }
     }
 
-    await recordBookingEvent(db, docId, {
-      type: "reminder_sent",
-      byUid: staff.uid,
-      byEmail: staff.email ?? "staff/manual-reminder",
-      meta: { emailSent, smsSent, automated: false, manual: true },
-    }).catch(() => {});
-
-    if (emailSent || smsSent) sent++;
+    // Only mark the booking as reminded when at least one channel actually went out,
+    // so a transient failure is retried on the next run.
+    if (emailSent || smsSent) {
+      await recordBookingEvent(db, docId, {
+        type: "reminder_sent",
+        byUid: staff.uid,
+        byEmail: staff.email ?? "staff/manual-reminder",
+        meta: { emailSent, smsSent, automated: false, manual: true },
+      }).catch(() => {});
+      sent++;
+    }
   }
 
   return NextResponse.json({

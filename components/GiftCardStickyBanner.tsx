@@ -14,12 +14,25 @@ export type GiftCardStickyBannerProps = {
   dismissKey?: string;
 };
 
+/** Fired on `window` when the banner is dismissed so padding hooks update at once. */
+const DISMISS_EVENT = "rub-gift-sticky-dismissed";
+
+function readDismissed(storageKey: string): boolean {
+  try {
+    return localStorage.getItem(storageKey) === "1";
+  } catch {
+    return false;
+  }
+}
+
 export function GiftCardStickyBanner({
   href = GIFT_CARD_ORDER_URL,
   label = DEFAULT_GIFT_CARD_STICKY_LABEL,
   enabled = true,
   dismissKey = "default",
-}: GiftCardStickyBannerProps) {
+  /** Lift the banner above the mobile call bar (56px) when both are on screen. */
+  aboveMobileCallBar = false,
+}: GiftCardStickyBannerProps & { aboveMobileCallBar?: boolean }) {
   const storageKey = useMemo(
     () => `rub_gift_sticky_dismissed_${dismissKey}`,
     [dismissKey],
@@ -48,6 +61,11 @@ export function GiftCardStickyBanner({
         /* ignore */
       }
       setHidden(true);
+      try {
+        window.dispatchEvent(new CustomEvent(DISMISS_EVENT, { detail: storageKey }));
+      } catch {
+        /* ignore */
+      }
     },
     [storageKey],
   );
@@ -60,7 +78,9 @@ export function GiftCardStickyBanner({
     <div
       role="region"
       aria-label="Gift card promotion"
-      className="fixed bottom-0 left-0 right-0 z-50 flex min-h-[52px] items-stretch bg-[#c0392b] shadow-[0_-4px_20px_rgba(0,0,0,0.2)]"
+      className={`fixed left-0 right-0 z-50 flex min-h-[52px] items-stretch bg-[#c0392b] shadow-[0_-4px_20px_rgba(0,0,0,0.2)] ${
+        aboveMobileCallBar ? "bottom-14 md:bottom-0" : "bottom-0"
+      }`}
     >
       <a
         href={href}
@@ -96,11 +116,23 @@ export function useGiftCardStickyVisible(props: GiftCardStickyBannerProps): bool
       setVisible(false);
       return;
     }
-    try {
-      setVisible(localStorage.getItem(storageKey) !== "1");
-    } catch {
-      setVisible(true);
-    }
+    setVisible(!readDismissed(storageKey));
+
+    // React immediately when the banner is dismissed (same tab via the custom
+    // event, other tabs via `storage`) instead of waiting for a reload.
+    const onDismiss = (e: Event) => {
+      const key = (e as CustomEvent<string>).detail;
+      if (!key || key === storageKey) setVisible(false);
+    };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === storageKey) setVisible(!readDismissed(storageKey));
+    };
+    window.addEventListener(DISMISS_EVENT, onDismiss);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(DISMISS_EVENT, onDismiss);
+      window.removeEventListener("storage", onStorage);
+    };
   }, [enabled, storageKey]);
 
   return visible;
