@@ -18,12 +18,13 @@ import {
 import { isPageLayoutId, PAGE_LAYOUT_PAGES } from "@/lib/page-layout";
 import {
   EDITOR_OFFICES,
-  entriesForOffice,
-  entryLabel,
-  firstScopeForOffice,
+  findSelection,
+  firstSelectionForOffice,
+  groupsForOffice,
   isEditorOffice,
   officeForScope,
-  officeLabel,
+  selectionLabel,
+  type EditorGroupId,
   type EditorOffice,
 } from "@/lib/page-builder-groups";
 import type { PageBuilderScopeId } from "@/lib/page-builder-content-scopes";
@@ -96,9 +97,14 @@ function officeStaffLocationFocus(
   return null;
 }
 
-function scopeLabel(scope: PageBuilderScopeId, pages: { id: string; label: string }[]): string {
-  const grouped = entryLabel(scope);
-  if (grouped) return `${officeLabel(officeForScope(scope))} · ${grouped}`;
+function scopeLabel(
+  office: EditorOffice,
+  scope: PageBuilderScopeId,
+  sectionId: string | null,
+  pages: { id: string; label: string }[],
+): string {
+  const sel = findSelection(office, scope, sectionId);
+  if (sel) return selectionLabel(office, sel);
   if (isPageLayoutId(scope)) {
     return pages.find((p) => p.id === scope)?.label ?? scope;
   }
@@ -212,17 +218,22 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
     [],
   );
 
-  const officePages = useMemo(() => entriesForOffice(office), [office]);
-  const pickerSections = useMemo(() => {
-    if (!PAGE_PICKER_SCOPES.has(scope) || !isContentScopeId(scope)) return [];
-    return contentScopeDef(scope).sections;
-  }, [scope]);
-  const activeSectionId =
-    pickerSections.length === 0
-      ? null
-      : pickerSections.some((s) => s.id === sectionId)
-        ? sectionId
-        : (pickerSections[0]?.id ?? null);
+  // Office → menu group (header order) → page. `scope` + `sectionId` stay the
+  // source of truth so existing ?scope= bookmarks keep working.
+  const groups = useMemo(() => groupsForOffice(office), [office]);
+  const selection = useMemo(
+    () => findSelection(office, scope, sectionId),
+    [office, scope, sectionId],
+  );
+  const activeGroup = selection?.group ?? groups[0]!;
+  const activeSectionId = useMemo(() => {
+    if (selection?.item.sectionId) return selection.item.sectionId;
+    if (PAGE_PICKER_SCOPES.has(scope) && isContentScopeId(scope)) {
+      const sections = contentScopeDef(scope).sections;
+      return sections.some((s) => s.id === sectionId) ? sectionId : (sections[0]?.id ?? null);
+    }
+    return null;
+  }, [selection, scope, sectionId]);
 
   // The scope was previously read once at load and never written back, so a
   // selection could not be bookmarked or survive a refresh.
@@ -239,12 +250,41 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
   const chooseOffice = useCallback(
     (next: EditorOffice) => {
       setOffice(next);
-      setScope((current) => {
-        if (current === "site-settings") return current;
-        return officeForScope(current) === next ? current : firstScopeForOffice(next);
-      });
+      // Same page in the other office (site settings) keeps the selection;
+      // otherwise land on the same menu group there.
+      if (findSelection(next, scope, sectionId)) return;
+      const sameGroup = groupsForOffice(next).find((g) => g.id === selection?.group.id);
+      const target =
+        sameGroup?.items.find((i) => !i.href) ?? firstSelectionForOffice(next).item;
+      setScope(target.scope);
+      setSectionId(target.sectionId ?? null);
     },
-    [],
+    [scope, sectionId, selection],
+  );
+
+  const chooseGroup = useCallback(
+    (id: EditorGroupId) => {
+      const group = groups.find((g) => g.id === id);
+      const target = group?.items.find((i) => !i.href) ?? group?.items[0];
+      if (!target) return;
+      setScope(target.scope);
+      setSectionId(target.sectionId ?? null);
+    },
+    [groups],
+  );
+
+  const chooseItem = useCallback(
+    (key: string) => {
+      const target = activeGroup.items.find((i) => i.key === key);
+      if (!target) return;
+      if (target.href) {
+        window.location.assign(target.href);
+        return;
+      }
+      setScope(target.scope);
+      setSectionId(target.sectionId ?? null);
+    },
+    [activeGroup],
   );
 
   const loadCms = cms.load;
@@ -421,35 +461,33 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
             </select>
           </label>
           <label className="text-sm">
-            <span className="sr-only">Page or section</span>
+            <span className="sr-only">Menu</span>
             <select
-              className="max-w-[240px] rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
-              value={scope}
-              onChange={(e) => setScope(parseInitialScope(e.target.value))}
+              className="max-w-[200px] rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+              value={activeGroup.id}
+              onChange={(e) => chooseGroup(e.target.value as EditorGroupId)}
             >
-              {officePages.map((entry) => (
-                <option key={entry.scope} value={entry.scope}>
-                  {entry.label}
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.label}
                 </option>
               ))}
             </select>
           </label>
-          {pickerSections.length > 0 ? (
-            <label className="text-sm">
-              <span className="sr-only">Which page</span>
-              <select
-                className="max-w-[280px] rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
-                value={activeSectionId ?? ""}
-                onChange={(e) => setSectionId(e.target.value)}
-              >
-                {pickerSections.map((section) => (
-                  <option key={section.id} value={section.id}>
-                    {section.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
+          <label className="text-sm">
+            <span className="sr-only">Page</span>
+            <select
+              className="max-w-[320px] rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+              value={selection?.item.key ?? ""}
+              onChange={(e) => chooseItem(e.target.value)}
+            >
+              {activeGroup.items.map((it) => (
+                <option key={it.key} value={it.key}>
+                  {it.label}
+                </option>
+              ))}
+            </select>
+          </label>
           {livePath ? (
             <a
               href={livePath}
@@ -478,7 +516,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
         >
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">
-              Editing: {scopeLabel(scope, pages)}
+              Editing: {scopeLabel(office, scope, activeSectionId, pages)}
             </h2>
             {cms.message ? (
               <p
