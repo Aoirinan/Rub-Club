@@ -10,10 +10,20 @@ import {
   SS_PATIENT_RESOURCES,
   SS_RESOURCE_ARTICLES,
   SS_SERVICES,
+  buildSSChiroNavChildren,
 } from "@/lib/sulphur-springs-content";
 
 export function ssPageBodyId(slug: string): string {
   return `ss_page_${slug}_body`;
+}
+
+export function ssPageTitleId(slug: string): string {
+  return `ss_page_${slug}_title`;
+}
+
+/** Label shown for this page in the header Services menu. */
+export function ssPageNavLabelId(slug: string): string {
+  return `ss_page_${slug}_nav_label`;
 }
 
 export function ssPageMetaId(slug: string): string {
@@ -39,6 +49,24 @@ function pageFields(
   opts: { cards: boolean },
 ): ContentFieldMeta[] {
   const fields: ContentFieldMeta[] = [
+    {
+      id: ssPageTitleId(page.slug),
+      pageLabel,
+      sectionLabel: page.title,
+      fieldLabel: "Page title (heading at the top of the page)",
+      type: "text",
+    },
+    ...(opts.cards
+      ? [
+          {
+            id: ssPageNavLabelId(page.slug),
+            pageLabel,
+            sectionLabel: page.title,
+            fieldLabel: "Menu label (header Services dropdown)",
+            type: "text" as const,
+          },
+        ]
+      : []),
     {
       id: ssPageBodyId(page.slug),
       pageLabel,
@@ -125,20 +153,28 @@ export function buildSSCmsDefaults(): Record<string, string> {
   const defaults: Record<string, string> = {
     ss_patient_resources_intro: SS_PATIENT_RESOURCES.intro,
   };
+  const navLabelBySlug = new Map(
+    buildSSChiroNavChildren().map((c) => [c.href.split("/").pop() ?? "", c.label] as const),
+  );
 
   for (const s of SS_SERVICES) {
+    defaults[ssPageTitleId(s.slug)] = s.title;
+    defaults[ssPageNavLabelId(s.slug)] = navLabelBySlug.get(s.slug) ?? s.title;
     defaults[ssPageBodyId(s.slug)] = s.body;
     defaults[ssPageMetaId(s.slug)] = s.metaDescription;
     defaults[ssPageCardBlurbId(s.slug)] = "";
     defaults[ssPageCardImageId(s.slug)] = SS_PAGE_DEFAULT_PHOTOS[s.slug] ?? "";
   }
   for (const i of SS_INJURIES) {
+    defaults[ssPageTitleId(i.slug)] = i.title;
+    defaults[ssPageNavLabelId(i.slug)] = navLabelBySlug.get(i.slug) ?? i.title;
     defaults[ssPageBodyId(i.slug)] = i.body;
     defaults[ssPageMetaId(i.slug)] = i.metaDescription;
     defaults[ssPageCardBlurbId(i.slug)] = "";
     defaults[ssPageCardImageId(i.slug)] = "";
   }
   for (const a of SS_RESOURCE_ARTICLES) {
+    defaults[ssPageTitleId(a.slug)] = a.title;
     defaults[ssPageBodyId(a.slug)] = a.body;
     defaults[ssPageMetaId(a.slug)] = a.metaDescription;
   }

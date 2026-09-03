@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import Image from "next/image";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
@@ -7,8 +8,11 @@ import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
-import { renderRichText } from "@/lib/cms";
+import { getContentMany, renderRichText } from "@/lib/cms";
+import { getPageMeta } from "@/lib/page-meta";
 import { getSSStaffPageContent } from "@/lib/ss-cms-content";
+import { SS_PAGES_CMS_DEFAULTS } from "@/lib/ss-pages-cms";
+import { getUiText, type UiText } from "@/lib/ui-text";
 import {
   resolveSiteStaffForBrand,
   splitFeaturedAndGrid,
@@ -17,14 +21,29 @@ import {
 
 export const revalidate = 60;
 
-export const metadata = buildPageMetadata({
-  title: "About Us — Sulphur Springs Chiropractic",
-  description:
-    "Meet Dr. Conner Collins and the care team at Chiropractic Associates of Sulphur Springs. Chiropractor, massage therapists, rehab therapy, and front-desk staff serving Hopkins County, TX.",
-  path: "/sulphur-springs/staff",
-  ogDescription:
-    "Dr. Conner Collins leads a dedicated team of massage therapists, rehab specialists, and support staff in Sulphur Springs, TX.",
-});
+const IDS = ["ss_staff_eyebrow", "page_ss_staff_og_description"];
+
+async function copy(): Promise<Record<string, string>> {
+  const cms = await getContentMany(IDS);
+  return Object.fromEntries(IDS.map((id) => [id, cms[id]?.trim() || SS_PAGES_CMS_DEFAULTS[id] || ""]));
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [meta, x] = await Promise.all([
+    getPageMeta("ss_staff", {
+      title: "About Us — Sulphur Springs Chiropractic",
+      description:
+        "Meet Dr. Conner Collins and the care team at Chiropractic Associates of Sulphur Springs. Chiropractor, massage therapists, rehab therapy, and front-desk staff serving Hopkins County, TX.",
+    }),
+    copy(),
+  ]);
+  return buildPageMetadata({
+    title: meta.title,
+    description: meta.description,
+    path: "/sulphur-springs/staff",
+    ogDescription: x.page_ss_staff_og_description,
+  });
+}
 
 function StaffPhoto({ member, className }: { member: SiteStaffDisplayMember; className?: string }) {
   if (member.image) {
@@ -61,17 +80,19 @@ function StaffPhoto({ member, className }: { member: SiteStaffDisplayMember; cla
   );
 }
 
-function meetVideoLabel(fullName: string): string {
+function meetVideoLabel(fullName: string, ui: UiText): string {
   const without = fullName.replace(/^Dr\.\s*/i, "").trim();
   const first = without.split(/\s+/)[0] ?? without;
-  return /^Dr\.\s*/i.test(fullName) ? `Meet Dr. ${first}` : `Meet ${first}`;
+  return /^Dr\.\s*/i.test(fullName)
+    ? `${ui.ui_meet_doctor_prefix} ${first}`
+    : `${ui.ui_meet_prefix} ${first}`;
 }
 
-function StaffVideo({ member }: { member: SiteStaffDisplayMember }) {
+function StaffVideo({ member, ui }: { member: SiteStaffDisplayMember; ui: UiText }) {
   if (!member.videoUrl) return null;
   return (
     <DoctorCardVideoAccordion
-      videos={[{ src: member.videoUrl, label: meetVideoLabel(member.name) }]}
+      videos={[{ src: member.videoUrl, label: meetVideoLabel(member.name, ui) }]}
     />
   );
 }
@@ -91,11 +112,13 @@ function BioBlock({ bio }: { bio: string }) {
 }
 
 export default async function SulphurSpringsStaffPage() {
-  const [allStaff, page, ssHours, displayLocs] = await Promise.all([
+  const [allStaff, page, ssHours, displayLocs, x, ui] = await Promise.all([
     resolveSiteStaffForBrand("sulphur"),
     getSSStaffPageContent(),
     getSulphurOfficeHours(),
     getDisplayLocations(),
+    copy(),
+    getUiText(),
   ]);
   const ss = displayLocs.sulphur_springs;
   const { featured, grid: rest } = splitFeaturedAndGrid(allStaff);
@@ -111,7 +134,7 @@ export default async function SulphurSpringsStaffPage() {
       />
       <PageHero
         variant="sulphur"
-        eyebrow="Chiropractic Associates · Sulphur Springs"
+        eyebrow={x.ss_staff_eyebrow}
         title={page.heroTitle}
         lede={page.heroLede || undefined}
       />
@@ -127,7 +150,7 @@ export default async function SulphurSpringsStaffPage() {
                   <p className="text-sm font-bold text-stone-600">{featured.role}</p>
                 </div>
                 <div className="max-w-md">
-                  <StaffVideo member={featured} />
+                  <StaffVideo member={featured} ui={ui} />
                 </div>
                 <BioBlock bio={featured.bio} />
               </div>
@@ -147,7 +170,7 @@ export default async function SulphurSpringsStaffPage() {
                 <div className="flex flex-1 flex-col p-5">
                   <h3 className="text-lg font-black text-[#0c2d3a]">{member.name}</h3>
                   <p className="text-sm font-bold text-stone-600">{member.role}</p>
-                  <StaffVideo member={member} />
+                  <StaffVideo member={member} ui={ui} />
                   <BioBlock bio={member.bio} />
                 </div>
               </article>
@@ -162,7 +185,7 @@ export default async function SulphurSpringsStaffPage() {
           title={page.ctaTitle}
           body={page.ctaBody}
           secondary={{
-            label: `Call ${ss.phonePrimary}`,
+            label: `${ui.ui_call_prefix} ${ss.phonePrimary}`,
             href: telHref(ss.phonePrimary),
           }}
         />

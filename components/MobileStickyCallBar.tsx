@@ -5,6 +5,7 @@ import { BookingCta } from "@/components/BookingCta";
 import { telHref, type LocationInfo } from "@/lib/constants";
 import { track } from "@/lib/analytics";
 import { useSiteBusinessContext } from "@/lib/use-site-business-context";
+import { useUiText } from "@/components/SiteChromeProvider";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
 
 export type MobileStickyCallBarProps = {
@@ -75,6 +76,7 @@ export function MobileStickyCallBar(props: MobileStickyCallBarProps) {
   const pathname = usePathname() ?? "/";
   const businessContext = useSiteBusinessContext(props.initialBusinessContext ?? "default");
   const { active, phone, trackLocation } = resolveBar(pathname, businessContext, props);
+  const t = useUiText();
 
   if (!active || !phone.trim()) return null;
 
@@ -92,10 +94,10 @@ export function MobileStickyCallBar(props: MobileStickyCallBarProps) {
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
           <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z" />
         </svg>
-        Call Us
+        {t.ui_sticky_call}
       </a>
       <BookingCta
-        label="Book Now"
+        label={t.ui_sticky_book}
         className="focus-ring flex items-center justify-center gap-2 bg-black px-4 py-3 text-sm font-black uppercase tracking-wide text-white"
       />
     </div>

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
@@ -7,23 +8,34 @@ import { getPageBrand } from "@/lib/page-business-theme";
 import { getContentMany, DEFAULTS } from "@/lib/cms";
 import { telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
+import { getPageMeta } from "@/lib/page-meta";
+import { getUiText } from "@/lib/ui-text";
+import { MASSAGE_PAGE_TEXT_IDS, resolveMassagePageText } from "@/lib/massage-page-cms";
 
-export const metadata = buildPageMetadata({
-  title: "Massage Prices — The Rub Club, Paris TX",
-  description:
-    "Massage session rates, add-ons, gift certificate packages, memberships, and Chiro-Fitness pricing at The Rub Club in Paris, TX.",
-  path: "/services/massage/prices",
-  ogTitle: "Massage Prices — The Rub Club",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const [meta, cms] = await Promise.all([
+    getPageMeta("massage_prices", { title: "", description: "" }),
+    getContentMany(["massage_prices_og_title"]),
+  ]);
+  const text = resolveMassagePageText(cms);
+  return buildPageMetadata({
+    title: meta.title,
+    description: meta.description,
+    path: "/services/massage/prices",
+    ogTitle: text.massage_prices_og_title,
+  });
+}
 
 export const revalidate = 60;
 
 export default async function MassagePricesPage() {
-  const [c, displayLocs, brand] = await Promise.all([
-    getContentMany(["massage_prices_body"]),
+  const [c, displayLocs, brand, ui] = await Promise.all([
+    getContentMany(["massage_prices_body", ...MASSAGE_PAGE_TEXT_IDS]),
     getDisplayLocations(),
     getPageBrand(),
+    getUiText(),
   ]);
+  const text = resolveMassagePageText(c);
   const body = c.massage_prices_body?.trim() || DEFAULTS.massage_prices_body || "";
   const massagePhone = displayLocs.paris.phoneSecondary ?? displayLocs.paris.phonePrimary;
 
@@ -32,11 +44,15 @@ export default async function MassagePricesPage() {
       <Breadcrumbs
         items={[
           { name: "Home", url: "/" },
-          { name: "Massage", url: "/services/massage" },
+          { name: text.massage_subpage_breadcrumb, url: "/services/massage" },
           { name: "Prices", url: "/services/massage/prices" },
         ]}
       />
-      <PageHero eyebrow="The Rub Club · Paris, TX" title="Massage Prices" variant={brand.variant} />
+      <PageHero
+        eyebrow={text.massage_prices_eyebrow}
+        title={text.massage_prices_title}
+        variant={brand.variant}
+      />
       <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
         <section className="border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-10">
           <div className="prose prose-stone max-w-none">
@@ -44,9 +60,9 @@ export default async function MassagePricesPage() {
           </div>
         </section>
         <ScheduleCtaCard
-          title="Book your massage"
-          body="Call the massage desk and we'll find a time that works for you."
-          secondary={{ label: `Call ${massagePhone}`, href: telHref(massagePhone) }}
+          title={text.massage_prices_cta_title}
+          body={text.massage_prices_cta_body}
+          secondary={{ label: `${ui.ui_call_prefix} ${massagePhone}`, href: telHref(massagePhone) }}
           variant={brand.variant}
         />
       </div>

@@ -8,7 +8,7 @@ import {
   type SSResourceArticle,
   type SSService,
 } from "@/lib/sulphur-springs-content";
-import { ssPageBodyId, ssPageMetaId } from "@/lib/ss-cms-registry";
+import { ssPageBodyId, ssPageMetaId, ssPageTitleId } from "@/lib/ss-cms-registry";
 
 export { getSSStaffPageContent } from "@/lib/ss-staff-cms";
 
@@ -39,18 +39,29 @@ export async function getSSPageContent(slug: string): Promise<SSPageContent | nu
   const base = pickPage(slug);
   if (!base) return null;
 
+  const titleId = ssPageTitleId(slug);
   const bodyId = ssPageBodyId(slug);
   const metaId = ssPageMetaId(slug);
-  const cms = await getContentMany([bodyId, metaId]);
+  const cms = await getContentMany([titleId, bodyId, metaId]);
   const kind = pageKind(slug);
 
   return {
     slug,
-    title: base.title,
+    title: cms[titleId]?.trim() || base.title,
     metaDescription: cms[metaId]?.trim() || base.metaDescription,
     body: cms[bodyId]?.trim() || base.body,
     kind,
   };
+}
+
+/** Resource-article titles (with CMS overrides) for the Patient Resources list. */
+export async function getSSResourceArticleTitles(): Promise<{ slug: string; title: string }[]> {
+  const ids = SS_RESOURCE_ARTICLES.map((a) => ssPageTitleId(a.slug));
+  const cms = await getContentMany(ids);
+  return SS_RESOURCE_ARTICLES.map((a) => ({
+    slug: a.slug,
+    title: cms[ssPageTitleId(a.slug)]?.trim() || a.title,
+  }));
 }
 
 export async function getSSPatientResourcesIntro(): Promise<string> {

@@ -74,6 +74,22 @@ export function massageServicePagesWithPhotos(photos: SitePhotos): MassageServic
   }));
 }
 
+/**
+ * Modality cards with CMS card names/blurbs (`massage_service_<slug>_name` /
+ * `_blurb`) and admin-replaced photos applied. Blank CMS values fall back to
+ * the built-in text.
+ */
+export function massageServicePagesWithCms(
+  cms: Partial<Record<string, string>>,
+  photos: SitePhotos,
+): MassageServicePage[] {
+  return massageServicePagesWithPhotos(photos).map((s) => ({
+    ...s,
+    name: cms[`massage_service_${s.slug}_name`]?.trim() || s.name,
+    blurb: cms[`massage_service_${s.slug}_blurb`]?.trim() || s.blurb,
+  }));
+}
+
 /** Nav children for the "Therapeutic Massage" mega-menu group (§5b). */
 export function buildMassageServiceNavChildren(): {
   href: string;

@@ -1,4 +1,9 @@
+import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/page-metadata";
+import { getPageMeta } from "@/lib/page-meta";
+import { getContentMany } from "@/lib/cms";
+import { pageOgDescriptionId, pageOgTitleId, parisText } from "@/lib/paris-pages-cms";
+import { getUiText } from "@/lib/ui-text";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { TestimonialVideosSection } from "@/components/TestimonialVideosSection";
 import { practiceThemeStyle } from "@/components/practice/theme";
@@ -8,19 +13,28 @@ import { getReviewsPageContent } from "@/lib/static-pages-content";
 
 export const revalidate = 60;
 
-export const metadata = buildPageMetadata({
-  title: "Patient Reviews",
-  description:
-    "Hear what our patients say about Chiropractic Associates and The Rub Club in Paris, TX, then leave your own review on Google.",
-  path: "/reviews",
-  ogTitle: "Patient Reviews — Chiropractic Associates",
-  ogDescription: "Read patient stories and leave us a Google review.",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const [meta, og] = await Promise.all([
+    getPageMeta("reviews", {
+      title: "Patient Reviews",
+      description:
+        "Hear what our patients say about Chiropractic Associates and The Rub Club in Paris, TX, then leave your own review on Google.",
+    }),
+    getContentMany([pageOgTitleId("reviews"), pageOgDescriptionId("reviews")]),
+  ]);
+  return buildPageMetadata({
+    title: meta.title,
+    description: meta.description,
+    path: "/reviews",
+    ogTitle: parisText(og, pageOgTitleId("reviews")),
+    ogDescription: parisText(og, pageOgDescriptionId("reviews")),
+  });
+}
 
 export default async function ReviewsPage() {
   const displayLocs = await getDisplayLocations();
   const locationList = [displayLocs.paris, displayLocs.sulphur_springs];
-  const [content, reviewLinks, brand] = await Promise.all([
+  const [content, reviewLinks, brand, ui] = await Promise.all([
     getReviewsPageContent(),
     Promise.all(
       locationList.map(async (loc) => ({
@@ -30,6 +44,7 @@ export default async function ReviewsPage() {
       })),
     ),
     getPageBrand(),
+    getUiText(),
   ]);
 
   return (
@@ -74,7 +89,7 @@ export default async function ReviewsPage() {
                 rel="noopener noreferrer"
                 className="focus-ring bg-[var(--pp-cta-hover)] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-black/40"
               >
-                Review {loc.shortName}
+                {ui.ui_review_prefix} {loc.shortName}
               </a>
             ))}
           </div>

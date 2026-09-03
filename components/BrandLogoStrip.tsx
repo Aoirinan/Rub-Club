@@ -4,6 +4,7 @@ import { ParisLockup } from "@/components/ParisLockup";
 import { SulphurSpringsLockup } from "@/components/SulphurSpringsLockup";
 import {
   CHIRO_LOGO_DIMENSIONS,
+  isDefaultChiroLogo,
   resolveChiroHeaderLogo,
   type BrandLogoVariant,
   type HeaderBrandContent,
@@ -118,7 +119,7 @@ export function BrandLogoStrip({
         // Mobile (non-large) emphasized logo uses a big, centered, stacked layout.
         const stacked = !large && emphasize;
         const info = headerBrandPhones(entry.key, paris, sulphur);
-        const labelText = branding?.labels[entry.key] ?? info.phoneLabel;
+        const labelText = info.phoneLabel;
 
         const ssBaseHeightPx = emphasize
           ? headerLogoHeightPx(
@@ -147,9 +148,12 @@ export function BrandLogoStrip({
 
         // Sulphur Springs uses the icon + text lockup unless a manager uploaded a logo image.
         const useSsLockup = entry.key === "ss" && !entry.src;
-        // Paris always uses the transparent circular mark + type lockup (CMS flat
-        // logo uploads are white-backed JPGs and do not blend into the header band).
-        const useParisLockup = entry.key === "chiro";
+        // Paris uses the transparent circular mark + type lockup unless a manager
+        // uploaded a logo image AND switched it on (Paris header & footer → Header).
+        const customParisLogo =
+          Boolean(branding?.useCustomChiroLogo) && !isDefaultChiroLogo(branding?.logos.chiro);
+        const useParisLockup = entry.key === "chiro" && !customParisLogo;
+        const imageHeightPx = entry.key === "chiro" ? parisHeightPx : ssHeightPx;
 
         const logo = useSsLockup ? (
           <SulphurSpringsLockup
@@ -184,7 +188,7 @@ export function BrandLogoStrip({
             className={`w-auto max-w-full object-contain mix-blend-multiply transition-[height,opacity] duration-300 ease-out ${
               !emphasize ? "opacity-90 transition-opacity hover:opacity-100" : ""
             }`}
-            style={{ height: `${ssHeightPx}px` }}
+            style={{ height: `${imageHeightPx}px` }}
             priority={primary}
           />
         );

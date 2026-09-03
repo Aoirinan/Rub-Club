@@ -1,4 +1,6 @@
 import { telHref } from "@/lib/constants";
+import { getDisplayLocationsFull } from "@/lib/display-locations";
+import { getUiText } from "@/lib/ui-text";
 
 type Office = {
   name: string;
@@ -6,27 +8,41 @@ type Office = {
   phone: string;
 };
 
-const CHIRO_OFFICES: Office[] = [
-  {
-    name: "Chiropractic Associates",
-    address: "3305 NE Loop 286, Suite A, Paris, TX 75460",
-    phone: "(903) 785-5551",
-  },
-  {
-    name: "Chiropractic Associates of Sulphur Springs",
-    address: "207 Jefferson St. E, Sulphur Springs, TX 75482",
-    phone: "(903) 919-5020",
-  },
-];
+/** "903-785-5551" → "(903) 785-5551"; anything that is not 10 digits is shown as typed. */
+function displayPhone(raw: string): string {
+  const d = raw.replace(/\D/g, "");
+  if (d.length === 10) return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+  return raw;
+}
 
-const RUB_CLUB_OFFICE: Office = {
-  name: "The Rub Club",
-  address: "Paris, TX",
-  phone: "(903) 739-9959",
-};
+/**
+ * Office footer under every online form. Names come from Site text, the
+ * address/phone from Office info & hours (same overrides as the header).
+ */
+export async function FormBranding({ brand }: { brand?: "chiropractic" | "rub_club" }) {
+  const [locations, t] = await Promise.all([getDisplayLocationsFull(), getUiText()]);
+  const paris = locations.paris;
+  const sulphur = locations.sulphur_springs;
 
-export function FormBranding({ brand }: { brand?: "chiropractic" | "rub_club" }) {
-  const offices = brand === "rub_club" ? [RUB_CLUB_OFFICE] : CHIRO_OFFICES;
+  const chiroOffices: Office[] = [
+    {
+      name: t.ui_form_office_paris_name,
+      address: paris.addressLines.join(", "),
+      phone: displayPhone(paris.phonePrimary),
+    },
+    {
+      name: t.ui_form_office_ss_name,
+      address: sulphur.addressLines.join(", "),
+      phone: displayPhone(sulphur.phonePrimary),
+    },
+  ];
+  const rubClubOffice: Office = {
+    name: t.ui_form_office_rubclub_name,
+    address: paris.shortName,
+    phone: displayPhone(paris.phoneSecondary ?? paris.phonePrimary),
+  };
+
+  const offices = brand === "rub_club" ? [rubClubOffice] : chiroOffices;
   return (
     <footer className="mt-12 border-t border-stone-200 pt-6 text-sm text-stone-600">
       <div className="grid gap-4 sm:grid-cols-2">
@@ -40,9 +56,7 @@ export function FormBranding({ brand }: { brand?: "chiropractic" | "rub_club" })
           </div>
         ))}
       </div>
-      <p className="mt-4 text-xs text-stone-500">
-        Your information is sent securely to our office and is only viewable by our staff.
-      </p>
+      <p className="mt-4 text-xs text-stone-500">{t.ui_form_secure_note}</p>
       <p className="mt-1 text-xs text-stone-500">
         <a
           href="https://www.chiropracticparistexas.com"

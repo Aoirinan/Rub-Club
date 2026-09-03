@@ -32,6 +32,11 @@ import {
   STATIC_PAGES_CMS_REGISTRY,
   buildStaticPagesCmsDefaults,
 } from "@/lib/static-pages-cms";
+import { PARIS_PAGES_CMS_DEFAULTS, PARIS_PAGES_CMS_REGISTRY } from "@/lib/paris-pages-cms";
+import { SS_PAGES_CMS_DEFAULTS, SS_PAGES_CMS_REGISTRY } from "@/lib/ss-pages-cms";
+import { NAV_CMS_DEFAULTS, NAV_CMS_REGISTRY } from "@/lib/nav-cms";
+import { UI_TEXT_CMS_DEFAULTS, UI_TEXT_CMS_REGISTRY } from "@/lib/ui-text-cms";
+import { MASSAGE_PAGE_CMS_DEFAULTS, MASSAGE_PAGE_CMS_REGISTRY } from "@/lib/massage-page-cms";
 import {
   FOOTER_LINKS_DEFAULT_TEXT,
   FOOTER_LINKS_PARIS_TEXT,
@@ -82,7 +87,11 @@ export type ContentPageKey =
   | "SS photos"
   | "Site settings"
   | "Doctors"
-  | "Wellness care plans";
+  | "Wellness care plans"
+  | "Navigation"
+  | "Site text"
+  | "Massage landing"
+  | "Booking page";
 
 export type ContentFieldMeta = {
   id: string;
@@ -91,35 +100,6 @@ export type ContentFieldMeta = {
   fieldLabel: string;
   type: ContentFieldType;
 };
-
-const CHIRO_TESTIMONIAL_DEFAULTS = [
-  {
-    text: "Dr. Brandy Collins is gentle with my kids and patient with their questions. We drive over an hour because she is worth it.",
-    attr: "Parent of two · Pediatric care",
-  },
-  {
-    text: "Dr. Thompson and the team have kept me moving for years. I always leave feeling looked after — and they never push extra visits I do not need.",
-    attr: "Long-time Paris patient · Chiropractic",
-  },
-  {
-    text: "I had sciatica so bad I couldn't sit through a workday. Dr. Brandy Collins found the problem fast and had me feeling better within two weeks.",
-    attr: "Paris patient · Sciatica",
-  },
-] as const;
-
-const MASSAGE_SERVICES_DEFAULT = `Deep Tissue Massage — Slow, targeted pressure to release chronic tension in the neck, shoulders, lower back, and hips.
-
-Swedish Massage — Long, flowing strokes that relax muscles, boost circulation, and melt away everyday stress.
-
-Therapeutic Massage — Coordinated with your chiropractic plan to support recovery between adjustments.
-
-Prenatal Massage — Side-lying, pregnancy-safe positioning with techniques to ease swelling, hip pressure, and tension headaches.
-
-Sports Massage — Pre- and post-event work focused on recovery, range of motion, and getting you back to training without rushing tissue.
-
-Hot Stone Massage — Heated stones paired with hands-on work to warm tight muscles and release deep tension.
-
-Trigger Point & Lymphatic — Focused release of stubborn knots, plus gentle lymphatic drainage when appropriate.`;
 
 /**
  * Pipe-delimited so `parseOfficeHoursCms` splits on "|" before it tries the
@@ -143,7 +123,6 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "home_awards_text", pageLabel: "Home", sectionLabel: "Awards Strip", fieldLabel: "Awards Text", type: "text" },
   { id: "home_about_blurb", pageLabel: "Home", sectionLabel: "About Section", fieldLabel: "Body Copy", type: "richtext" },
   { id: "home_testimonials_heading", pageLabel: "Home", sectionLabel: "Testimonials", fieldLabel: "Section Heading", type: "text" },
-  { id: "home_testimonials_intro", pageLabel: "Home", sectionLabel: "Testimonials", fieldLabel: "Intro paragraph", type: "richtext" },
 
   { id: "chiro_hero_heading", pageLabel: "Chiropractic", sectionLabel: "Hero", fieldLabel: "Main Heading", type: "text" },
   { id: "chiro_hero_subheading", pageLabel: "Chiropractic", sectionLabel: "Hero", fieldLabel: "Subheading", type: "text" },
@@ -158,20 +137,6 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "chiro_testimonials_heading", pageLabel: "Chiropractic", sectionLabel: "Testimonials", fieldLabel: "Section heading", type: "text" },
   { id: "chiro_cta_heading", pageLabel: "Chiropractic", sectionLabel: "CTA", fieldLabel: "Heading", type: "text" },
   { id: "chiro_cta_subtext", pageLabel: "Chiropractic", sectionLabel: "CTA", fieldLabel: "Subtext", type: "text" },
-  { id: "chiro_cta_paris_label", pageLabel: "Chiropractic", sectionLabel: "CTA", fieldLabel: "Paris call button label", type: "text" },
-  { id: "chiro_cta_ss_label", pageLabel: "Chiropractic", sectionLabel: "CTA", fieldLabel: "Sulphur Springs call button label", type: "text" },
-  { id: "chiro_cta_massage_link", pageLabel: "Chiropractic", sectionLabel: "CTA", fieldLabel: "Massage link text", type: "text" },
-  { id: "chiro_cta_stretch_link", pageLabel: "Chiropractic", sectionLabel: "CTA", fieldLabel: "Stretch & Flex link text", type: "text" },
-  { id: "chiro_cta_forms_link", pageLabel: "Chiropractic", sectionLabel: "CTA", fieldLabel: "Patient forms link text", type: "text" },
-  { id: "chiro_schedule_cta_title", pageLabel: "Chiropractic", sectionLabel: "Schedule CTA", fieldLabel: "Heading", type: "text" },
-  { id: "chiro_schedule_cta_body", pageLabel: "Chiropractic", sectionLabel: "Schedule CTA", fieldLabel: "Body copy", type: "text" },
-  { id: "chiro_schedule_cta_secondary", pageLabel: "Chiropractic", sectionLabel: "Schedule CTA", fieldLabel: "Call button label", type: "text" },
-  { id: "chiro_testimonial_1_text", pageLabel: "Chiropractic", sectionLabel: "Testimonials", fieldLabel: "Testimonial 1", type: "richtext" },
-  { id: "chiro_testimonial_1_attr", pageLabel: "Chiropractic", sectionLabel: "Testimonials", fieldLabel: "Testimonial 1 Attribution", type: "text" },
-  { id: "chiro_testimonial_2_text", pageLabel: "Chiropractic", sectionLabel: "Testimonials", fieldLabel: "Testimonial 2", type: "richtext" },
-  { id: "chiro_testimonial_2_attr", pageLabel: "Chiropractic", sectionLabel: "Testimonials", fieldLabel: "Testimonial 2 Attribution", type: "text" },
-  { id: "chiro_testimonial_3_text", pageLabel: "Chiropractic", sectionLabel: "Testimonials", fieldLabel: "Testimonial 3", type: "richtext" },
-  { id: "chiro_testimonial_3_attr", pageLabel: "Chiropractic", sectionLabel: "Testimonials", fieldLabel: "Testimonial 3 Attribution", type: "text" },
 
   { id: "doctor_greg_active", pageLabel: "Doctors", sectionLabel: "Dr. Greg Thompson", fieldLabel: "Show on the public site", type: "boolean" },
   { id: "doctor_greg_name", pageLabel: "Doctors", sectionLabel: "Dr. Greg Thompson", fieldLabel: "Name", type: "text" },
@@ -195,7 +160,6 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "massage_hero_heading", pageLabel: "Massage", sectionLabel: "Hero", fieldLabel: "Main Heading", type: "text" },
   { id: "massage_hero_subheading", pageLabel: "Massage", sectionLabel: "Hero", fieldLabel: "Subheading", type: "text" },
   { id: "massage_intro_body", pageLabel: "Massage", sectionLabel: "Intro", fieldLabel: "Body Copy", type: "richtext" },
-  { id: "massage_services_list", pageLabel: "Massage", sectionLabel: "Services", fieldLabel: "Services Offered", type: "richtext" },
   { id: "massage_cta_heading", pageLabel: "Massage", sectionLabel: "CTA", fieldLabel: "Heading", type: "text" },
   { id: "massage_prices_body", pageLabel: "Massage", sectionLabel: "Prices", fieldLabel: "Prices page body (markdown)", type: "richtext" },
 
@@ -244,7 +208,6 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
 
   // Header/footer fields are grouped by the office they actually affect. The
   // handful that render one value everywhere live under "Site settings".
-  { id: "header_chiro_label", pageLabel: "Paris header & footer", sectionLabel: "Header", fieldLabel: "Label under the logo", type: "text" },
   { id: "header_chiro_logo", pageLabel: "Paris header & footer", sectionLabel: "Header", fieldLabel: "Logo (replaces icon + text lockup)", type: "image" },
   { id: "header_paris_lockup_title", pageLabel: "Paris header & footer", sectionLabel: "Header", fieldLabel: "Lockup title (next to logo)", type: "text" },
   { id: "header_paris_lockup_subtitle", pageLabel: "Paris header & footer", sectionLabel: "Header", fieldLabel: "Lockup subtitle (next to logo)", type: "text" },
@@ -284,7 +247,6 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
     type: "richtext",
   },
 
-  { id: "header_ss_label", pageLabel: "SS header & footer", sectionLabel: "Header", fieldLabel: "Label under the logo", type: "text" },
   { id: "header_ss_logo", pageLabel: "SS header & footer", sectionLabel: "Header", fieldLabel: "Logo (replaces icon + text lockup)", type: "image" },
   {
     id: "header_ss_logo_nav_height_px",
@@ -344,7 +306,8 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   { id: "location_section_heading", pageLabel: "Site settings", sectionLabel: "Location & hours sections", fieldLabel: "Location heading (subpage bottom sections)", type: "text" },
   { id: "hours_section_heading", pageLabel: "Site settings", sectionLabel: "Location & hours sections", fieldLabel: "Hours heading (subpage bottom sections)", type: "text" },
   { id: "nav_giftcard_url", pageLabel: "Site settings", sectionLabel: "Header links", fieldLabel: "Gift Card URL", type: "url" },
-  { id: "nav_book_url", pageLabel: "Site settings", sectionLabel: "Header links", fieldLabel: "Book Now URL", type: "url" },
+  { id: "nav_book_url", pageLabel: "Site settings", sectionLabel: "Header links", fieldLabel: "Book Now URL (used only when the switch below is on)", type: "url" },
+  { id: "nav_book_url_enabled", pageLabel: "Site settings", sectionLabel: "Header links", fieldLabel: "Send Book Now buttons to the URL above instead of showing the call popup", type: "boolean" },
   { id: "nav_staff_label", pageLabel: "Site settings", sectionLabel: "Header links", fieldLabel: "About Us nav label", type: "text" },
 
   { id: "chiro_wellness_teaser_heading", pageLabel: "Chiropractic", sectionLabel: "Wellness teaser", fieldLabel: "Heading", type: "text" },
@@ -410,6 +373,11 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
   ...buildSSStaffCmsRegistry(),
   ...STATIC_PAGES_CMS_REGISTRY,
   ...buildSitePhotoCmsRegistry(),
+  ...PARIS_PAGES_CMS_REGISTRY,
+  ...SS_PAGES_CMS_REGISTRY,
+  ...NAV_CMS_REGISTRY,
+  ...UI_TEXT_CMS_REGISTRY,
+  ...MASSAGE_PAGE_CMS_REGISTRY,
 ];
 
 export const DEFAULTS: Record<string, string> = {
@@ -420,8 +388,6 @@ export const DEFAULTS: Record<string, string> = {
     "Voted Best Chiropractic Center & Best Massage — The Paris News reader polls.",
   home_about_blurb: HOME_INTRO.body,
   home_testimonials_heading: "Patient Reviews",
-  home_testimonials_intro:
-    "Voted Best Chiropractic Center and Best Massage in The Paris News reader polls. Below are stories adapted from public Google reviews (paraphrased, not copied word-for-word).",
 
   chiro_hero_heading: "Efficient, evidence-informed chiropractic care",
   chiro_hero_subheading:
@@ -438,21 +404,6 @@ export const DEFAULTS: Record<string, string> = {
   chiro_testimonials_heading: "Patient Reviews",
   chiro_cta_heading: CHIRO.contactUsTitle,
   chiro_cta_subtext: CHIRO.callCta,
-  chiro_cta_paris_label: "Call Paris Office",
-  chiro_cta_ss_label: "Call Sulphur Springs",
-  chiro_cta_massage_link: "Massage appointments",
-  chiro_cta_stretch_link: "Stretch & Flex Rehab",
-  chiro_cta_forms_link: "Patient forms",
-  chiro_schedule_cta_title: "Questions before you book?",
-  chiro_schedule_cta_body:
-    "Our front desk can verify insurance for chiropractic visits and help you choose Paris or Sulphur Springs.",
-  chiro_schedule_cta_secondary: "Call Paris 903-785-5551",
-  chiro_testimonial_1_text: CHIRO_TESTIMONIAL_DEFAULTS[0].text,
-  chiro_testimonial_1_attr: CHIRO_TESTIMONIAL_DEFAULTS[0].attr,
-  chiro_testimonial_2_text: CHIRO_TESTIMONIAL_DEFAULTS[1].text,
-  chiro_testimonial_2_attr: CHIRO_TESTIMONIAL_DEFAULTS[1].attr,
-  chiro_testimonial_3_text: CHIRO_TESTIMONIAL_DEFAULTS[2].text,
-  chiro_testimonial_3_attr: CHIRO_TESTIMONIAL_DEFAULTS[2].attr,
 
   doctor_greg_active: "true",
   doctor_greg_name: DOCTORS[0].name,
@@ -477,7 +428,6 @@ export const DEFAULTS: Record<string, string> = {
   massage_hero_subheading:
     "Licensed therapists. Honest treatment plans. Coordinated with chiropractic care when it helps. Call 903-739-9959 to schedule.",
   massage_intro_body: MASSAGE.stressParas.join("\n\n"),
-  massage_services_list: MASSAGE_SERVICES_DEFAULT,
   massage_cta_heading: MASSAGE.contactTitle,
   massage_prices_body: MASSAGE_PRICES_DEFAULT,
 
@@ -523,8 +473,6 @@ Trigger Point & Lymphatic — Focused release of stubborn knots, plus gentle lym
   footer_links_default: FOOTER_LINKS_DEFAULT_TEXT,
   footer_links_paris: FOOTER_LINKS_PARIS_TEXT,
   footer_links_ss: FOOTER_LINKS_SS_TEXT,
-  header_chiro_label: "Chiropractic — Paris",
-  header_ss_label: "Chiro / Massage",
   header_chiro_logo: BRAND_LOGOS.chiropractic,
   header_ss_logo: "",
   header_paris_lockup_title: "Chiropractic Associates",
@@ -551,6 +499,7 @@ Trigger Point & Lymphatic — Focused release of stubborn knots, plus gentle lym
 
   nav_giftcard_url: GIFT_CARD_ORDER_URL,
   nav_book_url: "/contact",
+  nav_book_url_enabled: "false",
   nav_staff_label: "About Us",
 
   ...wellnessCarePlansDefaults(),
@@ -560,6 +509,11 @@ Trigger Point & Lymphatic — Focused release of stubborn knots, plus gentle lym
   ...buildSSStaffCmsDefaults(),
   ...buildStaticPagesCmsDefaults(),
   ...buildSitePhotoDefaults(),
+  ...PARIS_PAGES_CMS_DEFAULTS,
+  ...SS_PAGES_CMS_DEFAULTS,
+  ...NAV_CMS_DEFAULTS,
+  ...UI_TEXT_CMS_DEFAULTS,
+  ...MASSAGE_PAGE_CMS_DEFAULTS,
 };
 
 export const CONTENT_IDS = CONTENT_REGISTRY.map((f) => f.id);

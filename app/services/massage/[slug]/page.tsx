@@ -6,8 +6,11 @@ import { LocationHoursSection } from "@/components/LocationHoursSection";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { LegacyPageBody } from "@/components/LegacyPageBody";
 import { telHref } from "@/lib/constants";
+import { getContentMany } from "@/lib/cms";
 import { getDisplayLocations } from "@/lib/cms-display";
 import { getParisOfficeHours } from "@/lib/office-hours";
+import { getUiText } from "@/lib/ui-text";
+import { MASSAGE_PAGE_TEXT_IDS, resolveMassagePageText } from "@/lib/massage-page-cms";
 import {
   getPublishedLegacyPage,
   listPublishedLegacyPagesForSite,
@@ -30,25 +33,38 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const page = await getPublishedLegacyPage("massage-paris", slug);
-  if (!page) return { title: "Massage" };
+  const [page, cms] = await Promise.all([
+    getPublishedLegacyPage("massage-paris", slug),
+    getContentMany([...MASSAGE_PAGE_TEXT_IDS]),
+  ]);
+  const text = resolveMassagePageText(cms);
+  if (!page) return { title: text.massage_subpage_breadcrumb };
+  // A meta title saved in Legacy pages wins; otherwise title + editable suffix.
+  const customMeta = page.metaTitle.trim();
+  const title =
+    customMeta && customMeta !== page.title
+      ? customMeta
+      : `${page.title}${text.massage_subpage_title_suffix}`;
   return buildPageMetadata({
-    title: `${page.title} — The Rub Club, Paris TX`,
+    title,
     description: page.metaDescription,
     path: page.route,
-    ogTitle: `${page.title} — Paris, TX`,
+    ogTitle: `${page.title}${text.massage_subpage_og_suffix}`,
   });
 }
 
 export default async function MassageLegacyPage({ params }: Props) {
   const { slug } = await params;
-  const [page, parisHours, displayLocs] = await Promise.all([
+  const [page, parisHours, displayLocs, cms, ui] = await Promise.all([
     getPublishedLegacyPage("massage-paris", slug),
     getParisOfficeHours(),
     getDisplayLocations(),
+    getContentMany([...MASSAGE_PAGE_TEXT_IDS]),
+    getUiText(),
   ]);
   if (!page) notFound();
 
+  const text = resolveMassagePageText(cms);
   const label = LEGACY_SITE_LABEL["massage-paris"];
   const paris = displayLocs.paris;
   const phone = paris.phonePrimary;
@@ -58,20 +74,25 @@ export default async function MassageLegacyPage({ params }: Props) {
       <Breadcrumbs
         items={[
           { name: "Home", url: "/" },
-          { name: label.section, url: label.sectionUrl },
+          { name: text.massage_subpage_breadcrumb, url: label.sectionUrl },
           { name: page.title, url: page.route },
         ]}
       />
-      <PageHero eyebrow={label.eyebrow} title={page.title} />
+      <PageHero eyebrow={text.massage_subpage_eyebrow} title={page.title} />
       <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
         <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
-          <LegacyPageBody blocks={page.blocks} heroImage={page.heroImage} images={page.images} />
+          <LegacyPageBody
+            blocks={page.blocks}
+            bodyMarkdown={page.bodyMarkdown}
+            heroImage={page.heroImage}
+            images={page.images}
+          />
         </section>
         <LocationHoursSection location={paris} hours={parisHours} />
         <ScheduleCtaCard
-          title="Book a massage"
-          body="Contact The Rub Club in Paris to schedule your session."
-          secondary={{ label: `Call ${phone}`, href: telHref(phone) }}
+          title={text.massage_subpage_cta_title}
+          body={text.massage_subpage_cta_body}
+          secondary={{ label: `${ui.ui_call_prefix} ${phone}`, href: telHref(phone) }}
         />
       </div>
     </>

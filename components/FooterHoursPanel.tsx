@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { BookingCta } from "@/components/BookingCta";
+import { DEFAULT_FOOTER_TEXT, type FooterText } from "@/components/SiteFooterClient";
 import { LOCATIONS } from "@/lib/constants";
 import type { DomainContextValue } from "@/lib/domain-context";
 import { useSiteBusinessContext } from "@/lib/use-site-business-context";
@@ -48,9 +49,9 @@ function shortShift(shift: string): string {
 }
 
 /** One entry per shift so a split schedule stacks instead of wrapping mid-range. */
-function shortHoursLines(hours: string): string[] {
+function shortHoursLines(hours: string, empty: string): string[] {
   const trimmed = hours.trim();
-  if (!trimmed || /closed/i.test(trimmed)) return [trimmed || "—"];
+  if (!trimmed || /closed/i.test(trimmed)) return [trimmed || empty];
   return hoursShifts(trimmed).map(shortShift);
 }
 
@@ -60,11 +61,13 @@ function TwoBusinessHoursTable({
   leftRows,
   rightLabel,
   rightRows,
+  empty,
 }: {
   leftLabel: string;
   leftRows: readonly OfficeHoursRow[];
   rightLabel: string;
   rightRows: readonly OfficeHoursRow[];
+  empty: string;
 }) {
   const findHours = (rows: readonly OfficeHoursRow[], day: string) =>
     rows.find((r) => r.day.trim().toLowerCase() === day.trim().toLowerCase())?.hours;
@@ -78,7 +81,7 @@ function TwoBusinessHoursTable({
       </div>
       <dl className="space-y-1">
         {leftRows.map((row, i) => {
-          const rightHours = findHours(rightRows, row.day) ?? rightRows[i]?.hours ?? "—";
+          const rightHours = findHours(rightRows, row.day) ?? rightRows[i]?.hours ?? empty;
           return (
             <div
               key={row.day}
@@ -87,7 +90,7 @@ function TwoBusinessHoursTable({
               <dt className="w-8 font-bold text-white">{shortDay(row.day)}</dt>
               {[row.hours, rightHours].map((value, col) => (
                 <dd key={col} className="flex-1 text-right text-white/80">
-                  {shortHoursLines(value).map((line) => (
+                  {shortHoursLines(value, empty).map((line) => (
                     <span key={line} className="block whitespace-nowrap">
                       {line}
                     </span>
@@ -102,9 +105,13 @@ function TwoBusinessHoursTable({
   );
 }
 
-function locationLabel(focus: FooterHoursFocus): string | null {
-  if (focus === "paris") return LOCATIONS.paris.shortName;
-  if (focus === "sulphur_springs") return LOCATIONS.sulphur_springs.shortName;
+function locationLabel(
+  focus: FooterHoursFocus,
+  parisShortName: string,
+  sulphurShortName: string,
+): string | null {
+  if (focus === "paris") return parisShortName;
+  if (focus === "sulphur_springs") return sulphurShortName;
   return null;
 }
 
@@ -114,21 +121,27 @@ export function FooterHoursPanel({
   sulphurHours,
   initialDomainCtx,
   initialBusinessContext = "default",
+  text = DEFAULT_FOOTER_TEXT,
+  parisShortName = LOCATIONS.paris.shortName,
+  sulphurShortName = LOCATIONS.sulphur_springs.shortName,
 }: {
   parisChiroHours: readonly OfficeHoursRow[];
   parisMassageHours: readonly OfficeHoursRow[];
   sulphurHours: readonly OfficeHoursRow[];
   initialDomainCtx: DomainContextValue;
   initialBusinessContext?: SiteBusinessContext;
+  text?: FooterText;
+  parisShortName?: string;
+  sulphurShortName?: string;
 }) {
   const pathname = usePathname() ?? "/";
   const businessContext = useSiteBusinessContext(initialBusinessContext);
   const focus = footerHoursFocus(pathname, initialDomainCtx, businessContext);
-  const subtitle = locationLabel(focus);
+  const subtitle = locationLabel(focus, parisShortName, sulphurShortName);
 
   return (
     <div className="text-sm">
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f19f1f]">Hours</p>
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f19f1f]">{text.hours}</p>
       {subtitle ? (
         <p className="mt-1 text-xs font-bold text-white/70">{subtitle}</p>
       ) : null}
@@ -137,14 +150,15 @@ export function FooterHoursPanel({
           <div>
             {focus === "both" ? (
               <p className="mb-2 text-xs font-black uppercase tracking-[0.14em] text-[#f19f1f]">
-                {LOCATIONS.paris.shortName}
+                {parisShortName}
               </p>
             ) : null}
             <TwoBusinessHoursTable
-              leftLabel="Chiro"
+              leftLabel={text.hoursColChiro}
               leftRows={parisChiroHours}
-              rightLabel="Massage"
+              rightLabel={text.hoursColMassage}
               rightRows={parisMassageHours}
+              empty={text.hoursEmpty}
             />
           </div>
         ) : null}
@@ -152,7 +166,7 @@ export function FooterHoursPanel({
           <div>
             {focus === "both" ? (
               <p className="mb-2 text-xs font-black uppercase tracking-[0.14em] text-[#f19f1f]">
-                {LOCATIONS.sulphur_springs.shortName}
+                {sulphurShortName}
               </p>
             ) : null}
             <HoursTable rows={sulphurHours} />
@@ -160,7 +174,7 @@ export function FooterHoursPanel({
         ) : null}
       </div>
       <BookingCta
-        label="Book Now"
+        label={text.bookNow}
         variant="compact"
         className="focus-ring mt-4 inline-flex bg-[#4a1515] px-4 py-2 text-xs font-black uppercase tracking-wide text-white hover:bg-[#341010]"
       />

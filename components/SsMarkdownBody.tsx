@@ -24,6 +24,13 @@ export function SsMarkdownBody({
             </h2>
           );
         }
+        if (block.startsWith("### ")) {
+          return (
+            <h3 key={i} className="mt-6 text-lg font-bold text-[#4a1515] first:mt-0">
+              {block.replace("### ", "")}
+            </h3>
+          );
+        }
         if (block.startsWith("- ")) {
           const items = block.split("\n").filter((l) => l.startsWith("- "));
           return (

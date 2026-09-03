@@ -8,6 +8,7 @@ import { postVisitSurveyEmail } from "@/lib/email-templates";
 import { sendBookingNotification } from "@/lib/sendgrid";
 import { recordBookingEvent } from "@/lib/booking-events";
 import { TIME_ZONE } from "@/lib/constants";
+import { emailLocations } from "@/lib/email-locations";
 
 export const runtime = "nodejs";
 
@@ -83,7 +84,7 @@ export async function GET(req: Request) {
     }
 
     try {
-      const { subject, text, html } = postVisitSurveyEmail(emailCtx);
+      const { subject, text, html } = postVisitSurveyEmail(emailCtx, await emailLocations());
       const delivered = await sendBookingNotification({
         to: emailCtx.email,
         subject,

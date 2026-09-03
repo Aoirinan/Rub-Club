@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { JsonLd } from "@/components/JsonLd";
-import { BOOKING_DISABLED_TITLE } from "@/lib/public-booking";
+import { getUiText } from "@/lib/ui-text";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
 
 export type Crumb = { name: string; url: string };
@@ -69,10 +69,12 @@ function CtaButton({
   href,
   label,
   variant,
+  disabledTitle,
 }: {
   href: string | null;
   label: string;
   variant: "primary" | "secondary";
+  disabledTitle: string;
 }) {
   const primaryClass =
     "focus-ring bg-[var(--brand-paris-cta,#4a1515)] px-6 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-[var(--brand-paris-cta-hover,#341010)]";
@@ -84,7 +86,7 @@ function CtaButton({
       <span
         className={`${variant === "primary" ? primaryClass : secondaryClass} cursor-not-allowed opacity-75`}
         aria-disabled="true"
-        title={BOOKING_DISABLED_TITLE}
+        title={disabledTitle}
       >
         {label}
       </span>
@@ -106,7 +108,7 @@ function CtaButton({
   );
 }
 
-export function CtaCard({
+export async function CtaCard({
   title,
   body,
   primary,
@@ -117,14 +119,26 @@ export function CtaCard({
   primary: { label: string; href: string | null };
   secondary?: { label: string; href: string | null };
 }) {
+  const t = await getUiText();
+  const disabledTitle = t.ui_scheduling_soon_tooltip;
   return (
     <section className="border-t-4 border-[var(--brand-paris-accent,#c0392b)] bg-[var(--brand-paris-heading,#4a1515)] px-6 py-10 text-white shadow-md sm:px-10">
       <h2 className="text-2xl font-black">{title}</h2>
       {body ? <p className="mt-3 max-w-2xl text-white/90">{body}</p> : null}
       <div className="mt-6 flex flex-wrap gap-3">
-        <CtaButton href={primary.href} label={primary.label} variant="primary" />
+        <CtaButton
+          href={primary.href}
+          label={primary.label}
+          variant="primary"
+          disabledTitle={disabledTitle}
+        />
         {secondary ? (
-          <CtaButton href={secondary.href} label={secondary.label} variant="secondary" />
+          <CtaButton
+            href={secondary.href}
+            label={secondary.label}
+            variant="secondary"
+            disabledTitle={disabledTitle}
+          />
         ) : null}
       </div>
     </section>

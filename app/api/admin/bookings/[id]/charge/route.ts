@@ -8,6 +8,7 @@ import { patientPaymentRequestEmail } from "@/lib/email-templates";
 import { sendBookingNotification } from "@/lib/sendgrid";
 import { sendSms } from "@/lib/twilio";
 import { createPaymentLink } from "@/lib/square";
+import { emailLocations } from "@/lib/email-locations";
 
 export const runtime = "nodejs";
 
@@ -83,11 +84,15 @@ export async function POST(req: Request, ctx: Params) {
   let smsSent = false;
 
   try {
-    const { subject, text, html } = patientPaymentRequestEmail(emailCtx, {
-      amountCents: body.amountCents,
-      paymentUrl: linkResult.url,
-      description: body.description,
-    });
+    const { subject, text, html } = patientPaymentRequestEmail(
+      emailCtx,
+      {
+        amountCents: body.amountCents,
+        paymentUrl: linkResult.url,
+        description: body.description,
+      },
+      await emailLocations(),
+    );
     emailSent = await sendBookingNotification({
       to: emailCtx.email,
       subject,

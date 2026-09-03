@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { DoctorCardVideoAccordion } from "@/components/DoctorCardVideoAccordion";
+import { useUiText } from "@/components/SiteChromeProvider";
 
 export type DoctorActionVideo = {
   src: string;
@@ -21,10 +22,10 @@ export type ChiropracticDoctorCardProps = {
   actionVideos?: DoctorActionVideo[];
 };
 
-function meetButtonLabel(fullName: string): string {
+function meetButtonLabel(fullName: string, prefix: string): string {
   const without = fullName.replace(/^Dr\.\s*/i, "").trim();
   const first = without.split(/\s+/)[0] ?? without;
-  return `Meet Dr. ${first}`;
+  return `${prefix} ${first}`;
 }
 
 export function ChiropracticDoctorCard({
@@ -42,12 +43,13 @@ export function ChiropracticDoctorCard({
       ? `/media/doctors/${videoFile}`
       : null;
   const remoteImage = /^https?:\/\//i.test(imageSrc);
+  const t = useUiText();
 
   const videos = [
-    ...(introSrc ? [{ src: introSrc, label: meetButtonLabel(name) }] : []),
+    ...(introSrc ? [{ src: introSrc, label: meetButtonLabel(name, t.ui_meet_doctor_prefix) }] : []),
     ...actionVideos.map((v) => ({
       src: v.src,
-      label: v.caption?.trim() || "Adjustment in action",
+      label: v.caption?.trim() || t.ui_adjustment_in_action,
     })),
   ];
 

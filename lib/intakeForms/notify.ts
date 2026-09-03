@@ -9,6 +9,7 @@
 import { sendOutboundEmail } from "@/lib/sendgrid";
 import { onlineFormSubmissionAckEmail } from "@/lib/email-templates";
 import { getPublicAppOrigin } from "@/lib/app-origin";
+import { emailLocations } from "@/lib/email-locations";
 
 export async function notifyNewSubmission(params: {
   formTitle: string;
@@ -53,10 +54,13 @@ export async function sendSubmissionAcknowledgment(params: {
   const to = params.to.trim().toLowerCase();
   if (!to.includes("@")) return;
 
-  const { subject, text, html } = onlineFormSubmissionAckEmail({
-    formTitle: params.formTitle,
-    recipientName: params.recipientName,
-  });
+  const { subject, text, html } = onlineFormSubmissionAckEmail(
+    {
+      formTitle: params.formTitle,
+      recipientName: params.recipientName,
+    },
+    await emailLocations(),
+  );
 
   try {
     const res = await sendOutboundEmail({ to, subject, text, html });

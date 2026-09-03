@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/page-metadata";
+import { getPageMeta } from "@/lib/page-meta";
+import { getContentMany } from "@/lib/cms";
+import { pageOgDescriptionId, pageOgTitleId, parisText } from "@/lib/paris-pages-cms";
 import { Breadcrumbs } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
 import {
@@ -13,7 +16,6 @@ import { siteUrl } from "@/lib/site-content";
 import { pageKeywords } from "@/lib/seo-keywords";
 import { getDisplayLocations } from "@/lib/cms-display";
 import { getParisChiroOfficeHours } from "@/lib/office-hours";
-import { CHIRO } from "@/lib/home-verbatim";
 import { getPracticePage } from "@/lib/practice-pages";
 import { practiceThemeStyle } from "@/components/practice/theme";
 import { PracticeHero } from "@/components/practice/PracticeHero";
@@ -30,37 +32,55 @@ import { ExtrasSection } from "@/components/practice/ExtrasSection";
 import { StickyCallBar } from "@/components/practice/StickyCallBar";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const booking = await getPublicBookingConfig();
+  const [booking, meta, og] = await Promise.all([
+    getPublicBookingConfig(),
+    getPageMeta("chiropractic", {
+      title: "Chiropractor in Paris, TX — Chiropractic Associates",
+      description:
+        "Chiropractic adjustments, spinal decompression, rehab, and acupuncture in Paris, TX. {schedule} — family-owned since 1998.",
+    }),
+    getContentMany([pageOgTitleId("chiropractic"), pageOgDescriptionId("chiropractic")]),
+  ]);
   const phrase = scheduleMetaPhrase(isPublicBookingEnabled(booking));
+  const fill = (s: string) => s.replace("{schedule}", phrase);
   return buildPageMetadata({
-    title: "Chiropractor in Paris, TX — Chiropractic Associates",
+    title: meta.title,
     brandInTitle: true,
-    description: `Chiropractic adjustments, spinal decompression, rehab, and acupuncture in Paris, TX. ${phrase} — family-owned since 1998.`,
+    description: fill(meta.description),
     path: "/services/chiropractic",
     keywords: pageKeywords(["Paris TX chiropractor", "chiropractic Paris Texas"]),
-    ogTitle: "Chiropractor in Paris, TX",
-    ogDescription: `Adjustments, decompression, rehab, and acupuncture at Chiropractic Associates in Paris. ${phrase}.`,
+    ogTitle: parisText(og, pageOgTitleId("chiropractic")),
+    ogDescription: fill(parisText(og, pageOgDescriptionId("chiropractic"))),
   });
 }
+
+const CHIRO_COPY_IDS = [
+  "chiro_location_phone_label",
+  "chiro_location_details_label",
+  "chiro_second_location_title",
+  "chiro_second_location_link_label",
+] as const;
 
 export const revalidate = 60;
 
 export default async function ChiropracticServicePage() {
-  const [page, parisHours, displayLocs] = await Promise.all([
+  const [page, parisHours, displayLocs, copy] = await Promise.all([
     getPracticePage("paris-chiro"),
     getParisChiroOfficeHours(),
     getDisplayLocations(),
+    getContentMany([...CHIRO_COPY_IDS]),
   ]);
   const paris = displayLocs.paris;
   const ss = displayLocs.sulphur_springs;
+  const t = (id: string) => parisText(copy, id);
 
   const secondaryLocations: PracticeSecondaryLocation[] = [
     {
-      title: CHIRO.secondLocationTitle,
+      title: t("chiro_second_location_title"),
       lines: [...ss.addressLines],
       phone: ss.phonePrimary,
       href: "/sulphur-springs",
-      hrefLabel: "Sulphur Springs details & hours",
+      hrefLabel: t("chiro_second_location_link_label"),
     },
   ];
 
@@ -98,12 +118,12 @@ export default async function ChiropracticServicePage() {
             data={page.locationBlock}
             location={{
               name: paris.name,
-              phoneLabel: "Chiropractic",
+              phoneLabel: t("chiro_location_phone_label"),
               phone: paris.phonePrimary,
               addressLines: [...paris.addressLines],
               mapsUrl: paris.mapsUrl,
               detailsHref: `/locations/${paris.slug}`,
-              detailsLabel: "Paris details & hours",
+              detailsLabel: t("chiro_location_details_label"),
             }}
             hours={parisHours}
             secondaryLocations={secondaryLocations}

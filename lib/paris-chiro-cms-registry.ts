@@ -1,5 +1,5 @@
 import type { ContentFieldMeta } from "@/lib/cms-registry";
-import { PARIS_CHIRO_SERVICES } from "@/lib/paris-chiro-services";
+import { PARIS_CHIRO_SERVICES, buildParisChiroNavChildren } from "@/lib/paris-chiro-services";
 
 export const STRETCH_FLEX_SLUG = "stretch-and-flex-rehab";
 
@@ -15,6 +15,15 @@ export const PARIS_CHIRO_PAGES_WITH_IMAGES = [STRETCH_FLEX_SLUG] as const;
 
 export function parisChiroPageBodyId(slug: string): string {
   return `paris_chiro_page_${slug}_body`;
+}
+
+export function parisChiroPageTitleId(slug: string): string {
+  return `paris_chiro_page_${slug}_title`;
+}
+
+/** Label shown for this page in the header Services menu. */
+export function parisChiroPageNavLabelId(slug: string): string {
+  return `paris_chiro_page_${slug}_nav_label`;
 }
 
 export function parisChiroPageMetaId(slug: string): string {
@@ -83,6 +92,20 @@ export function buildParisChiroCmsRegistry(): ContentFieldMeta[] {
   for (const s of PARIS_CHIRO_SERVICES) {
     fields.push(
       {
+        id: parisChiroPageTitleId(s.slug),
+        pageLabel: "Paris chiro pages",
+        sectionLabel: s.title,
+        fieldLabel: "Page title (heading at the top of the page)",
+        type: "text",
+      },
+      {
+        id: parisChiroPageNavLabelId(s.slug),
+        pageLabel: "Paris chiro pages",
+        sectionLabel: s.title,
+        fieldLabel: "Menu label (header Services dropdown)",
+        type: "text",
+      },
+      {
         id: parisChiroPageBodyId(s.slug),
         pageLabel: "Paris chiro pages",
         sectionLabel: s.title,
@@ -106,7 +129,12 @@ export function buildParisChiroCmsRegistry(): ContentFieldMeta[] {
 
 export function buildParisChiroCmsDefaults(): Record<string, string> {
   const defaults: Record<string, string> = {};
+  const navLabelBySlug = new Map(
+    buildParisChiroNavChildren().map((c) => [c.href.split("/").pop() ?? "", c.label] as const),
+  );
   for (const s of PARIS_CHIRO_SERVICES) {
+    defaults[parisChiroPageTitleId(s.slug)] = s.title;
+    defaults[parisChiroPageNavLabelId(s.slug)] = navLabelBySlug.get(s.slug) ?? s.title;
     defaults[parisChiroPageBodyId(s.slug)] = s.body;
     defaults[parisChiroPageMetaId(s.slug)] = s.metaDescription;
     if (s.slug === STRETCH_FLEX_SLUG) {

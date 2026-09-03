@@ -8,6 +8,7 @@ import { bookingDocToEmailContext } from "@/lib/booking-doc";
 import { patientDeclinedEmail } from "@/lib/email-templates";
 import { sendBookingNotification } from "@/lib/sendgrid";
 import { recomputeNextAppointmentForBooking } from "@/lib/patients-db";
+import { emailLocations } from "@/lib/email-locations";
 
 export const runtime = "nodejs";
 
@@ -106,7 +107,7 @@ export async function POST(req: Request, ctx: Params) {
     const fresh = await bookingRef.get();
     const emailCtx = bookingDocToEmailContext(fresh);
     if (emailCtx) {
-      const { subject, text, html } = patientDeclinedEmail(emailCtx, reason);
+      const { subject, text, html } = patientDeclinedEmail(emailCtx, reason, await emailLocations());
       await sendBookingNotification({
         to: emailCtx.email,
         subject,

@@ -1,6 +1,7 @@
 import type { JSX } from "react";
 import Image from "next/image";
 import type { LegacyBlock, LegacyImage } from "@/lib/legacy-pages";
+import { SsMarkdownBody } from "@/components/SsMarkdownBody";
 
 /**
  * Renders legacy page content VERBATIM from the scraped `blocks[]` (tag + text),
@@ -69,16 +70,20 @@ function isOptimizableImageSrc(src: string): boolean {
 
 export function LegacyPageBody({
   blocks,
+  bodyMarkdown,
   heroImage,
   images,
   accent = "#c0392b",
 }: {
   blocks: LegacyBlock[];
+  /** Staff-written markdown replacement; when non-empty it replaces `blocks`. */
+  bodyMarkdown?: string;
   heroImage?: string;
   images?: LegacyImage[];
   accent?: string;
 }) {
-  const nodes = groupBlocks(blocks);
+  const markdown = bodyMarkdown?.trim() ?? "";
+  const nodes = markdown ? [] : groupBlocks(blocks);
   const gallery = (images ?? []).filter((img) => img.url && img.url !== heroImage);
   // next/image only optimizes allow-listed hosts (see next.config.ts); anything
   // else must be served as-is or the page 500s.
@@ -98,6 +103,8 @@ export function LegacyPageBody({
           />
         </div>
       ) : null}
+
+      {markdown ? <SsMarkdownBody body={markdown} /> : null}
 
       {nodes.map((node, i) => {
         if (node.kind === "heading") {

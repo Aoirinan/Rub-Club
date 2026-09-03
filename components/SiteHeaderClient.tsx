@@ -10,6 +10,11 @@ import { HeaderBrandLogoStrip } from "@/components/HeaderBrandLogoStrip";
 import { BusinessLogoHeader } from "@/components/BusinessLogoHeader";
 import { BusinessSubNav } from "@/components/BusinessSubNav";
 import { HeaderThemeProvider, useHeaderCompact } from "@/components/HeaderThemeProvider";
+import {
+  DEFAULT_NAV_CHROME,
+  NavChromeProvider,
+  type NavChrome,
+} from "@/components/NavChromeContext";
 import { SiteHeaderLogoRow } from "@/components/SiteHeaderLogoRow";
 import { MobileNav } from "@/components/MobileNav";
 import type { NavItem } from "@/components/DesktopNav";
@@ -18,6 +23,7 @@ import {
 } from "@/lib/paris-chiro-services";
 import type { HeaderBrandContent } from "@/lib/brand-logos";
 import type { HeaderColorConfig } from "@/lib/header-colors";
+import { NAV_TEXT_DEFAULTS, type NavText } from "@/lib/nav-cms";
 import { useSiteBusinessContext } from "@/lib/use-site-business-context";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
 
@@ -32,84 +38,96 @@ export function buildDefaultNavItems(
   businessContext: SiteBusinessContext = "default",
   ssWellnessNavChildren?: ServicesNavChild[],
   staffNavLabel = "About Us",
+  nav: NavText = NAV_TEXT_DEFAULTS,
 ): NavItem[] {
   // On the Sulphur Springs section, the Services / Wellness Plan dropdowns stay
   // on SS pages instead of jumping to the Paris equivalents.
   const onSulphur = businessContext === "sulphur_springs";
   return [
     {
+      key: "home",
       href: onSulphur ? "/sulphur-springs" : "/",
-      label: "Home",
+      label: nav.nav_home_label,
     },
     onSulphur && ssServicesNavChildren?.length
       ? {
+          key: "services",
           href: "/sulphur-springs",
-          label: "Services",
+          label: nav.nav_services_label,
           mega: true,
           children: ssServicesNavChildren,
         }
       : {
+          key: "services",
           href: "/services/chiropractic",
-          label: "Services",
+          label: nav.nav_services_label,
           mega: true,
           // Grouped legacy Services mega-menu when provided; static fallback.
           children: servicesNavChildren ?? buildParisChiroNavChildren(),
         },
     {
+      key: "chiropractic",
       href: "/services/chiropractic",
-      label: "Chiropractic",
+      label: nav.nav_chiropractic_label,
       children: [
-        { href: "/services/chiropractic", label: "Paris" },
-        { href: "/sulphur-springs", label: "Sulphur Springs" },
+        { href: "/services/chiropractic", label: nav.nav_child_paris_label },
+        { href: "/sulphur-springs", label: nav.nav_child_sulphur_label },
       ],
     },
     {
+      key: "massage",
       href: "/services/massage",
-      label: "Massage",
+      label: nav.nav_massage_label,
       children: [
-        { href: "/services/massage", label: "Paris" },
-        { href: "/sulphur-springs/massage", label: "Sulphur Springs" },
+        { href: "/services/massage", label: nav.nav_child_paris_label },
+        { href: "/sulphur-springs/massage", label: nav.nav_child_sulphur_label },
       ],
     },
     {
+      key: "about",
       href: "/locations/paris/staff",
       label: staffNavLabel,
       children: [
-        { href: "/locations/paris/staff", label: "Paris" },
-        { href: "/sulphur-springs/staff", label: "Sulphur Springs" },
+        { href: "/locations/paris/staff", label: nav.nav_child_paris_label },
+        { href: "/sulphur-springs/staff", label: nav.nav_child_sulphur_label },
       ],
     },
     onSulphur && ssWellnessNavChildren?.length
       ? {
+          key: "wellness",
           href: "/sulphur-springs/wellness-care-plans",
-          label: "Wellness Plan",
+          label: nav.nav_wellness_label,
           children: ssWellnessNavChildren,
         }
       : {
+          key: "wellness",
           href: WELLNESS_CARE_PLANS_PATH,
-          label: "Wellness Plan",
+          label: nav.nav_wellness_label,
           children: [
-            { href: WELLNESS_CARE_PLANS_PATH, label: "Wellness Plan" },
-            { href: "/services/massage/prices", label: "Massage Prices" },
+            { href: WELLNESS_CARE_PLANS_PATH, label: nav.nav_wellness_child_plan_label },
+            { href: "/services/massage/prices", label: nav.nav_wellness_child_prices_label },
           ],
         },
     {
+      key: "giftcards",
       href: giftCardHref,
-      label: "Gift cards",
+      label: nav.nav_giftcards_label,
       external: true,
+      giftCard: true,
     },
-    { href: "/patient-forms", label: "Patient Forms" },
+    { key: "patient-forms", href: "/patient-forms", label: nav.nav_patient_forms_label },
     {
+      key: "contact",
       href: onSulphur ? "/sulphur-springs/contact" : "/contact",
-      label: "Contact Us",
+      label: nav.nav_contact_label,
       clinics: (() => {
         const parisClinic = {
-          name: "Paris (main office)",
+          name: nav.nav_contact_paris_name,
           addressLines: paris.addressLines,
           phones: [
-            { label: "Office", number: paris.phonePrimary },
+            { label: nav.nav_contact_office_label, number: paris.phonePrimary },
             ...(paris.phoneSecondary?.trim()
-              ? [{ label: "Massage desk", number: paris.phoneSecondary }]
+              ? [{ label: nav.nav_contact_massage_desk_label, number: paris.phoneSecondary }]
               : []),
           ],
           fax: paris.fax,
@@ -117,9 +135,9 @@ export function buildDefaultNavItems(
           contactHref: "/contact",
         };
         const ssClinic = {
-          name: "Sulphur Springs (second location)",
+          name: nav.nav_contact_sulphur_name,
           addressLines: sulphur.addressLines,
-          phones: [{ label: "Office", number: sulphur.phonePrimary }],
+          phones: [{ label: nav.nav_contact_office_label, number: sulphur.phonePrimary }],
           fax: sulphur.fax,
           mapsUrl: sulphur.mapsUrl,
           contactHref: "/sulphur-springs/contact",
@@ -161,6 +179,7 @@ export function SiteHeaderClient({
   ssServicesNavChildren,
   ssWellnessNavChildren,
   staffNavLabel = "About Us",
+  chrome = DEFAULT_NAV_CHROME,
 }: {
   paris: LocationInfo;
   sulphur: LocationInfo;
@@ -173,10 +192,13 @@ export function SiteHeaderClient({
   ssServicesNavChildren?: ServicesNavChild[];
   ssWellnessNavChildren?: ServicesNavChild[];
   staffNavLabel?: string;
+  /** Editable header labels (server-resolved); defaults keep today's text. */
+  chrome?: NavChrome;
 }) {
   const businessContext = useSiteBusinessContext(initialBusinessContext);
   const isBusinessScoped =
     businessContext === "paris_chiro" || businessContext === "sulphur_springs";
+  const nav = chrome.nav;
 
   // Same nav on every page except Services, which stays within the current
   // section of the site (Paris vs. Sulphur Springs); colors follow context too.
@@ -189,27 +211,29 @@ export function SiteHeaderClient({
     businessContext,
     ssWellnessNavChildren,
     staffNavLabel,
+    nav,
   );
 
   const rub = paris.phoneSecondary?.trim();
 
   return (
+    <NavChromeProvider value={chrome}>
     <HeaderThemeProvider colors={headerColors} initialBusinessContext={initialBusinessContext}>
       {showTopPhoneBar ? (
         <HeaderTier1Collapse>
           <div className="bg-[var(--header-phone-bar-bg)] px-4 py-1.5 text-center text-xs font-bold text-white sm:text-sm">
             {businessContext === "paris_chiro" ? (
               <a className="hover:underline" href={telHref(paris.phonePrimary)}>
-                Paris Chiropractic {paris.phonePrimary}
+                {nav.nav_phone_bar_paris_chiro_prefix} {paris.phonePrimary}
               </a>
             ) : businessContext === "sulphur_springs" ? (
               <a className="hover:underline" href={telHref(sulphur.phonePrimary)}>
-                Sulphur Springs {sulphur.phonePrimary}
+                {nav.nav_phone_bar_sulphur_prefix} {sulphur.phonePrimary}
               </a>
             ) : (
               <>
                 <a className="hover:underline" href={telHref(paris.phonePrimary)}>
-                  Paris {paris.phonePrimary}
+                  {nav.nav_phone_bar_paris_prefix} {paris.phonePrimary}
                 </a>
                 <span className="mx-3 hidden text-white/40 sm:inline" aria-hidden>
                   |
@@ -218,7 +242,7 @@ export function SiteHeaderClient({
                   className="mt-1 inline-block hover:underline sm:mt-0"
                   href={telHref(sulphur.phonePrimary)}
                 >
-                  Sulphur Springs {sulphur.phonePrimary}
+                  {nav.nav_phone_bar_sulphur_prefix} {sulphur.phonePrimary}
                 </a>
                 {rub ? (
                   <>
@@ -229,7 +253,7 @@ export function SiteHeaderClient({
                       className="mt-1 block text-[#f19f1f] hover:underline md:mt-0 md:inline"
                       href={telHref(rub)}
                     >
-                      The Rub Club: {rub}
+                      {nav.nav_phone_bar_rub_prefix} {rub}
                     </a>
                   </>
                 ) : null}
@@ -299,5 +323,6 @@ export function SiteHeaderClient({
         }
       />
     </HeaderThemeProvider>
+    </NavChromeProvider>
   );
 }

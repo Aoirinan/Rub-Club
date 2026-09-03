@@ -13,6 +13,7 @@ const patchSchema = z.object({
   metaTitle: z.string().max(300).optional(),
   metaDescription: z.string().max(1000).optional(),
   heroImage: z.string().max(2000).optional(),
+  bodyMarkdown: z.string().max(20000).optional(),
   order: z.number().int().min(0).max(100000).optional(),
   published: z.boolean().optional(),
 });

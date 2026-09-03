@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BookingCta } from "@/components/BookingCta";
 import { useHeaderCompact } from "@/components/HeaderThemeProvider";
+import { useNavChrome } from "@/components/NavChromeContext";
 import { telHref } from "@/lib/constants";
 import { isNavItemActive } from "@/lib/nav-active";
 import {
@@ -40,10 +41,26 @@ export type ContactClinicInfo = {
   contactHref?: string;
 };
 
+/** Stable identity for a primary nav item (labels are CMS-editable). */
+export type NavItemKey =
+  | "home"
+  | "services"
+  | "chiropractic"
+  | "massage"
+  | "about"
+  | "wellness"
+  | "giftcards"
+  | "patient-forms"
+  | "contact";
+
 export type NavItem = {
+  /** Which primary section this is; used for active-state matching. */
+  key?: NavItemKey;
   href: string;
   label: string;
   external?: boolean;
+  /** The gift-card link (gets the expanded promo treatment). */
+  giftCard?: boolean;
   children?: NavChild[];
   mega?: boolean;
   /** When set, the dropdown renders clinic contact blocks instead of links. */
@@ -97,6 +114,7 @@ function ContactPanel({
   onClose: () => void;
   align?: PanelAlign;
 }) {
+  const chrome = useNavChrome();
   return (
     <div className={`absolute top-full z-50 w-[460px] pt-1 lg:w-[540px] ${panelAlignClass(align)}`}>
       <div className="bg-[var(--header-nav-hover)] p-5 shadow-xl">
@@ -134,7 +152,7 @@ function ContactPanel({
                 ))}
                 {clinic.fax?.trim() ? (
                   <p className="text-xs font-bold text-white/85">
-                    <span className="text-white/70">Fax: </span>
+                    <span className="text-white/70">{chrome.faxLabel} </span>
                     {clinic.fax}
                   </p>
                 ) : null}
@@ -146,7 +164,7 @@ function ContactPanel({
                   rel="noopener noreferrer"
                   className="inline-block text-xs font-bold underline hover:text-white/80"
                 >
-                  Get directions
+                  {chrome.getDirections}
                 </a>
                 {clinic.contactHref ? (
                   <Link
@@ -205,6 +223,7 @@ function MegaPanel({
   align?: PanelAlign;
 }) {
   const groups = groupChildren(item.children!);
+  const chrome = useNavChrome();
   return (
     <div
       className={`absolute top-full z-50 w-[720px] max-w-[calc(100vw-2rem)] pt-1 lg:w-[860px] ${panelAlignClass(align)}`}
@@ -216,7 +235,7 @@ function MegaPanel({
             className="text-xs font-black uppercase tracking-widest text-[var(--header-nav-hover)] hover:underline"
             onClick={onClose}
           >
-            Overview &rarr;
+            {chrome.nav.nav_overview_label}
           </Link>
         </div>
         {/* Balanced newspaper columns: each group stays whole and gets full column
@@ -267,6 +286,7 @@ export function DesktopNav({
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const giftCardExpanded = useMassageGiftCardNavExpandedContext();
   const compact = useHeaderCompact();
+  const chrome = useNavChrome();
   const pathname = usePathname() ?? "/";
   const businessContext = useSiteBusinessContext(businessContextProp);
   // Backpro-style shrink: nav links lose vertical padding once scrolled.
@@ -345,7 +365,7 @@ export function DesktopNav({
               />
             </svg>
           </button>
-        ) : item.external && item.label === "Gift cards" ? (
+        ) : item.external && (item.giftCard || item.label === "Gift cards") ? (
           <a
             className={`focus-ring block shrink-0 font-black uppercase tracking-wide transition-all duration-300 ease-out motion-reduce:transition-none ${
               giftCardExpanded
@@ -389,7 +409,7 @@ export function DesktopNav({
 
   const bookCta = showBookCta ? (
     <BookingCta
-      label="Book Now"
+      label={chrome.bookNow}
       className="focus-ring ml-2 flex items-center self-stretch bg-[var(--header-nav-hover)] px-3 text-xs font-black uppercase tracking-wide text-white shadow-sm transition-all duration-300 brightness-100 hover:brightness-90 xl:px-5 xl:text-sm"
     />
   ) : null;

@@ -15,6 +15,8 @@ import { allParisChiroServiceSlugs, getParisChiroService } from "@/lib/paris-chi
 import { getPublishedLegacyPage, listPublishedLegacyPagesForSite } from "@/lib/legacy-pages";
 import { StretchFlexExercises } from "@/components/StretchFlexExercises";
 import { getStretchFlexExercises } from "@/lib/stretch-flex";
+import { parisText } from "@/lib/paris-pages-cms";
+import { getUiText } from "@/lib/ui-text";
 
 const STRETCH_FLEX_SLUG = "stretch-and-flex-rehab";
 import {
@@ -24,7 +26,23 @@ import {
   parisChiroPageHeroImageId,
   parisChiroPageImageIds,
   parisChiroPageMetaId,
+  parisChiroPageTitleId,
 } from "@/lib/paris-chiro-cms-registry";
+
+/** Copy shared by every Paris service page (eyebrow, title suffixes, CTA). */
+const SHARED_COPY_IDS = [
+  "paris_chiro_pages_eyebrow",
+  "paris_chiro_pages_title_suffix",
+  "paris_chiro_pages_og_suffix",
+  "paris_chiro_pages_cta_body",
+  "paris_chiro_stretch_flex_exercises_heading",
+  "paris_chiro_stretch_flex_image_alt",
+] as const;
+
+async function getSharedCopy() {
+  const c = await getContentMany([...SHARED_COPY_IDS]);
+  return (id: (typeof SHARED_COPY_IDS)[number]) => parisText(c, id);
+}
 
 export const revalidate = 60;
 
@@ -45,11 +63,12 @@ async function getParisChiroPageContent(slug: string): Promise<ParisChiroPageCon
   if (!base) return null;
   const bodyId = parisChiroPageBodyId(slug);
   const metaId = parisChiroPageMetaId(slug);
+  const titleId = parisChiroPageTitleId(slug);
   const imageIds = parisChiroPageImageIds(slug);
-  const cms = await getContentMany([bodyId, metaId, ...imageIds]);
+  const cms = await getContentMany([bodyId, metaId, titleId, ...imageIds]);
   const content: ParisChiroPageContentData = {
     slug,
-    title: base.title,
+    title: cms[titleId]?.trim() || base.title,
     metaDescription: cms[metaId]?.trim() || base.metaDescription,
     body: cms[bodyId]?.trim() || base.body,
   };
@@ -75,22 +94,22 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const page = await getParisChiroPageContent(slug);
+  const [page, shared] = await Promise.all([getParisChiroPageContent(slug), getSharedCopy()]);
   if (page) {
     return buildPageMetadata({
-      title: `${page.title} — Chiropractic Associates, Paris TX`,
+      title: `${page.title}${shared("paris_chiro_pages_title_suffix")}`,
       description: page.metaDescription,
       path: `/services/chiropractic/${page.slug}`,
-      ogTitle: `${page.title} — Paris, TX`,
+      ogTitle: `${page.title}${shared("paris_chiro_pages_og_suffix")}`,
     });
   }
   const legacy = await getPublishedLegacyPage("chiro-paris", slug);
   if (legacy) {
     return buildPageMetadata({
-      title: `${legacy.title} — Chiropractic Associates, Paris TX`,
+      title: `${legacy.title}${shared("paris_chiro_pages_title_suffix")}`,
       description: legacy.metaDescription,
       path: legacy.route,
-      ogTitle: `${legacy.title} — Paris, TX`,
+      ogTitle: `${legacy.title}${shared("paris_chiro_pages_og_suffix")}`,
     });
   }
   return { title: "Chiropractic" };
@@ -98,14 +117,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ParisChiroServicePage({ params }: Props) {
   const { slug } = await params;
-  const [page, parisHours, displayLocs] = await Promise.all([
+  const [page, parisHours, displayLocs, shared, ui] = await Promise.all([
     getParisChiroPageContent(slug),
     getParisChiroOfficeHours(),
     getDisplayLocations(),
+    getSharedCopy(),
+    getUiText(),
   ]);
 
   const paris = displayLocs.paris;
   const phone = paris.phonePrimary;
+  const eyebrow = shared("paris_chiro_pages_eyebrow");
+  const cta = {
+    title: ui.ui_schedule_appointment_cta,
+    body: shared("paris_chiro_pages_cta_body"),
+    secondary: { label: `${ui.ui_call_prefix} ${phone}`, href: telHref(phone) },
+  };
 
   // Curated page missing -> fall back to a verbatim legacy page (CURSOR_PROMPT §5).
   if (!page) {
@@ -120,17 +147,13 @@ export default async function ParisChiroServicePage({ params }: Props) {
             { name: legacy.title, url: legacy.route },
           ]}
         />
-        <PageHero eyebrow="Chiropractic Associates · Paris, TX" title={legacy.title} />
+        <PageHero eyebrow={eyebrow} title={legacy.title} />
         <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
           <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
             <LegacyPageBody blocks={legacy.blocks} heroImage={legacy.heroImage} images={legacy.images} />
           </section>
           <LocationHoursSection location={paris} hours={parisHours} />
-          <ScheduleCtaCard
-            title="Schedule an appointment"
-            body="Contact our Paris office to discuss whether this treatment is right for you."
-            secondary={{ label: `Call ${phone}`, href: telHref(phone) }}
-          />
+          <ScheduleCtaCard title={cta.title} body={cta.body} secondary={cta.secondary} />
         </div>
       </>
     );
@@ -150,12 +173,16 @@ export default async function ParisChiroServicePage({ params }: Props) {
           { name: page.title, url: `/services/chiropractic/${page.slug}` },
         ]}
       />
-      <PageHero eyebrow="Chiropractic Associates · Paris, TX" title={page.title} />
+      <PageHero eyebrow={eyebrow} title={page.title} />
       <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
         <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
           <div className="prose prose-stone max-w-none">
             {hasImages ? (
-              <ParisChiroPageContent body={page.body} heroImage={page.heroImage} />
+              <ParisChiroPageContent
+                body={page.body}
+                heroImage={page.heroImage}
+                imageAlt={shared("paris_chiro_stretch_flex_image_alt")}
+              />
             ) : (
               <SsMarkdownBody body={page.body} />
             )}
@@ -165,14 +192,12 @@ export default async function ParisChiroServicePage({ params }: Props) {
           <StretchFlexExercises
             exercises={stretchFlexExercises}
             photos={page.galleryImages ?? []}
+            heading={shared("paris_chiro_stretch_flex_exercises_heading")}
+            photoAlt={shared("paris_chiro_stretch_flex_image_alt")}
           />
         ) : null}
         <LocationHoursSection location={paris} hours={parisHours} />
-        <ScheduleCtaCard
-          title="Schedule an appointment"
-          body="Contact our Paris office to discuss whether this treatment is right for you."
-          secondary={{ label: `Call ${phone}`, href: telHref(phone) }}
-        />
+        <ScheduleCtaCard title={cta.title} body={cta.body} secondary={cta.secondary} />
       </div>
     </>
   );

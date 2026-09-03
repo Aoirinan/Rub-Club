@@ -7,6 +7,7 @@ import {
   patientRescheduledEmail,
 } from "@/lib/email-templates";
 import { buildIcs } from "@/lib/ics";
+import { emailLocations } from "@/lib/email-locations";
 import { sendBookingNotification } from "@/lib/sendgrid";
 
 export async function sendRescheduleNotifications(params: {
@@ -21,6 +22,7 @@ export async function sendRescheduleNotifications(params: {
 
   const emailCtx = bookingDocToEmailContext(snap);
   if (!emailCtx) return;
+  const locations = await emailLocations();
 
   const previousStart = DateTime.fromISO(params.prevStartIso, { zone: "utc" }).setZone(TIME_ZONE);
   if (!previousStart.isValid) return;
@@ -28,10 +30,11 @@ export async function sendRescheduleNotifications(params: {
   const status = snap.get("status");
   const isConfirmed = status === "confirmed";
 
-  const { subject, text, html } = patientRescheduledEmail(emailCtx, {
-    previousStart,
-    rescheduledBy: params.rescheduledBy,
-  });
+  const { subject, text, html } = patientRescheduledEmail(
+    emailCtx,
+    { previousStart, rescheduledBy: params.rescheduledBy },
+    locations,
+  );
 
   const attachments = isConfirmed
     ? [
@@ -44,7 +47,7 @@ export async function sendRescheduleNotifications(params: {
               durationMinutes: emailCtx.durationMin,
               summary: `${emailCtx.serviceLine === "massage" ? "Massage" : "Chiropractic"} appointment`,
               description: `Rescheduled appointment with ${emailCtx.providerDisplayName || "first available provider"}. Reference: ${emailCtx.bookingId}.`,
-              location: `${emailCtx.locationId === "paris" ? "Paris" : "Sulphur Springs"}, TX`,
+              location: `${locations[emailCtx.locationId].addressLocality}, ${locations[emailCtx.locationId].addressRegion}`,
               organizerEmail: process.env.OFFICE_NOTIFICATION_EMAIL,
               organizerName: "Paris Wellness",
               method: "REQUEST",
@@ -71,7 +74,7 @@ export async function sendRescheduleNotifications(params: {
   if (params.notifyOffice) {
     const officeTo = process.env.OFFICE_NOTIFICATION_EMAIL?.trim();
     if (officeTo) {
-      const officePayload = officeRescheduleNotificationEmail(emailCtx, { previousStart });
+      const officePayload = officeRescheduleNotificationEmail(emailCtx, { previousStart }, locations);
       try {
         await sendBookingNotification({
           to: officeTo,

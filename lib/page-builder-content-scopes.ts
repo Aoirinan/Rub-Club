@@ -34,7 +34,11 @@ export type ContentScopeId =
   | "faq-copy"
   | "contact"
   | "doctors-global"
-  | "site-settings";
+  | "site-settings"
+  | "navigation"
+  | "site-text"
+  | "massage-landing"
+  | "booking-page";
 
 export type PageBuilderScopeId =
   | PageLayoutId
@@ -74,6 +78,10 @@ const CONTENT_SCOPE_IDS: ReadonlySet<string> = new Set<ContentScopeId>([
   "contact",
   "doctors-global",
   "site-settings",
+  "navigation",
+  "site-text",
+  "massage-landing",
+  "booking-page",
 ]);
 
 export function isContentScopeId(v: string): v is ContentScopeId {
@@ -128,6 +136,10 @@ const CONTENT_SCOPE_PAGES: Record<ContentScopeId, ContentPageKey[]> = {
   contact: ["Contact"],
   "doctors-global": ["Doctors"],
   "site-settings": ["Site settings"],
+  navigation: ["Navigation"],
+  "site-text": ["Site text"],
+  "massage-landing": ["Massage landing"],
+  "booking-page": ["Booking page"],
 };
 
 export type ContentScopeSection = {
@@ -181,6 +193,10 @@ const SCOPE_LABELS: Partial<Record<ContentScopeId, string>> = {
   "paris-photos": "Photos",
   "ss-photos": "Photos",
   "site-settings": "Site settings",
+  navigation: "Menu & navigation",
+  "site-text": "Site text (buttons & labels)",
+  "massage-landing": "Massage landing page",
+  "booking-page": "Book page",
 };
 
 function autoScopeLabel(id: ContentScopeId): string {

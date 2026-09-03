@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/page-metadata";
+import { getPageMeta } from "@/lib/page-meta";
+import {
+  joinNames,
+  pageOgDescriptionId,
+  pageOgTitleId,
+  parisText,
+} from "@/lib/paris-pages-cms";
 import Image from "next/image";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
@@ -8,24 +16,47 @@ import { ChiropracticDoctorCard } from "@/components/ChiropracticDoctorCard";
 import { getContentMany, renderRichText } from "@/lib/cms";
 import { DOCTOR_CMS_KEYS, getDoctorsForMarketing } from "@/lib/cms-doctors";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
-import { CHIRO } from "@/lib/home-verbatim";
 import { getSitePhotos } from "@/lib/site-photos-server";
 import { organizationJsonLd } from "@/lib/structured-data";
 
 export const revalidate = 60;
 
-export const metadata = buildPageMetadata({
-  title: "About Us — Family-owned wellness in Northeast Texas",
-  description:
-    "Since 1998, Chiropractic Associates and The Rub Club have delivered family-owned chiropractic care and licensed massage therapy in Paris and Sulphur Springs, TX.",
-  path: "/about",
-  ogTitle: "About — Chiropractic Associates",
-  ogDescription:
-    "Family-owned wellness in Paris and Sulphur Springs, TX. Best Chiropractic Center and Best Massage in The Paris News reader polls.",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const [meta, og] = await Promise.all([
+    getPageMeta("about", {
+      title: "About Us — Family-owned wellness in Northeast Texas",
+      description:
+        "Since 1998, Chiropractic Associates and The Rub Club have delivered family-owned chiropractic care and licensed massage therapy in Paris and Sulphur Springs, TX.",
+    }),
+    getContentMany([pageOgTitleId("about"), pageOgDescriptionId("about")]),
+  ]);
+  return buildPageMetadata({
+    title: meta.title,
+    description: meta.description,
+    path: "/about",
+    ogTitle: parisText(og, pageOgTitleId("about")),
+    ogDescription: parisText(og, pageOgDescriptionId("about")),
+  });
+}
+
+const ABOUT_COPY_IDS = [
+  "about_hero_eyebrow",
+  "about_hero_lede",
+  "about_story_heading",
+  "about_awards_label",
+  "about_awards_text",
+  "about_photo_alt",
+  "about_doctors_heading",
+  "about_doctors_intro",
+  "about_doctors_link_label",
+  "about_cta_title",
+  "about_cta_body",
+  "about_cta_book_label",
+  "about_cta_secondary_label",
+] as const;
 
 export default async function AboutPage() {
-  const c = await getContentMany(["about_heading", "about_body", ...DOCTOR_CMS_KEYS]);
+  const c = await getContentMany(["about_heading", "about_body", ...ABOUT_COPY_IDS, ...DOCTOR_CMS_KEYS]);
   let doctorMedia: Awaited<ReturnType<typeof getSiteOwnerConfig>>["doctorMedia"] = [];
   try {
     doctorMedia = (await getSiteOwnerConfig()).doctorMedia;
@@ -35,20 +66,25 @@ export default async function AboutPage() {
   const doctors = await getDoctorsForMarketing(c, doctorMedia);
   const photos = await getSitePhotos();
   const bodyParagraphs = (c.about_body ?? "").split(/\n\n+/).filter(Boolean);
+  const t = (id: string) => parisText(c, id);
+  const doctorsIntro = t("about_doctors_intro").replace(
+    "{doctors}",
+    joinNames(doctors.map((d) => d.name)),
+  );
 
   return (
     <>
       <JsonLd data={organizationJsonLd()} />
       <Breadcrumbs items={[{ name: "Home", url: "/" }, { name: "About", url: "/about" }]} />
       <PageHero
-        eyebrow="Family-owned since 1998"
+        eyebrow={t("about_hero_eyebrow")}
         title={c.about_heading}
-        lede="Chiropractic Associates leads our family-owned care in Paris and Sulphur Springs, with licensed massage therapy at The Rub Club in Paris."
+        lede={t("about_hero_lede")}
       />
       <div className="mx-auto max-w-6xl space-y-12 px-4 pb-16">
         <section className="grid gap-10 border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-2">
           <div className="space-y-4 leading-relaxed text-stone-700">
-            <h2 className="text-2xl font-black text-[#4a1515]">Two practices, one address</h2>
+            <h2 className="text-2xl font-black text-[#4a1515]">{t("about_story_heading")}</h2>
             {bodyParagraphs.map((p, idx) => (
               <p
                 key={`about-${idx}`}
@@ -56,14 +92,14 @@ export default async function AboutPage() {
               />
             ))}
             <p className="rounded border border-[#d8c061] bg-[#fff7d7] p-4 text-[#5a4a15]">
-              <strong>Awards: </strong>
-              {CHIRO.awards}
+              <strong>{t("about_awards_label")}</strong>
+              {t("about_awards_text")}
             </p>
           </div>
           <div className="relative aspect-[4/3] overflow-hidden shadow-lg lg:aspect-auto lg:min-h-[360px]">
             <Image
               src={photos.chiroBlade}
-              alt="Chiropractic Associates team at the Paris office"
+              alt={t("about_photo_alt")}
               fill
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
@@ -72,11 +108,11 @@ export default async function AboutPage() {
         </section>
 
         <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#4a1515]">Our Paris Chiropractors</h2>
+          <h2 className="text-2xl font-black text-[#4a1515]">{t("about_doctors_heading")}</h2>
           <p className="mt-2 max-w-2xl text-sm text-stone-600">
-            Dr. Greg Thompson, Dr. Sean Welborn, and Dr. Brandy Collins practice in Paris.{" "}
+            {doctorsIntro}{" "}
             <Link href="/locations/paris/staff" className="font-bold text-[#c0392b] underline">
-              About us — Paris office
+              {t("about_doctors_link_label")}
             </Link>
             .
           </p>
@@ -97,11 +133,11 @@ export default async function AboutPage() {
         </section>
 
         <ScheduleCtaCard
-          title="Ready to visit?"
-          body="Book chiropractic or massage online, or call either office and we will help you find a time."
-          bookLabel="Book chiropractic"
+          title={t("about_cta_title")}
+          body={t("about_cta_body")}
+          bookLabel={t("about_cta_book_label")}
           query="service=chiropractic"
-          secondary={{ label: "Contact us", href: "/contact" }}
+          secondary={{ label: t("about_cta_secondary_label"), href: "/contact" }}
         />
       </div>
     </>

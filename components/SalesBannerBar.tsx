@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useUiText } from "@/components/SiteChromeProvider";
 
 export type SalesBannerPayload = {
   html: string;
@@ -10,6 +11,7 @@ export type SalesBannerPayload = {
 export function SalesBannerBar({ payload }: { payload: SalesBannerPayload }) {
   const storageKey = useMemo(() => `rub_banner_dismissed_${payload.dismissKey}`, [payload.dismissKey]);
   const [hidden, setHidden] = useState(false);
+  const t = useUiText();
 
   useEffect(() => {
     try {
@@ -46,7 +48,7 @@ export function SalesBannerBar({ payload }: { payload: SalesBannerPayload }) {
         className="focus-ring absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-white/40 bg-white/10 px-2 py-1 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/20"
         aria-label="Dismiss announcement"
       >
-        Close
+        {t.ui_close}
       </button>
     </div>
   );

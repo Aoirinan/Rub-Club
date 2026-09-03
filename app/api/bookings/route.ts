@@ -8,7 +8,8 @@ import type { LocationId, ServiceLine } from "@/lib/constants";
 import { isValidBookingDurationMin } from "@/lib/booking-duration";
 import { fetchSchedulerServiceById } from "@/lib/scheduler-services-db";
 import { isCustomerVisibleService, schedulerServiceMatchesLine } from "@/lib/scheduler-service-lines";
-import { LOCATIONS, TIME_ZONE, serviceLineEmailLabel } from "@/lib/constants";
+import { TIME_ZONE, serviceLineEmailLabel } from "@/lib/constants";
+import { emailLocations } from "@/lib/email-locations";
 import { assertRateLimitOk, getClientIp } from "@/lib/rate-limit";
 import {
   fetchActiveProvidersForPublicBooking,
@@ -110,10 +111,10 @@ export async function POST(req: Request) {
   }
 
   if (body.paymentType === "insurance") {
+    const locs = await emailLocations();
     return NextResponse.json(
       {
-        error:
-          "Insurance patients please call us to book: Paris 903-785-5551 | Sulphur Springs 903-919-5020",
+        error: `Insurance patients please call us to book: Paris ${locs.paris.phonePrimary} | Sulphur Springs ${locs.sulphur_springs.phonePrimary}`,
       },
       { status: 400 },
     );
@@ -553,10 +554,11 @@ export async function POST(req: Request) {
 
   const origin = getSiteOrigin();
   const confirmUrl = `${origin}/api/confirm?token=${encodeURIComponent(confirmToken)}`;
-  const locOffice = LOCATIONS[locationId];
+  const locOffice = (await emailLocations())[locationId];
   const firstName = body.name.trim().split(/\s+/)[0] || body.name.trim();
   const when = firstStart.setZone(TIME_ZONE).toFormat("LLLL d yyyy 'at' h:mm a");
-  const biz = "The Rub Club";
+  // Massage is booked with The Rub Club; chiropractic and stretch are Chiropractic Associates.
+  const biz = serviceLine === "massage" ? "The Rub Club" : "Chiropractic Associates";
   let smsBody = `Hi ${firstName}, your appointment at ${biz} is scheduled for ${when}. To cancel or reschedule, please call us at ${locOffice.phonePrimary}. Do not reply to this text. Confirm: ${confirmUrl}`;
   if (paymentUrl) {
     smsBody += ` Pay online: ${paymentUrl}`;

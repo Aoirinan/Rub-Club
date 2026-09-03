@@ -1,4 +1,4 @@
-import type { NavItem } from "@/components/DesktopNav";
+import type { NavItem, NavItemKey } from "@/components/DesktopNav";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
 
 function normalizePath(pathname: string): string {
@@ -7,17 +7,17 @@ function normalizePath(pathname: string): string {
 }
 
 /**
- * Pick exactly one primary nav label for the current path.
+ * Pick exactly one primary nav section for the current path.
  * Home is handled separately (exact href match only).
  */
-function primaryNavActiveLabel(
+function primaryNavActiveKey(
   pathname: string,
   businessContext: SiteBusinessContext,
-): string | null {
+): NavItemKey | null {
   const path = normalizePath(pathname);
 
   if (path.startsWith("/patient-forms") || path.startsWith("/sulphur-springs/patient-forms")) {
-    return "Patient Forms";
+    return "patient-forms";
   }
 
   if (
@@ -26,7 +26,7 @@ function primaryNavActiveLabel(
     path.startsWith("/services/massage/prices") ||
     path.startsWith("/sulphur-springs/massage/prices")
   ) {
-    return "Wellness Plan";
+    return "wellness";
   }
 
   if (
@@ -34,7 +34,7 @@ function primaryNavActiveLabel(
     path.startsWith("/sulphur-springs/staff") ||
     path === "/about"
   ) {
-    return "About Us";
+    return "about";
   }
 
   if (
@@ -42,19 +42,19 @@ function primaryNavActiveLabel(
     path.startsWith("/sulphur-springs/contact") ||
     (path.startsWith("/locations/") && !path.includes("/staff"))
   ) {
-    return "Contact Us";
+    return "contact";
   }
 
   if (path.startsWith("/services/massage") || path.startsWith("/sulphur-springs/massage")) {
-    return "Massage";
+    return "massage";
   }
 
   if (path.startsWith("/services/chiropractic")) {
-    return "Chiropractic";
+    return "chiropractic";
   }
 
   if (path.startsWith("/services/")) {
-    return "Services";
+    return "services";
   }
 
   if (path.startsWith("/sulphur-springs")) {
@@ -72,10 +72,37 @@ function primaryNavActiveLabel(
       "patient-forms",
     ]);
     if (nonService.has(segment)) return null;
-    return businessContext === "sulphur_springs" ? "Services" : "Chiropractic";
+    return businessContext === "sulphur_springs" ? "services" : "chiropractic";
   }
 
   return null;
+}
+
+/** Items built without a `key` (older callers) fall back to their default label. */
+function keyFromLegacyLabel(item: NavItem): NavItemKey | null {
+  switch (item.label) {
+    case "Home":
+      return "home";
+    case "Services":
+      return "services";
+    case "Chiropractic":
+      return "chiropractic";
+    case "Massage":
+      return "massage";
+    case "About Us":
+    case "Staff":
+      return "about";
+    case "Wellness Plan":
+      return "wellness";
+    case "Gift cards":
+      return "giftcards";
+    case "Patient Forms":
+      return "patient-forms";
+    case "Contact Us":
+      return "contact";
+    default:
+      return null;
+  }
 }
 
 /**
@@ -89,25 +116,24 @@ export function isNavItemActive(
 ): boolean {
   const path = normalizePath(pathname);
 
-  if (item.label === "Home") {
+  const itemKey = item.key ?? keyFromLegacyLabel(item);
+  if (itemKey === "home") {
     return path === normalizePath(item.href);
   }
 
-  const active = primaryNavActiveLabel(pathname, businessContext);
+  const active = primaryNavActiveKey(pathname, businessContext);
   if (!active) return false;
 
-  if (active === "About Us") {
-    // The staff item's label is CMS-editable (nav_staff_label), so match on
-    // where it points rather than what it says.
+  if (active === "about") {
+    // Labels are CMS-editable, so match on where the item points as well.
     const href = normalizePath(item.href);
     return (
-      item.label === "About Us" ||
-      item.label === "Staff" ||
+      itemKey === "about" ||
       href === "/locations/paris/staff" ||
       href === "/sulphur-springs/staff" ||
       href === "/about"
     );
   }
 
-  return item.label === active;
+  return itemKey === active;
 }

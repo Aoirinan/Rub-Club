@@ -1,8 +1,10 @@
 import { BookingCta } from "@/components/BookingCta";
+import { getUiText } from "@/lib/ui-text";
 
 type Props = {
   title: string;
   body?: string;
+  /** Defaults to the editable "Book Now" label (Site text). */
   bookLabel?: string;
   /** Retained for backward compatibility; no longer used (online booking retired). */
   contactLabel?: string;
@@ -28,13 +30,15 @@ const SECONDARY_CLASS = {
 } as const;
 
 /** Bottom CTA. Online booking is retired — the primary button pops the office phone number. */
-export function ScheduleCtaCard({
+export async function ScheduleCtaCard({
   title,
   body,
-  bookLabel = "Book Now",
+  bookLabel,
   secondary,
   variant = "paris",
 }: Props) {
+  const t = await getUiText();
+  const label = bookLabel ?? t.ui_book_now;
   return (
     <section
       className={`${SECTION_CLASS[variant]} px-6 py-10 text-white shadow-md sm:px-10`}
@@ -42,7 +46,7 @@ export function ScheduleCtaCard({
       <h2 className="text-2xl font-black">{title}</h2>
       {body ? <p className="mt-3 max-w-2xl text-white/90">{body}</p> : null}
       <div className="mt-6 flex flex-wrap gap-3">
-        <BookingCta label={bookLabel} variant="default" brand={variant} />
+        <BookingCta label={label} variant="default" brand={variant} />
         {secondary ? (
           <a className={SECONDARY_CLASS[variant]} href={secondary.href}>
             {secondary.label}

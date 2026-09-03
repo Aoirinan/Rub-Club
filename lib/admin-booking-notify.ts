@@ -2,6 +2,7 @@ import type { Firestore } from "firebase-admin/firestore";
 import { bookingDocToEmailContext } from "@/lib/booking-doc";
 import { patientAcceptedEmail, patientPendingEmail } from "@/lib/email-templates";
 import { buildIcs } from "@/lib/ics";
+import { emailLocations } from "@/lib/email-locations";
 import { sendBookingNotification } from "@/lib/sendgrid";
 import { siteUrl } from "@/lib/site-content";
 
@@ -16,6 +17,7 @@ export async function sendAdminCreatedBookingEmail(params: {
   const snap = await params.db.collection("bookings").doc(params.bookingId).get();
   const emailCtx = bookingDocToEmailContext(snap);
   if (!emailCtx) return;
+  const locations = await emailLocations();
 
   const manageUrl = params.portalPlainToken
     ? siteUrl(`/book/manage?token=${encodeURIComponent(params.portalPlainToken)}`)
@@ -28,13 +30,14 @@ export async function sendAdminCreatedBookingEmail(params: {
       durationMinutes: emailCtx.durationMin,
       summary: `${emailCtx.serviceLine === "massage" ? "Massage" : "Chiropractic"} appointment`,
       description: `Confirmed appointment with ${emailCtx.providerDisplayName || "first available provider"}. Reference: ${emailCtx.bookingId}.`,
-      location: `${emailCtx.locationId === "paris" ? "Paris" : "Sulphur Springs"}, TX`,
+      location: `${locations[emailCtx.locationId].addressLocality}, ${locations[emailCtx.locationId].addressRegion}`,
       organizerEmail: process.env.OFFICE_NOTIFICATION_EMAIL,
       organizerName: "Paris Wellness",
     });
     const { subject, text, html } = patientAcceptedEmail(
       { ...emailCtx, patientManageUrl: manageUrl },
       { isFirstVisit: params.isFirstVisit },
+      locations,
     );
     await sendBookingNotification({
       to: emailCtx.email,
@@ -52,8 +55,10 @@ export async function sendAdminCreatedBookingEmail(params: {
     return;
   }
 
-  const { subject, text, html } = patientPendingEmail(emailCtx, {
-    isFirstVisit: params.isFirstVisit,
-  });
+  const { subject, text, html } = patientPendingEmail(
+    emailCtx,
+    { isFirstVisit: params.isFirstVisit },
+    locations,
+  );
   await sendBookingNotification({ to: emailCtx.email, subject, text, html });
 }

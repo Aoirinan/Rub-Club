@@ -5,6 +5,8 @@ type Props = {
   body: string;
   heroImage?: string;
   galleryImages?: string[];
+  /** Screen-reader description for the hero logo and gallery photos. */
+  imageAlt?: string;
 };
 
 function PageImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
@@ -23,7 +25,8 @@ function PageImage({ src, alt, className }: { src: string; alt: string; classNam
 }
 
 /** Paris chiro detail page body with optional hero logo and gallery row. */
-export function ParisChiroPageContent({ body, heroImage, galleryImages }: Props) {
+export function ParisChiroPageContent({ body, heroImage, galleryImages, imageAlt }: Props) {
+  const alt = imageAlt?.trim() || "Stretch & Flex Rehab";
   const hero = heroImage?.trim() ?? "";
   const gallery = (galleryImages ?? []).map((u) => u.trim()).filter(Boolean);
 
@@ -31,7 +34,7 @@ export function ParisChiroPageContent({ body, heroImage, galleryImages }: Props)
     <div className="space-y-6">
       {hero ? (
         <div className="flex justify-center">
-          <PageImage src={hero} alt="Stretch & Flex Rehab" />
+          <PageImage src={hero} alt={alt} />
         </div>
       ) : null}
       <SsMarkdownBody body={body} centeredH2Titles={["WHY STRETCH?"]} />
@@ -41,7 +44,7 @@ export function ParisChiroPageContent({ body, heroImage, galleryImages }: Props)
             <PageImage
               key={`${src}-${i}`}
               src={src}
-              alt="Stretch & Flex Rehab"
+              alt={alt}
               className="h-auto w-auto max-w-[258px]"
             />
           ))}

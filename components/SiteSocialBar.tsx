@@ -4,9 +4,18 @@ import { SocialIcon } from "@/components/practice/UtilityBar";
 /**
  * Site-wide black strip below the header: Facebook + Instagram.
  * CURSOR_PROMPT §2: shows a CMS-editable "Follow us on social media" label
- * (field `social_bar_label`) beside the icons.
+ * (field `social_bar_label`) beside the icons. Link targets are the CMS
+ * `social_facebook_url` / `social_instagram_url` fields (Menu & navigation).
  */
-export function SiteSocialBar({ label }: { label?: string }) {
+export function SiteSocialBar({
+  label,
+  facebookUrl = FACEBOOK_URL,
+  instagramUrl = INSTAGRAM_URL,
+}: {
+  label?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+}) {
   const text = label?.trim();
   return (
     <div className="bg-black text-white">
@@ -18,7 +27,7 @@ export function SiteSocialBar({ label }: { label?: string }) {
         ) : null}
         <span className="inline-flex items-center gap-4">
           <a
-            href={FACEBOOK_URL}
+            href={facebookUrl?.trim() || FACEBOOK_URL}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Facebook"
@@ -27,7 +36,7 @@ export function SiteSocialBar({ label }: { label?: string }) {
             <SocialIcon platform="facebook" large />
           </a>
           <a
-            href={INSTAGRAM_URL}
+            href={instagramUrl?.trim() || INSTAGRAM_URL}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Instagram"

@@ -2,12 +2,14 @@ import type { LocationInfo } from "@/lib/constants";
 import { telHref } from "@/lib/constants";
 import { OfficeHoursTable } from "@/components/OfficeHoursTable";
 import { getContentMany } from "@/lib/cms";
+import { getUiText } from "@/lib/ui-text";
 import type { OfficeHoursRow } from "@/lib/office-hours";
 
 /**
  * "Our Location" + "Office Hours" strip repeated across subpages,
  * mirroring the block the legacy Sulphur Springs site showed on every page.
- * Headings are manager-editable (Footer → Location & hours sections).
+ * Headings are manager-editable (Footer → Location & hours sections);
+ * the schedule note and Call button label come from Site text.
  */
 export async function LocationHoursSection({
   location,
@@ -19,7 +21,10 @@ export async function LocationHoursSection({
   /** Border/link accent — SS blue (#c0392b) or Paris green (#c0392b). */
   accent?: string;
 }) {
-  const cms = await getContentMany(["location_section_heading", "hours_section_heading"]);
+  const [cms, t] = await Promise.all([
+    getContentMany(["location_section_heading", "hours_section_heading"]),
+    getUiText(),
+  ]);
   const locationHeading = cms.location_section_heading?.trim() || "Our Location";
   const hoursHeading = cms.hours_section_heading?.trim() || "Office Hours";
   const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(
@@ -49,14 +54,14 @@ export async function LocationHoursSection({
       </div>
       <div className="space-y-4">
         <h2 className="text-xl font-black uppercase tracking-wide text-[#4a1515]">{hoursHeading}</h2>
-        <p className="text-sm text-stone-600">Our General Schedule</p>
+        <p className="text-sm text-stone-600">{t.ui_our_general_schedule}</p>
         <OfficeHoursTable rows={hours} />
         <a
           href={telHref(location.phonePrimary)}
           className="focus-ring inline-flex px-5 py-3 text-sm font-black uppercase tracking-wide text-white"
           style={{ backgroundColor: accent }}
         >
-          Call {location.phonePrimary}
+          {t.ui_call_prefix} {location.phonePrimary}
         </a>
       </div>
     </section>

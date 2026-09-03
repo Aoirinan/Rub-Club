@@ -8,6 +8,7 @@ import {
 import { resolveOfficeNotificationEmail } from "@/lib/contact-routing";
 import { assertRateLimitOk } from "@/lib/rate-limit";
 import { sendOutboundEmail } from "@/lib/sendgrid";
+import { emailLocations } from "@/lib/email-locations";
 
 export const runtime = "nodejs";
 
@@ -89,7 +90,7 @@ export async function POST(req: Request) {
     console.warn("[contact] no office notification email configured — message saved; staff use Admin → Contact inbox");
   }
 
-  const autoReply = contactFormAutoReplyEmail({ name: payload.name });
+  const autoReply = contactFormAutoReplyEmail({ name: payload.name }, await emailLocations());
   const autoResult = await sendOutboundEmail({
     to: payload.email,
     subject: autoReply.subject,

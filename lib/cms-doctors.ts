@@ -61,24 +61,39 @@ function resolveDoctorVideo(
   return { videoUrl: null, videoFile: file || fallbackFile };
 }
 
-function meetVideoLabel(fullName: string): string {
+export type DoctorVideoLabels = {
+  /** "Meet Dr." → "Meet Dr. Greg" (Site text → ui_meet_doctor_prefix). */
+  meetDoctorPrefix: string;
+  /** Fallback label for owner-uploaded clips (Site text → ui_adjustment_in_action). */
+  adjustmentInAction: string;
+};
+
+const DEFAULT_DOCTOR_VIDEO_LABELS: DoctorVideoLabels = {
+  meetDoctorPrefix: "Meet Dr.",
+  adjustmentInAction: "Adjustment in action",
+};
+
+function meetVideoLabel(fullName: string, prefix: string): string {
   const without = fullName.replace(/^Dr\.\s*/i, "").trim();
   const first = without.split(/\s+/)[0] ?? without;
-  return `Meet Dr. ${first}`;
+  return `${prefix} ${first}`;
 }
 
 /** All of a doctor's videos (intro + action clips) as accordion items. */
-export function doctorVideoItems(d: DoctorCmsEntry): { src: string; label?: string }[] {
+export function doctorVideoItems(
+  d: DoctorCmsEntry,
+  labels: DoctorVideoLabels = DEFAULT_DOCTOR_VIDEO_LABELS,
+): { src: string; label?: string }[] {
   const introSrc = d.videoUrl?.trim()
     ? d.videoUrl.trim()
     : d.videoFile
       ? `/media/doctors/${d.videoFile}`
       : null;
   return [
-    ...(introSrc ? [{ src: introSrc, label: meetVideoLabel(d.name) }] : []),
+    ...(introSrc ? [{ src: introSrc, label: meetVideoLabel(d.name, labels.meetDoctorPrefix) }] : []),
     ...d.actionVideos.map((v) => ({
       src: v.src,
-      label: v.caption?.trim() || "Adjustment in action",
+      label: v.caption?.trim() || labels.adjustmentInAction,
     })),
   ];
 }

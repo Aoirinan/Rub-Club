@@ -4,6 +4,7 @@ import { BookingCta } from "@/components/BookingCta";
 import { PracticeHeroSlides } from "@/components/practice/PracticeHeroSlides";
 import { SocialIcon } from "@/components/practice/UtilityBar";
 import { telHref } from "@/lib/constants";
+import { getUiText } from "@/lib/ui-text";
 import type { PracticeHeroSection, PracticeUtilityBar } from "@/lib/practice-pages-shared";
 
 const CTA_CLASS =
@@ -13,7 +14,7 @@ const MOBILE_BTN_CLASS =
   "focus-ring block w-full rounded-md bg-[var(--pp-accent)] px-4 py-3 text-center text-sm font-bold text-white shadow hover:bg-[var(--pp-accent-hover)]";
 
 /** Full-width photo hero with practice heading, tagline, and book/call CTAs. */
-export function PracticeHero({
+export async function PracticeHero({
   data,
   utility,
   headingTag = "h1",
@@ -24,6 +25,7 @@ export function PracticeHero({
   headingTag?: "h1" | "h2";
 }) {
   if (!data.published || !data.heading.trim()) return null;
+  const t = await getUiText();
   const Heading = headingTag;
   const remote = /^https?:\/\//i.test(data.imageUrl);
   const slides = [data.imageUrl, ...data.slides].filter((s) => s.trim().length > 0);
@@ -60,7 +62,7 @@ export function PracticeHero({
           </Heading>
           {data.callPhone.trim() ? (
             <p className="mt-5 text-base">
-              <span className="font-bold">Call or Text Us Today:</span>{" "}
+              <span className="font-bold">{t.ui_call_or_text_today}</span>{" "}
               <a className="focus-ring font-semibold underline-offset-2 hover:underline" href={telHref(data.callPhone)}>
                 {data.callPhone}
               </a>
@@ -73,14 +75,14 @@ export function PracticeHero({
           <div className="mt-7 hidden flex-wrap gap-3 sm:flex">
             {data.ctaUrl.trim() ? (
               <Link href={data.ctaUrl} className={CTA_CLASS}>
-                {data.ctaLabel || "Appointments"}
+                {data.ctaLabel || t.ui_appointments}
               </Link>
             ) : (
-              <BookingCta label={data.ctaLabel || "Appointments"} className={CTA_CLASS} />
+              <BookingCta label={data.ctaLabel || t.ui_appointments} className={CTA_CLASS} />
             )}
             {data.callPhone.trim() ? (
               <a className={CTA_CLASS} href={telHref(data.callPhone)}>
-                Call {data.callPhone}
+                {t.ui_call_prefix} {data.callPhone}
               </a>
             ) : null}
           </div>
@@ -89,7 +91,7 @@ export function PracticeHero({
           <div className="mt-6 space-y-3 sm:hidden">
             {data.callPhone.trim() ? (
               <a className={MOBILE_BTN_CLASS} href={telHref(data.callPhone)}>
-                Call or Text Us: {data.callPhone}
+                {t.ui_call_or_text} {data.callPhone}
               </a>
             ) : null}
             {utility?.mapsUrl.trim() ? (
@@ -99,16 +101,16 @@ export function PracticeHero({
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Get Directions
+                {t.ui_get_directions_hero}
               </a>
             ) : null}
             {data.ctaUrl.trim() ? (
               <Link href={data.ctaUrl} className={MOBILE_BTN_CLASS}>
-                {data.ctaLabel || "Schedule an Appointment"}
+                {data.ctaLabel || t.ui_schedule_an_appointment}
               </Link>
             ) : (
               <BookingCta
-                label={data.ctaLabel || "Schedule an Appointment"}
+                label={data.ctaLabel || t.ui_schedule_an_appointment}
                 className={MOBILE_BTN_CLASS}
               />
             )}

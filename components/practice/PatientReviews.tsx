@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SectionHeading } from "@/components/practice/SectionHeading";
+import { getUiText } from "@/lib/ui-text";
 import type {
   PracticeReviewsSection,
   PracticeTestimonial,
@@ -21,7 +22,7 @@ function StarRating() {
   );
 }
 
-export function PatientReviews({
+export async function PatientReviews({
   data,
   testimonials,
 }: {
@@ -31,6 +32,7 @@ export function PatientReviews({
   if (!data.published) return null;
   const rows = testimonials.filter((t) => t.published && t.quote.trim().length > 0);
   if (rows.length === 0) return null;
+  const ui = await getUiText();
 
   return (
     <section className="px-4 py-12 sm:px-8">
@@ -63,7 +65,7 @@ export function PatientReviews({
             href={data.reviewsUrl}
             className="focus-ring text-sm font-black uppercase tracking-wide text-[var(--pp-accent)] underline hover:text-[var(--pp-accent-hover)]"
           >
-            {data.reviewsLinkLabel.trim() || "Read more reviews"}
+            {data.reviewsLinkLabel.trim() || ui.ui_read_more_reviews}
           </Link>
         </p>
       ) : null}

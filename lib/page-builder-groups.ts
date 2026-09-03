@@ -84,8 +84,11 @@ function sectionByLabel(scope: PageBuilderScopeId, label: string): string | null
 
 const SITE_ITEMS = (header: PageBuilderScopeId, photos: PageBuilderScopeId): EditorItem[] => [
   item(header, "Header & footer"),
+  item("navigation", "Menu & navigation"),
+  item("site-text", "Site text (buttons & labels)"),
   item(photos, "Site photos"),
   item("site-settings", "Site settings"),
+  item("booking-page", "Book page"),
 ];
 
 /** Paris Services: the /services overview, then each service page in header order. */
@@ -149,7 +152,11 @@ function buildGroups(): EditorGroup[] {
     home: [item("home", "Home page"), ...SITE_ITEMS("paris-header", "paris-photos")],
     services: parisServiceItems(),
     chiropractic: [item("chiropractic", "Chiropractic page"), item("doctors-global", "Doctors")],
-    massage: [item("massage", "Massage page"), item("massage-team", "Massage team")],
+    massage: [
+      item("massage", "Massage page"),
+      item("massage-team", "Massage team"),
+      item("massage-landing", "Massage landing page"),
+    ],
     about: [
       item("about", "About page"),
       item("paris-staff", "Staff"),

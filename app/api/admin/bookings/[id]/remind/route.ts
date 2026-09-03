@@ -8,6 +8,7 @@ import { sendBookingNotification } from "@/lib/sendgrid";
 import { sendSms } from "@/lib/twilio";
 import { formatChicagoDateTimeLong } from "@/lib/chicago-datetime-format";
 import { LOCATIONS } from "@/lib/constants";
+import { emailLocations } from "@/lib/email-locations";
 
 export const runtime = "nodejs";
 
@@ -49,7 +50,7 @@ export async function POST(req: Request, ctx: Params) {
   let smsDetail: string | undefined;
 
   try {
-    const { subject, text, html } = patientReminderEmail(emailCtx);
+    const { subject, text, html } = patientReminderEmail(emailCtx, undefined, await emailLocations());
     emailSent = await sendBookingNotification({
       to: emailCtx.email,
       subject,

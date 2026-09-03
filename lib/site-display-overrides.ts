@@ -35,6 +35,14 @@ export function mergedDisplayLocations(
   if (cms?.footer_ss_address?.trim()) {
     sulphur_springs = applyAddressLine(sulphur_springs, cms.footer_ss_address);
   }
+  if (cms?.footer_paris_name?.trim()) paris.name = cms.footer_paris_name.trim();
+  if (cms?.footer_paris_short_name?.trim()) paris.shortName = cms.footer_paris_short_name.trim();
+  if (cms?.footer_paris_fax?.trim()) paris.fax = cms.footer_paris_fax.trim();
+  if (cms?.footer_ss_name?.trim()) sulphur_springs.name = cms.footer_ss_name.trim();
+  if (cms?.footer_ss_short_name?.trim()) {
+    sulphur_springs.shortName = cms.footer_ss_short_name.trim();
+  }
+  if (cms?.footer_ss_fax?.trim()) sulphur_springs.fax = cms.footer_ss_fax.trim();
   if (cms?.footer_paris_phone?.trim()) paris.phonePrimary = cms.footer_paris_phone.trim();
   if (cms?.footer_massage_phone?.trim()) paris.phoneSecondary = cms.footer_massage_phone.trim();
   if (cms?.footer_ss_phone?.trim()) sulphur_springs.phonePrimary = cms.footer_ss_phone.trim();
@@ -80,6 +88,19 @@ export function effectiveGiftCardSticky(
   const enabled = copy?.giftCardStickyEnabled !== false;
   const dismissKey = `${label.length}_${href.length}`;
   return { enabled, label, href, dismissKey };
+}
+
+/**
+ * "Book Now URL" (Site settings → Header links). When set, every Book Now
+ * button links here; when blank, Book Now opens the call-to-book popup.
+ */
+export function bookNowLinkUrl(cms?: Record<string, string>): string | null {
+  // Opt-in: the URL field existed (unused) for a long time, so a stored value
+  // alone must not change every Book Now button from the call popup to a link.
+  if (cms?.nav_book_url_enabled?.trim() !== "true") return null;
+  const u = cms?.nav_book_url?.trim();
+  if (u && (u.startsWith("/") || /^https?:\/\//i.test(u))) return u;
+  return null;
 }
 
 export function effectiveBookUrl(cms?: Record<string, string>): string {

@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
-import { LOCATIONS, telHref } from "@/lib/constants";
+import { telHref, type LocationId, type LocationInfo } from "@/lib/constants";
+import { useSiteChrome } from "@/components/SiteChromeProvider";
+import type { UiText } from "@/lib/ui-text-cms";
 
 const VARIANT_BASE = {
   default:
@@ -51,34 +54,43 @@ type Props = {
 
 type ContextPhone = { business: string; phone: string };
 
-/** Phone number for the business the visitor has landed on, by brand + URL path. */
-function contextPhone(pathname: string, brand: "paris" | "sulphur"): ContextPhone {
+/**
+ * Business name + phone for the site the visitor is on, from the CMS-resolved
+ * offices (Office info & hours) and Site text labels.
+ */
+function contextPhone(
+  pathname: string,
+  brand: "paris" | "sulphur",
+  locations: Record<LocationId, LocationInfo>,
+  t: UiText,
+): ContextPhone {
   if (brand === "sulphur" || pathname.startsWith("/sulphur-springs")) {
     return {
-      business: "Chiropractic Associates of Sulphur Springs",
-      phone: LOCATIONS.sulphur_springs.phonePrimary,
+      business: t.ui_booking_modal_name_ss,
+      phone: locations.sulphur_springs.phonePrimary,
     };
   }
   if (pathname.startsWith("/services/massage") || pathname.startsWith("/massage-landing")) {
     return {
-      business: "The Rub Club Massage — Paris",
-      phone: LOCATIONS.paris.phoneSecondary ?? LOCATIONS.paris.phonePrimary,
+      business: t.ui_booking_modal_name_paris_massage,
+      phone: locations.paris.phoneSecondary ?? locations.paris.phonePrimary,
     };
   }
   return {
-    business: "Chiropractic Associates — Paris",
-    phone: LOCATIONS.paris.phonePrimary,
+    business: t.ui_booking_modal_name_paris_chiro,
+    phone: locations.paris.phonePrimary,
   };
 }
 
 export function BookingCta({ label, className, variant = "default", brand, children }: Props) {
   const pathname = usePathname() ?? "/";
+  const { uiText: t, locations, bookUrl } = useSiteChrome();
   const [open, setOpen] = useState(false);
   const resolvedBrand =
     brand ?? (pathname.startsWith("/sulphur-springs") ? "sulphur" : "paris");
   const colors = BRAND_COLORS[resolvedBrand];
   const classes = className ?? `${VARIANT_BASE[variant]} ${colors.button}`;
-  const { business, phone } = contextPhone(pathname, resolvedBrand);
+  const { business, phone } = contextPhone(pathname, resolvedBrand, locations, t);
 
   useEffect(() => {
     if (!open) return;
@@ -88,6 +100,30 @@ export function BookingCta({ label, className, variant = "default", brand, child
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
+
+  // "Book Now URL" (Site settings → Header links): when set, Book Now links
+  // there instead of opening the call popup.
+  if (bookUrl) {
+    const content = children ?? label;
+    if (bookUrl.startsWith("/")) {
+      return (
+        <Link href={bookUrl} className={classes} aria-label={label}>
+          {content}
+        </Link>
+      );
+    }
+    return (
+      <a
+        href={bookUrl}
+        className={classes}
+        aria-label={label}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {content}
+      </a>
+    );
+  }
 
   return (
     <>
@@ -106,11 +142,11 @@ export function BookingCta({ label, className, variant = "default", brand, child
           <button
             type="button"
             className="absolute inset-0"
-            aria-label="Close"
+            aria-label={t.ui_close}
             onClick={() => setOpen(false)}
           />
           <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl">
-            <h2 className={`text-lg font-black ${colors.heading}`}>Call to book your visit</h2>
+            <h2 className={`text-lg font-black ${colors.heading}`}>{t.ui_booking_modal_title}</h2>
             <p className="mt-1 text-sm text-stone-600">{business}</p>
             <a
               href={telHref(phone)}
@@ -118,15 +154,13 @@ export function BookingCta({ label, className, variant = "default", brand, child
             >
               {phone}
             </a>
-            <p className="mt-3 text-xs text-stone-500">
-              Give us a call and our front desk will find a time that works for you.
-            </p>
+            <p className="mt-3 text-xs text-stone-500">{t.ui_booking_modal_body}</p>
             <button
               type="button"
               onClick={() => setOpen(false)}
               className="focus-ring mt-4 text-sm font-bold text-stone-600 underline"
             >
-              Close
+              {t.ui_close}
             </button>
           </div>
         </div>,

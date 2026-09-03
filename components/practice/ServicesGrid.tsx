@@ -2,12 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChiroTreatmentIcon } from "@/components/ChiroTreatmentIcon";
 import { SectionHeading } from "@/components/practice/SectionHeading";
+import { getUiText } from "@/lib/ui-text";
 import type {
   PracticeServiceCard,
   PracticeServicesGridSection,
 } from "@/lib/practice-pages-shared";
 
-function CardBody({ card }: { card: PracticeServiceCard }) {
+function CardBody({ card, readMore }: { card: PracticeServiceCard; readMore: string }) {
   const remote = /^https?:\/\//i.test(card.imageUrl);
   return (
     <>
@@ -35,7 +36,7 @@ function CardBody({ card }: { card: PracticeServiceCard }) {
       ) : null}
       {card.href.trim() ? (
         <span className="mx-auto mt-5 inline-flex bg-[var(--pp-cta)] px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-white transition group-hover:bg-[var(--pp-cta-hover)]">
-          Read More
+          {readMore}
         </span>
       ) : null}
     </>
@@ -43,7 +44,7 @@ function CardBody({ card }: { card: PracticeServiceCard }) {
 }
 
 /** Grid of service cards: image (or icon) + name + blurb + Read More. */
-export function ServicesGrid({
+export async function ServicesGrid({
   data,
   derivedCards,
 }: {
@@ -52,6 +53,8 @@ export function ServicesGrid({
   derivedCards?: PracticeServiceCard[];
 }) {
   if (!data.published) return null;
+  const t = await getUiText();
+  const readMore = t.ui_read_more;
   const cards = (data.mode === "ss-services" ? (derivedCards ?? []) : data.cards).filter(
     (card) => card.name.trim().length > 0,
   );
@@ -74,14 +77,14 @@ export function ServicesGrid({
               aria-label={card.name}
               className="focus-ring group flex flex-col overflow-hidden rounded-xl bg-white p-5 text-center shadow-md transition hover:shadow-lg"
             >
-              <CardBody card={card} />
+              <CardBody card={card} readMore={readMore} />
             </Link>
           ) : (
             <div
               key={`${idx}-${card.name}`}
               className="group flex flex-col overflow-hidden rounded-xl bg-white p-5 text-center shadow-md"
             >
-              <CardBody card={card} />
+              <CardBody card={card} readMore={readMore} />
             </div>
           ),
         )}

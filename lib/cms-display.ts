@@ -1,17 +1,18 @@
 import { getContentMany } from "@/lib/cms";
 import { DEFAULTS } from "@/lib/cms-registry";
 import {
-  HEADER_BRAND_LABEL_FIELDS,
   HEADER_BRAND_LOGO_FIELDS,
   resolveChiroHeaderLogo,
   type HeaderBrandContent,
   type HeaderBrandKey,
 } from "@/lib/brand-logos";
 import { reviewUrlForLocation, type LocationId, type LocationInfo } from "@/lib/constants";
+import { HEADER_CHIRO_LOGO_ENABLED_FIELD } from "@/lib/nav-cms";
 import { getVisualPageLayoutIfSet } from "@/lib/visual-page-layout-db";
 import type { VisualPageLayout, VisualScopeId } from "@/lib/visual-page-layout";
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
 import { effectiveGiftCardUrl, mergedDisplayLocations } from "@/lib/site-display-overrides";
+import { OFFICE_INFO_CMS_IDS } from "@/lib/office-info-cms";
 
 import {
   DEFAULT_HEADER_LOGO_HEIGHTS,
@@ -34,9 +35,8 @@ const LAYOUT_CMS_IDS = [
   "footer_links_default",
   "footer_links_paris",
   "footer_links_ss",
-  "header_chiro_label",
-  "header_ss_label",
   "header_chiro_logo",
+  HEADER_CHIRO_LOGO_ENABLED_FIELD,
   "header_ss_logo",
   "header_paris_lockup_title",
   "header_paris_lockup_subtitle",
@@ -55,7 +55,11 @@ const LAYOUT_CMS_IDS = [
   "footer_copyright",
   "nav_giftcard_url",
   "nav_book_url",
+  "nav_book_url_enabled",
   "social_bar_label",
+  ...OFFICE_INFO_CMS_IDS,
+  "social_facebook_url",
+  "social_instagram_url",
 ] as const;
 
 export type LayoutCmsContent = Record<(typeof LAYOUT_CMS_IDS)[number], string>;
@@ -67,17 +71,13 @@ export async function getLayoutCmsContent(): Promise<LayoutCmsContent> {
 
 const HEADER_BRAND_KEYS: HeaderBrandKey[] = ["chiro", "ss"];
 
-/** Build the editable header branding (labels + logos) from CMS values, falling back to defaults. */
+/** Build the editable header branding (logos + lockup text) from CMS values, falling back to defaults. */
 export function headerBrandContentFromCms(
   cms: Partial<Record<string, string>>,
 ): HeaderBrandContent {
-  const labels = {} as Record<HeaderBrandKey, string>;
   const logos = {} as Record<HeaderBrandKey, string>;
   for (const key of HEADER_BRAND_KEYS) {
-    const labelId = HEADER_BRAND_LABEL_FIELDS[key];
     const logoId = HEADER_BRAND_LOGO_FIELDS[key];
-    const labelValue = cms[labelId]?.trim();
-    labels[key] = labelValue && labelValue.length > 0 ? labelValue : (DEFAULTS[labelId] ?? "");
     const logoValue = cms[logoId]?.trim();
     // Logos may legitimately default to empty (Sulphur Springs uses its lockup).
     const rawLogo = logoValue && logoValue.length > 0 ? logoValue : (DEFAULTS[logoId] ?? "");
@@ -105,7 +105,10 @@ export function headerBrandContentFromCms(
     );
     logoHeights[key] = headerLogoHeightsFromValues(nav, mobile);
   }
-  return { labels, logos, parisLockup, logoHeights };
+  const useCustomChiroLogo =
+    (cms[HEADER_CHIRO_LOGO_ENABLED_FIELD] ?? DEFAULTS[HEADER_CHIRO_LOGO_ENABLED_FIELD]) ===
+    "true";
+  return { logos, useCustomChiroLogo, parisLockup, logoHeights };
 }
 
 export async function getScopeVisualLayout(

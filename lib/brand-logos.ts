@@ -49,12 +49,6 @@ export type BrandLogoVariant = "home" | "massage" | "chiropractic" | "sulphur-sp
 
 export type HeaderBrandKey = "chiro" | "ss";
 
-/** CMS field ids for editable header labels (text under each logo). */
-export const HEADER_BRAND_LABEL_FIELDS: Record<HeaderBrandKey, string> = {
-  chiro: "header_chiro_label",
-  ss: "header_ss_label",
-};
-
 /** CMS field ids for editable header logo images. */
 export const HEADER_BRAND_LOGO_FIELDS: Record<HeaderBrandKey, string> = {
   chiro: "header_chiro_logo",
@@ -66,8 +60,12 @@ export const HEADER_BRAND_LOGO_FIELDS: Record<HeaderBrandKey, string> = {
  * `logos.ss` may be an empty string, meaning "render the icon + text lockup".
  */
 export type HeaderBrandContent = {
-  labels: Record<HeaderBrandKey, string>;
   logos: Record<HeaderBrandKey, string>;
+  /**
+   * Render the uploaded Paris logo image (`logos.chiro`) instead of the
+   * icon + text lockup. Off unless a manager enables it in the editor.
+   */
+  useCustomChiroLogo: boolean;
   /** Text lines rendered next to the Paris circular mark (icon + text lockup). */
   parisLockup: { title: string; subtitle: string };
   /** Editable logo heights per brand (Footer → Header in site editor). */

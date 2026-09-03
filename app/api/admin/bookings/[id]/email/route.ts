@@ -5,6 +5,7 @@ import { recordBookingEvent } from "@/lib/booking-events";
 import { bookingDocToEmailContext } from "@/lib/booking-doc";
 import { patientCustomEmail } from "@/lib/email-templates";
 import { sendBookingNotification } from "@/lib/sendgrid";
+import { emailLocations } from "@/lib/email-locations";
 
 export const runtime = "nodejs";
 
@@ -46,10 +47,14 @@ export async function POST(req: Request, ctx: Params) {
   }
 
   try {
-    const { subject, text, html } = patientCustomEmail(emailCtx, {
-      subject: body.subject.trim(),
-      message: body.message.trim(),
-    });
+    const { subject, text, html } = patientCustomEmail(
+      emailCtx,
+      {
+        subject: body.subject.trim(),
+        message: body.message.trim(),
+      },
+      await emailLocations(),
+    );
     const sent = await sendBookingNotification({
       to: emailCtx.email,
       subject,

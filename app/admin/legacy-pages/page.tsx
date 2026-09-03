@@ -73,6 +73,7 @@ function LegacyPagesEditor() {
             metaTitle: row.metaTitle,
             metaDescription: row.metaDescription,
             heroImage: row.heroImage,
+            bodyMarkdown: row.bodyMarkdown,
             order: row.order,
             published: row.published,
           }),
@@ -104,7 +105,8 @@ function LegacyPagesEditor() {
           <h1 className="text-2xl font-black text-slate-900">Legacy pages</h1>
           <p className="mt-1 text-sm text-slate-600">
             Verbatim pages migrated from the old sites (<code>legacyPages</code>). Edit titles,
-            SEO meta, ordering, and publish state. Body copy stays verbatim from the scrape.
+            SEO meta, ordering, and publish state. The imported body stays verbatim unless you
+            write a replacement in the page body box.
           </p>
         </div>
         <Link href="/admin/super" className="text-sm font-semibold text-[#c0392b] underline">
@@ -211,6 +213,16 @@ function LegacyPagesEditor() {
                     onChange={(e) => patch(row.id, { metaDescription: e.target.value })}
                     rows={2}
                     className="rounded-lg border border-slate-300 px-2 py-1 text-sm font-normal text-slate-900"
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-xs font-semibold text-slate-600 sm:col-span-2">
+                  Page body (markdown; blank = keep the imported layout)
+                  <textarea
+                    value={row.bodyMarkdown ?? ""}
+                    onChange={(e) => patch(row.id, { bodyMarkdown: e.target.value })}
+                    rows={row.bodyMarkdown ? 12 : 3}
+                    placeholder={["## Heading", "", "Paragraph text.", "", "- bullet", "- bullet"].join("\n")}
+                    className="rounded-lg border border-slate-300 px-2 py-1 font-mono text-sm font-normal text-slate-900"
                   />
                 </label>
               </div>

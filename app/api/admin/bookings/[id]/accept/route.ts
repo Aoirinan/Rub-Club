@@ -7,6 +7,7 @@ import { bookingDocToEmailContext } from "@/lib/booking-doc";
 import { patientAcceptedEmail } from "@/lib/email-templates";
 import { sendBookingNotification } from "@/lib/sendgrid";
 import { buildIcs } from "@/lib/ics";
+import { emailLocations } from "@/lib/email-locations";
 import { generatePatientPortalToken, hashPatientPortalToken } from "@/lib/patient-portal-token";
 import { siteUrl } from "@/lib/site-content";
 import { linkBookingAfterCreate, onBookingStatusChange } from "@/lib/patients-db";
@@ -92,6 +93,7 @@ export async function POST(req: Request, ctx: Params) {
     const fresh = freshAfter;
     const emailCtx = bookingDocToEmailContext(fresh);
     if (emailCtx) {
+      const locations = await emailLocations();
       const manageUrl = siteUrl(`/book/manage?token=${encodeURIComponent(portalPlain)}`);
       const ics = buildIcs({
         uid: `${emailCtx.bookingId}@chiropracticparistexas.com`,
@@ -99,16 +101,17 @@ export async function POST(req: Request, ctx: Params) {
         durationMinutes: emailCtx.durationMin,
         summary: `${emailCtx.serviceLine === "massage" ? "Massage" : "Chiropractic"} appointment`,
         description: `Confirmed appointment with ${emailCtx.providerDisplayName || "first available provider"}. Reference: ${emailCtx.bookingId}.`,
-        location: `${emailCtx.locationId === "paris" ? "Paris" : "Sulphur Springs"}, TX`,
+        location: `${locations[emailCtx.locationId].addressLocality}, ${locations[emailCtx.locationId].addressRegion}`,
         organizerEmail: process.env.OFFICE_NOTIFICATION_EMAIL,
         organizerName: "Paris Wellness",
       });
       const icsBase64 = Buffer.from(ics, "utf8").toString("base64");
 
-      const { subject, text, html } = patientAcceptedEmail({
-        ...emailCtx,
-        patientManageUrl: manageUrl,
-      });
+      const { subject, text, html } = patientAcceptedEmail(
+        { ...emailCtx, patientManageUrl: manageUrl },
+        undefined,
+        locations,
+      );
       await sendBookingNotification({
         to: emailCtx.email,
         subject,

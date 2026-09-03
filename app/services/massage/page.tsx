@@ -19,20 +19,32 @@ import { ServicePageVisualSection } from "@/components/ServicePageVisualSection"
 import { MassageReviews } from "@/components/marketing/MassageReviews";
 import { getMassageReviews } from "@/lib/massage-reviews";
 import { getSitePhotos } from "@/lib/site-photos-server";
+import { getPageMeta } from "@/lib/page-meta";
+import { getUiText } from "@/lib/ui-text";
+import {
+  MASSAGE_META_SCHEDULE_TOKEN,
+  MASSAGE_PAGE_TEXT_IDS,
+  MASSAGE_SERVICE_PAGES_IDS,
+  resolveMassagePageText,
+} from "@/lib/massage-page-cms";
 import { MassagePageBlock } from "./MassagePageBlocks";
 
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const booking = await getPublicBookingConfig();
+  const [booking, meta, text] = await Promise.all([
+    getPublicBookingConfig(),
+    getPageMeta("massage", { title: "", description: "" }),
+    getContentMany(["massage_page_og_description"]),
+  ]);
   const phrase = scheduleMetaPhrase(isPublicBookingEnabled(booking));
+  const t = resolveMassagePageText(text);
   return buildPageMetadata({
-    title: "Massage Therapy in Paris, TX — The Rub Club",
-    description: `Licensed massage therapists offering deep tissue, prenatal, sports, and trigger-point therapy in Paris, TX. Same-week openings; call 903-739-9959 or ${phrase.toLowerCase()}.`,
+    title: meta.title,
+    description: meta.description.replace(MASSAGE_META_SCHEDULE_TOKEN, phrase.toLowerCase()),
     path: "/services/massage",
     keywords: pageKeywords(["Paris TX massage", "The Rub Club"]),
-    ogDescription:
-      "Deep tissue, prenatal, sports, and trigger-point massage at The Rub Club in Paris, TX.",
+    ogDescription: t.massage_page_og_description,
   });
 }
 
@@ -41,22 +53,24 @@ export default async function MassageServicePage() {
     "massage_hero_heading",
     "massage_hero_subheading",
     "massage_intro_body",
-    "massage_services_list",
-    "massage_cta_heading",
+    ...MASSAGE_PAGE_TEXT_IDS,
+    ...MASSAGE_SERVICE_PAGES_IDS,
   ]);
-  const [massageTeam, blockOrder, visual, displayLocs, photos] = await Promise.all([
-    getMassageTeamForMarketing(),
-    getPageBlockOrder("massage"),
-    getScopeVisualLayout("massage"),
-    getDisplayLocations(),
-    getSitePhotos(),
-  ]);
+  const [massageTeam, blockOrder, visual, displayLocs, photos, massageReviews, ui] =
+    await Promise.all([
+      getMassageTeamForMarketing(),
+      getPageBlockOrder("massage"),
+      getScopeVisualLayout("massage"),
+      getDisplayLocations(),
+      getSitePhotos(),
+      getMassageReviews(),
+      getUiText(),
+    ]);
   const paris = displayLocs.paris;
+  const text = resolveMassagePageText(c);
   const introParagraphs = (c.massage_intro_body ?? "").split(/\n\n+/).filter(Boolean);
-  const serviceLines = (c.massage_services_list ?? "").split(/\n\n+/).filter(Boolean);
-  const blockData = { introParagraphs, serviceLines, massageTeam, paris, photos };
+  const blockData = { introParagraphs, massageTeam, paris, photos, cms: c, text, ui };
   const cmsMap = c as Record<string, string>;
-  const massageReviews = getMassageReviews();
 
   return (
     <>
@@ -73,9 +87,11 @@ export default async function MassageServicePage() {
           }),
         ]}
       />
-      <Breadcrumbs items={serviceBreadcrumbs({ name: "Massage", url: "/services/massage" })} />
+      <Breadcrumbs
+        items={serviceBreadcrumbs({ name: text.massage_subpage_breadcrumb, url: "/services/massage" })}
+      />
       <PageHero
-        eyebrow="The Rub Club · Paris, TX"
+        eyebrow={text.massage_page_eyebrow}
         title={c.massage_hero_heading}
         lede={c.massage_hero_subheading}
       />

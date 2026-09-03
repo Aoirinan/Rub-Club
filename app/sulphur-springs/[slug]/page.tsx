@@ -10,14 +10,25 @@ import { LegacyPageBody } from "@/components/LegacyPageBody";
 import { telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
-import { getContent } from "@/lib/cms";
+import { getContent, getContentMany } from "@/lib/cms";
 import { allSSPageSlugs, getSSPageContent } from "@/lib/ss-cms-content";
 import { ssPageCardImageId } from "@/lib/ss-cms-registry";
+import { SS_PAGES_CMS_DEFAULTS, ssPageFieldIds } from "@/lib/ss-pages-cms";
+import { getUiText } from "@/lib/ui-text";
 import { getPublishedLegacyPage, listPublishedLegacyPagesForSite } from "@/lib/legacy-pages";
 
 export const revalidate = 60;
 
 type Props = { params: Promise<{ slug: string }> };
+
+const SHARED_IDS = ssPageFieldIds("ss_subpage_");
+
+async function getSharedCopy(): Promise<Record<string, string>> {
+  const cms = await getContentMany(SHARED_IDS);
+  return Object.fromEntries(
+    SHARED_IDS.map((id) => [id, cms[id]?.trim() || SS_PAGES_CMS_DEFAULTS[id] || ""]),
+  );
+}
 
 export async function generateStaticParams() {
   const slugs = new Set(allSSPageSlugs());
@@ -32,22 +43,24 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const page = await getSSPageContent(slug);
+  const [page, shared] = await Promise.all([getSSPageContent(slug), getSharedCopy()]);
+  const titleSuffix = shared.ss_subpage_meta_title_suffix;
+  const ogSuffix = shared.ss_subpage_og_title_suffix;
   if (page) {
     return buildPageMetadata({
-      title: `${page.title} — Sulphur Springs Chiropractic`,
+      title: `${page.title} ${titleSuffix}`,
       description: page.metaDescription,
       path: `/sulphur-springs/${page.slug}`,
-      ogTitle: `${page.title} — Sulphur Springs, TX`,
+      ogTitle: `${page.title} ${ogSuffix}`,
     });
   }
   const legacy = await getPublishedLegacyPage("chiro-sulphur", slug);
   if (legacy) {
     return buildPageMetadata({
-      title: `${legacy.title} — Sulphur Springs Chiropractic`,
+      title: `${legacy.title} ${titleSuffix}`,
       description: legacy.metaDescription,
       path: legacy.route,
-      ogTitle: `${legacy.title} — Sulphur Springs, TX`,
+      ogTitle: `${legacy.title} ${ogSuffix}`,
     });
   }
   return { title: "Sulphur Springs" };
@@ -55,14 +68,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SulphurSpringsSubpage({ params }: Props) {
   const { slug } = await params;
-  const [page, ssHours, displayLocs, cardImage] = await Promise.all([
+  const [page, ssHours, displayLocs, cardImage, shared, ui] = await Promise.all([
     getSSPageContent(slug),
     getSulphurOfficeHours(),
     getDisplayLocations(),
     getContent(ssPageCardImageId(slug)),
+    getSharedCopy(),
+    getUiText(),
   ]);
   const ss = displayLocs.sulphur_springs;
   const photo = cardImage.trim();
+  const callLabel = `${ui.ui_call_prefix} ${ss.phonePrimary}`;
 
   // Curated SS page missing -> fall back to a verbatim legacy page (CURSOR_PROMPT §5).
   if (!page) {
@@ -77,7 +93,7 @@ export default async function SulphurSpringsSubpage({ params }: Props) {
             { name: legacy.title, url: legacy.route },
           ]}
         />
-        <PageHero variant="sulphur" eyebrow="Chiropractic Associates · Sulphur Springs" title={legacy.title} />
+        <PageHero variant="sulphur" eyebrow={shared.ss_subpage_eyebrow} title={legacy.title} />
         <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
           <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
             <LegacyPageBody blocks={legacy.blocks} heroImage={legacy.heroImage} images={legacy.images} accent="#2980b9" />
@@ -85,9 +101,9 @@ export default async function SulphurSpringsSubpage({ params }: Props) {
           <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
           <ScheduleCtaCard
             variant="sulphur"
-            title="Schedule an appointment"
-            body="Contact our Sulphur Springs office to discuss whether this treatment is right for you."
-            secondary={{ label: `Call ${ss.phonePrimary}`, href: telHref(ss.phonePrimary) }}
+            title={ui.ui_schedule_appointment_cta}
+            body={shared.ss_subpage_cta_service_body}
+            secondary={{ label: callLabel, href: telHref(ss.phonePrimary) }}
           />
         </div>
       </>
@@ -96,16 +112,16 @@ export default async function SulphurSpringsSubpage({ params }: Props) {
 
   const ctaTitle =
     page.kind === "injury"
-      ? "Need treatment?"
+      ? shared.ss_subpage_cta_injury_heading
       : page.kind === "resource"
-        ? "Have questions?"
-        : "Schedule an appointment";
+        ? shared.ss_subpage_cta_resource_heading
+        : ui.ui_schedule_appointment_cta;
   const ctaBody =
     page.kind === "injury"
-      ? "Contact our Sulphur Springs office for a thorough examination."
+      ? shared.ss_subpage_cta_injury_body
       : page.kind === "resource"
-        ? "Contact our Sulphur Springs office and our team will be happy to help."
-        : "Contact our Sulphur Springs office to discuss whether this treatment is right for you.";
+        ? shared.ss_subpage_cta_resource_body
+        : shared.ss_subpage_cta_service_body;
 
   return (
     <>
@@ -116,7 +132,7 @@ export default async function SulphurSpringsSubpage({ params }: Props) {
           { name: page.title, url: `/sulphur-springs/${page.slug}` },
         ]}
       />
-      <PageHero variant="sulphur" eyebrow="Chiropractic Associates · Sulphur Springs" title={page.title} />
+      <PageHero variant="sulphur" eyebrow={shared.ss_subpage_eyebrow} title={page.title} />
       <div className="mx-auto max-w-4xl space-y-6 px-4 pb-16">
         <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
           {photo ? (
@@ -140,7 +156,7 @@ export default async function SulphurSpringsSubpage({ params }: Props) {
           variant="sulphur"
           title={ctaTitle}
           body={ctaBody}
-          secondary={{ label: `Call ${ss.phonePrimary}`, href: telHref(ss.phonePrimary) }}
+          secondary={{ label: callLabel, href: telHref(ss.phonePrimary) }}
         />
       </div>
     </>

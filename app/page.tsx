@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { Fragment } from "react";
+import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/page-metadata";
+import { getPageMeta } from "@/lib/page-meta";
+import { parisText } from "@/lib/paris-pages-cms";
+import { getUiText } from "@/lib/ui-text";
 import { JsonLd } from "@/components/JsonLd";
 import { FaqList } from "@/components/FaqList";
 import { MassageTeamGrid } from "@/components/marketing/MassageTeamGrid";
@@ -14,7 +18,6 @@ import {
 } from "@/lib/structured-data";
 import { getContentMany, renderRichText } from "@/lib/cms";
 import { DOCTOR_CMS_KEYS, doctorVideoItems, getDoctorsForMarketing } from "@/lib/cms-doctors";
-import { CHIRO } from "@/lib/home-verbatim";
 import { getSitePhotos } from "@/lib/site-photos-server";
 import { getMassageTeamForMarketing } from "@/lib/massage-team";
 import { getLayoutCmsContent } from "@/lib/cms-display";
@@ -49,16 +52,28 @@ export const revalidate = 60;
 const SHOW_OUR_CHIROPRACTORS_SECTION = false; // §3a
 const SHOW_MEET_THE_TEAM_SECTION = false; // §3b
 
-export const metadata = buildPageMetadata({
-  title: siteTitle,
-  brandInTitle: true,
-  description: siteDescription,
-  path: "/",
-  keywords: pageKeywords(),
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const meta = await getPageMeta("home", { title: siteTitle, description: siteDescription });
+  return buildPageMetadata({
+    title: meta.title,
+    brandInTitle: true,
+    description: meta.description,
+    path: "/",
+    keywords: pageKeywords(),
+  });
+}
+
+const HOME_COPY_IDS = [
+  "home_location_phone_label",
+  "home_location_details_label",
+  "home_location_hours_label",
+  "home_location_massage_hours_label",
+  "home_second_location_title",
+  "home_second_location_link_label",
+] as const;
 
 export default async function Home() {
-  const [page, testimonials, chiroHours, massageHours, cmsLayout, homeFaqs] = await Promise.all([
+  const [page, testimonials, chiroHours, massageHours, cmsLayout, homeFaqs, ui] = await Promise.all([
     getPracticePage("paris-home"),
     // CURSOR_PROMPT §8b: Paris page shows ONLY Paris-tagged reviews (untagged hidden).
     listPracticeTestimonials("paris-home", { publishedOnly: true, location: "paris" }),
@@ -66,8 +81,10 @@ export default async function Home() {
     getParisOfficeHours(),
     getLayoutCmsContent(),
     getActiveFaqs().then((faqs) => faqs.slice(0, 5)),
+    getUiText(),
   ]);
-  const c = await getContentMany(["home_awards_text", ...DOCTOR_CMS_KEYS]);
+  const c = await getContentMany(["home_awards_text", ...HOME_COPY_IDS, ...DOCTOR_CMS_KEYS]);
+  const t = (id: string) => parisText(c, id);
 
   let displayLocs = mergedDisplayLocations(undefined, cmsLayout);
   let awardsHtml: string | null = null;
@@ -106,11 +123,11 @@ export default async function Home() {
 
   const secondaryLocations: PracticeSecondaryLocation[] = [
     {
-      title: CHIRO.secondLocationTitle,
+      title: t("home_second_location_title"),
       lines: [...ss.addressLines],
       phone: ss.phonePrimary,
       href: "/sulphur-springs",
-      hrefLabel: "Sulphur Springs details & hours",
+      hrefLabel: t("home_second_location_link_label"),
     },
   ];
 
@@ -254,13 +271,13 @@ export default async function Home() {
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 id="home-faq" className="text-2xl font-black text-[var(--pp-heading)]">
-              Frequently asked questions
+              {ui.ui_faq_heading}
             </h2>
             <Link
               href="/faq"
               className="focus-ring text-sm font-bold text-[var(--pp-accent)] underline"
             >
-              See all FAQs
+              {ui.ui_see_all_faqs}
             </Link>
           </div>
           <div className="mt-4">
@@ -272,16 +289,16 @@ export default async function Home() {
           data={page.locationBlock}
           location={{
             name: paris.name,
-            phoneLabel: "Chiropractic",
+            phoneLabel: t("home_location_phone_label"),
             phone: paris.phonePrimary,
             addressLines: [...paris.addressLines],
             mapsUrl: paris.mapsUrl,
             detailsHref: `/locations/${paris.slug}`,
-            detailsLabel: "Paris details & hours",
+            detailsLabel: t("home_location_details_label"),
           }}
           hours={chiroHours}
-          hoursLabel="Chiropractic"
-          additionalHours={[{ label: "Massage (The Rub Club)", rows: massageHours }]}
+          hoursLabel={t("home_location_hours_label")}
+          additionalHours={[{ label: t("home_location_massage_hours_label"), rows: massageHours }]}
           secondaryLocations={secondaryLocations}
         />
       </div>

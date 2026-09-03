@@ -2,12 +2,12 @@ import Image from "next/image";
 import type { StretchFlexExercise } from "@/lib/stretch-flex";
 
 /** Single editable gallery photo (uniform 4:3, rounded, subtle border + shadow). */
-function GalleryPhoto({ src }: { src: string }) {
+function GalleryPhoto({ src, alt }: { src: string; alt: string }) {
   return (
     <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-stone-200 shadow-sm">
       <Image
         src={src}
-        alt="Stretch & Flex Rehab"
+        alt={alt}
         fill
         loading="lazy"
         sizes="(max-width: 1024px) 45vw, 320px"
@@ -30,11 +30,19 @@ function GalleryPhoto({ src }: { src: string }) {
 export function StretchFlexExercises({
   exercises,
   photos = [],
+  heading,
+  photoAlt,
 }: {
   exercises: StretchFlexExercise[];
   photos?: string[];
+  /** Section heading (CMS: Stretch & Flex Rehab → Exercises section heading). */
+  heading?: string;
+  /** Screen-reader description for the gallery photos. */
+  photoAlt?: string;
 }) {
   const gallery = photos.map((p) => p.trim()).filter(Boolean);
+  const headingText = heading?.trim() || "Exercises & movements";
+  const alt = photoAlt?.trim() || "Stretch & Flex Rehab";
   if (!exercises.length && !gallery.length) return null;
 
   const rightPhotos = gallery.slice(0, 2);
@@ -42,7 +50,7 @@ export function StretchFlexExercises({
 
   return (
     <section className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10">
-      <h2 className="text-2xl font-black text-[#4a1515]">Exercises &amp; movements</h2>
+      <h2 className="text-2xl font-black text-[#4a1515]">{headingText}</h2>
       <div className="mt-6 grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-start">
         <div className="space-y-10">
           {exercises.map((ex) => (
@@ -81,14 +89,14 @@ export function StretchFlexExercises({
           ))}
           {leftPhoto ? (
             <div className="max-w-[360px]">
-              <GalleryPhoto src={leftPhoto} />
+              <GalleryPhoto src={leftPhoto} alt={alt} />
             </div>
           ) : null}
         </div>
         {rightPhotos.length ? (
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:gap-4">
             {rightPhotos.map((src, i) => (
-              <GalleryPhoto key={`${src}-${i}`} src={src} />
+              <GalleryPhoto key={`${src}-${i}`} src={src} alt={alt} />
             ))}
           </div>
         ) : null}

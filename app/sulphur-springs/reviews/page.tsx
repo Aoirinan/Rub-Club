@@ -1,27 +1,44 @@
+import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { TestimonialVideosSection } from "@/components/TestimonialVideosSection";
 import { practiceThemeStyle } from "@/components/practice/theme";
+import { getContentMany } from "@/lib/cms";
 import { getDisplayLocations, getReviewUrlForLocation } from "@/lib/cms-display";
+import { getPageMeta } from "@/lib/page-meta";
+import { SS_PAGES_CMS_DEFAULTS } from "@/lib/ss-pages-cms";
 import { getReviewsPageContent } from "@/lib/static-pages-content";
+import { getUiText } from "@/lib/ui-text";
 
 export const revalidate = 60;
 
-export const metadata = buildPageMetadata({
-  title: "Patient Reviews — Sulphur Springs",
-  description:
-    "Hear what our patients say about Chiropractic Associates in Sulphur Springs, TX, then leave your own review on Google.",
-  path: "/sulphur-springs/reviews",
-  ogTitle: "Patient Reviews — Sulphur Springs",
-  ogDescription: "Read patient stories and leave us a Google review.",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const [meta, cms] = await Promise.all([
+    getPageMeta("ss_reviews", {
+      title: "Patient Reviews — Sulphur Springs",
+      description:
+        "Hear what our patients say about Chiropractic Associates in Sulphur Springs, TX, then leave your own review on Google.",
+    }),
+    getContentMany(["page_ss_reviews_og_description"]),
+  ]);
+  return buildPageMetadata({
+    title: meta.title,
+    description: meta.description,
+    path: "/sulphur-springs/reviews",
+    ogTitle: meta.title,
+    ogDescription:
+      cms.page_ss_reviews_og_description?.trim() ||
+      SS_PAGES_CMS_DEFAULTS.page_ss_reviews_og_description,
+  });
+}
 
 export default async function SulphurSpringsReviewsPage() {
   const displayLocs = await getDisplayLocations();
   const ss = displayLocs.sulphur_springs;
-  const [content, reviewUrl] = await Promise.all([
+  const [content, reviewUrl, ui] = await Promise.all([
     getReviewsPageContent("ss_"),
     getReviewUrlForLocation(ss.id),
+    getUiText(),
   ]);
 
   return (
@@ -70,7 +87,7 @@ export default async function SulphurSpringsReviewsPage() {
               rel="noopener noreferrer"
               className="focus-ring bg-[var(--pp-cta-hover)] px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-black/40"
             >
-              Review {ss.shortName}
+              {ui.ui_review_prefix} {ss.shortName}
             </a>
           </div>
         </section>

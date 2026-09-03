@@ -2,6 +2,7 @@ import type { LocationInfo } from "@/lib/constants";
 import { telHref } from "@/lib/constants";
 import { BookingCta } from "@/components/BookingCta";
 import { OfficeHoursTable } from "@/components/OfficeHoursTable";
+import { getUiText } from "@/lib/ui-text";
 import type { OfficeHoursRow } from "@/lib/office-hours";
 
 export type LocationHoursGroup = {
@@ -9,7 +10,7 @@ export type LocationHoursGroup = {
   rows: readonly OfficeHoursRow[];
 };
 
-export function LocationDetail({
+export async function LocationDetail({
   location,
   reviewUrl,
   officeHours,
@@ -24,6 +25,7 @@ export function LocationDetail({
   /** Extra labeled hours blocks — e.g. a co-located business with a different schedule. */
   additionalHours?: readonly LocationHoursGroup[];
 }) {
+  const t = await getUiText();
   const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(
     `${location.streetAddress}, ${location.addressLocality}, ${location.addressRegion} ${location.postalCode}`,
   )}&output=embed`;
@@ -31,7 +33,7 @@ export function LocationDetail({
     <div className="mx-auto max-w-6xl space-y-10 px-4 pb-16">
       <section className="grid gap-8 border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10 lg:grid-cols-2">
         <div className="space-y-4">
-          <h2 className="text-2xl font-black text-[#4a1515]">Visit us</h2>
+          <h2 className="text-2xl font-black text-[#4a1515]">{t.ui_visit_us}</h2>
           <address className="not-italic">
             <p className="font-bold text-[#4a1515]">{location.name}</p>
             {location.addressLines.map((line) => (
@@ -42,14 +44,14 @@ export function LocationDetail({
           </address>
           <div className="space-y-2 text-sm">
             <p>
-              <span className="font-bold text-[#4a1515]">Office: </span>
+              <span className="font-bold text-[#4a1515]">{t.ui_office_label} </span>
               <a className="focus-ring font-bold text-[#c0392b] underline" href={telHref(location.phonePrimary)}>
                 {location.phonePrimary}
               </a>
             </p>
             {location.phoneSecondary ? (
               <p>
-                <span className="font-bold text-[#4a1515]">Massage desk: </span>
+                <span className="font-bold text-[#4a1515]">{t.ui_massage_desk_label} </span>
                 <a
                   className="focus-ring font-bold text-[#c0392b] underline"
                   href={telHref(location.phoneSecondary)}
@@ -66,7 +68,7 @@ export function LocationDetail({
               rel="noopener noreferrer"
               className="focus-ring inline-flex items-center gap-2 border-2 border-[#c0392b] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#c0392b] hover:bg-[#4a1515]/5"
             >
-              Get directions
+              {t.ui_get_directions}
             </a>
             <a
               href={reviewUrl}
@@ -74,25 +76,27 @@ export function LocationDetail({
               rel="noopener noreferrer"
               className="focus-ring inline-flex items-center gap-2 border-2 border-[#c0392b] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#c0392b] hover:bg-[#4a1515]/5"
             >
-              Leave a Google review
+              {t.ui_leave_google_review}
             </a>
           </div>
         </div>
         <div className="space-y-4">
           <div>
             <h3 className="text-lg font-black text-[#4a1515]">
-              {officeHoursLabel ? `${officeHoursLabel} hours` : "Office hours"}
+              {officeHoursLabel ? `${officeHoursLabel} ${t.ui_hours_word}` : t.ui_office_hours_lower}
             </h3>
             <OfficeHoursTable rows={officeHours} />
           </div>
           {additionalHours.map((group) => (
             <div key={group.label}>
-              <h3 className="text-lg font-black text-[#4a1515]">{group.label} hours</h3>
+              <h3 className="text-lg font-black text-[#4a1515]">
+                {group.label} {t.ui_hours_word}
+              </h3>
               <OfficeHoursTable rows={group.rows} />
             </div>
           ))}
           <BookingCta
-            label="Book at this location"
+            label={t.ui_book_at_location}
             query={`location=${location.id}`}
           />
         </div>

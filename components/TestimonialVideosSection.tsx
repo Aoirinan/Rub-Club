@@ -1,4 +1,5 @@
 import { getSiteOwnerConfig } from "@/lib/site-owner-config";
+import { getUiText } from "@/lib/ui-text";
 
 export async function TestimonialVideosSection() {
   let items: Awaited<ReturnType<typeof getSiteOwnerConfig>>["testimonialVideos"] = [];
@@ -9,6 +10,7 @@ export async function TestimonialVideosSection() {
     items = [];
   }
   if (items.length === 0) return null;
+  const t = await getUiText();
 
   return (
     <section
@@ -16,9 +18,9 @@ export async function TestimonialVideosSection() {
       className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10"
     >
       <h2 id="patient-videos" className="text-3xl font-black text-[#4a1515]">
-        What our patients say
+        {t.ui_what_patients_say}
       </h2>
-      <p className="mt-2 text-sm text-stone-600">Video testimonials from real visits.</p>
+      <p className="mt-2 text-sm text-stone-600">{t.ui_video_testimonials_sub}</p>
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((v) => (
           <article

@@ -1,4 +1,8 @@
+import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/page-metadata";
+import { getPageMeta } from "@/lib/page-meta";
+import { pageOgDescriptionId, pageOgTitleId, parisText } from "@/lib/paris-pages-cms";
+import { getUiText } from "@/lib/ui-text";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/PageChrome";
 import { JsonLd } from "@/components/JsonLd";
@@ -14,15 +18,32 @@ import { getContentMany } from "@/lib/cms";
 
 export const revalidate = 60;
 
-export const metadata = buildPageMetadata({
-  title: "Contact — Chiropractic Associates, Paris, TX",
-  description:
-    "Phone number, address, and hours for The Rub Club and Chiropractic Associates in Paris, TX. Call us directly.",
-  path: "/contact",
-  ogTitle: "Contact — Chiropractic Associates, Paris",
-  ogDescription:
-    "Phone, hours, and contact form for our Paris, TX office. Sulphur Springs has its own contact page.",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const [meta, og] = await Promise.all([
+    getPageMeta("contact", {
+      title: "Contact — Chiropractic Associates, Paris, TX",
+      description:
+        "Phone number, address, and hours for The Rub Club and Chiropractic Associates in Paris, TX. Call us directly.",
+    }),
+    getContentMany([pageOgTitleId("contact"), pageOgDescriptionId("contact")]),
+  ]);
+  return buildPageMetadata({
+    title: meta.title,
+    description: meta.description,
+    path: "/contact",
+    ogTitle: parisText(og, pageOgTitleId("contact")),
+    ogDescription: parisText(og, pageOgDescriptionId("contact")),
+  });
+}
+
+const CONTACT_COPY_IDS = [
+  "contact_massage_desk_note",
+  "contact_directions_label",
+  "contact_details_label",
+  "contact_hours_heading",
+  "contact_chiro_hours_label",
+  "contact_massage_hours_label",
+] as const;
 
 function PhoneIcon() {
   return (
@@ -41,13 +62,15 @@ function PinIcon() {
 }
 
 export default async function ContactPage() {
-  const [c, chiroHours, massageHours, displayLocs, brand] = await Promise.all([
-    getContentMany(["contact_heading", "contact_subtext"]),
+  const [c, chiroHours, massageHours, displayLocs, brand, ui] = await Promise.all([
+    getContentMany(["contact_heading", "contact_subtext", ...CONTACT_COPY_IDS]),
     getParisChiroOfficeHours(),
     getParisOfficeHours(),
     getDisplayLocations(),
     getPageBrand(),
+    getUiText(),
   ]);
+  const t = (id: string) => parisText(c, id);
   // Paris-only contact page; Sulphur Springs has its own at /sulphur-springs/contact.
   const paris = displayLocs.paris;
   const locationList = [paris];
@@ -90,12 +113,12 @@ export default async function ContactPage() {
                     <a className="focus-ring font-bold hover:underline" href={telHref(paris.phoneSecondary)}>
                       {paris.phoneSecondary}
                     </a>
-                    <span className="text-xs text-stone-500">(massage desk)</span>
+                    <span className="text-xs text-stone-500">{t("contact_massage_desk_note")}</span>
                   </p>
                 ) : null}
                 {paris.fax?.trim() ? (
                   <p className="flex items-center gap-2 text-sm text-stone-700">
-                    <span className="font-bold text-[var(--pp-heading)]">Fax:</span>
+                    <span className="font-bold text-[var(--pp-heading)]">{ui.ui_fax_label}</span>
                     {paris.fax}
                   </p>
                 ) : null}
@@ -124,23 +147,23 @@ export default async function ContactPage() {
                   rel="noopener noreferrer"
                   className="focus-ring inline-flex bg-[var(--pp-cta)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-[var(--pp-cta-hover)]"
                 >
-                  Get Directions
+                  {t("contact_directions_label")}
                 </a>
                 <Link
                   href={`/locations/${paris.slug}`}
                   className="focus-ring inline-flex border-2 border-[var(--pp-accent)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-[var(--pp-accent)] hover:bg-[var(--pp-accent)]/5"
                 >
-                  Location Details
+                  {t("contact_details_label")}
                 </Link>
               </div>
             </section>
 
             <section className="rounded-xl border-t-4 border-[var(--pp-accent)] bg-white p-6 shadow-md sm:p-8">
-              <h2 className="text-xl font-black text-[var(--pp-heading)]">Hours</h2>
+              <h2 className="text-xl font-black text-[var(--pp-heading)]">{t("contact_hours_heading")}</h2>
               <div className="mt-4 space-y-4">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
-                    Chiropractic Associates
+                    {t("contact_chiro_hours_label")}
                   </p>
                   <OfficeHoursTable
                     rows={chiroHours}
@@ -149,7 +172,7 @@ export default async function ContactPage() {
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
-                    The Rub Club (massage)
+                    {t("contact_massage_hours_label")}
                   </p>
                   <OfficeHoursTable
                     rows={massageHours}

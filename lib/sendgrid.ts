@@ -1,6 +1,9 @@
 import sgMail from "@sendgrid/mail";
 import { emailFromName, siteShortName } from "@/lib/site-content";
 import { getPublicAppOrigin } from "@/lib/app-origin";
+import { LOCATIONS, telHref } from "@/lib/constants";
+import { emailLocations } from "@/lib/email-locations";
+import type { EmailLocations } from "@/lib/email-templates";
 
 let configured = false;
 
@@ -337,7 +340,13 @@ type StaffPortalEmailContent = {
   category: string;
 };
 
-function buildStaffPortalEmailHtml(content: StaffPortalEmailContent): string {
+function buildStaffPortalEmailHtml(
+  content: StaffPortalEmailContent,
+  locations: EmailLocations = LOCATIONS,
+): string {
+  const parisPhone = locations.paris.phonePrimary;
+  const rubPhone = locations.paris.phoneSecondary || LOCATIONS.paris.phoneSecondary || "";
+  const ssPhone = locations.sulphur_springs.phonePrimary;
   const PRIMARY = "#c0392b";
   const ACCENT = "#f19f1f";
   const TEXT = "#4a1515";
@@ -389,9 +398,9 @@ function buildStaffPortalEmailHtml(content: StaffPortalEmailContent): string {
               <p style="margin:0 0 16px;color:${MUTED};font-size:13px;line-height:1.5">Staff sign-in page: <a href="${safeLogin}" style="color:${PRIMARY};font-weight:700">${safeLogin}</a></p>
               ${footerHtml}
               <p style="margin:16px 0 0;padding-top:16px;border-top:1px solid #e6e2d3;color:${MUTED};font-size:12px;line-height:1.5;">
-                Paris office: <a href="tel:+19037855551" style="color:${PRIMARY};">903-785-5551</a> ·
-                The Rub Club: <a href="tel:+19037399959" style="color:${PRIMARY};">903-739-9959</a> ·
-                Sulphur Springs: <a href="tel:+19039195020" style="color:${PRIMARY};">903-919-5020</a>
+                Paris office: <a href="${telHref(parisPhone)}" style="color:${PRIMARY};">${escapeHtml(parisPhone)}</a> ·
+                The Rub Club: <a href="${telHref(rubPhone)}" style="color:${PRIMARY};">${escapeHtml(rubPhone)}</a> ·
+                Sulphur Springs: <a href="${telHref(ssPhone)}" style="color:${PRIMARY};">${escapeHtml(ssPhone)}</a>
               </p>
             </td>
           </tr>
@@ -438,8 +447,9 @@ async function sendStaffPortalEmail(
     };
   }
 
+  const locations = await emailLocations();
   const text = buildStaffPortalEmailText(content);
-  const html = buildStaffPortalEmailHtml(content);
+  const html = buildStaffPortalEmailHtml(content, locations);
 
   try {
     await sgMail.send({

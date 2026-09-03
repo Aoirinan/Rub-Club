@@ -20,6 +20,39 @@ import { FooterHoursPanel } from "@/components/FooterHoursPanel";
 import { useSiteBusinessContext } from "@/lib/use-site-business-context";
 import type { SiteBusinessContext } from "@/lib/site-business-context";
 
+/** Editable footer labels (server-resolved from Site text); defaults = today's text. */
+export type FooterText = {
+  allPractices: string;
+  massageDesk: string;
+  explore: string;
+  giftCardsSquare: string;
+  privacyPractices: string;
+  websitePrivacy: string;
+  terms: string;
+  staff: string;
+  hours: string;
+  hoursColChiro: string;
+  hoursColMassage: string;
+  hoursEmpty: string;
+  bookNow: string;
+};
+
+export const DEFAULT_FOOTER_TEXT: FooterText = {
+  allPractices: "All practices →",
+  massageDesk: "Massage desk:",
+  explore: "Explore",
+  giftCardsSquare: "Gift cards (Square)",
+  privacyPractices: "Privacy practices",
+  websitePrivacy: "Website privacy",
+  terms: "Terms",
+  staff: "Staff",
+  hours: "Hours",
+  hoursColChiro: "Chiro",
+  hoursColMassage: "Massage",
+  hoursEmpty: "—",
+  bookNow: "Book Now",
+};
+
 const PARIS_CHIRO_TAGLINE =
   "Chiropractic Associates in Paris, TX — family-owned care since 1998.";
 const SS_TAGLINE =
@@ -37,6 +70,7 @@ export function SiteFooterClient({
   sulphurHours,
   initialDomainCtx,
   initialBusinessContext = "default",
+  text = DEFAULT_FOOTER_TEXT,
 }: {
   locations?: readonly LocationInfo[];
   giftCardHref?: string;
@@ -50,8 +84,14 @@ export function SiteFooterClient({
   sulphurHours: readonly OfficeHoursRow[];
   initialDomainCtx: DomainContextValue;
   initialBusinessContext?: SiteBusinessContext;
+  text?: FooterText;
 }) {
   const businessContext = useSiteBusinessContext(initialBusinessContext);
+  const parisShortName =
+    locations.find((l) => l.id === "paris")?.shortName ?? LOCATION_LIST[0]!.shortName;
+  const sulphurShortName =
+    locations.find((l) => l.id === "sulphur_springs")?.shortName ??
+    LOCATION_LIST[1]!.shortName;
   const isParisChiro = businessContext === "paris_chiro";
   const isSulphur = businessContext === "sulphur_springs";
   const isBusinessScoped = isParisChiro || isSulphur;
@@ -91,7 +131,7 @@ export function SiteFooterClient({
               href="/"
               className="mt-3 inline-block text-xs font-bold uppercase tracking-wide text-[#f19f1f] hover:underline"
             >
-              All practices →
+              {text.allPractices}
             </Link>
           ) : null}
         </div>
@@ -113,7 +153,7 @@ export function SiteFooterClient({
               </a>
               {loc.phoneSecondary && !isBusinessScoped ? (
                 <p className="text-xs text-white/60">
-                  Massage desk:{" "}
+                  {text.massageDesk}{" "}
                   <a
                     className="font-bold text-[#f19f1f] hover:underline"
                     href={telHref(loc.phoneSecondary)}
@@ -126,7 +166,7 @@ export function SiteFooterClient({
           ))}
         </div>
         <nav aria-label="Footer quick links" className="text-sm">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f19f1f]">Explore</p>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f19f1f]">{text.explore}</p>
           <ul className="mt-3 space-y-1">
             {footerLinksForContext(businessContext, footerLinks?.[businessContext]).map((link) =>
               link.external ? (
@@ -155,7 +195,7 @@ export function SiteFooterClient({
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Gift cards (Square)
+                {text.giftCardsSquare}
               </a>
             </li>
           </ul>
@@ -166,6 +206,9 @@ export function SiteFooterClient({
           sulphurHours={sulphurHours}
           initialDomainCtx={initialDomainCtx}
           initialBusinessContext={initialBusinessContext}
+          text={text}
+          parisShortName={parisShortName}
+          sulphurShortName={sulphurShortName}
         />
       </div>
       <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-white/60">
@@ -175,25 +218,25 @@ export function SiteFooterClient({
             ·
           </span>
           <Link className="hover:underline" href={PRIVACY_PRACTICES_PATH}>
-            Privacy practices
+            {text.privacyPractices}
           </Link>
           <span aria-hidden className="text-white/30">
             ·
           </span>
           <Link className="hover:underline" href={WEBSITE_PRIVACY_PATH}>
-            Website privacy
+            {text.websitePrivacy}
           </Link>
           <span aria-hidden className="text-white/30">
             ·
           </span>
           <Link className="hover:underline" href={TERMS_PATH}>
-            Terms
+            {text.terms}
           </Link>
           <span aria-hidden className="text-white/30">
             ·
           </span>
           <Link className="hover:underline" href="/admin/login">
-            Staff
+            {text.staff}
           </Link>
         </p>
         <p className="mt-1 tabular-nums text-white/45">v{label}</p>

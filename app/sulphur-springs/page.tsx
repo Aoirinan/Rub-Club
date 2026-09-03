@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { JsonLd } from "@/components/JsonLd";
 import { chiropractorJsonLd } from "@/lib/structured-data";
 import { pageKeywords } from "@/lib/seo-keywords";
+import { getContentMany } from "@/lib/cms";
 import { getDisplayLocations } from "@/lib/cms-display";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
+import { getPageMeta } from "@/lib/page-meta";
+import { SS_PAGES_CMS_DEFAULTS } from "@/lib/ss-pages-cms";
+import { getUiText } from "@/lib/ui-text";
 import { resolveSiteStaffForBrand, siteStaffExistsForBrand } from "@/lib/site-staff";
 import { SS_STAFF_SEED } from "@/lib/site-staff-seed-rosters";
 import {
@@ -33,27 +38,38 @@ const SS_DOCTOR_FALLBACK: PracticeTeamMember = {
 
 export const revalidate = 60;
 
-export const metadata = buildPageMetadata({
-  title: "Sulphur Springs, TX Chiropractor — Chiropractic Associates",
-  brandInTitle: true,
-  description:
-    "Chiropractic Associates of Sulphur Springs offers chiropractic adjustments, spinal decompression, massage therapy, and rehabilitation at 207 Jefferson St. E. Call 903-919-5020.",
-  path: "/sulphur-springs",
-  keywords: pageKeywords(["Sulphur Springs chiropractor", "Sulphur Springs massage"]),
-  ogDescription:
-    "Chiropractic care, spinal decompression, and massage therapy in Sulphur Springs, TX. Call 903-919-5020.",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const [meta, cms] = await Promise.all([
+    getPageMeta("ss_home", {
+      title: "Sulphur Springs, TX Chiropractor — Chiropractic Associates",
+      description:
+        "Chiropractic Associates of Sulphur Springs offers chiropractic adjustments, spinal decompression, massage therapy, and rehabilitation at 207 Jefferson St. E. Call 903-919-5020.",
+    }),
+    getContentMany(["page_ss_home_og_description"]),
+  ]);
+  return buildPageMetadata({
+    title: meta.title,
+    brandInTitle: true,
+    description: meta.description,
+    path: "/sulphur-springs",
+    keywords: pageKeywords(["Sulphur Springs chiropractor", "Sulphur Springs massage"]),
+    ogDescription:
+      cms.page_ss_home_og_description?.trim() || SS_PAGES_CMS_DEFAULTS.page_ss_home_og_description,
+  });
+}
 
 export default async function SulphurSpringsPage() {
-  const [page, ssServiceCards, ssHours, staff, hasAnySsStaff, displayLocs, testimonials] = await Promise.all([
-    getPracticePage("sulphur-springs"),
-    getSSServiceCards(),
-    getSulphurOfficeHours(),
-    resolveSiteStaffForBrand("sulphur"),
-    siteStaffExistsForBrand("sulphur"),
-    getDisplayLocations(),
-    listPracticeTestimonials("sulphur-springs", { publishedOnly: true }),
-  ]);
+  const [page, ssServiceCards, ssHours, staff, hasAnySsStaff, displayLocs, testimonials, ui] =
+    await Promise.all([
+      getPracticePage("sulphur-springs"),
+      getSSServiceCards(),
+      getSulphurOfficeHours(),
+      resolveSiteStaffForBrand("sulphur"),
+      siteStaffExistsForBrand("sulphur"),
+      getDisplayLocations(),
+      listPracticeTestimonials("sulphur-springs", { publishedOnly: true }),
+      getUiText(),
+    ]);
   const ss = displayLocs.sulphur_springs;
 
   const membersBySource: Partial<Record<string, PracticeTeamMember[]>> = {
@@ -65,7 +81,7 @@ export default async function SulphurSpringsPage() {
             imageUrl: m.image ?? "",
             bio: m.bio,
             featured: m.featured,
-            videos: m.videoUrl ? [{ src: m.videoUrl, label: `Meet ${m.name}` }] : [],
+            videos: m.videoUrl ? [{ src: m.videoUrl, label: `${ui.ui_meet_prefix} ${m.name}` }] : [],
           }))
         : hasAnySsStaff
           ? [] // every member hidden on purpose: don't resurrect the built-in doctor

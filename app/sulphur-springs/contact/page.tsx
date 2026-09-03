@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
@@ -8,23 +9,53 @@ import { getDisplayLocations } from "@/lib/cms-display";
 import { chiropractorJsonLd } from "@/lib/structured-data";
 import { getSulphurOfficeHours } from "@/lib/office-hours";
 import { getContentMany } from "@/lib/cms";
+import { getPageMeta } from "@/lib/page-meta";
+import { SS_PAGES_CMS_DEFAULTS } from "@/lib/ss-pages-cms";
+import { getUiText } from "@/lib/ui-text";
 
 export const revalidate = 60;
 
-export const metadata = buildPageMetadata({
-  title: "Contact us — Chiropractic Associates of Sulphur Springs",
-  description:
-    "Phone number, address, and hours for Chiropractic Associates of Sulphur Springs at 207 Jefferson St. E. Call 903-919-5020.",
-  path: "/sulphur-springs/contact",
-  ogTitle: "Contact Chiropractic Associates of Sulphur Springs",
-  ogDescription: "Phone, hours, and directions for our Sulphur Springs, TX office. Call 903-919-5020.",
-});
+const IDS = [
+  "ss_contact_heading",
+  "ss_contact_subtext",
+  "ss_contact_eyebrow",
+  "ss_contact_directions_label",
+  "ss_contact_details_label",
+  "page_ss_contact_og_title",
+  "page_ss_contact_og_description",
+] as const;
+
+async function copy(): Promise<Record<(typeof IDS)[number], string>> {
+  const cms = await getContentMany([...IDS]);
+  return Object.fromEntries(
+    IDS.map((id) => [id, cms[id]?.trim() || SS_PAGES_CMS_DEFAULTS[id] || cms[id] || ""]),
+  ) as Record<(typeof IDS)[number], string>;
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [meta, c] = await Promise.all([
+    getPageMeta("ss_contact", {
+      title: "Contact us — Chiropractic Associates of Sulphur Springs",
+      description:
+        "Phone number, address, and hours for Chiropractic Associates of Sulphur Springs at 207 Jefferson St. E. Call 903-919-5020.",
+    }),
+    copy(),
+  ]);
+  return buildPageMetadata({
+    title: meta.title,
+    description: meta.description,
+    path: "/sulphur-springs/contact",
+    ogTitle: c.page_ss_contact_og_title,
+    ogDescription: c.page_ss_contact_og_description,
+  });
+}
 
 export default async function SulphurSpringsContactPage() {
-  const [c, ssHours, displayLocs] = await Promise.all([
-    getContentMany(["ss_contact_heading", "ss_contact_subtext"]),
+  const [c, ssHours, displayLocs, ui] = await Promise.all([
+    copy(),
     getSulphurOfficeHours(),
     getDisplayLocations(),
+    getUiText(),
   ]);
   const ss = displayLocs.sulphur_springs;
 
@@ -44,7 +75,7 @@ export default async function SulphurSpringsContactPage() {
       />
       <PageHero
         variant="sulphur"
-        eyebrow="Chiropractic Associates · Sulphur Springs"
+        eyebrow={c.ss_contact_eyebrow}
         title={c.ss_contact_heading}
         lede={c.ss_contact_subtext}
       />
@@ -61,14 +92,14 @@ export default async function SulphurSpringsContactPage() {
               ))}
             </address>
             <p className="text-sm">
-              <span className="font-bold text-[#0c2d3a]">Office: </span>
+              <span className="font-bold text-[#0c2d3a]">{ui.ui_office_label} </span>
               <a className="focus-ring font-bold text-[#2980b9] underline" href={telHref(ss.phonePrimary)}>
                 {ss.phonePrimary}
               </a>
             </p>
             {ss.fax?.trim() ? (
               <p className="text-sm text-stone-700">
-                <span className="font-bold text-[#0c2d3a]">Fax: </span>
+                <span className="font-bold text-[#0c2d3a]">{ui.ui_fax_label} </span>
                 {ss.fax}
               </p>
             ) : null}
@@ -79,13 +110,13 @@ export default async function SulphurSpringsContactPage() {
                 rel="noopener noreferrer"
                 className="focus-ring inline-flex items-center gap-2 border-2 border-[#2980b9] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#2980b9] hover:bg-[#0c2d3a]/5"
               >
-                Get directions
+                {c.ss_contact_directions_label}
               </a>
               <Link
                 href="/locations/sulphur-springs"
                 className="focus-ring inline-flex items-center gap-2 border-2 border-[#2980b9] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#2980b9] hover:bg-[#0c2d3a]/5"
               >
-                Location details
+                {c.ss_contact_details_label}
               </Link>
             </div>
           </div>
@@ -104,7 +135,7 @@ export default async function SulphurSpringsContactPage() {
         </section>
 
         <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#0c2d3a]">Office hours</h2>
+          <h2 className="text-2xl font-black text-[#0c2d3a]">{ui.ui_office_hours_lower}</h2>
           <div className="mt-4 max-w-md">
             <OfficeHoursTable
               rows={ssHours}

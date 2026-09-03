@@ -17,20 +17,13 @@ export type ParisStaffPageContent = {
   ctaBody: string;
 };
 
-/** Rub Club is linked below the hero — drop legacy trailing sentence from stored lede. */
-function normalizeParisStaffHeroLede(lede: string): string {
-  return lede
-    .replace(/ Licensed massage therapists are listed separately at The Rub Club\.?$/i, "")
-    .trim();
-}
-
 export async function getParisStaffPageContent(): Promise<ParisStaffPageContent> {
   const cms = await getContentMany([...PARIS_STAFF_PAGE_CMS_KEYS]);
   const heroLede =
     cms.paris_staff_hero_lede?.trim() || PARIS_STAFF_PAGE_DEFAULTS.heroLede;
   return {
     heroTitle: cms.paris_staff_hero_title?.trim() || PARIS_STAFF_PAGE_DEFAULTS.heroTitle,
-    heroLede: normalizeParisStaffHeroLede(heroLede),
+    heroLede,
     doctorsHeading:
       cms.paris_staff_doctors_heading?.trim() || PARIS_STAFF_PAGE_DEFAULTS.doctorsHeading,
     sectionHeading:

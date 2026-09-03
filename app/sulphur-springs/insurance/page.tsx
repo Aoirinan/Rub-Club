@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
@@ -6,23 +7,42 @@ import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
 import { practiceThemeStyle } from "@/components/practice/theme";
 import { telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
+import { getContentMany } from "@/lib/cms";
+import { getPageMeta } from "@/lib/page-meta";
+import { SS_PAGES_CMS_DEFAULTS, ssPageFieldIds } from "@/lib/ss-pages-cms";
 import { getInsurancePageContent } from "@/lib/static-pages-content";
 
 export const revalidate = 60;
 
-export const metadata = buildPageMetadata({
-  title: "Insurance & Billing — Sulphur Springs",
-  description:
-    "What to expect with insurance for chiropractic visits, plus self-pay information for massage therapy at our Sulphur Springs office.",
-  path: "/sulphur-springs/insurance",
-  ogTitle: "Insurance & Billing — Sulphur Springs",
-  ogDescription:
-    "Insurance accepted for chiropractic care; massage therapy is self-pay. Call our Sulphur Springs office to verify benefits.",
-});
+const IDS = [...ssPageFieldIds("ss_insurance_"), "page_ss_insurance_og_description"];
+
+async function copy(): Promise<Record<string, string>> {
+  const cms = await getContentMany(IDS);
+  return Object.fromEntries(IDS.map((id) => [id, cms[id]?.trim() || SS_PAGES_CMS_DEFAULTS[id] || ""]));
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [meta, c] = await Promise.all([
+    getPageMeta("ss_insurance", {
+      title: "Insurance & Billing — Sulphur Springs",
+      description:
+        "What to expect with insurance for chiropractic visits, plus self-pay information for massage therapy at our Sulphur Springs office.",
+    }),
+    copy(),
+  ]);
+  return buildPageMetadata({
+    title: meta.title,
+    description: meta.description,
+    path: "/sulphur-springs/insurance",
+    ogTitle: meta.title,
+    ogDescription: c.page_ss_insurance_og_description,
+  });
+}
 
 export default async function SulphurSpringsInsurancePage() {
-  const [c, displayLocs] = await Promise.all([
+  const [c, x, displayLocs] = await Promise.all([
     getInsurancePageContent("ss_"),
+    copy(),
     getDisplayLocations(),
   ]);
   const ss = displayLocs.sulphur_springs;
@@ -37,7 +57,7 @@ export default async function SulphurSpringsInsurancePage() {
         ]}
       />
       <PageHero
-        eyebrow="Insurance & billing"
+        eyebrow={x.ss_insurance_eyebrow}
         title={c.heroTitle}
         lede={c.heroLede}
         variant="sulphur"
@@ -55,9 +75,9 @@ export default async function SulphurSpringsInsurancePage() {
             ),
           )}
           <p className="text-sm text-stone-600">
-            Auto-injury and personal-injury paperwork:{" "}
+            {x.ss_insurance_paperwork_prefix}{" "}
             <Link href="/sulphur-springs/staff" className="font-bold text-[var(--pp-accent)] underline">
-              About us — Sulphur Springs office
+              {x.ss_insurance_paperwork_link_label}
             </Link>
             .
           </p>
@@ -73,15 +93,15 @@ export default async function SulphurSpringsInsurancePage() {
           <p className="text-stone-700">{c.verifyBody}</p>
           <p className="text-sm font-bold text-[var(--pp-accent)]">
             <a className="focus-ring underline" href={telHref(ss.phonePrimary)}>
-              Call Sulphur Springs: {ss.phonePrimary}
+              {x.ss_insurance_call_prefix} {ss.phonePrimary}
             </a>
           </p>
         </section>
 
         <ScheduleCtaCard
-          title="Have benefits to use before year-end?"
-          body="Book a visit while you still have flexible-spending or out-of-pocket dollars to use."
-          secondary={{ label: "Talk to billing", href: "/sulphur-springs/contact" }}
+          title={x.ss_insurance_cta_heading}
+          body={x.ss_insurance_cta_body}
+          secondary={{ label: x.ss_insurance_cta_button, href: "/sulphur-springs/contact" }}
           variant="sulphur"
         />
       </div>

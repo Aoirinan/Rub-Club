@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { FACEBOOK_URL, INSTAGRAM_URL, telHref, type LocationInfo } from "@/lib/constants";
+import { telHref, type LocationInfo } from "@/lib/constants";
+import { useNavChrome } from "@/components/NavChromeContext";
 import { track } from "@/lib/analytics";
 import type { NavItem } from "@/components/DesktopNav";
 import { isNavItemActive } from "@/lib/nav-active";
@@ -30,8 +31,10 @@ export function MobileNav({
   businessContext?: SiteBusinessContext;
 }) {
   const businessContext = useSiteBusinessContext(businessContextProp);
+  const chrome = useNavChrome();
+  const nav = chrome.nav;
   const pathname = usePathname() ?? "/";
-  const hasGiftCardInNav = items.some((i) => i.label === "Gift cards");
+  const hasGiftCardInNav = items.some((i) => i.giftCard || i.label === "Gift cards");
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const giftCardExpanded = useMassageGiftCardNavExpandedContext();
@@ -70,7 +73,7 @@ export function MobileNav({
         aria-expanded={open}
         aria-controls="mobile-menu"
       >
-        Menu
+        {nav.nav_mobile_menu_label}
         <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
           <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
         </svg>
@@ -94,7 +97,7 @@ export function MobileNav({
           />
           <div className="mobile-drawer-panel absolute right-0 top-0 h-full w-[88%] max-w-sm overflow-y-auto bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-stone-200 px-4 py-3">
-              <span className="text-sm font-black uppercase tracking-wide text-[var(--header-nav-hover)]">Menu</span>
+              <span className="text-sm font-black uppercase tracking-wide text-[var(--header-nav-hover)]">{nav.nav_mobile_menu_label}</span>
               <button
                 type="button"
                 onClick={close}
@@ -215,7 +218,7 @@ export function MobileNav({
                                   ))}
                                   {clinic.fax?.trim() ? (
                                     <p className="text-xs font-bold text-stone-600">
-                                      Fax: {clinic.fax}
+                                      {chrome.faxLabel} {clinic.fax}
                                     </p>
                                   ) : null}
                                 </div>
@@ -226,7 +229,7 @@ export function MobileNav({
                                     rel="noopener noreferrer"
                                     className="inline-block text-xs font-bold text-[#c0392b] underline"
                                   >
-                                    Get directions
+                                    {chrome.getDirections}
                                   </a>
                                 </div>
                               </div>
@@ -256,16 +259,16 @@ export function MobileNav({
                   }`}
                   onClick={close}
                 >
-                  Gift cards
+                  {nav.nav_giftcards_label}
                 </a>
               ) : null}
               <BookingCta
-                label="Book Now"
+                label={chrome.bookNow}
                 className="focus-ring m-4 block bg-[#4a1515] px-4 py-3 text-center text-sm font-black uppercase tracking-wide text-white hover:bg-[#341010]"
               />
               <div className="border-t border-stone-200 p-4 text-sm">
                 <p className="mb-2 text-xs font-black uppercase tracking-wide text-stone-600">
-                  Call us
+                  {nav.nav_mobile_call_us_label}
                 </p>
                 {businessContext === "paris_chiro" ? (
                   <a
@@ -273,7 +276,7 @@ export function MobileNav({
                     href={telHref(paris.phonePrimary)}
                     onClick={() => track("phone_click", { location: "paris" })}
                   >
-                    Paris {paris.phonePrimary}
+                    {nav.nav_mobile_paris_prefix} {paris.phonePrimary}
                   </a>
                 ) : businessContext === "sulphur_springs" ? (
                   <a
@@ -281,7 +284,7 @@ export function MobileNav({
                     href={telHref(sulphur.phonePrimary)}
                     onClick={() => track("phone_click", { location: "sulphur_springs" })}
                   >
-                    Sulphur Springs {sulphur.phonePrimary}
+                    {nav.nav_mobile_sulphur_prefix} {sulphur.phonePrimary}
                   </a>
                 ) : (
                   <>
@@ -290,7 +293,7 @@ export function MobileNav({
                       href={telHref(paris.phonePrimary)}
                       onClick={() => track("phone_click", { location: "paris" })}
                     >
-                      Paris {paris.phonePrimary}
+                      {nav.nav_mobile_paris_prefix} {paris.phonePrimary}
                     </a>
                     {paris.phoneSecondary?.trim() ? (
                       <a
@@ -298,7 +301,7 @@ export function MobileNav({
                         href={telHref(paris.phoneSecondary)}
                         onClick={() => track("phone_click", { location: "rub_club" })}
                       >
-                        The Rub Club {paris.phoneSecondary}
+                        {nav.nav_mobile_rub_prefix} {paris.phoneSecondary}
                       </a>
                     ) : null}
                     <a
@@ -306,14 +309,14 @@ export function MobileNav({
                       href={telHref(sulphur.phonePrimary)}
                       onClick={() => track("phone_click", { location: "sulphur_springs" })}
                     >
-                      Sulphur Springs {sulphur.phonePrimary}
+                      {nav.nav_mobile_sulphur_prefix} {sulphur.phonePrimary}
                     </a>
                   </>
                 )}
                 <div className="mt-3 flex flex-wrap gap-4">
                   <a
                     className="inline-flex items-center gap-2 font-bold text-[#c0392b] underline"
-                    href={FACEBOOK_URL}
+                    href={nav.social_facebook_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={close}
@@ -327,11 +330,11 @@ export function MobileNav({
                     >
                       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                     </svg>
-                    Facebook
+                    {nav.nav_mobile_facebook_label}
                   </a>
                   <a
                     className="inline-flex items-center gap-2 font-bold text-[#c0392b] underline"
-                    href={INSTAGRAM_URL}
+                    href={nav.social_instagram_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={close}
@@ -345,7 +348,7 @@ export function MobileNav({
                     >
                       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 11-2.881 0 1.44 1.44 0 012.881 0z" />
                     </svg>
-                    Instagram
+                    {nav.nav_mobile_instagram_label}
                   </a>
                 </div>
               </div>
@@ -354,7 +357,7 @@ export function MobileNav({
                 className="focus-ring border-t border-stone-100 px-4 py-3 text-xs text-stone-600 hover:bg-stone-50"
                 onClick={close}
               >
-                Staff sign-in
+                {nav.nav_mobile_staff_sign_in_label}
               </Link>
             </nav>
           </div>

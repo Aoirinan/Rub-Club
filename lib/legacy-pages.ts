@@ -38,6 +38,11 @@ export type LegacyPage = {
   blocks: LegacyBlock[];
   /** VERBATIM raw contentHtml (may be empty when offloaded — see contentHtmlUrl). */
   body: string;
+  /**
+   * Optional staff-written replacement for the body (markdown: ## / ### headings,
+   * - bullets, blank line between paragraphs). Blank = render `blocks` verbatim.
+   */
+  bodyMarkdown: string;
   contentHtmlUrl: string;
   heroImage: string;
   images: LegacyImage[];
@@ -102,6 +107,7 @@ function toLegacyPage(id: string, data: FirebaseFirestore.DocumentData): LegacyP
     metaDescription: String(data.metaDescription ?? ""),
     blocks: Array.isArray(data.blocks) ? (data.blocks as LegacyBlock[]) : [],
     body: String(data.body ?? ""),
+    bodyMarkdown: typeof data.bodyMarkdown === "string" ? data.bodyMarkdown : "",
     contentHtmlUrl: String(data.contentHtmlUrl ?? ""),
     heroImage: String(data.heroImage ?? ""),
     images: Array.isArray(data.images) ? (data.images as LegacyImage[]) : [],

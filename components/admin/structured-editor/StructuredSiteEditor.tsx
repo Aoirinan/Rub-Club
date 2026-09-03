@@ -41,7 +41,7 @@ type Props = {
 };
 
 function parseInitialScope(raw?: string): PageBuilderScopeId {
-  if (raw === "header-branding" || raw === "footer" || raw === "navigation") return "paris-header";
+  if (raw === "header-branding" || raw === "footer") return "paris-header";
   if (raw === "photos") return "paris-photos";
   if (raw === "services-hub") return "paris-chiro-pages";
   if (raw === "faq-items") return "faq-copy";
@@ -58,6 +58,9 @@ function scopeLivePath(scope: PageBuilderScopeId): string | null {
   }
   if (scope === "home") return "/";
   if (scope === "paris-header" || scope === "site-settings") return "/";
+  if (scope === "navigation" || scope === "site-text") return "/";
+  if (scope === "massage-landing") return "/massage-landing";
+  if (scope === "booking-page") return "/book";
   if (scope === "ss-header") return "/sulphur-springs";
   if (scope === "about") return "/about";
   if (scope === "contact") return "/contact";
@@ -141,7 +144,6 @@ const SUPERSEDED_FIELD_IDS: Record<string, string[]> = {
     "home_hero_cta_label",
     "home_about_blurb",
     "home_testimonials_heading",
-    "home_testimonials_intro",
   ],
   chiropractic: [
     "chiro_hero_heading",
@@ -155,20 +157,6 @@ const SUPERSEDED_FIELD_IDS: Record<string, string[]> = {
     "chiro_testimonials_heading",
     "chiro_cta_heading",
     "chiro_cta_subtext",
-    "chiro_cta_paris_label",
-    "chiro_cta_ss_label",
-    "chiro_cta_massage_link",
-    "chiro_cta_stretch_link",
-    "chiro_cta_forms_link",
-    "chiro_schedule_cta_title",
-    "chiro_schedule_cta_body",
-    "chiro_schedule_cta_secondary",
-    "chiro_testimonial_1_text",
-    "chiro_testimonial_1_attr",
-    "chiro_testimonial_2_text",
-    "chiro_testimonial_2_attr",
-    "chiro_testimonial_3_text",
-    "chiro_testimonial_3_attr",
     "chiro_wellness_teaser_heading",
     "chiro_wellness_teaser_body",
   ],

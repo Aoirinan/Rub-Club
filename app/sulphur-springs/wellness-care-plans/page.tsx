@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
@@ -6,27 +7,49 @@ import { practiceThemeStyle } from "@/components/practice/theme";
 import { telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
 import { getContentMany } from "@/lib/cms";
+import { getPageMeta } from "@/lib/page-meta";
+import { SS_PAGES_CMS_DEFAULTS, ssPageFieldIds } from "@/lib/ss-pages-cms";
 import {
   SS_WELLNESS_PAGE_CMS_FIELD_IDS,
   SS_WELLNESS_PUBLIC_PATH,
   buildSSWellnessCarePlansContent,
 } from "@/lib/ss-wellness-care-plans-content";
 
-export const metadata = buildPageMetadata({
-  title: "Wellness Care Plans — Chiropractic Associates, Sulphur Springs, TX",
-  description:
-    "Chiro-Fitness monthly wellness memberships: adjustments, massage combos, therapy, and rehab sessions at our Sulphur Springs, TX office.",
-  path: SS_WELLNESS_PUBLIC_PATH,
-  ogTitle: "Wellness care plans — Sulphur Springs, TX",
-  ogDescription:
-    "Monthly wellness membership options for chiropractic, massage, therapy, and rehab in Sulphur Springs, TX.",
-});
-
 export const revalidate = 60;
 
+const IDS = [
+  ...ssPageFieldIds("ss_wellness_").filter((id) => !SS_WELLNESS_PAGE_CMS_FIELD_IDS.includes(id)),
+  "page_ss_wellness_og_title",
+  "page_ss_wellness_og_description",
+];
+
+async function copy(): Promise<Record<string, string>> {
+  const cms = await getContentMany(IDS);
+  return Object.fromEntries(IDS.map((id) => [id, cms[id]?.trim() || SS_PAGES_CMS_DEFAULTS[id] || ""]));
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [meta, x] = await Promise.all([
+    getPageMeta("ss_wellness", {
+      title: "Wellness Care Plans — Chiropractic Associates, Sulphur Springs, TX",
+      description:
+        "Chiro-Fitness monthly wellness memberships: adjustments, massage combos, therapy, and rehab sessions at our Sulphur Springs, TX office.",
+    }),
+    copy(),
+  ]);
+  return buildPageMetadata({
+    title: meta.title,
+    description: meta.description,
+    path: SS_WELLNESS_PUBLIC_PATH,
+    ogTitle: x.page_ss_wellness_og_title,
+    ogDescription: x.page_ss_wellness_og_description,
+  });
+}
+
 export default async function SulphurSpringsWellnessCarePlansPage() {
-  const [raw, displayLocs] = await Promise.all([
+  const [raw, x, displayLocs] = await Promise.all([
     getContentMany([...SS_WELLNESS_PAGE_CMS_FIELD_IDS]),
+    copy(),
     getDisplayLocations(),
   ]);
   const content = buildSSWellnessCarePlansContent(raw);
@@ -44,7 +67,7 @@ export default async function SulphurSpringsWellnessCarePlansPage() {
 
       <PageHero
         eyebrow={content.heroEyebrow}
-        title="Wellness care plans"
+        title={x.ss_wellness_title}
         lede={content.pageLede}
         variant="sulphur"
       />
@@ -82,14 +105,14 @@ export default async function SulphurSpringsWellnessCarePlansPage() {
             ))}
           </ul>
           <p className="mt-6 text-sm text-stone-600">
-            Questions about which tier fits you?{" "}
+            {x.ss_wellness_questions_prefix}{" "}
             <Link
               href="/sulphur-springs"
               className="font-bold text-[var(--pp-accent)] underline hover:text-[var(--pp-heading)]"
             >
-              Back to Sulphur Springs chiropractic
+              {x.ss_wellness_back_link_label}
             </Link>{" "}
-            or call{" "}
+            {x.ss_wellness_questions_or_call}{" "}
             <a className="font-bold text-[var(--pp-accent)] underline" href={telHref(ssPhone)}>
               {ssPhone}
             </a>
@@ -100,9 +123,9 @@ export default async function SulphurSpringsWellnessCarePlansPage() {
         <ScheduleCtaCard
           title={content.ctaTitle}
           body={content.ctaBody}
-          bookLabel="Book chiropractic"
+          bookLabel={x.ss_wellness_book_button}
           query="service=chiropractic&location=sulphur_springs"
-          secondary={{ label: `Call Sulphur Springs ${ssPhone}`, href: telHref(ssPhone) }}
+          secondary={{ label: `${x.ss_wellness_call_prefix} ${ssPhone}`, href: telHref(ssPhone) }}
           variant="sulphur"
         />
       </div>

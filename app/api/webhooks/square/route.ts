@@ -8,6 +8,7 @@ import {
   patientPaymentReceiptEmail,
 } from "@/lib/email-templates";
 import { buildIcs } from "@/lib/ics";
+import { emailLocations } from "@/lib/email-locations";
 import { generatePatientPortalToken, hashPatientPortalToken } from "@/lib/patient-portal-token";
 import { linkBookingAfterCreate, onBookingStatusChange } from "@/lib/patients-db";
 import { sendBookingNotification } from "@/lib/sendgrid";
@@ -191,14 +192,16 @@ export async function POST(req: Request) {
   }
 
   const snap = await bookingRef.get();
+  const locations = await emailLocations();
 
   try {
     const emailCtx = bookingDocToEmailContext(snap);
     if (emailCtx) {
-      const { subject, text, html } = patientPaymentReceiptEmail(emailCtx, {
-        amountCents,
-        squarePaymentId,
-      });
+      const { subject, text, html } = patientPaymentReceiptEmail(
+        emailCtx,
+        { amountCents, squarePaymentId },
+        locations,
+      );
       await sendBookingNotification({
         to: emailCtx.email,
         subject,
@@ -222,15 +225,16 @@ export async function POST(req: Request) {
           durationMinutes: emailCtx.durationMin,
           summary: `${emailCtx.serviceLine === "massage" ? "Massage" : "Chiropractic"} appointment`,
           description: `Confirmed appointment with ${emailCtx.providerDisplayName || "first available provider"}. Reference: ${emailCtx.bookingId}.`,
-          location: `${emailCtx.locationId === "paris" ? "Paris" : "Sulphur Springs"}, TX`,
+          location: `${locations[emailCtx.locationId].addressLocality}, ${locations[emailCtx.locationId].addressRegion}`,
           organizerEmail: process.env.OFFICE_NOTIFICATION_EMAIL,
           organizerName: "Paris Wellness",
         });
         const icsBase64 = Buffer.from(ics, "utf8").toString("base64");
-        const { subject, text, html } = patientAcceptedEmail({
-          ...emailCtx,
-          patientManageUrl: manageUrl,
-        });
+        const { subject, text, html } = patientAcceptedEmail(
+          { ...emailCtx, patientManageUrl: manageUrl },
+          undefined,
+          locations,
+        );
         await sendBookingNotification({
           to: emailCtx.email,
           subject,

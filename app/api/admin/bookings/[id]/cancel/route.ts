@@ -7,6 +7,7 @@ import { recordBookingEventInTx } from "@/lib/booking-events";
 import { bookingDocToEmailContext } from "@/lib/booking-doc";
 import { patientCancelledEmail } from "@/lib/email-templates";
 import { sendBookingNotification } from "@/lib/sendgrid";
+import { emailLocations } from "@/lib/email-locations";
 import {
   linkBookingAfterCreate,
   onBookingStatusChange,
@@ -133,7 +134,7 @@ export async function POST(req: Request, ctx: Params) {
     // captured inside the transaction that performed this cancellation.
     if (emailCtx) {
       if (prevStatus === "confirmed") {
-        const { subject, text, html } = patientCancelledEmail(emailCtx, reason);
+        const { subject, text, html } = patientCancelledEmail(emailCtx, reason, undefined, await emailLocations());
         await sendBookingNotification({
           to: emailCtx.email,
           subject,

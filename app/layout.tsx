@@ -9,15 +9,13 @@ import { Analytics } from "@/components/Analytics";
 import { DomainSpecialsPopup } from "@/components/DomainSpecialsPopup";
 import { HomepageSalesBanner } from "@/components/HomepageSalesBanner";
 import type { SalesBannerPayload } from "@/components/SalesBannerBar";
-import {
-  getSiteOrigin,
-  siteDescription,
-  siteKeywords,
-  siteOgImage,
-  siteTitle,
-  siteTitleTemplate,
-  siteShortName,
-} from "@/lib/site-content";
+import { getSiteOrigin, siteOgImage } from "@/lib/site-content";
+import { getContentMany } from "@/lib/cms";
+import { resolveSiteMeta, SITE_META_CMS_IDS } from "@/lib/site-meta-cms";
+import { getJsonLdStrings } from "@/lib/structured-data-strings";
+import { getDisplayChrome } from "@/lib/display-locations";
+import { getUiText } from "@/lib/ui-text";
+import { SiteChromeProvider } from "@/components/SiteChromeProvider";
 import {
   organizationJsonLd,
   websiteJsonLd,
@@ -29,10 +27,7 @@ import {
   headerBrandContentFromCms,
   parseHeaderShowTopPhoneBar,
 } from "@/lib/cms-display";
-import {
-  effectiveGiftCardSticky,
-  mergedDisplayLocations,
-} from "@/lib/site-display-overrides";
+import { effectiveGiftCardSticky } from "@/lib/site-display-overrides";
 import { PublicBookingProvider } from "@/components/PublicBookingProvider";
 import { ConditionalMarketingChrome } from "@/components/ConditionalMarketingChrome";
 import {
@@ -68,34 +63,41 @@ const geistMono = Geist_Mono({
 
 const origin = getSiteOrigin();
 
-export const metadata: Metadata = {
-  metadataBase: new URL(origin),
-  title: { default: siteTitle, template: siteTitleTemplate },
-  description: siteDescription,
-  applicationName: siteShortName,
-  keywords: siteKeywords,
-  authors: [{ name: siteShortName }],
-  creator: siteShortName,
-  publisher: siteShortName,
-  formatDetection: { telephone: true, email: true, address: true },
-  openGraph: {
-    type: "website",
-    siteName: siteShortName,
-    locale: "en_US",
-    url: origin,
-    title: siteTitle,
-    description: siteDescription,
-    images: [{ url: siteOgImage, width: 1200, height: 630, alt: siteShortName }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: siteTitle,
-    description: siteDescription,
-    images: [siteOgImage],
-  },
-  robots: { index: true, follow: true },
-  category: "health",
-};
+/**
+ * Site-wide title/description/keywords are editable under Site settings →
+ * "Search & social"; the lib/site-content.ts constants remain the defaults.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const site = resolveSiteMeta(await getContentMany([...SITE_META_CMS_IDS]));
+  return {
+    metadataBase: new URL(origin),
+    title: { default: site.title, template: site.titleTemplate },
+    description: site.description,
+    applicationName: site.shortName,
+    keywords: site.keywords,
+    authors: [{ name: site.shortName }],
+    creator: site.shortName,
+    publisher: site.shortName,
+    formatDetection: { telephone: true, email: true, address: true },
+    openGraph: {
+      type: "website",
+      siteName: site.shortName,
+      locale: "en_US",
+      url: origin,
+      title: site.title,
+      description: site.description,
+      images: [{ url: siteOgImage, width: 1200, height: 630, alt: site.shortName }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: site.title,
+      description: site.description,
+      images: [siteOgImage],
+    },
+    robots: { index: true, follow: true },
+    category: "health",
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#d64535",
@@ -116,24 +118,36 @@ export default async function RootLayout({
     cookieStore.get(BUSINESS_CTX_COOKIE)?.value,
   );
 
-  const [cms, bookingConfig, parisChiroHours, parisMassageHours, sulphurHours, brandThemeStyle] =
-    await Promise.all([
-      getLayoutCmsContent(),
-      getPublicBookingConfig(),
-      getParisChiroOfficeHours(),
-      getParisOfficeHours(),
-      getSulphurOfficeHours(),
-      getBrandThemeStyle(),
-    ]);
+  const [
+    cms,
+    bookingConfig,
+    parisChiroHours,
+    parisMassageHours,
+    sulphurHours,
+    brandThemeStyle,
+    displayChrome,
+    uiText,
+    jsonLdStrings,
+  ] = await Promise.all([
+    getLayoutCmsContent(),
+    getPublicBookingConfig(),
+    getParisChiroOfficeHours(),
+    getParisOfficeHours(),
+    getSulphurOfficeHours(),
+    getBrandThemeStyle(),
+    getDisplayChrome(),
+    getUiText(),
+    getJsonLdStrings(),
+  ]);
   const onlineBookingEnabled = isPublicBookingEnabled(bookingConfig);
-  let displayLocs = mergedDisplayLocations(undefined, cms);
+  // Offices with every override applied (CMS address/phone/name/fax → owner config → constants).
+  const displayLocs = displayChrome.locations;
   let giftCardSticky = effectiveGiftCardSticky(undefined, cms);
   let footerBlurbHtml: string | null = null;
   let headerColors = mergeHeaderColors(undefined);
   try {
     const cfg = await getSiteOwnerConfig();
     headerColors = cfg.headerColors;
-    displayLocs = mergedDisplayLocations(cfg.editableCopy, cms);
     giftCardSticky = effectiveGiftCardSticky(cfg.editableCopy, cms);
     const fb = cfg.editableCopy.footerBlurbHtml.trim();
     footerBlurbHtml = fb.length > 0 ? fb : null;
@@ -176,13 +190,23 @@ export default async function RootLayout({
         >
           Skip to content
         </a>
-        <JsonLd data={[organizationJsonLd(schemaLocations), websiteJsonLd()]} />
+        <JsonLd
+          data={[
+            organizationJsonLd(schemaLocations, jsonLdStrings),
+            websiteJsonLd(jsonLdStrings),
+          ]}
+        />
+        <SiteChromeProvider
+          value={{ uiText, locations: displayLocs, bookUrl: displayChrome.bookUrl }}
+        >
         <PublicBookingProvider enabled={onlineBookingEnabled}>
           <ConditionalMarketingChrome
             giftCardSticky={giftCardSticky}
             stickyCallBar={stickyCallBar}
             accessibilityPanelEnabled={accessibilityPanelEnabled}
             socialBarLabel={cms.social_bar_label}
+            socialFacebookUrl={cms.social_facebook_url}
+            socialInstagramUrl={cms.social_instagram_url}
             header={
               <>
                 <SiteHeader
@@ -221,6 +245,7 @@ export default async function RootLayout({
             </main>
           </ConditionalMarketingChrome>
         </PublicBookingProvider>
+        </SiteChromeProvider>
         <Analytics />
       </body>
     </html>

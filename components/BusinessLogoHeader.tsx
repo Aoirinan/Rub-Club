@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ParisLockup } from "@/components/ParisLockup";
 import { SulphurSpringsLockup } from "@/components/SulphurSpringsLockup";
 import {
+  CHIRO_LOGO_DIMENSIONS,
+  isDefaultChiroLogo,
   type HeaderBrandContent,
 } from "@/lib/brand-logos";
 import {
@@ -37,11 +39,14 @@ export function BusinessLogoHeader({
   const isParis = context === "paris_chiro";
   const location = isParis ? paris : sulphur;
   const href = isParis ? "/services/chiropractic" : "/sulphur-springs";
-  const cmsLabel = isParis ? branding?.labels.chiro : branding?.labels.ss;
-  const phoneLabel =
-    cmsLabel || (isParis ? "Chiropractic — Paris" : "Chiro / Massage — Sulphur Springs");
+  const phoneLabel = isParis ? "Chiropractic — Paris" : "Chiro / Massage — Sulphur Springs";
   // Managers can upload a Sulphur Springs logo image; empty means use the icon + text lockup.
   const ssLogoSrc = branding?.logos.ss || undefined;
+  // Paris keeps the mark + type lockup unless the uploaded logo is switched on.
+  const chiroLogoSrc =
+    branding?.useCustomChiroLogo && !isDefaultChiroLogo(branding.logos.chiro)
+      ? branding.logos.chiro
+      : undefined;
   const parisHeights = branding?.logoHeights?.chiro ?? DEFAULT_HEADER_LOGO_HEIGHTS.chiro;
   const ssHeights = branding?.logoHeights?.ss ?? DEFAULT_HEADER_LOGO_HEIGHTS.ss;
   // Mobile (non-large) uses a big, centered, vertically-stacked logo.
@@ -76,7 +81,20 @@ export function BusinessLogoHeader({
             compact && !large ? "scale-[0.85]" : "scale-100"
           }`}
         >
-          {isParis ? (
+          {isParis && chiroLogoSrc ? (
+            <Image
+              src={chiroLogoSrc}
+              alt="Chiropractic Associates — Paris, TX"
+              width={CHIRO_LOGO_DIMENSIONS.width}
+              height={CHIRO_LOGO_DIMENSIONS.height}
+              sizes="(max-width: 640px) 80vw, 360px"
+              className={`w-auto object-contain mix-blend-multiply transition-[height] duration-300 ease-out ${
+                large ? "max-w-[10rem]" : "max-w-full"
+              }`}
+              style={{ height: `${parisMarkPx}px` }}
+              priority
+            />
+          ) : isParis ? (
             <ParisLockup
               heightPx={parisMarkPx}
               className="max-w-full"

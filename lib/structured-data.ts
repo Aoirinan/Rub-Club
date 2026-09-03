@@ -15,8 +15,39 @@ import type { FaqEntry } from "@/lib/faqs";
 import type { OfficeHoursRow } from "@/lib/office-hours";
 import { hoursShifts } from "@/lib/office-hours-format";
 import { CHIRO, MASSAGE } from "@/lib/home-verbatim";
+import { JSONLD_DEFAULTS } from "@/lib/site-meta-cms";
 
 type JsonLd = Record<string, unknown>;
+
+/**
+ * Editable names/descriptions for the business entities (Site settings →
+ * "Search & social"). Server code resolves them with `getJsonLdStrings()`
+ * (lib/structured-data-strings.ts); callers that don't pass them get the
+ * same defaults the site always used.
+ */
+export type JsonLdStrings = {
+  chiroNameParis: string;
+  chiroNameSS: string;
+  chiroDescription: string;
+  massageName: string;
+  massageDescription: string;
+  /** Organization / WebSite name. */
+  siteName: string;
+  /** Organization / WebSite description. */
+  siteDescription: string;
+  /** Social profile URLs (Facebook, Instagram, …) merged with env-driven ones. */
+  sameAs?: string[];
+};
+
+export const DEFAULT_JSONLD_STRINGS: JsonLdStrings = {
+  ...JSONLD_DEFAULTS,
+  siteName: siteShortName,
+  siteDescription,
+};
+
+function sameAs(strings: JsonLdStrings): string[] {
+  return Array.from(new Set([...(strings.sameAs ?? []), ...getSocialProfiles()]));
+}
 
 const DAY_NAME_TO_SCHEMA: Record<string, string> = {
   monday: "Monday",
@@ -131,6 +162,7 @@ function geo(location: LocationInfo): JsonLd {
 export function chiropractorJsonLd(
   location: LocationInfo,
   hours?: readonly OfficeHoursRow[],
+  strings: JsonLdStrings = DEFAULT_JSONLD_STRINGS,
 ): JsonLd {
   const url = siteUrl(`/locations/${location.slug}`);
   const hoursRows = hours ?? (location.id === "paris" ? CHIRO.hours : undefined);
@@ -141,13 +173,9 @@ export function chiropractorJsonLd(
     "@context": "https://schema.org",
     "@type": ["Chiropractor", "MedicalBusiness", "LocalBusiness"],
     "@id": `${url}#chiropractic`,
-    name:
-      location.id === "sulphur_springs"
-        ? "Chiropractic Associates of Sulphur Springs"
-        : "Chiropractic Associates",
-    legalName: "Chiropractic Associates",
-    description:
-      "Family-owned chiropractic clinic offering adjustments, spinal decompression, rehab, and acupuncture in Northeast Texas.",
+    name: location.id === "sulphur_springs" ? strings.chiroNameSS : strings.chiroNameParis,
+    legalName: strings.chiroNameParis,
+    description: strings.chiroDescription,
     url,
     telephone: `+1${location.phonePrimary.replace(/\D/g, "")}`,
     image: siteUrl("/og/og-default.svg"),
@@ -159,7 +187,7 @@ export function chiropractorJsonLd(
     areaServed: ["Paris, TX", "Sulphur Springs, TX", "Northeast Texas"],
     // schema.org MedicalSpecialty enumeration values (no "Chiropractic"/"PhysicalTherapy" members).
     medicalSpecialty: ["Musculoskeletal", "Physiotherapy"],
-    sameAs: getSocialProfiles(),
+    sameAs: sameAs(strings),
   };
 }
 
@@ -170,6 +198,7 @@ export function chiropractorJsonLd(
 export function massageJsonLd(
   parisOverride?: LocationInfo,
   hours?: readonly OfficeHoursRow[],
+  strings: JsonLdStrings = DEFAULT_JSONLD_STRINGS,
 ): JsonLd {
   const loc = parisOverride ?? LOCATIONS.paris;
   const url = siteUrl(`/locations/${loc.slug}`);
@@ -178,10 +207,9 @@ export function massageJsonLd(
     "@context": "https://schema.org",
     "@type": ["HealthAndBeautyBusiness", "LocalBusiness"],
     "@id": `${url}#massage`,
-    name: "The Rub Club Massage",
+    name: strings.massageName,
     legalName: "The Rub Club",
-    description:
-      "Licensed massage therapists offering deep tissue, prenatal, and sports massage in Paris, TX.",
+    description: strings.massageDescription,
     url,
     telephone: `+1${(loc.phoneSecondary ?? loc.phonePrimary).replace(/\D/g, "")}`,
     image: siteUrl("/og/og-default.svg"),
@@ -191,22 +219,25 @@ export function massageJsonLd(
     hasMap: loc.mapsUrl,
     openingHoursSpecification: openingHours.length ? openingHours : openingHoursSpec(loc),
     areaServed: ["Paris, TX", "Northeast Texas"],
-    sameAs: getSocialProfiles(),
+    sameAs: sameAs(strings),
   };
 }
 
 /** Top-level Organization linking the two brands. */
-export function organizationJsonLd(locations: readonly LocationInfo[] = LOCATION_LIST): JsonLd {
+export function organizationJsonLd(
+  locations: readonly LocationInfo[] = LOCATION_LIST,
+  strings: JsonLdStrings = DEFAULT_JSONLD_STRINGS,
+): JsonLd {
   const origin = getSiteOrigin();
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
     "@id": `${origin}#organization`,
-    name: siteShortName,
+    name: strings.siteName,
     url: origin,
     logo: siteUrl("/og/og-default.svg"),
-    description: siteDescription,
-    sameAs: getSocialProfiles(),
+    description: strings.siteDescription,
+    sameAs: sameAs(strings),
     contactPoint: locations.map((loc) => ({
       "@type": "ContactPoint",
       contactType: "Reservations",
@@ -217,15 +248,15 @@ export function organizationJsonLd(locations: readonly LocationInfo[] = LOCATION
   };
 }
 
-export function websiteJsonLd(): JsonLd {
+export function websiteJsonLd(strings: JsonLdStrings = DEFAULT_JSONLD_STRINGS): JsonLd {
   const origin = getSiteOrigin();
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "@id": `${origin}#website`,
     url: origin,
-    name: siteShortName,
-    description: siteDescription,
+    name: strings.siteName,
+    description: strings.siteDescription,
     inLanguage: "en-US",
     publisher: { "@id": `${origin}#organization` },
   };

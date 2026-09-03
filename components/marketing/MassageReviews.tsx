@@ -1,4 +1,5 @@
 import type { MassageReview } from "@/lib/massage-reviews";
+import { getUiText } from "@/lib/ui-text";
 
 /** Five stars, `filled` of them solid (CURSOR_PROMPT §6b). */
 function StarRating({ filled, outOf = 5 }: { filled: number; outOf?: number }) {
@@ -28,15 +29,16 @@ function formatDate(iso?: string): string | null {
 }
 
 /** Massage page reviews section: 5-star display, name, date, review text. */
-export function MassageReviews({ reviews }: { reviews: MassageReview[] }) {
+export async function MassageReviews({ reviews }: { reviews: MassageReview[] }) {
   if (!reviews.length) return null;
+  const t = await getUiText();
   return (
     <section
       aria-labelledby="massage-reviews"
       className="border-t-4 border-[#c0392b] bg-white p-6 shadow-md sm:p-10"
     >
       <h2 id="massage-reviews" className="text-2xl font-black text-[#4a1515]">
-        What clients say
+        {t.ui_what_clients_say}
       </h2>
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {reviews.map((r, i) => {

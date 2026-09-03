@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { usePathname } from "next/navigation";
+import { useUiText } from "@/components/SiteChromeProvider";
 
 type VideoItem = {
   src: string;
@@ -11,6 +12,7 @@ type VideoItem = {
 export function DoctorCardVideoAccordion({ videos }: { videos: VideoItem[] }) {
   const refs = useRef<(HTMLVideoElement | null)[]>([]);
   const pathname = usePathname() ?? "/";
+  const t = useUiText();
   // Brand-aware link color: page theme var if present, else red/blue by site section.
   const summaryColor = pathname.startsWith("/sulphur-springs")
     ? "text-[var(--pp-accent,var(--brand-ss-accent,#2980b9))] hover:text-[var(--pp-accent-hover,var(--brand-ss-accent-hover,#1a6da3))]"
@@ -30,7 +32,7 @@ export function DoctorCardVideoAccordion({ videos }: { videos: VideoItem[] }) {
       <summary
         className={`focus-ring flex cursor-pointer list-none items-center gap-1 text-sm font-bold ${summaryColor} [&::-webkit-details-marker]:hidden`}
       >
-        Video
+        {t.ui_video}
         <svg
           width="10"
           height="10"

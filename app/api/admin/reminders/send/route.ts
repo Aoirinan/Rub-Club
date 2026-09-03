@@ -8,7 +8,8 @@ import { patientReminderEmail } from "@/lib/email-templates";
 import { sendBookingNotification } from "@/lib/sendgrid";
 import { sendSms } from "@/lib/twilio";
 import { recordBookingEvent } from "@/lib/booking-events";
-import { LOCATIONS, TIME_ZONE } from "@/lib/constants";
+import { TIME_ZONE } from "@/lib/constants";
+import { emailLocations } from "@/lib/email-locations";
 import { logSmsSent } from "@/lib/sms-audit";
 import { providerAllowsReminderChannel } from "@/lib/provider-reminders";
 import { getNotificationTemplates } from "@/lib/notification-settings-db";
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
     .get();
 
   const byPhoneDay = new Map<string, { docId: string; startMs: number }>();
+  const locations = await emailLocations();
   for (const doc of snap.docs) {
     const data = doc.data();
     const phone = typeof data.phone === "string" ? data.phone.trim() : "";
@@ -85,7 +87,7 @@ export async function POST(req: Request) {
     const allowSms = await providerAllowsReminderChannel(providerId, "sms");
     if (!allowEmail && !allowSms) continue;
 
-    const loc = LOCATIONS[emailCtx.locationId];
+    const loc = locations[emailCtx.locationId];
     const serviceName =
       typeof doc.get("serviceTypeName") === "string" && doc.get("serviceTypeName")
         ? String(doc.get("serviceTypeName"))
@@ -132,7 +134,7 @@ export async function POST(req: Request) {
             .map((line) => `<p style="margin:0 0 1em;font-family:sans-serif;">${line || "&nbsp;"}</p>`)
             .join("");
         } else {
-          const built = patientReminderEmail(emailCtx);
+          const built = patientReminderEmail(emailCtx, undefined, locations);
           subject = built.subject;
           text = built.text;
           html = built.html;

@@ -15,25 +15,42 @@ import { getContentMany, renderRichText } from "@/lib/cms";
 import { parseChiroTreatments } from "@/lib/chiro-treatments";
 import { telHref } from "@/lib/constants";
 import { getDisplayLocations } from "@/lib/cms-display";
-import { MASSAGE } from "@/lib/home-verbatim";
+import { getPageMeta } from "@/lib/page-meta";
 import { pageKeywords } from "@/lib/seo-keywords";
 import { listActiveSiteStaffForBrand } from "@/lib/site-staff";
 import { getSitePhotos } from "@/lib/site-photos-server";
 import { ssMassagePhotoFor } from "@/lib/ss-massage-services";
+import { SS_PAGES_CMS_DEFAULTS, ssPageFieldIds } from "@/lib/ss-pages-cms";
 import { serviceJsonLd } from "@/lib/structured-data";
 import { siteUrl } from "@/lib/site-content";
+import { getUiText } from "@/lib/ui-text";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "Massage Therapy in Sulphur Springs, TX — Chiropractic Associates",
-  description:
-    "Therapeutic massage to complement chiropractic care in Sulphur Springs, TX. Call 903-919-5020 to ask about availability.",
-  path: "/sulphur-springs/massage",
-  keywords: pageKeywords(["Sulphur Springs massage", "massage Sulphur Springs TX"]),
-  ogDescription:
-    "Therapeutic massage in Sulphur Springs, TX — coordinated with your chiropractic care.",
-});
+const IDS = [...ssPageFieldIds("ss_massage_"), "page_ss_massage_og_description"];
+
+async function copy(): Promise<Record<string, string>> {
+  const cms = await getContentMany(IDS);
+  return Object.fromEntries(IDS.map((id) => [id, cms[id]?.trim() || SS_PAGES_CMS_DEFAULTS[id] || ""]));
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [meta, x] = await Promise.all([
+    getPageMeta("ss_massage", {
+      title: "Massage Therapy in Sulphur Springs, TX — Chiropractic Associates",
+      description:
+        "Therapeutic massage to complement chiropractic care in Sulphur Springs, TX. Call 903-919-5020 to ask about availability.",
+    }),
+    copy(),
+  ]);
+  return buildPageMetadata({
+    title: meta.title,
+    description: meta.description,
+    path: "/sulphur-springs/massage",
+    keywords: pageKeywords(["Sulphur Springs massage", "massage Sulphur Springs TX"]),
+    ogDescription: x.page_ss_massage_og_description,
+  });
+}
 
 /** Sulphur Springs therapists live in the shared staff roster, tagged by job title. */
 function isMassageRole(role: string): boolean {
@@ -41,17 +58,19 @@ function isMassageRole(role: string): boolean {
 }
 
 export default async function SulphurSpringsMassagePage() {
-  const [c, ssHours, displayLocs, photos, ssStaff] = await Promise.all([
+  const [c, x, ssHours, displayLocs, photos, ssStaff, ui] = await Promise.all([
     getContentMany([
       "ss_massage_hero_heading",
       "ss_massage_hero_subheading",
       "ss_massage_intro_body",
       "ss_massage_services_list",
     ]),
+    copy(),
     getSulphurOfficeHours(),
     getDisplayLocations(),
     getSitePhotos(),
     listActiveSiteStaffForBrand("sulphur"),
+    getUiText(),
   ]);
   const ss = displayLocs.sulphur_springs;
   const introParagraphs = (c.ss_massage_intro_body ?? "").split(/\n\n+/).filter(Boolean);
@@ -87,7 +106,7 @@ export default async function SulphurSpringsMassagePage() {
       />
       <PageHero
         variant="sulphur"
-        eyebrow="Chiropractic Associates · Sulphur Springs, TX"
+        eyebrow={x.ss_massage_eyebrow}
         title={c.ss_massage_hero_heading}
         lede={c.ss_massage_hero_subheading}
       />
@@ -106,7 +125,7 @@ export default async function SulphurSpringsMassagePage() {
             <div className="relative aspect-[4/3] overflow-hidden shadow-md lg:min-h-[360px]">
               <Image
                 src={photos.ssMassagePatient}
-                alt="A licensed massage therapist working on a client's shoulders"
+                alt={x.ss_massage_intro_photo_alt}
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -120,7 +139,7 @@ export default async function SulphurSpringsMassagePage() {
             <ServicesGrid
               data={{
                 published: true,
-                heading: "Massage services",
+                heading: x.ss_massage_services_heading,
                 intro: "",
                 mode: "custom",
                 cards: services.map((s) => ({
@@ -132,35 +151,35 @@ export default async function SulphurSpringsMassagePage() {
               }}
             />
             <p className="mt-6 text-sm leading-relaxed text-stone-700">
-              Need more than soft-tissue work?{" "}
+              {x.ss_massage_chiro_link_prefix}{" "}
               <Link href="/sulphur-springs" className="font-bold text-[#2980b9] underline">
-                Explore our chiropractic care
+                {x.ss_massage_chiro_link_label}
               </Link>{" "}
-              — our massage and chiropractic teams coordinate care under one roof.
+              {x.ss_massage_chiro_link_suffix}
             </p>
           </section>
         ) : null}
 
         <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#0c2d3a]">When to get a massage</h2>
-          <p className="mt-4 max-w-3xl leading-relaxed text-stone-700">{MASSAGE.whenBody}</p>
+          <h2 className="text-2xl font-black text-[#0c2d3a]">{x.ss_massage_when_heading}</h2>
+          <p className="mt-4 max-w-3xl leading-relaxed text-stone-700">{x.ss_massage_when_body}</p>
         </section>
 
         {therapists.length > 0 ? (
           <MassageTeamGrid
             members={therapists}
-            title="Meet the team"
-            subtitle="Licensed massage therapists in Sulphur Springs"
+            title={x.ss_massage_team_heading}
+            subtitle={x.ss_massage_team_subtitle}
             variant="service"
             accent="sulphur"
             footnote={
               <>
-                For our chiropractor, front desk, and rehab team, see{" "}
+                {x.ss_massage_team_footnote_prefix}{" "}
                 <Link
                   href="/sulphur-springs/staff"
                   className="font-bold text-[#2980b9] underline"
                 >
-                  About us — Sulphur Springs
+                  {x.ss_massage_team_footnote_link_label}
                 </Link>
                 .
               </>
@@ -169,19 +188,19 @@ export default async function SulphurSpringsMassagePage() {
         ) : null}
 
         <section className="border-t-4 border-[#2980b9] bg-white p-6 shadow-md sm:p-10">
-          <h2 className="text-2xl font-black text-[#0c2d3a]">Visit us in Sulphur Springs</h2>
+          <h2 className="text-2xl font-black text-[#0c2d3a]">{x.ss_massage_visit_heading}</h2>
           <p className="mt-3 leading-relaxed text-stone-700">
             {ss.streetAddress} · {ss.addressLocality}, {ss.addressRegion}
           </p>
           <p className="mt-2 text-stone-700">
-            Sulphur Springs office:{" "}
+            {x.ss_massage_office_label}{" "}
             <a className="font-bold text-[#2980b9] underline" href={telHref(ss.phonePrimary)}>
               {ss.phonePrimary}
             </a>
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <BookingCta
-              label="Request appointment"
+              label={x.ss_massage_request_button}
               query="service=massage&location=sulphur_springs"
               variant="teal"
             />
@@ -189,13 +208,13 @@ export default async function SulphurSpringsMassagePage() {
               href="/sulphur-springs/massage/prices"
               className="focus-ring border-2 border-[#2980b9] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#2980b9] hover:bg-[#0c2d3a]/5"
             >
-              View prices
+              {x.ss_massage_prices_button}
             </Link>
             <Link
               href="/sulphur-springs"
               className="focus-ring border-2 border-[#2980b9] px-5 py-3 text-sm font-black uppercase tracking-wide text-[#2980b9] hover:bg-[#0c2d3a]/5"
             >
-              Sulphur Springs chiropractic
+              {x.ss_massage_chiro_button}
             </Link>
           </div>
         </section>
@@ -203,11 +222,11 @@ export default async function SulphurSpringsMassagePage() {
         <LocationHoursSection location={ss} hours={ssHours} accent="#2980b9" />
 
         <ScheduleCtaCard
-          title="Have a question first?"
-          body="Our front desk can verify available times and answer questions about specific conditions."
+          title={x.ss_massage_cta_heading}
+          body={x.ss_massage_cta_body}
           variant="sulphur"
           secondary={{
-            label: `Call ${ss.phonePrimary}`,
+            label: `${ui.ui_call_prefix} ${ss.phonePrimary}`,
             href: telHref(ss.phonePrimary),
           }}
         />

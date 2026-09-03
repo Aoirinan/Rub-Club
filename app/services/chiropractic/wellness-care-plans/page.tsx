@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/page-metadata";
+import { getPageMeta } from "@/lib/page-meta";
+import { pageOgDescriptionId, pageOgTitleId, parisText } from "@/lib/paris-pages-cms";
 import Link from "next/link";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
@@ -13,27 +16,46 @@ import {
   buildWellnessCarePlansContent,
 } from "@/lib/wellness-care-plans-content";
 
-export const metadata = buildPageMetadata({
-  title: "Wellness Care Plans — Chiropractic Associates, Paris, TX",
-  brandInTitle: true,
-  description:
-    "Chiro-Fitness and Acu-Fit monthly wellness memberships: adjustments, massage combos, therapy, acupuncture, and rehab sessions at our Paris, TX office.",
-  path: WELLNESS_CARE_PLANS_PATH,
-  ogTitle: "Wellness care plans — Chiropractic Associates",
-  ogDescription:
-    "Monthly wellness membership options for chiropractic, massage, therapy, and acupuncture in Paris, TX.",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const [meta, og] = await Promise.all([
+    getPageMeta("wellness_care_plans", {
+      title: "Wellness Care Plans — Chiropractic Associates, Paris, TX",
+      description:
+        "Chiro-Fitness and Acu-Fit monthly wellness memberships: adjustments, massage combos, therapy, acupuncture, and rehab sessions at our Paris, TX office.",
+    }),
+    getContentMany([pageOgTitleId("wellness_care_plans"), pageOgDescriptionId("wellness_care_plans")]),
+  ]);
+  return buildPageMetadata({
+    title: meta.title,
+    brandInTitle: true,
+    description: meta.description,
+    path: WELLNESS_CARE_PLANS_PATH,
+    ogTitle: parisText(og, pageOgTitleId("wellness_care_plans")),
+    ogDescription: parisText(og, pageOgDescriptionId("wellness_care_plans")),
+  });
+}
+
+const WELLNESS_COPY_IDS = [
+  "wellness_page_title",
+  "wellness_questions_prefix",
+  "wellness_back_link_label",
+  "wellness_or_call",
+  "wellness_book_label",
+  "wellness_call_prefix",
+] as const;
 
 export const revalidate = 60;
 
 export default async function WellnessCarePlansPage() {
-  const [raw, displayLocs, brand] = await Promise.all([
+  const [raw, displayLocs, brand, copy] = await Promise.all([
     getContentMany([...WELLNESS_PAGE_CMS_FIELD_IDS]),
     getDisplayLocations(),
     getPageBrand(),
+    getContentMany([...WELLNESS_COPY_IDS]),
   ]);
   const content = buildWellnessCarePlansContent(raw);
   const parisPhone = displayLocs.paris.phonePrimary;
+  const t = (id: string) => parisText(copy, id);
 
   return (
     <div style={practiceThemeStyle(brand.loc)}>
@@ -41,7 +63,7 @@ export default async function WellnessCarePlansPage() {
 
       <PageHero
         eyebrow={content.heroEyebrow}
-        title="Wellness care plans"
+        title={t("wellness_page_title")}
         lede={content.pageLede}
         variant={brand.variant}
       />
@@ -79,14 +101,14 @@ export default async function WellnessCarePlansPage() {
             ))}
           </ul>
           <p className="mt-6 text-sm text-stone-600">
-            Questions about which tier fits you?{" "}
+            {t("wellness_questions_prefix")}{" "}
             <Link
               href="/services/chiropractic"
               className="font-bold text-[var(--pp-accent)] underline hover:text-[var(--pp-heading)]"
             >
-              Back to chiropractic services
+              {t("wellness_back_link_label")}
             </Link>{" "}
-            or call{" "}
+            {t("wellness_or_call")}{" "}
             <a className="font-bold text-[var(--pp-accent)] underline" href={telHref(parisPhone)}>
               {parisPhone}
             </a>
@@ -97,9 +119,9 @@ export default async function WellnessCarePlansPage() {
         <ScheduleCtaCard
           title={content.ctaTitle}
           body={content.ctaBody}
-          bookLabel="Book chiropractic"
+          bookLabel={t("wellness_book_label")}
           query="service=chiropractic"
-          secondary={{ label: `Call Paris ${parisPhone}`, href: telHref(parisPhone) }}
+          secondary={{ label: `${t("wellness_call_prefix")} ${parisPhone}`, href: telHref(parisPhone) }}
           variant={brand.variant}
         />
       </div>

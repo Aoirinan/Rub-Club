@@ -2,6 +2,7 @@ import Link from "next/link";
 import { OfficeHoursTable } from "@/components/OfficeHoursTable";
 import { SectionHeading } from "@/components/practice/SectionHeading";
 import { telHref } from "@/lib/constants";
+import { getUiText } from "@/lib/ui-text";
 import type { OfficeHoursRow } from "@/lib/office-hours";
 import type { PracticeLocationBlockSection } from "@/lib/practice-pages-shared";
 
@@ -30,7 +31,7 @@ export type LocationContactHoursGroup = {
 };
 
 /** Office info + hours table + embedded map, with optional secondary-office cards. */
-export function LocationContactBlock({
+export async function LocationContactBlock({
   data,
   location,
   hours,
@@ -48,6 +49,7 @@ export function LocationContactBlock({
   secondaryLocations?: PracticeSecondaryLocation[];
 }) {
   if (!data.published) return null;
+  const t = await getUiText();
 
   const secondaries = data.showSecondaryLocations ? secondaryLocations : [];
 
@@ -79,7 +81,7 @@ export function LocationContactBlock({
                   href={s.href}
                   className="focus-ring mt-4 inline-block text-sm font-bold text-[var(--pp-accent)] underline"
                 >
-                  {s.hrefLabel || "Details & hours"}
+                  {s.hrefLabel || t.ui_details_hours}
                 </Link>
               ) : null}
             </div>
@@ -112,7 +114,7 @@ export function LocationContactBlock({
                   href={location.detailsHref}
                   className="focus-ring text-sm font-bold text-[var(--pp-accent)] underline"
                 >
-                  {location.detailsLabel || "Details & hours"}
+                  {location.detailsLabel || t.ui_details_hours}
                 </Link>
               </p>
             ) : null}
@@ -120,7 +122,7 @@ export function LocationContactBlock({
           {hours.length > 0 ? (
             <div>
               <h3 className="text-sm font-black uppercase tracking-wide text-[var(--pp-accent)]">
-                {hoursLabel ? `${hoursLabel} Hours` : "Office Hours"}
+                {hoursLabel ? `${hoursLabel} ${t.ui_hours_word_cap}` : t.ui_office_hours}
               </h3>
               <div className="mt-2 max-w-sm">
                 <OfficeHoursTable
@@ -134,7 +136,7 @@ export function LocationContactBlock({
           {additionalHours.map((group) => (
             <div key={group.label}>
               <h3 className="text-sm font-black uppercase tracking-wide text-[var(--pp-accent)]">
-                {group.label} Hours
+                {group.label} {t.ui_hours_word_cap}
               </h3>
               <div className="mt-2 max-w-sm">
                 <OfficeHoursTable

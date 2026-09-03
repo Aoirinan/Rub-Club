@@ -9,6 +9,7 @@ import { findBookingByPortalToken } from "@/lib/patient-portal-lookup";
 import { assertRateLimitOk } from "@/lib/rate-limit";
 import { sendBookingNotification } from "@/lib/sendgrid";
 import { recomputeNextAppointmentForBooking } from "@/lib/patients-db";
+import { emailLocations } from "@/lib/email-locations";
 
 export const runtime = "nodejs";
 
@@ -104,7 +105,7 @@ export async function POST(req: Request) {
     const fresh = await bookingRef.get();
     const emailCtx = bookingDocToEmailContext(fresh);
     if (emailCtx) {
-      const { subject, text, html } = patientCancelledEmail(emailCtx, reason, { viaPatientPortal: true });
+      const { subject, text, html } = patientCancelledEmail(emailCtx, reason, { viaPatientPortal: true }, await emailLocations());
       await sendBookingNotification({
         to: emailCtx.email,
         subject,

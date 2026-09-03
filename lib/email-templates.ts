@@ -2,7 +2,9 @@ import { DateTime } from "luxon";
 import {
   LOCATIONS,
   reviewUrlForLocation,
+  telHref,
   type LocationId,
+  type LocationInfo,
   serviceLineEmailLabel,
   serviceLineEmailLabelLower,
   type ServiceLine,
@@ -13,6 +15,25 @@ import {
 } from "@/lib/chicago-datetime-format";
 import { siteShortName, siteUrl } from "@/lib/site-content";
 import { publicBookingEmailUrl, publicBookingRebookText } from "@/lib/public-booking";
+
+/**
+ * Paris + Sulphur Springs office details used in email copy. Callers pass the
+ * CMS-merged display locations (see `emailLocations()`) so an edited phone or
+ * address reaches every message; the constants are the fallback.
+ */
+export type EmailLocations = Record<LocationId, LocationInfo>;
+
+function officePhones(locations: EmailLocations): {
+  parisPhone: string;
+  rubPhone: string;
+  ssPhone: string;
+} {
+  return {
+    parisPhone: locations.paris.phonePrimary,
+    rubPhone: locations.paris.phoneSecondary || LOCATIONS.paris.phoneSecondary || "",
+    ssPhone: locations.sulphur_springs.phonePrimary,
+  };
+}
 
 export type BookingEmailContext = {
   bookingId: string;
@@ -51,7 +72,9 @@ function brandedShell(params: {
   body: string;
   ctaText?: string;
   ctaHref?: string;
+  locations?: EmailLocations;
 }): string {
+  const phones = officePhones(params.locations ?? LOCATIONS);
   const cta =
     params.ctaText && params.ctaHref
       ? `
@@ -93,9 +116,9 @@ function brandedShell(params: {
             ${escapeHtml(siteShortName)} · Paris &amp; Sulphur Springs, TX
           </p>
           <p style="margin:0;">
-            Paris office: <a href="tel:+19037855551" style="color:${PRIMARY};">903-785-5551</a> ·
-            The Rub Club: <a href="tel:+19037399959" style="color:${PRIMARY};">903-739-9959</a> ·
-            Sulphur Springs: <a href="tel:+19039195020" style="color:${PRIMARY};">903-919-5020</a>
+            Paris office: <a href="${telHref(phones.parisPhone)}" style="color:${PRIMARY};">${escapeHtml(phones.parisPhone)}</a> ·
+            The Rub Club: <a href="${telHref(phones.rubPhone)}" style="color:${PRIMARY};">${escapeHtml(phones.rubPhone)}</a> ·
+            Sulphur Springs: <a href="${telHref(phones.ssPhone)}" style="color:${PRIMARY};">${escapeHtml(phones.ssPhone)}</a>
           </p>
         </td></tr>
       </table>
@@ -105,8 +128,8 @@ function brandedShell(params: {
 </html>`;
 }
 
-function detailsTable(ctx: BookingEmailContext): string {
-  const loc = LOCATIONS[ctx.locationId];
+function detailsTable(ctx: BookingEmailContext, locations: EmailLocations = LOCATIONS): string {
+  const loc = locations[ctx.locationId];
   const rows: [string, string][] = [
     ["When", formatChicagoDateTimeLong(ctx.start)],
     ["Service", `${serviceLineEmailLabel(ctx.serviceLine)} · ${ctx.durationMin} min`],
@@ -138,12 +161,13 @@ function detailsTable(ctx: BookingEmailContext): string {
 export function patientPendingEmail(
   ctx: BookingEmailContext,
   opts?: { recurrenceNote?: string; isFirstVisit?: boolean },
+  locations: EmailLocations = LOCATIONS,
 ): {
   subject: string;
   text: string;
   html: string;
 } {
-  const loc = LOCATIONS[ctx.locationId];
+  const loc = locations[ctx.locationId];
   const subject = `Request received — ${formatChicagoDateTimeShort(ctx.start)}`;
 
   const recLine = opts?.recurrenceNote?.trim();
@@ -186,7 +210,7 @@ export function patientPendingEmail(
     <p style="margin:12px 0 0 0;padding:10px 12px;background:#fdf6e0;border:1px solid #f19f1f;border-radius:6px;font-size:14px;font-weight:700;color:${TEXT};">
       Status: PENDING — we have not yet confirmed this appointment.
     </p>
-    ${detailsTable(ctx)}
+    ${detailsTable(ctx, locations)}
     ${prefNote}
     ${
       recLine
@@ -205,6 +229,7 @@ export function patientPendingEmail(
   `;
 
   const html = brandedShell({
+    locations,
     preheader: `Your ${ctx.durationMin}-minute ${ctx.serviceLine} request for ${formatChicagoDateTimeShort(ctx.start)}.`,
     heading: "We received your appointment request",
     body,
@@ -220,12 +245,13 @@ export function patientPendingEmail(
 export function patientAcceptedEmail(
   ctx: BookingEmailContext,
   opts?: { isFirstVisit?: boolean },
+  locations: EmailLocations = LOCATIONS,
 ): {
   subject: string;
   text: string;
   html: string;
 } {
-  const loc = LOCATIONS[ctx.locationId];
+  const loc = locations[ctx.locationId];
   const subject = `Appointment confirmed — ${formatChicagoDateTimeShort(ctx.start)}`;
 
   const firstVisitLines = opts?.isFirstVisit
@@ -271,7 +297,7 @@ export function patientAcceptedEmail(
   const body = `
     <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
     <p style="margin:12px 0 0 0;">Good news — your appointment has been confirmed. We've attached a calendar invite (.ics) to add it to your calendar.</p>
-    ${detailsTable(ctx)}
+    ${detailsTable(ctx, locations)}
     ${prefNote}
     <h2 style="margin:20px 0 6px 0;font-size:16px;color:${TEXT};">${opts?.isFirstVisit ? "Before your first visit" : "Before your visit"}</h2>
     <ul style="margin:0;padding-left:18px;color:${TEXT};font-size:14px;line-height:1.6;">
@@ -304,6 +330,7 @@ export function patientAcceptedEmail(
   `;
 
   const html = brandedShell({
+    locations,
     preheader: `Confirmed: ${ctx.durationMin}-minute ${ctx.serviceLine} on ${formatChicagoDateTimeShort(ctx.start)}.`,
     heading: "Your appointment is confirmed",
     body,
@@ -320,8 +347,9 @@ export function patientAcceptedEmail(
 export function patientDeclinedEmail(
   ctx: BookingEmailContext,
   reason?: string,
+  locations: EmailLocations = LOCATIONS,
 ): { subject: string; text: string; html: string } {
-  const loc = LOCATIONS[ctx.locationId];
+  const loc = locations[ctx.locationId];
   const subject = `Unable to confirm — ${formatChicagoDateTimeShort(ctx.start)}`;
 
   const cleanReason = (reason ?? "").trim();
@@ -353,7 +381,7 @@ export function patientDeclinedEmail(
   const body = `
     <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
     <p style="margin:12px 0 0 0;">We're sorry — we weren't able to confirm the appointment you requested. The time slot is now released and no charges have been made.</p>
-    ${detailsTable(ctx)}
+    ${detailsTable(ctx, locations)}
     ${reasonBlock}
     <p style="margin:16px 0 0 0;font-size:14px;">
       We'd love to fit you in another time. Pick a new time online or call the office:
@@ -367,6 +395,7 @@ export function patientDeclinedEmail(
   `;
 
   const html = brandedShell({
+    locations,
     preheader: `We could not confirm your ${formatChicagoDateTimeShort(ctx.start)} request.`,
     heading: "We couldn't confirm your appointment",
     body,
@@ -384,8 +413,9 @@ export function patientCancelledEmail(
   ctx: BookingEmailContext,
   reason?: string,
   opts?: { viaPatientPortal?: boolean },
+  locations: EmailLocations = LOCATIONS,
 ): { subject: string; text: string; html: string } {
-  const loc = LOCATIONS[ctx.locationId];
+  const loc = locations[ctx.locationId];
   const subject = `Appointment cancelled — ${formatChicagoDateTimeShort(ctx.start)}`;
   const self = opts?.viaPatientPortal === true;
   const opener = self
@@ -427,7 +457,7 @@ export function patientCancelledEmail(
         ? "Your appointment has been cancelled using your secure online link. The time slot is now released."
         : "Your appointment has been cancelled by the office. The time slot is now released."
     }</p>
-    ${detailsTable(ctx)}
+    ${detailsTable(ctx, locations)}
     ${reasonBlock}
     <p style="margin:16px 0 0 0;font-size:14px;">
       We'd love to rebook you. Pick a new time online or call the office:
@@ -441,6 +471,7 @@ export function patientCancelledEmail(
   `;
 
   const html = brandedShell({
+    locations,
     preheader: `Your ${formatChicagoDateTimeShort(ctx.start)} appointment was cancelled by the office.`,
     heading: "Your appointment was cancelled",
     body,
@@ -458,12 +489,12 @@ export function patientCancelledEmail(
 export const patientConfirmationEmail = patientPendingEmail;
 
 /** Office-facing rich HTML notification. */
-export function officeNotificationEmail(ctx: BookingEmailContext): {
+export function officeNotificationEmail(ctx: BookingEmailContext, locations: EmailLocations = LOCATIONS): {
   subject: string;
   text: string;
   html: string;
 } {
-  const loc = LOCATIONS[ctx.locationId];
+  const loc = locations[ctx.locationId];
   const subject = `New booking: ${ctx.serviceLine} @ ${formatChicagoDateTimeShort(ctx.start)}`;
 
   const prefLine =
@@ -501,7 +532,7 @@ export function officeNotificationEmail(ctx: BookingEmailContext): {
       <br>
       <a href="${escapeHtml(adminFocusUrl)}" style="display:inline-block;margin-top:6px;color:${PRIMARY};font-weight:700;">Open this booking in /admin →</a>
     </p>
-    ${detailsTable(ctx)}
+    ${detailsTable(ctx, locations)}
     <h2 style="margin:20px 0 6px 0;font-size:16px;color:${TEXT};">Patient</h2>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
            style="border:1px solid #e6e2d3;border-radius:6px;">
@@ -541,6 +572,7 @@ export function officeNotificationEmail(ctx: BookingEmailContext): {
   `;
 
   const html = brandedShell({
+    locations,
     preheader: `${ctx.name} requested ${ctx.serviceLine} on ${formatChicagoDateTimeShort(ctx.start)}.`,
     heading: "New booking request",
     body,
@@ -557,12 +589,13 @@ export function officeNotificationEmail(ctx: BookingEmailContext): {
 export function patientReminderEmail(
   ctx: BookingEmailContext,
   opts?: { isFirstVisit?: boolean },
+  locations: EmailLocations = LOCATIONS,
 ): {
   subject: string;
   text: string;
   html: string;
 } {
-  const loc = LOCATIONS[ctx.locationId];
+  const loc = locations[ctx.locationId];
   const subject = `Reminder — ${formatChicagoDateTimeShort(ctx.start)}`;
 
   const beforeVisitText = opts?.isFirstVisit
@@ -600,7 +633,7 @@ export function patientReminderEmail(
   const body = `
     <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
     <p style="margin:12px 0 0 0;">Just a friendly reminder about your upcoming appointment.</p>
-    ${detailsTable(ctx)}
+    ${detailsTable(ctx, locations)}
     <h2 style="margin:20px 0 6px 0;font-size:16px;color:${TEXT};">${opts?.isFirstVisit ? "Before your first visit" : "Before your visit"}</h2>
     <ul style="margin:0;padding-left:18px;color:${TEXT};font-size:14px;line-height:1.6;">
       ${
@@ -625,6 +658,7 @@ export function patientReminderEmail(
   `;
 
   const html = brandedShell({
+    locations,
     preheader: `Reminder: ${ctx.durationMin}-minute ${ctx.serviceLine} on ${formatChicagoDateTimeShort(ctx.start)}.`,
     heading: "Appointment reminder",
     body,
@@ -636,12 +670,12 @@ export function patientReminderEmail(
 }
 
 /** Short follow-up after a completed visit — asks for a public review when configured. */
-export function postVisitSurveyEmail(ctx: BookingEmailContext): {
+export function postVisitSurveyEmail(ctx: BookingEmailContext, locations: EmailLocations = LOCATIONS): {
   subject: string;
   text: string;
   html: string;
 } {
-  const loc = LOCATIONS[ctx.locationId];
+  const loc = locations[ctx.locationId];
   const reviewUrl = reviewUrlForLocation(ctx.locationId);
   const subject = `How was your visit? — ${loc.shortName}`;
 
@@ -662,7 +696,7 @@ export function postVisitSurveyEmail(ctx: BookingEmailContext): {
   const body = `
     <p style="margin:0;">Hi ${escapeHtml(ctx.name.split(" ")[0] || ctx.name)},</p>
     <p style="margin:12px 0 0 0;">Thank you for visiting ${escapeHtml(loc.shortName)}. If you have a moment, we would really appreciate a short public review — it helps others in the community find care.</p>
-    ${detailsTable(ctx)}
+    ${detailsTable(ctx, locations)}
     <p style="margin:16px 0 0 0;font-size:14px;">
       <a href="${escapeHtml(reviewUrl)}" style="color:${PRIMARY};font-weight:700;">Share feedback on Google →</a>
     </p>
@@ -670,6 +704,7 @@ export function postVisitSurveyEmail(ctx: BookingEmailContext): {
   `;
 
   const html = brandedShell({
+    locations,
     preheader: "We would love your feedback.",
     heading: "How was your visit?",
     body,
@@ -686,8 +721,9 @@ export function postVisitSurveyEmail(ctx: BookingEmailContext): {
 export function patientPaymentRequestEmail(
   ctx: BookingEmailContext,
   params: { amountCents: number; paymentUrl: string; description?: string },
+  locations: EmailLocations = LOCATIONS,
 ): { subject: string; text: string; html: string } {
-  const loc = LOCATIONS[ctx.locationId];
+  const loc = locations[ctx.locationId];
   const dollars = (params.amountCents / 100).toFixed(2);
   const subject = `Payment request — $${dollars}`;
 
@@ -721,7 +757,7 @@ export function patientPaymentRequestEmail(
       $${escapeHtml(dollars)}
     </p>
     ${descBlock}
-    ${detailsTable(ctx)}
+    ${detailsTable(ctx, locations)}
     <p style="margin:16px 0 0 0;font-size:14px;">
       Questions? Call
       <a href="tel:+1${loc.phonePrimary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phonePrimary)}</a>${
@@ -734,6 +770,7 @@ export function patientPaymentRequestEmail(
   `;
 
   const html = brandedShell({
+    locations,
     preheader: `Payment request: $${dollars} for your ${ctx.serviceLine} appointment.`,
     heading: "Payment request",
     body,
@@ -750,8 +787,9 @@ export function patientPaymentRequestEmail(
 export function patientPaymentReceiptEmail(
   ctx: BookingEmailContext,
   params: { amountCents: number; squarePaymentId?: string },
+  locations: EmailLocations = LOCATIONS,
 ): { subject: string; text: string; html: string } {
-  const loc = LOCATIONS[ctx.locationId];
+  const loc = locations[ctx.locationId];
   const dollars = (params.amountCents / 100).toFixed(2);
   const subject = `Payment received — $${dollars}`;
 
@@ -780,7 +818,7 @@ export function patientPaymentReceiptEmail(
     <p style="margin:12px 0 0 0;padding:14px 16px;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:6px;font-size:20px;font-weight:900;color:${TEXT};text-align:center;">
       $${escapeHtml(dollars)} — Paid
     </p>
-    ${detailsTable(ctx)}
+    ${detailsTable(ctx, locations)}
     ${txnBlock}
     <p style="margin:16px 0 0 0;font-size:14px;">
       Questions? Call
@@ -794,6 +832,7 @@ export function patientPaymentReceiptEmail(
   `;
 
   const html = brandedShell({
+    locations,
     preheader: `Payment of $${dollars} received for your ${ctx.serviceLine} appointment.`,
     heading: "Payment received",
     body,
@@ -808,8 +847,9 @@ export function patientPaymentReceiptEmail(
 export function patientCustomEmail(
   ctx: BookingEmailContext,
   params: { subject: string; message: string },
+  locations: EmailLocations = LOCATIONS,
 ): { subject: string; text: string; html: string } {
-  const loc = LOCATIONS[ctx.locationId];
+  const loc = locations[ctx.locationId];
   const subject = params.subject;
 
   const text = [
@@ -844,6 +884,7 @@ export function patientCustomEmail(
   `;
 
   const html = brandedShell({
+    locations,
     preheader: params.message.slice(0, 100),
     heading: params.subject,
     body,
@@ -861,8 +902,9 @@ export function patientRescheduledEmail(
     previousStart: DateTime;
     rescheduledBy: "patient" | "staff";
   },
+  locations: EmailLocations = LOCATIONS,
 ): { subject: string; text: string; html: string } {
-  const loc = LOCATIONS[ctx.locationId];
+  const loc = locations[ctx.locationId];
   const subject = `Appointment moved — ${formatChicagoDateTimeShort(ctx.start)}`;
   const opener =
     params.rescheduledBy === "patient"
@@ -907,7 +949,7 @@ export function patientRescheduledEmail(
         <td style="padding:10px 12px;border-bottom:1px solid #f0ecdd;font-size:15px;color:${TEXT};font-weight:700;">${escapeHtml(formatChicagoDateTimeLong(ctx.start))}</td>
       </tr>
     </table>
-    ${detailsTable(ctx)}
+    ${detailsTable(ctx, locations)}
     <p style="margin:16px 0 0 0;font-size:14px;">
       Questions? Call
       <a href="tel:+1${loc.phonePrimary.replace(/-/g, "")}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(loc.phonePrimary)}</a>${
@@ -927,6 +969,7 @@ export function patientRescheduledEmail(
   `;
 
   const html = brandedShell({
+    locations,
     preheader: `Moved to ${formatChicagoDateTimeShort(ctx.start)}.`,
     heading: "Your appointment was rescheduled",
     body,
@@ -941,6 +984,7 @@ export function patientRescheduledEmail(
 export function officeRescheduleNotificationEmail(
   ctx: BookingEmailContext,
   params: { previousStart: DateTime },
+  locations: EmailLocations = LOCATIONS,
 ): { subject: string; text: string; html: string } {
   const subject = `Patient rescheduled: ${ctx.name} → ${formatChicagoDateTimeShort(ctx.start)}`;
   const text = [
@@ -974,11 +1018,12 @@ export function officeRescheduleNotificationEmail(
         <td style="padding:10px 12px;border-bottom:1px solid #f0ecdd;font-weight:700;">${escapeHtml(formatChicagoDateTimeLong(ctx.start))}</td>
       </tr>
     </table>
-    ${detailsTable(ctx)}
+    ${detailsTable(ctx, locations)}
     <p style="margin:12px 0 0 0;font-size:12px;color:${MUTED};">Reference: ${escapeHtml(ctx.bookingId)}</p>
   `;
 
   const html = brandedShell({
+    locations,
     preheader: `${ctx.name} moved to ${formatChicagoDateTimeShort(ctx.start)}.`,
     heading: "Patient rescheduled online",
     body,
@@ -993,7 +1038,8 @@ export function officeRescheduleNotificationEmail(
 export function onlineFormSubmissionAckEmail(params: {
   formTitle: string;
   recipientName?: string;
-}): { subject: string; text: string; html: string } {
+}, locations: EmailLocations = LOCATIONS): { subject: string; text: string; html: string } {
+  const phones = officePhones(locations);
   const greeting = params.recipientName?.trim()
     ? `Hi ${params.recipientName.trim().split(/\s+/)[0]},`
     : "Hello,";
@@ -1006,9 +1052,9 @@ export function onlineFormSubmissionAckEmail(params: {
     "Our team will review it before your visit.",
     "",
     "If you have questions before your appointment, please call:",
-    "Paris office: 903-785-5551",
-    "The Rub Club (massage): 903-739-9959",
-    "Sulphur Springs: 903-919-5020",
+    `Paris office: ${phones.parisPhone}`,
+    `The Rub Club (massage): ${phones.rubPhone}`,
+    `Sulphur Springs: ${phones.ssPhone}`,
     "",
     "Please do not reply with medical records or other sensitive health information by email.",
     "",
@@ -1023,9 +1069,9 @@ export function onlineFormSubmissionAckEmail(params: {
     </p>
     <p style="margin:0 0 12px 0;">
       <strong>Questions before your visit?</strong><br />
-      Paris office: <a href="tel:+19037855551" style="color:${PRIMARY};font-weight:700;">903-785-5551</a><br />
-      The Rub Club (massage): <a href="tel:+19037399959" style="color:${PRIMARY};font-weight:700;">903-739-9959</a><br />
-      Sulphur Springs: <a href="tel:+19039195020" style="color:${PRIMARY};font-weight:700;">903-919-5020</a>
+      Paris office: <a href="${telHref(phones.parisPhone)}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(phones.parisPhone)}</a><br />
+      The Rub Club (massage): <a href="${telHref(phones.rubPhone)}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(phones.rubPhone)}</a><br />
+      Sulphur Springs: <a href="${telHref(phones.ssPhone)}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(phones.ssPhone)}</a>
     </p>
     <p style="margin:0;font-size:13px;color:${MUTED};">
       Please do not send medical records or other sensitive health information by email.
@@ -1033,6 +1079,7 @@ export function onlineFormSubmissionAckEmail(params: {
   `;
 
   const html = brandedShell({
+    locations,
     preheader: `We received your ${params.formTitle} form.`,
     heading: "Form received",
     body,
@@ -1051,7 +1098,7 @@ export function contactFormEmail(params: {
   subject?: string;
   message: string;
   topic?: string;
-}): { subject: string; text: string; html: string } {
+}, locations: EmailLocations = LOCATIONS): { subject: string; text: string; html: string } {
   const subject = params.subject ?? `Contact form: ${params.topic ?? "General inquiry"}`;
   const text = [
     `New contact form submission`,
@@ -1105,6 +1152,7 @@ export function contactFormEmail(params: {
     <p style="margin:0;white-space:pre-line;">${escapeHtml(params.message)}</p>
   `;
   const html = brandedShell({
+    locations,
     preheader: `${params.name} sent a contact form message.`,
     heading: "New contact form submission",
     body,
@@ -1115,7 +1163,8 @@ export function contactFormEmail(params: {
 /** Auto-reply after a visitor submits the public contact form. */
 export function contactFormAutoReplyEmail(params: {
   name: string;
-}): { subject: string; text: string; html: string } {
+}, locations: EmailLocations = LOCATIONS): { subject: string; text: string; html: string } {
+  const phones = officePhones(locations);
   const subject = `We received your message — ${siteShortName}`;
   const text = [
     `Hi ${params.name},`,
@@ -1123,9 +1172,9 @@ export function contactFormAutoReplyEmail(params: {
     "Thank you for contacting us. We received your message and will respond during office hours.",
     "",
     "If your question is urgent, please call:",
-    "Paris office: 903-785-5551",
-    "The Rub Club (massage): 903-739-9959",
-    "Sulphur Springs: 903-919-5020",
+    `Paris office: ${phones.parisPhone}`,
+    `The Rub Club (massage): ${phones.rubPhone}`,
+    `Sulphur Springs: ${phones.ssPhone}`,
     "",
     "Please do not reply with medical records or other sensitive health information by email.",
     "",
@@ -1139,9 +1188,9 @@ export function contactFormAutoReplyEmail(params: {
     </p>
     <p style="margin:0 0 12px 0;">
       <strong>If your question is urgent, please call:</strong><br />
-      Paris office: <a href="tel:+19037855551" style="color:${PRIMARY};font-weight:700;">903-785-5551</a><br />
-      The Rub Club (massage): <a href="tel:+19037399959" style="color:${PRIMARY};font-weight:700;">903-739-9959</a><br />
-      Sulphur Springs: <a href="tel:+19039195020" style="color:${PRIMARY};font-weight:700;">903-919-5020</a>
+      Paris office: <a href="${telHref(phones.parisPhone)}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(phones.parisPhone)}</a><br />
+      The Rub Club (massage): <a href="${telHref(phones.rubPhone)}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(phones.rubPhone)}</a><br />
+      Sulphur Springs: <a href="${telHref(phones.ssPhone)}" style="color:${PRIMARY};font-weight:700;">${escapeHtml(phones.ssPhone)}</a>
     </p>
     <p style="margin:0;font-size:13px;color:${MUTED};">
       Please do not send medical records or other sensitive health information by email.
@@ -1149,6 +1198,7 @@ export function contactFormAutoReplyEmail(params: {
   `;
 
   const html = brandedShell({
+    locations,
     preheader: "We received your message and will respond during office hours.",
     heading: "Thanks for reaching out",
     body,
