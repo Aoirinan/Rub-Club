@@ -42,7 +42,7 @@ const syncFromProvidersSchema = z.object({
 });
 
 function bumpCache(): void {
-  revalidateTag(MASSAGE_TEAM_CACHE_TAG);
+  revalidateTag(MASSAGE_TEAM_CACHE_TAG, "max");
   // Path revalidation is required for the rendered pages, not just the data tag.
   revalidatePath("/");
   revalidatePath("/services/massage");

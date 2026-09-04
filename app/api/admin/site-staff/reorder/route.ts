@@ -60,7 +60,7 @@ export async function POST(req: Request) {
   });
   await batch.commit();
 
-  revalidateTag(SITE_STAFF_CACHE_TAG);
+  revalidateTag(SITE_STAFF_CACHE_TAG, "max");
   revalidatePath("/locations/paris/staff");
   revalidatePath("/sulphur-springs/staff");
   revalidatePath("/sulphur-springs");

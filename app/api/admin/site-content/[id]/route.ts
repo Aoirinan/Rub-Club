@@ -22,7 +22,7 @@ const patchSchema = z.object({
 function revalidatePublicPages(fieldId?: string): void {
   // Drop the cached site_content snapshot first, so the pages re-rendered
   // below read this manager's new value rather than the previous one.
-  revalidateTag(SITE_CONTENT_TAG);
+  revalidateTag(SITE_CONTENT_TAG, "max");
   for (const p of CMS_REVALIDATE_PATHS) {
     revalidatePath(p);
   }

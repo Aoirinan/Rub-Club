@@ -103,7 +103,7 @@ export async function POST(
     changedBy: staff.email ?? staff.uid,
   });
 
-  revalidateTag(SITE_CONTENT_TAG);
+  revalidateTag(SITE_CONTENT_TAG, "max");
   for (const p of [
     "/",
     "/about",

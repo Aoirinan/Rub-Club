@@ -65,7 +65,7 @@ export async function POST(req: Request) {
   });
   await batch.commit();
 
-  revalidateTag(MASSAGE_TEAM_CACHE_TAG);
+  revalidateTag(MASSAGE_TEAM_CACHE_TAG, "max");
   revalidatePath("/");
   revalidatePath("/services/massage");
 

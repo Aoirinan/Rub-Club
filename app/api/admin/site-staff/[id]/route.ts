@@ -47,7 +47,7 @@ const patchJsonSchema = z.object({
 type Params = { params: Promise<{ id: string }> };
 
 function bumpCache(): void {
-  revalidateTag(SITE_STAFF_CACHE_TAG);
+  revalidateTag(SITE_STAFF_CACHE_TAG, "max");
   revalidatePath("/locations/paris/staff");
   revalidatePath("/sulphur-springs/staff");
   revalidatePath("/sulphur-springs");

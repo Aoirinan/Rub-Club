@@ -52,7 +52,7 @@ const seedSchema = z.object({
 });
 
 function bumpCache(): void {
-  revalidateTag(SITE_STAFF_CACHE_TAG);
+  revalidateTag(SITE_STAFF_CACHE_TAG, "max");
   revalidatePath("/locations/paris/staff");
   revalidatePath("/sulphur-springs/staff");
   revalidatePath("/sulphur-springs");

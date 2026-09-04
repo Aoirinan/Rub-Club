@@ -32,7 +32,7 @@ const patchJsonSchema = z.object({
 type Params = { params: Promise<{ id: string }> };
 
 function bumpCache(): void {
-  revalidateTag(MASSAGE_TEAM_CACHE_TAG);
+  revalidateTag(MASSAGE_TEAM_CACHE_TAG, "max");
   // Hiding a therapist has to reach the rendered pages, not just the data tag.
   revalidatePath("/");
   revalidatePath("/services/massage");

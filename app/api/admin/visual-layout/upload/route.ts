@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     { merge: true },
   );
 
-  revalidateTag(SITE_CONTENT_TAG);
+  revalidateTag(SITE_CONTENT_TAG, "max");
 
   return NextResponse.json({ url, fieldId });
 }
