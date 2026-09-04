@@ -15,7 +15,7 @@ import { loadEnvConfig } from "@next/env";
 loadEnvConfig(process.cwd());
 
 import { getFirestore } from "../lib/firebase-admin";
-import type { CollectionReference, QueryDocumentSnapshot } from "firebase-admin/firestore";
+import type { firestore } from "firebase-admin";
 
 const SKIP_COLLECTIONS = new Set([
   "bookings",
@@ -128,12 +128,12 @@ function transform(value: unknown, docPath: string, fieldPath: string, isLog: bo
   return [value, false];
 }
 
-async function scanCollection(col: CollectionReference, rootName: string): Promise<number> {
+async function scanCollection(col: firestore.CollectionReference, rootName: string): Promise<number> {
   let updated = 0;
   let seen = 0;
   const isLog = LOG_COLLECTIONS.has(rootName);
   // Stream instead of one .get() so huge collections don't buffer in memory.
-  for await (const docSnap of col.stream() as AsyncIterable<QueryDocumentSnapshot>) {
+  for await (const docSnap of col.stream() as AsyncIterable<firestore.QueryDocumentSnapshot>) {
     seen++;
     if (seen % 500 === 0) console.log(`  ...${col.path}: ${seen} docs scanned`);
     const [next, changed] = transform(docSnap.data(), docSnap.ref.path, "", isLog);

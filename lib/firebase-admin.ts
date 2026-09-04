@@ -1,15 +1,4 @@
-import {
-  applicationDefault,
-  cert,
-  getApp,
-  getApps,
-  initializeApp,
-  type App,
-  type ServiceAccount,
-} from "firebase-admin/app";
-import { getAuth as getAdminAuth, type Auth } from "firebase-admin/auth";
-import { getFirestore as getAdminFirestore, type Firestore } from "firebase-admin/firestore";
-import { getStorage } from "firebase-admin/storage";
+import admin from "firebase-admin";
 
 /**
  * Resolves the GCS bucket used by Firebase Admin Storage.
@@ -58,26 +47,27 @@ function normalizeServiceAccountJson(raw: string): string {
   return s;
 }
 
-function initAdmin(): App {
-  const existing = getApps();
-  if (existing.length) return getApp();
+function initAdmin(): void {
+  if (admin.apps.length) return;
 
   const rawJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
   if (rawJson) {
-    const creds = JSON.parse(normalizeServiceAccountJson(rawJson)) as ServiceAccount;
+    const creds = JSON.parse(normalizeServiceAccountJson(rawJson)) as admin.ServiceAccount;
     const storageBucket = resolveStorageBucket();
-    return initializeApp({
-      credential: cert(creds),
+    admin.initializeApp({
+      credential: admin.credential.cert(creds),
       ...(storageBucket ? { storageBucket } : {}),
     });
+    return;
   }
 
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     const storageBucket = resolveStorageBucket();
-    return initializeApp({
-      credential: applicationDefault(),
+    admin.initializeApp({
+      credential: admin.credential.applicationDefault(),
       ...(storageBucket ? { storageBucket } : {}),
     });
+    return;
   }
 
   throw new Error(
@@ -85,22 +75,22 @@ function initAdmin(): App {
   );
 }
 
-export function getAdminApp(): App {
-  return initAdmin();
+export function getAdminApp(): admin.app.App {
+  initAdmin();
+  return admin.app();
 }
 
-export function getFirestore(): Firestore {
-  return getAdminFirestore(getAdminApp());
+export function getFirestore(): admin.firestore.Firestore {
+  return getAdminApp().firestore();
 }
 
-export function getAuth(): Auth {
-  return getAdminAuth(getAdminApp());
+export function getAuth(): admin.auth.Auth {
+  return getAdminApp().auth();
 }
 
-export function getStorageBucket(): ReturnType<ReturnType<typeof getStorage>["bucket"]> {
+export function getStorageBucket(): ReturnType<admin.storage.Storage["bucket"]> {
   const app = getAdminApp();
   const name = resolveStorageBucket();
-  const storage = getStorage(app);
-  if (name) return storage.bucket(name);
-  return storage.bucket();
+  if (name) return admin.storage(app).bucket(name);
+  return admin.storage(app).bucket();
 }
