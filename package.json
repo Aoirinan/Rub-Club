@@ -2,6 +2,9 @@
   "name": "chiropractic-paris-tx",
   "version": "0.56.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
