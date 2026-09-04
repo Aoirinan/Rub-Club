@@ -96,13 +96,27 @@ export function FaqItemsPanel({ getIdToken, category }: Props) {
 
   async function deleteFaq(id: string) {
     if (!window.confirm("Delete this FAQ?")) return;
+    setMessage(null);
     const token = await getIdToken();
-    if (!token) return;
-    await fetch(`/api/admin/site-faqs/${encodeURIComponent(id)}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    await load();
+    if (!token) {
+      setMessage("Could not delete — please sign in again.");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/admin/site-faqs/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        setMessage(data.error ?? "Could not delete this FAQ.");
+        return;
+      }
+      await load();
+      setMessage("FAQ deleted");
+    } catch {
+      setMessage("Could not delete this FAQ — check your connection.");
+    }
   }
 
   async function moveFaq(index: number, dir: -1 | 1) {
@@ -110,20 +124,37 @@ export function FaqItemsPanel({ getIdToken, category }: Props) {
     const j = index + dir;
     if (j < 0 || j >= next.length) return;
     [next[index], next[j]] = [next[j]!, next[index]!];
+    setMessage(null);
     const token = await getIdToken();
-    if (!token) return;
-    await fetch("/api/admin/site-faqs/reorder", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        orderedIds: next.map((f) => f.id),
-        category: lockedCategory ?? undefined,
-      }),
-    });
-    await load();
+    if (!token) {
+      setMessage("Could not save the new order — please sign in again.");
+      return;
+    }
+    try {
+      const res = await fetch("/api/admin/site-faqs/reorder", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          orderedIds: next.map((f) => f.id),
+          category: lockedCategory ?? undefined,
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        // Reload so the list shows the order that is actually saved.
+        await load();
+        setMessage(data.error ?? "Could not save the new order.");
+        return;
+      }
+      await load();
+      setMessage("Order saved");
+    } catch {
+      await load();
+      setMessage("Could not save the new order — check your connection.");
+    }
   }
 
   return (

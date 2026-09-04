@@ -559,15 +559,41 @@ export function PracticePagesEditor({ getIdToken, initialLocation, embedded = fa
                   }
                 />
               </Field>
-              <ImageField
-                label="Hero photo"
-                value={doc.hero.imageUrl}
-                onChange={(url) =>
-                  update((p) => ({ ...p, hero: { ...p.hero, imageUrl: url } }))
-                }
-                onUpload={(file) => uploadImage("hero", file)}
-              />
-              <div className="space-y-3 rounded-xl border border-slate-200 p-3">
+              {/*
+                The Paris home page builds its hero carousel from the Site photos
+                fields, which overwrite whatever is stored here — so the upload
+                boxes are hidden there and staff are pointed at the field that
+                actually changes the page. Chiro and Sulphur Springs use these.
+              */}
+              {location === "paris-home" ? (
+                <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                  <p className="font-semibold">Home page hero photos are edited elsewhere</p>
+                  <p className="mt-1">
+                    Change them under{" "}
+                    <a
+                      href="/admin/super/page-builder?scope=paris-photos"
+                      className="font-semibold underline"
+                    >
+                      Website → Home → Site photos → Home page hero carousel
+                    </a>
+                    . Photos uploaded here would not appear on the home page.
+                  </p>
+                </div>
+              ) : (
+                <ImageField
+                  label="Hero photo"
+                  value={doc.hero.imageUrl}
+                  onChange={(url) =>
+                    update((p) => ({ ...p, hero: { ...p.hero, imageUrl: url } }))
+                  }
+                  onUpload={(file) => uploadImage("hero", file)}
+                />
+              )}
+              <div
+                className={`space-y-3 rounded-xl border border-slate-200 p-3 ${
+                  location === "paris-home" ? "hidden" : ""
+                }`}
+              >
                 <p className="text-xs text-slate-500">
                   Hero carousel (up to 4 photos). The hero rotates through the main photo plus these slides.
                 </p>
@@ -630,7 +656,7 @@ export function PracticePagesEditor({ getIdToken, initialLocation, embedded = fa
                     }
                   />
                 </Field>
-                <Field label="Call phone">
+                <Field label="Call phone (blank = use the office phone)">
                   <input
                     className={INPUT}
                     value={doc.hero.callPhone}
@@ -1536,7 +1562,7 @@ export function PracticePagesEditor({ getIdToken, initialLocation, embedded = fa
             {/* 10. Sticky call bar */}
             <SectionCard
               title="10 · Sticky mobile call bar"
-              hint="Fixed bottom bar on phones: Call Us + Book Now."
+              hint="Fixed bottom bar on phones: Call Us + Book Now. This bar controls only this page — the rest of the site uses Website → Home → Header & footer → “Show Call/Book bottom bar”."
               published={doc.stickyCallBar.enabled}
               onPublishedChange={(v) =>
                 update((p) => ({ ...p, stickyCallBar: { ...p.stickyCallBar, enabled: v } }))
@@ -1555,7 +1581,7 @@ export function PracticePagesEditor({ getIdToken, initialLocation, embedded = fa
                     }
                   />
                 </Field>
-                <Field label="Phone">
+                <Field label="Phone (blank = use the office phone)">
                   <input
                     className={INPUT}
                     value={doc.stickyCallBar.phone}

@@ -28,6 +28,7 @@ import {
   resolveMassagePageText,
 } from "@/lib/massage-page-cms";
 import { MassagePageBlock } from "./MassagePageBlocks";
+import { getParisOfficeHours } from "@/lib/office-hours";
 
 export const revalidate = 60;
 
@@ -56,7 +57,7 @@ export default async function MassageServicePage() {
     ...MASSAGE_PAGE_TEXT_IDS,
     ...MASSAGE_SERVICE_PAGES_IDS,
   ]);
-  const [massageTeam, blockOrder, visual, displayLocs, photos, massageReviews, ui] =
+  const [massageTeam, blockOrder, visual, displayLocs, photos, massageReviews, ui, massageHours] =
     await Promise.all([
       getMassageTeamForMarketing(),
       getPageBlockOrder("massage"),
@@ -65,6 +66,7 @@ export default async function MassageServicePage() {
       getSitePhotos(),
       getMassageReviews(),
       getUiText(),
+      getParisOfficeHours(),
     ]);
   const paris = displayLocs.paris;
   const text = resolveMassagePageText(c);
@@ -76,7 +78,7 @@ export default async function MassageServicePage() {
     <>
       <JsonLd
         data={[
-          massageJsonLd(paris),
+          massageJsonLd(paris, massageHours),
           serviceJsonLd({
             name: "Massage Therapy",
             description:

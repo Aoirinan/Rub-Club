@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { SiteHeaderClient, type ServicesNavChild } from "@/components/SiteHeaderClient";
 import type { NavChrome } from "@/components/NavChromeContext";
 import type { HeaderBrandContent } from "@/lib/brand-logos";
@@ -60,6 +61,33 @@ function applyMenuLabels(
   });
 }
 
+/**
+ * Menu labels + chrome strings, resolved once per request so a second header
+ * instance (or a page that renders its own) costs nothing extra.
+ */
+const getNavMenuData = cache(async function getNavMenuData() {
+  const serviceLabelIds = [...PARIS_SERVICES_NAV_CHILDREN, ...SS_SERVICES_NAV_CHILDREN]
+    .map((c) => navLabelFieldFor(c.href))
+    .filter((id): id is string => Boolean(id));
+  const [cms, ui] = await Promise.all([
+    getContentMany([...NAV_TEXT_KEYS, "nav_staff_label", ...serviceLabelIds]),
+    getUiText(),
+  ]);
+  const nav = resolveNavText(cms);
+  return {
+    nav,
+    staffNavLabel: cms.nav_staff_label?.trim() || "About Us",
+    chrome: {
+      nav,
+      bookNow: ui.ui_book_now,
+      getDirections: ui.ui_get_directions,
+      faxLabel: ui.ui_fax_label,
+    } satisfies NavChrome,
+    parisServices: applyMenuLabels(PARIS_SERVICES_NAV_CHILDREN, cms, nav),
+    ssServices: applyMenuLabels(SS_SERVICES_NAV_CHILDREN, cms, nav),
+  };
+});
+
 export async function SiteHeader({
   paris,
   sulphur,
@@ -77,21 +105,7 @@ export async function SiteHeader({
   headerColors: HeaderColorConfig;
   initialBusinessContext?: SiteBusinessContext;
 }) {
-  const serviceLabelIds = [...PARIS_SERVICES_NAV_CHILDREN, ...SS_SERVICES_NAV_CHILDREN]
-    .map((c) => navLabelFieldFor(c.href))
-    .filter((id): id is string => Boolean(id));
-  const [cms, ui] = await Promise.all([
-    getContentMany([...NAV_TEXT_KEYS, "nav_staff_label", ...serviceLabelIds]),
-    getUiText(),
-  ]);
-  const nav = resolveNavText(cms);
-  const staffNavLabel = cms.nav_staff_label?.trim() || "About Us";
-  const chrome: NavChrome = {
-    nav,
-    bookNow: ui.ui_book_now,
-    getDirections: ui.ui_get_directions,
-    faxLabel: ui.ui_fax_label,
-  };
+  const { nav, staffNavLabel, chrome, parisServices, ssServices } = await getNavMenuData();
 
   const ssWellnessNavChildren: ServicesNavChild[] = [
     { href: "/sulphur-springs/wellness-care-plans", label: nav.nav_wellness_child_plan_label },
@@ -107,8 +121,8 @@ export async function SiteHeader({
       headerBranding={headerBranding}
       headerColors={headerColors}
       initialBusinessContext={initialBusinessContext}
-      servicesNavChildren={applyMenuLabels(PARIS_SERVICES_NAV_CHILDREN, cms, nav)}
-      ssServicesNavChildren={applyMenuLabels(SS_SERVICES_NAV_CHILDREN, cms, nav)}
+      servicesNavChildren={parisServices}
+      ssServicesNavChildren={ssServices}
       ssWellnessNavChildren={ssWellnessNavChildren}
       staffNavLabel={staffNavLabel}
       chrome={chrome}

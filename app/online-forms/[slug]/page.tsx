@@ -25,6 +25,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description: `Complete the ${title} online before your visit to Chiropractic Associates in Paris or Sulphur Springs, TX.`,
     path: `/online-forms/${slug}`,
+    // Patient paperwork: reachable by link, kept out of search results.
+    noindex: true,
   });
 }
 

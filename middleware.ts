@@ -68,6 +68,14 @@ export async function middleware(request: NextRequest) {
   const host = request.headers.get("host")?.split(":")[0] ?? "";
 
   const res = NextResponse.next();
+
+  // Belt-and-braces with the layout's `robots` metadata: keep the *.vercel.app
+  // deploy copy out of search while the canonical domain still serves the old
+  // site. Also covers robots.txt / sitemap.xml, which carry no meta tag.
+  if (host.endsWith(".vercel.app")) {
+    res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
+
   const utmRaw = request.nextUrl.searchParams.get("utm_source");
   const utm = utmRaw?.toLowerCase() ?? null;
 

@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getFirestore } from "@/lib/firebase-admin";
 import {
   CMS_REVALIDATE_PATHS,
   CONTENT_CHANGE_LOG_COLLECTION,
   SITE_CONTENT_COLLECTION,
-  getContent,
+  SITE_CONTENT_TAG,
+  getContentUncached,
   getContentFieldMeta,
 } from "@/lib/cms";
 import { requireStaff } from "@/lib/staff-auth";
@@ -19,6 +20,9 @@ const patchSchema = z.object({
 });
 
 function revalidatePublicPages(fieldId?: string): void {
+  // Drop the cached site_content snapshot first, so the pages re-rendered
+  // below read this manager's new value rather than the previous one.
+  revalidateTag(SITE_CONTENT_TAG);
   for (const p of CMS_REVALIDATE_PATHS) {
     revalidatePath(p);
   }
@@ -66,7 +70,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  const oldValue = await getContent(id);
+  const oldValue = await getContentUncached(id);
   const newValue = parsed.data.value;
 
   const db = getFirestore();

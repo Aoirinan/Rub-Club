@@ -83,7 +83,7 @@ export default async function ContactPage() {
       <div className="mx-auto max-w-6xl space-y-10 px-4 pb-16 pt-10">
         {/* Header */}
         <section>
-          <SectionHeading>{c.contact_heading?.trim() || "Contact Us"}</SectionHeading>
+          <SectionHeading as="h1">{c.contact_heading?.trim() || "Contact Us"}</SectionHeading>
           {c.contact_subtext?.trim() ? (
             <p className="mx-auto mt-5 max-w-3xl text-center leading-relaxed text-stone-500">
               {c.contact_subtext}

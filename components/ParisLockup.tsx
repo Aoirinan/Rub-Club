@@ -31,12 +31,11 @@ export function ParisLockup({
       <Image
         src={BRAND_LOGOS.chiropracticMark}
         alt=""
-        width={160}
-        height={120}
+        width={413}
+        height={300}
         aria-hidden
-        unoptimized
+        sizes="200px"
         className="h-full w-auto object-contain"
-        priority
       />
     </span>
   );
@@ -68,12 +67,11 @@ export function ParisLockup({
         <Image
           src={BRAND_LOGOS.chiropracticMark}
           alt=""
-          width={160}
-          height={120}
+          width={413}
+          height={300}
           aria-hidden
-          unoptimized
+          sizes="200px"
           className="h-full w-auto object-contain"
-          priority
         />
       </span>
       {markOnly ? null : (

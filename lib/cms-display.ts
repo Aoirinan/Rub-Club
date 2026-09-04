@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { getContentMany } from "@/lib/cms";
 import { DEFAULTS } from "@/lib/cms-registry";
 import {
@@ -64,10 +65,11 @@ const LAYOUT_CMS_IDS = [
 
 export type LayoutCmsContent = Record<(typeof LAYOUT_CMS_IDS)[number], string>;
 
-export async function getLayoutCmsContent(): Promise<LayoutCmsContent> {
+/** Cached per request: the layout and app/page.tsx both ask for these. */
+export const getLayoutCmsContent = cache(async function getLayoutCmsContent(): Promise<LayoutCmsContent> {
   const values = await getContentMany([...LAYOUT_CMS_IDS]);
   return values as LayoutCmsContent;
-}
+});
 
 const HEADER_BRAND_KEYS: HeaderBrandKey[] = ["chiro", "ss"];
 
@@ -120,7 +122,7 @@ export async function getScopeVisualLayout(
 export type { VisualPageLayout };
 
 /** Paris + Sulphur locations with CMS → owner settings → constants merge. */
-export async function getDisplayLocations(): Promise<Record<LocationId, LocationInfo>> {
+export const getDisplayLocations = cache(async function getDisplayLocations(): Promise<Record<LocationId, LocationInfo>> {
   const cms = await getLayoutCmsContent();
   try {
     const cfg = await getSiteOwnerConfig();
@@ -128,7 +130,7 @@ export async function getDisplayLocations(): Promise<Record<LocationId, Location
   } catch {
     return mergedDisplayLocations(undefined, cms);
   }
-}
+});
 
 export async function getPublicGiftCardUrl(): Promise<string> {
   const cms = await getLayoutCmsContent();

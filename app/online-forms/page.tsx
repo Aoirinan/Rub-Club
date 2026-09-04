@@ -21,6 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title: meta.title,
     description: meta.description,
     path: "/online-forms",
+    // Patient paperwork: reachable by link, kept out of search results.
+    noindex: true,
   });
 }
 

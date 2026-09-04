@@ -7,17 +7,42 @@ import {
 import type { SiteEditableCopy } from "@/lib/site-owner-config";
 import { DEFAULT_EDITABLE_COPY } from "@/lib/site-owner-config";
 
+/**
+ * Split an edited address line into its parts.
+ *
+ * The city/state/ZIP are read from the RIGHT, so a suite or unit segment can't
+ * be mistaken for the city: the last segment carries "TX 75460", the one
+ * before it is the city. (Splitting from the left made
+ * "3305 NE Loop 286, Suite A, Paris, TX 75460" publish "Suite A" as the city
+ * in the search-engine listing.) When the tail carries no state or ZIP the
+ * line is left unparsed and the constants stand, so a half-typed address can
+ * never publish a wrong city.
+ *
+ * `streetAddress` stays the first segment: it is rendered as the visible
+ * street line (Paris location heading, footer, massage page), so it must keep
+ * reading exactly as it does today.
+ */
 function applyAddressLine(loc: LocationInfo, line: string): LocationInfo {
   const trimmed = line.trim();
   if (!trimmed) return loc;
-  const parts = trimmed.split(",").map((s) => s.trim());
-  return {
+  const parts = trimmed.split(",").map((s) => s.trim()).filter(Boolean);
+  const next: LocationInfo = {
     ...loc,
     streetAddress: parts[0] ?? trimmed,
     addressLines: [trimmed],
-    addressLocality: parts[1] ?? loc.addressLocality,
-    addressRegion: (parts[2]?.match(/\b([A-Z]{2})\b/)?.[1] as "TX") ?? loc.addressRegion,
-    postalCode: parts[2]?.match(/\b(\d{5})\b/)?.[1] ?? loc.postalCode,
+  };
+
+  // Need at least "street, city, TX 75460" before trusting the split.
+  const tail = parts.length >= 3 ? (parts[parts.length - 1] ?? "") : "";
+  const region = tail.match(/\b([A-Z]{2})\b/)?.[1];
+  const postalCode = tail.match(/\b(\d{5})\b/)?.[1];
+  if (!region && !postalCode) return next;
+
+  return {
+    ...next,
+    addressLocality: parts[parts.length - 2] ?? loc.addressLocality,
+    addressRegion: (region as LocationInfo["addressRegion"]) ?? loc.addressRegion,
+    postalCode: postalCode ?? loc.postalCode,
   };
 }
 
@@ -52,6 +77,9 @@ export function mergedDisplayLocations(
   const ssMaps = cms?.footer_ss_maps_url?.trim();
   if (ssMaps && /^https?:\/\//i.test(ssMaps)) sulphur_springs.mapsUrl = ssMaps;
 
+  // Owner-config phone overrides win over the everyday CMS "Office info →
+  // Phone" fields. Normally blank; editable under Marketing → Phone overrides
+  // so a stale value can be seen and cleared instead of silently winning.
   if (copy?.parisChiroPhone?.trim()) paris.phonePrimary = copy.parisChiroPhone.trim();
   if (copy?.rubClubMassagePhone?.trim()) paris.phoneSecondary = copy.rubClubMassagePhone.trim();
   if (copy?.sulphurChiroPhone?.trim()) sulphur_springs.phonePrimary = copy.sulphurChiroPhone.trim();

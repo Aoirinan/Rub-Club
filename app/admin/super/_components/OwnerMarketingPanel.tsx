@@ -664,23 +664,22 @@ export function OwnerMarketingPanel() {
               and Footer intro.
             </p>
             <label className="mt-3 block text-sm">
-              <span className="font-semibold">Square gift card order URL</span>
+              <span className="font-semibold">Square gift card order URL (not used)</span>
               <p className="text-xs text-slate-500">
-                Prefer{" "}
-                <a href="/admin/super/page-builder?scope=navigation" className="underline">
-                  Website → Navigation
+                This box no longer changes the site. Edit the gift card link under{" "}
+                <a
+                  href="/admin/super/page-builder?scope=site-settings"
+                  className="font-semibold underline"
+                >
+                  Website → Home → Site settings → Header links → Gift Card URL
                 </a>
                 .
               </p>
               <input
-                className="mt-1 w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                readOnly
+                disabled
+                className="mt-1 w-full rounded border border-slate-200 bg-slate-100 px-2 py-1 text-sm text-slate-500"
                 value={config.editableCopy.giftCardOrderUrl}
-                onChange={(e) =>
-                  setConfig({
-                    ...config,
-                    editableCopy: { ...config.editableCopy, giftCardOrderUrl: e.target.value },
-                  })
-                }
               />
             </label>
             <label className="mt-3 block text-sm">
@@ -732,10 +731,103 @@ export function OwnerMarketingPanel() {
             Save site info
           </button>
         </section>
+
+        <PhoneOverridesBlock
+          config={config}
+          setConfig={setConfig}
+          onSave={() => void saveEditableCopy()}
+        />
         </div>
       ) : null}
 
     </div>
+  );
+}
+
+/**
+ * Emergency phone overrides. These three values win over the everyday
+ * "Office info & hours → Phone" fields in the Website editor, so a stale value
+ * left here silently blocks phone edits. Surfaced so a manager can see and
+ * clear one; blank (the normal state) means the Website editor is in charge.
+ */
+function PhoneOverridesBlock({
+  config,
+  setConfig,
+  onSave,
+}: {
+  config: SiteOwnerSingleton;
+  setConfig: Dispatch<SetStateAction<SiteOwnerSingleton | null>>;
+  onSave: () => void;
+}) {
+  const copy = config.editableCopy;
+  const fields: {
+    key: "parisChiroPhone" | "rubClubMassagePhone" | "sulphurChiroPhone";
+    label: string;
+    where: string;
+  }[] = [
+    {
+      key: "parisChiroPhone",
+      label: "Paris chiropractic phone",
+      where: "Paris → Office info & hours → Phone",
+    },
+    {
+      key: "rubClubMassagePhone",
+      label: "Paris massage desk phone",
+      where: "Paris → Office info & hours → Massage Desk Phone",
+    },
+    {
+      key: "sulphurChiroPhone",
+      label: "Sulphur Springs phone",
+      where: "Sulphur Springs → Office info & hours → Phone",
+    },
+  ];
+  const anySet = fields.some((f) => (copy[f.key] ?? "").trim().length > 0);
+
+  return (
+    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 className="text-lg font-bold">Phone overrides</h2>
+      <p className="text-sm text-slate-600">
+        Leave these <strong className="font-semibold">blank</strong> — that is the normal setting. The
+        everyday phone numbers live in the{" "}
+        <a
+          href="/admin/super/page-builder?scope=paris-office"
+          className="font-semibold text-[#c0392b] underline"
+        >
+          Website editor → Office info &amp; hours
+        </a>
+        . Anything typed here overrides that field everywhere on the site.
+      </p>
+      {anySet ? (
+        <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          An override is set below. While it has a value, editing the phone in the Website editor will
+          not change the site. Clear the box and save to hand control back.
+        </p>
+      ) : null}
+      {fields.map((f) => (
+        <label key={f.key} className="block text-sm">
+          <span className="font-semibold">{f.label}</span>
+          <p className="text-xs text-slate-500">Blank = use {f.where}.</p>
+          <input
+            className="mt-1 w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            placeholder="Blank (recommended)"
+            value={copy[f.key] ?? ""}
+            onChange={(e) =>
+              setConfig({
+                ...config,
+                editableCopy: { ...config.editableCopy, [f.key]: e.target.value },
+              })
+            }
+          />
+        </label>
+      ))}
+      <button
+        type="button"
+        onClick={onSave}
+        className="rounded-full bg-slate-900 px-5 py-2 text-sm font-bold text-white"
+      >
+        Save phone overrides
+      </button>
+    </section>
   );
 }
 

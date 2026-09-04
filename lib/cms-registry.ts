@@ -229,21 +229,22 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
     id: "sticky_call_bar_paris",
     pageLabel: "Paris header & footer",
     sectionLabel: "Mobile sticky bar",
-    fieldLabel: "Show Call/Book bottom bar on Paris & shared pages",
+    fieldLabel:
+      "Show Call/Book bottom bar on Paris & shared pages (the Home and Chiropractic pages have their own bar under Website → Home page → section 10)",
     type: "boolean",
   },
   {
     id: "footer_links_default",
     pageLabel: "Paris header & footer",
     sectionLabel: "Footer links",
-    fieldLabel: "Explore links — main site (one per line: Label — /path)",
+    fieldLabel: "Explore links — main site (one per line: Label — /path; a plain hyphen or | also works)",
     type: "richtext",
   },
   {
     id: "footer_links_paris",
     pageLabel: "Paris header & footer",
     sectionLabel: "Footer links",
-    fieldLabel: "Explore links — Paris chiropractic pages (one per line: Label — /path)",
+    fieldLabel: "Explore links — Paris chiropractic pages (one per line: Label — /path; a plain hyphen or | also works)",
     type: "richtext",
   },
 
@@ -266,14 +267,15 @@ export const CONTENT_REGISTRY: ContentFieldMeta[] = [
     id: "sticky_call_bar_ss",
     pageLabel: "SS header & footer",
     sectionLabel: "Mobile sticky bar",
-    fieldLabel: "Show Call/Book bottom bar on Sulphur Springs pages",
+    fieldLabel:
+      "Show Call/Book bottom bar on Sulphur Springs pages (the Sulphur Springs home page has its own bar under Website → Home page → section 10)",
     type: "boolean",
   },
   {
     id: "footer_links_ss",
     pageLabel: "SS header & footer",
     sectionLabel: "Footer links",
-    fieldLabel: "Explore links — Sulphur Springs pages (one per line: Label — /path)",
+    fieldLabel: "Explore links — Sulphur Springs pages (one per line: Label — /path; a plain hyphen or | also works)",
     type: "richtext",
   },
 

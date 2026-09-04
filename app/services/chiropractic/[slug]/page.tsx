@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { buildPageMetadata } from "@/lib/page-metadata";
+import {
+  buildPageMetadata,
+  descriptionFromBlocks,
+  stripTrailingBrand,
+} from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { LocationHoursSection } from "@/components/LocationHoursSection";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
@@ -43,6 +47,22 @@ async function getSharedCopy() {
   const c = await getContentMany([...SHARED_COPY_IDS]);
   return (id: (typeof SHARED_COPY_IDS)[number]) => parisText(c, id);
 }
+
+/**
+ * Massage topics that the old site published under /services/chiropractic/ and
+ * that also live at /services/massage/. Both keep rendering (old inbound links
+ * still land), but search engines are pointed at the massage copy.
+ */
+const MASSAGE_TOPIC_CANONICAL: Record<string, string> = Object.fromEntries(
+  [
+    "swedish-massage",
+    "thai-massage",
+    "hot-stone-massage",
+    "deep-tissue-massage",
+    "prenatal-massage",
+    "sports-massage",
+  ].map((slug) => [slug, `/services/massage/${slug}`]),
+);
 
 export const revalidate = 60;
 
@@ -105,11 +125,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   const legacy = await getPublishedLegacyPage("chiro-paris", slug);
   if (legacy) {
+    // Imported titles often already end with the brand ("… | Chiropractic
+    // Associates"); strip it so the tab doesn't repeat it twice more.
+    const legacyTitle = stripTrailingBrand(legacy.title);
     return buildPageMetadata({
-      title: `${legacy.title}${shared("paris_chiro_pages_title_suffix")}`,
-      description: legacy.metaDescription,
+      title: `${legacyTitle}${shared("paris_chiro_pages_title_suffix")}`,
+      brandInTitle: true,
+      description: legacy.metaDescription.trim() || descriptionFromBlocks(legacy.blocks),
       path: legacy.route,
-      ogTitle: `${legacy.title}${shared("paris_chiro_pages_og_suffix")}`,
+      canonical: MASSAGE_TOPIC_CANONICAL[slug],
+      ogTitle: `${legacyTitle}${shared("paris_chiro_pages_og_suffix")}`,
     });
   }
   return { title: "Chiropractic" };

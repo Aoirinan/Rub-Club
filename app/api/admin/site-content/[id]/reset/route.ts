@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getFirestore } from "@/lib/firebase-admin";
 import {
   CMS_REVALIDATE_PATHS,
   CONTENT_CHANGE_LOG_COLLECTION,
   DEFAULTS,
   SITE_CONTENT_COLLECTION,
-  getContent,
+  SITE_CONTENT_TAG,
+  getContentUncached,
   getContentFieldMeta,
 } from "@/lib/cms";
 import { requireStaff } from "@/lib/staff-auth";
@@ -30,7 +31,7 @@ export async function POST(
   }
 
   const defaultValue = DEFAULTS[id] ?? "";
-  const oldValue = await getContent(id);
+  const oldValue = await getContentUncached(id);
 
   const db = getFirestore();
   await db
@@ -61,6 +62,7 @@ export async function POST(
     changedBy: staff.email ?? staff.uid,
   });
 
+  revalidateTag(SITE_CONTENT_TAG);
   for (const p of CMS_REVALIDATE_PATHS) {
     revalidatePath(p);
   }

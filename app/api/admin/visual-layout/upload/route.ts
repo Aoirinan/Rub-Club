@@ -1,9 +1,10 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getFirestore } from "@/lib/firebase-admin";
 import { uploadSiteContentMedia } from "@/lib/cms-upload";
 import { resolveMassageTeamImageContentType } from "@/lib/massage-team-upload";
-import { SITE_CONTENT_COLLECTION } from "@/lib/cms";
+import { SITE_CONTENT_COLLECTION, SITE_CONTENT_TAG } from "@/lib/cms";
 import { isVisualScopeId } from "@/lib/visual-page-layout";
 import { requireStaff } from "@/lib/staff-auth";
 
@@ -67,6 +68,8 @@ export async function POST(req: Request) {
     },
     { merge: true },
   );
+
+  revalidateTag(SITE_CONTENT_TAG);
 
   return NextResponse.json({ url, fieldId });
 }

@@ -15,6 +15,9 @@ export async function generateMetadata(): Promise<Metadata> {
     title: meta.title,
     description: meta.description,
     path: "/massage-landing",
+    // Landing page for the massageparistexas.com audience; the massage page is
+    // the same topic, so search engines are pointed there.
+    canonical: "/services/massage",
   });
 }
 

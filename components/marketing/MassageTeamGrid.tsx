@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { ReactNode } from "react";
 import type { MassageTeamCard } from "@/lib/massage-team";
 
@@ -65,13 +66,12 @@ export function MassageTeamGrid({
             className="flex flex-col overflow-hidden border border-stone-200 bg-stone-50 shadow-sm"
           >
             <div className="relative aspect-[3/4] w-full bg-stone-200">
-              {/* eslint-disable-next-line @next/next/no-img-element -- portraits may be Firebase Storage URLs */}
-              <img
+              <Image
                 src={member.imageSrc}
                 alt={`Portrait of ${member.name}, massage therapist`}
-                className="absolute inset-0 h-full w-full object-cover object-top"
-                loading="lazy"
-                decoding="async"
+                fill
+                sizes="(min-width: 1024px) 22rem, (min-width: 640px) 45vw, 92vw"
+                className="object-cover object-top"
               />
             </div>
             <div className="flex flex-1 flex-col p-5">

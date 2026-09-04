@@ -11,14 +11,17 @@ type Props = {
   getIdToken: () => Promise<string | null>;
 };
 
-type Tab = "customer" | "internal";
 type Channel = "sms" | "email";
 
-const KINDS = [
-  { id: "first_time" as const, label: "First time" },
-  { id: "standard" as const, label: "Standard" },
-  { id: "status_change" as const, label: "Status change" },
-];
+/**
+ * Only the customer "standard" text and email are ever sent: the scheduler's
+ * "Send reminders" action reads `sms.customer.standard` / `email.customer.standard`
+ * and nothing else. The other stored slots (first time, status change, internal)
+ * are left untouched in the database but are not shown, so nobody edits a
+ * template that never goes out.
+ */
+const TAB = "customer" as const;
+const KIND = "standard" as const;
 
 export function NotificationSettingsEditor({ getIdToken }: Props) {
   const [templates, setTemplates] = useState<NotificationTemplatesConfig>(
@@ -26,11 +29,11 @@ export function NotificationSettingsEditor({ getIdToken }: Props) {
   );
   const [rescheduleEmail, setRescheduleEmail] = useState("");
   const [envReschedule, setEnvReschedule] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("customer");
   const [channel, setChannel] = useState<Channel>("sms");
-  const [kind, setKind] = useState<(typeof KINDS)[number]["id"]>("standard");
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const tab = TAB;
+  const kind = KIND;
 
   const load = useCallback(async () => {
     const token = await getIdToken();
@@ -151,40 +154,25 @@ export function NotificationSettingsEditor({ getIdToken }: Props) {
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {(["customer", "internal"] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${tab === t ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700"}`}
-          >
-            {t === "customer" ? "Customer" : "Internal (staff)"}
-          </button>
-        ))}
-        {(["sms", "email"] as const).map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => setChannel(c)}
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${channel === c ? "bg-[#c0392b] text-white" : "bg-slate-100 text-slate-700"}`}
-          >
-            {c === "sms" ? "Text" : "Email"}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {KINDS.map((k) => (
-          <button
-            key={k.id}
-            type="button"
-            onClick={() => setKind(k.id)}
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${kind === k.id ? "bg-teal-100 text-teal-900 ring-1 ring-teal-300" : "bg-white text-slate-600 ring-1 ring-slate-200"}`}
-          >
-            {k.label}
-          </button>
-        ))}
+      <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <h3 className="text-sm font-bold text-slate-900">Appointment reminder to the patient</h3>
+        <p className="mt-1 text-sm text-slate-600">
+          This is the only message you can edit here. It goes out when staff click{" "}
+          <strong>Send reminders</strong> on the scheduler. Confirmation, cancellation, and
+          decline messages are not editable yet.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(["sms", "email"] as const).map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setChannel(c)}
+              className={`rounded-full px-3 py-1 text-xs font-semibold ${channel === c ? "bg-[#c0392b] text-white" : "bg-slate-100 text-slate-700"}`}
+            >
+              {c === "sms" ? "Text message" : "Email"}
+            </button>
+          ))}
+        </div>
       </div>
 
       <details className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">

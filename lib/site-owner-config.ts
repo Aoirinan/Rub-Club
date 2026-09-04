@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { cache } from "react";
 import { FieldValue, type Firestore } from "firebase-admin/firestore";
 import { DateTime } from "luxon";
 import { mergeBusinessNavigationConfig } from "@/lib/business-nav-defaults";
@@ -191,10 +192,24 @@ function mergeDefaults(partial: Partial<SiteOwnerSingleton> | undefined): SiteOw
   };
 }
 
-export async function getSiteOwnerConfig(db: Firestore = getFirestore()): Promise<SiteOwnerSingleton> {
+async function readSiteOwnerConfig(db: Firestore): Promise<SiteOwnerSingleton> {
   const snap = await db.collection(COL).doc(DOC).get();
   if (!snap.exists) return mergeDefaults(undefined);
   return mergeDefaults(snap.data() as Partial<SiteOwnerSingleton>);
+}
+
+/**
+ * Cached per request: the root layout, the home page, and several components
+ * each ask for the owner settings while rendering one page.
+ */
+const getSiteOwnerConfigCached = cache(async function getSiteOwnerConfigCached(): Promise<SiteOwnerSingleton> {
+  return readSiteOwnerConfig(getFirestore());
+});
+
+export async function getSiteOwnerConfig(db?: Firestore): Promise<SiteOwnerSingleton> {
+  // An explicit handle (admin routes, scripts) always reads straight through.
+  if (db) return readSiteOwnerConfig(db);
+  return getSiteOwnerConfigCached();
 }
 
 export async function setSiteOwnerConfigPatch(

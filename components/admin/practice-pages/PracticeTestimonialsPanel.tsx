@@ -81,26 +81,58 @@ export function PracticeTestimonialsPanel({ location, getIdToken }: Props) {
     }
   }
 
-  async function togglePublished(row: PracticeTestimonial) {
+  /** Run a change, then reload and report — a failed call must not look saved. */
+  async function runChange(
+    action: (token: string) => Promise<Response>,
+    okMessage: string,
+    failMessage: string,
+  ) {
+    setMessage(null);
     const token = await getIdToken();
-    if (!token) return;
-    await fetch(`${base}/${encodeURIComponent(row.id)}`, {
-      method: "PATCH",
-      headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
-      body: JSON.stringify({ published: !row.published }),
-    });
-    await load();
+    if (!token) {
+      setMessage(`${failMessage} — please sign in again.`);
+      return;
+    }
+    try {
+      const res = await action(token);
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        await load();
+        setMessage(data.error ?? failMessage);
+        return;
+      }
+      await load();
+      setMessage(okMessage);
+    } catch {
+      await load();
+      setMessage(`${failMessage} — check your connection.`);
+    }
+  }
+
+  async function togglePublished(row: PracticeTestimonial) {
+    await runChange(
+      (token) =>
+        fetch(`${base}/${encodeURIComponent(row.id)}`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
+          body: JSON.stringify({ published: !row.published }),
+        }),
+      row.published ? "Review hidden" : "Review published",
+      "Could not change this review",
+    );
   }
 
   async function remove(id: string) {
     if (!window.confirm("Delete this review?")) return;
-    const token = await getIdToken();
-    if (!token) return;
-    await fetch(`${base}/${encodeURIComponent(id)}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    await load();
+    await runChange(
+      (token) =>
+        fetch(`${base}/${encodeURIComponent(id)}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      "Review deleted",
+      "Could not delete this review",
+    );
   }
 
   async function move(index: number, dir: -1 | 1) {
@@ -108,14 +140,16 @@ export function PracticeTestimonialsPanel({ location, getIdToken }: Props) {
     const j = index + dir;
     if (j < 0 || j >= next.length) return;
     [next[index], next[j]] = [next[j]!, next[index]!];
-    const token = await getIdToken();
-    if (!token) return;
-    await fetch(`${base}/reorder`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
-      body: JSON.stringify({ orderedIds: next.map((r) => r.id) }),
-    });
-    await load();
+    await runChange(
+      (token) =>
+        fetch(`${base}/reorder`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
+          body: JSON.stringify({ orderedIds: next.map((r) => r.id) }),
+        }),
+      "Order saved",
+      "Could not save the new order",
+    );
   }
 
   return (

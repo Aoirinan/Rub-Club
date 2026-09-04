@@ -210,6 +210,19 @@ function str(v: unknown, fallback: string): string {
   return typeof v === "string" ? v : fallback;
 }
 
+/**
+ * Like `str`, but a blank saved value also falls back to the default.
+ *
+ * Used for the phone boxes that seed from the CMS "Office info → Phone"
+ * fields. A saved copy of the number would otherwise freeze forever, so
+ * clearing the box hands the field back to the office phone. Only for fields
+ * where blank has no other meaning — a blank utility-bar phone still deletes
+ * that row.
+ */
+function strOrDefault(v: unknown, fallback: string): string {
+  return typeof v === "string" && v.trim() ? v : fallback;
+}
+
 function bool(v: unknown, fallback: boolean): boolean {
   return typeof v === "boolean" ? v : fallback;
 }
@@ -252,7 +265,7 @@ function mergeHero(raw: unknown, d: PracticeHeroSection): PracticeHeroSection {
       : d.slides,
     ctaLabel: str(raw.ctaLabel, d.ctaLabel),
     ctaUrl: str(raw.ctaUrl, d.ctaUrl),
-    callPhone: str(raw.callPhone, d.callPhone),
+    callPhone: strOrDefault(raw.callPhone, d.callPhone),
   };
 }
 
@@ -479,7 +492,7 @@ function mergeStickyBar(raw: unknown, d: PracticeStickyBarSection): PracticeStic
   return {
     enabled: bool(raw.enabled, d.enabled),
     callLabel: str(raw.callLabel, d.callLabel),
-    phone: str(raw.phone, d.phone),
+    phone: strOrDefault(raw.phone, d.phone),
     bookLabel: str(raw.bookLabel, d.bookLabel),
     bookUrl: str(raw.bookUrl, d.bookUrl),
   };

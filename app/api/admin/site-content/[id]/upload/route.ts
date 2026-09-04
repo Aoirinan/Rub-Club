@@ -1,12 +1,13 @@
 import { Buffer } from "node:buffer";
 import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getFirestore } from "@/lib/firebase-admin";
 import {
   CONTENT_CHANGE_LOG_COLLECTION,
   SITE_CONTENT_COLLECTION,
-  getContent,
+  SITE_CONTENT_TAG,
+  getContentUncached,
   getContentFieldMeta,
   type ContentFieldType,
 } from "@/lib/cms";
@@ -65,7 +66,7 @@ export async function POST(
     return NextResponse.json({ error: "File too large" }, { status: 400 });
   }
 
-  const oldValue = await getContent(id);
+  const oldValue = await getContentUncached(id);
   const url = await uploadSiteContentMedia({
     fieldId: id,
     contentType,
@@ -102,6 +103,7 @@ export async function POST(
     changedBy: staff.email ?? staff.uid,
   });
 
+  revalidateTag(SITE_CONTENT_TAG);
   for (const p of [
     "/",
     "/about",

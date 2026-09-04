@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { getContentMany } from "@/lib/cms";
 import { CHIRO, MASSAGE } from "@/lib/home-verbatim";
 
@@ -45,20 +46,20 @@ export function parseOfficeHoursCms(text: string | undefined, fallback: OfficeHo
 }
 
 /** The Rub Club (massage) office hours for the Paris location. */
-export async function getParisOfficeHours(): Promise<OfficeHoursRow[]> {
+export const getParisOfficeHours = cache(async function getParisOfficeHours(): Promise<OfficeHoursRow[]> {
   const c = await getContentMany(["paris_hours"]);
   return parseOfficeHoursCms(c.paris_hours, [...MASSAGE.hours]);
-}
+});
 
 /** Chiropractic Associates office hours for the Paris location — a separate business from The Rub Club, kept on its own schedule. */
-export async function getParisChiroOfficeHours(): Promise<OfficeHoursRow[]> {
+export const getParisChiroOfficeHours = cache(async function getParisChiroOfficeHours(): Promise<OfficeHoursRow[]> {
   const c = await getContentMany(["paris_chiro_hours"]);
   return parseOfficeHoursCms(c.paris_chiro_hours, [...CHIRO.hours]);
-}
+});
 
 const SS_HOURS_FALLBACK: OfficeHoursRow[] = parseOfficeHoursCms(SS_HOURS_DEFAULT_TEXT, []);
 
-export async function getSulphurOfficeHours(): Promise<OfficeHoursRow[]> {
+export const getSulphurOfficeHours = cache(async function getSulphurOfficeHours(): Promise<OfficeHoursRow[]> {
   const c = await getContentMany(["ss_hours"]);
   return parseOfficeHoursCms(c.ss_hours, SS_HOURS_FALLBACK);
-}
+});

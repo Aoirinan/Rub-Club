@@ -58,6 +58,7 @@ export function SchedulerServicesEditor({ getIdToken }: Props) {
       setMessage(data.error ?? "Save failed.");
     } else {
       await load();
+      setMessage("Saved.");
     }
     setSavingId(null);
   }
@@ -98,20 +99,39 @@ export function SchedulerServicesEditor({ getIdToken }: Props) {
     const idx = services.findIndex((s) => s.id === id);
     const next = idx + dir;
     if (idx < 0 || next < 0 || next >= services.length) return;
+    const previous = services;
     const reordered = [...services];
     const [row] = reordered.splice(idx, 1);
     reordered.splice(next, 0, row);
     setServices(reordered);
+    setMessage(null);
     const token = await getIdToken();
-    if (!token) return;
-    await fetch("/api/admin/scheduler-services", {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({ orderedIds: reordered.map((s) => s.id) }),
-    });
+    if (!token) {
+      setServices(previous);
+      setMessage("Could not save the new order — please sign in again.");
+      return;
+    }
+    try {
+      const res = await fetch("/api/admin/scheduler-services", {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ orderedIds: reordered.map((s) => s.id) }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        // Put the list back so the screen matches what is actually saved.
+        setServices(previous);
+        setMessage(data.error ?? "Could not save the new order.");
+        return;
+      }
+      setMessage("Order saved.");
+    } catch {
+      setServices(previous);
+      setMessage("Could not save the new order — check your connection.");
+    }
   }
 
   if (loading) {

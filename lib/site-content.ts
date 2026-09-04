@@ -25,8 +25,14 @@ export const siteDescription =
 
 export const siteKeywords = [...SITE_SEO_KEYWORDS];
 
-/** Default Open Graph image — served from /public/og/og-default.svg. */
-export const siteOgImage = "/og/og-default.svg";
+/**
+ * Default Open Graph image. PNG, not SVG: Facebook, LinkedIn, iMessage and
+ * Slack ignore SVG share images. Same artwork as /og/og-default.svg.
+ */
+export const siteOgImage = "/og/og-default.png";
+
+/** Square brand logo for Organization JSON-LD (search engines only). */
+export const siteLogoImage = "/og/logo-512.png";
 
 /** Resolve the canonical site origin from env, fallback to placeholder. */
 export function getSiteOrigin(): string {
@@ -35,6 +41,23 @@ export function getSiteOrigin(): string {
     return "https://www.chiropracticparistexas.com";
   }
   return origin;
+}
+
+/**
+ * Is this request being served from the canonical domain?
+ *
+ * Until DNS moves, the site also answers on its *.vercel.app deploy URL while
+ * every canonical/og:url points at the real domain. Search engines must not
+ * index that preview copy, so pages served from any other host are marked
+ * noindex. Indexing turns itself back on, with no code change, as soon as the
+ * canonical domain serves the site.
+ */
+export function isCanonicalHost(host: string | null | undefined): boolean {
+  const bare = (host ?? "").split(":")[0]!.trim().toLowerCase().replace(/^www\./, "");
+  if (!bare) return true; // no Host header (build/prerender) — behave as today
+  if (bare === "localhost" || bare === "127.0.0.1" || bare === "[::1]") return true;
+  const canonical = new URL(getSiteOrigin()).hostname.toLowerCase().replace(/^www\./, "");
+  return bare === canonical;
 }
 
 /** Build an absolute URL from a path relative to the site root. */

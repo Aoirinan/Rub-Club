@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { buildPageMetadata } from "@/lib/page-metadata";
+import {
+  buildPageMetadata,
+  descriptionFromBlocks,
+  stripTrailingBrand,
+} from "@/lib/page-metadata";
 import { Breadcrumbs, PageHero } from "@/components/PageChrome";
 import { LocationHoursSection } from "@/components/LocationHoursSection";
 import { ScheduleCtaCard } from "@/components/ScheduleCtaCard";
@@ -16,6 +20,16 @@ import {
   listPublishedLegacyPagesForSite,
   LEGACY_SITE_LABEL,
 } from "@/lib/legacy-pages";
+
+/**
+ * Imported pages that duplicate a curated page at a second URL. Both keep
+ * rendering (old inbound links still land); search engines are pointed at the
+ * curated copy.
+ */
+const DUPLICATE_CANONICAL: Record<string, string> = {
+  "massage-prices": "/services/massage/prices",
+  "chiropractic-care": "/services/chiropractic",
+};
 
 export const revalidate = 60;
 
@@ -39,17 +53,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   ]);
   const text = resolveMassagePageText(cms);
   if (!page) return { title: text.massage_subpage_breadcrumb };
+  // Imported titles often already end with the brand ("… | The Rub Club");
+  // strip it so the browser tab doesn't repeat it.
+  const pageTitle = stripTrailingBrand(page.title);
   // A meta title saved in Legacy pages wins; otherwise title + editable suffix.
   const customMeta = page.metaTitle.trim();
   const title =
     customMeta && customMeta !== page.title
       ? customMeta
-      : `${page.title}${text.massage_subpage_title_suffix}`;
+      : `${pageTitle}${text.massage_subpage_title_suffix}`;
   return buildPageMetadata({
     title,
-    description: page.metaDescription,
+    brandInTitle: true,
+    description: page.metaDescription.trim() || descriptionFromBlocks(page.blocks),
     path: page.route,
-    ogTitle: `${page.title}${text.massage_subpage_og_suffix}`,
+    canonical: DUPLICATE_CANONICAL[slug],
+    ogTitle: `${pageTitle}${text.massage_subpage_og_suffix}`,
   });
 }
 

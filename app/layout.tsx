@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { Open_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -9,7 +9,7 @@ import { Analytics } from "@/components/Analytics";
 import { DomainSpecialsPopup } from "@/components/DomainSpecialsPopup";
 import { HomepageSalesBanner } from "@/components/HomepageSalesBanner";
 import type { SalesBannerPayload } from "@/components/SalesBannerBar";
-import { getSiteOrigin, siteOgImage } from "@/lib/site-content";
+import { getSiteOrigin, isCanonicalHost, siteOgImage } from "@/lib/site-content";
 import { getContentMany } from "@/lib/cms";
 import { resolveSiteMeta, SITE_META_CMS_IDS } from "@/lib/site-meta-cms";
 import { getJsonLdStrings } from "@/lib/structured-data-strings";
@@ -68,7 +68,15 @@ const origin = getSiteOrigin();
  * "Search & social"; the lib/site-content.ts constants remain the defaults.
  */
 export async function generateMetadata(): Promise<Metadata> {
-  const site = resolveSiteMeta(await getContentMany([...SITE_META_CMS_IDS]));
+  const [site, headerList] = await Promise.all([
+    getContentMany([...SITE_META_CMS_IDS]).then(resolveSiteMeta),
+    headers(),
+  ]);
+  // Preview/deploy hosts must not be indexed while the canonical domain still
+  // serves the old site; see isCanonicalHost().
+  const indexable = isCanonicalHost(
+    headerList.get("host") ?? headerList.get("x-forwarded-host"),
+  );
   return {
     metadataBase: new URL(origin),
     title: { default: site.title, template: site.titleTemplate },
@@ -94,7 +102,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: site.description,
       images: [siteOgImage],
     },
-    robots: { index: true, follow: true },
+    robots: indexable ? { index: true, follow: true } : { index: false, follow: false },
     category: "health",
   };
 }
