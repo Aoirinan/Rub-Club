@@ -1,5 +1,9 @@
 # DNS prep (before you flip the switch)
 
+> **Going back?** See [`dns-restore-point.md`](./dns-restore-point.md) for a snapshot of every
+> current DNS record and the rollback procedure for each failure case. Export the Cloudflare
+> zone files **before** changing anything.
+
 You can do almost everything below **while the site still runs on `rub-club.vercel.app`**. None of this requires turning on online booking.
 
 ## Phase 1 — marketing (now)
