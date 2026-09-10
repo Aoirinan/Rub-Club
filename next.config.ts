@@ -95,6 +95,26 @@ const LEGACY_PRIMARY_REDIRECTS: Record<string, string> = {
   "/spinal-decompression.php": "/services/chiropractic/spinal-decompression",
   "/spinal-wellness-tips": "/faq",
   "/spine-care": "/services/chiropractic/spine-care",
+  // Condition + info pages Google still has indexed from the old site. Without
+  // these they 404 on cutover and their rankings are lost. The first seven were
+  // already imported and live under /services/chiropractic/ — they only lacked a
+  // route from their old bare path.
+  "/low-back-pain-treatments": "/services/chiropractic/low-back-pain-treatments",
+  "/neck-pain-treatments": "/services/chiropractic/neck-pain-treatments",
+  "/sciatica-treatments": "/services/chiropractic/sciatica-treatments",
+  "/herniated-disc-treatments": "/services/chiropractic/herniated-disc-treatments",
+  "/pinched-nerve-treatments": "/services/chiropractic/pinched-nerve-treatments",
+  "/knee-pain-treatments": "/services/chiropractic/knee-pain-treatments",
+  "/spine-specialist": "/services/chiropractic/spine-specialist",
+  // No direct equivalent — sent to the closest live page rather than a 404.
+  "/what-is-chiropractic": "/sulphur-springs/about-chiropractic",
+  "/chiropractic-massage": "/services/massage/therapeutic-massage",
+  "/youth-massage": "/services/massage",
+  "/dot-physical": "/services",
+  "/gallery": "/about",
+  "/patient-education": "/faq",
+  "/wellness-tips": "/faq",
+  "/what-can-i-expect": "/patient-forms",
   "/sports-injury": "/services/chiropractic/sports-injury",
   "/staff": "/locations/paris/staff",
   "/stretch---flex-rehab": "/services/chiropractic/stretch-and-flex-rehab",
