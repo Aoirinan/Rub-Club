@@ -65,6 +65,8 @@ type ViewProps = {
   serviceStyles: Map<string, ProviderCalendarStyle>;
   filters: FilterState;
   onSelect: (id: string) => void;
+  /** Opens the drawer straight into the edit panel (list "Reschedule"). */
+  onRescheduleRequest?: (id: string) => void;
   /** Manager or superadmin: reschedule and expanded list rows. */
   isManager?: boolean;
   /** Day view: drag a block to another time (same provider column). */
@@ -106,10 +108,12 @@ function SchedulerListRow({
   booking: b,
   isManager,
   onSelect,
+  onRescheduleRequest,
 }: {
   booking: BookingRow;
   isManager: boolean;
   onSelect: (id: string) => void;
+  onRescheduleRequest?: (id: string) => void;
 }) {
   const timeLabel = b.startAtMs ? formatChicagoTime(b.startAtMs) : "—";
   const patientHref = patientProfileHref(b);
@@ -161,7 +165,7 @@ function SchedulerListRow({
           <button
             type="button"
             className="block w-full px-3 py-2 text-left text-slate-800 hover:bg-slate-50"
-            onClick={() => onSelect(b.id)}
+            onClick={() => (onRescheduleRequest ?? onSelect)(b.id)}
           >
             Reschedule
           </button>
@@ -194,11 +198,13 @@ function MobileDayAgenda({
   filters,
   isManager,
   onSelect,
+  onRescheduleRequest,
 }: {
   bookings: BookingRow[];
   filters: FilterState;
   isManager: boolean;
   onSelect: (id: string) => void;
+  onRescheduleRequest?: (id: string) => void;
 }) {
   const dayStart = chicagoDayStart(filters.date);
   const dayStartMs = dayStart.toMillis();
@@ -217,7 +223,12 @@ function MobileDayAgenda({
         <ul className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm divide-y divide-slate-100">
           {rows.map((b) => (
             <li key={b.id}>
-              <SchedulerListRow booking={b} isManager={isManager} onSelect={onSelect} />
+              <SchedulerListRow
+                booking={b}
+                isManager={isManager}
+                onSelect={onSelect}
+                onRescheduleRequest={onRescheduleRequest}
+              />
             </li>
           ))}
         </ul>
@@ -259,6 +270,7 @@ export function DayView({
   serviceStyles,
   filters,
   onSelect,
+  onRescheduleRequest,
   isManager = false,
   onRescheduleBooking,
   onInvalidCrossProviderDrop,
@@ -285,6 +297,7 @@ export function DayView({
         filters={filters}
         isManager={isManager}
         onSelect={onSelect}
+        onRescheduleRequest={onRescheduleRequest}
       />
       <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
       <div className="overflow-x-auto">
@@ -799,7 +812,12 @@ function AllProvidersWeekSummary({
 
 /* ---------------- List view ---------------- */
 
-export function ListView({ bookings, onSelect, isManager = false }: ViewProps) {
+export function ListView({
+  bookings,
+  onSelect,
+  onRescheduleRequest,
+  isManager = false,
+}: ViewProps) {
   const groups = groupBookingsForList(bookings).filter((g) => g.rows.length > 0);
 
   if (groups.length === 0) {
@@ -826,7 +844,12 @@ export function ListView({ bookings, onSelect, isManager = false }: ViewProps) {
           <ul className="divide-y divide-slate-100">
             {g.rows.map((b) => (
               <li key={b.id}>
-                <SchedulerListRow booking={b} isManager={isManager} onSelect={onSelect} />
+                <SchedulerListRow
+                booking={b}
+                isManager={isManager}
+                onSelect={onSelect}
+                onRescheduleRequest={onRescheduleRequest}
+              />
               </li>
             ))}
           </ul>

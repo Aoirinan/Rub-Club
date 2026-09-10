@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { DateTime } from "luxon";
-import { TIME_ZONE } from "@/lib/constants";
+import { TIME_ZONE, type ServiceLine } from "@/lib/constants";
 import {
   bookingStatusLabel,
   bookingStatusPillClasses,
   type BookingStatus,
 } from "@/lib/booking-status";
-import type { BookingEvent, BookingRow } from "./types";
+import type { SchedulerServiceRow } from "@/lib/scheduler-service-types";
+import type { BookingEvent, BookingRow, ProviderRow } from "./types";
 
 type Props = {
   booking: BookingRow | null;
@@ -18,7 +19,32 @@ type Props = {
   getIdToken: () => Promise<string | null>;
   /** Massage therapists and other read-only roles: view details only. */
   readOnly?: boolean;
+  /** Bookable providers, for moving an appointment to someone else. */
+  providers?: ProviderRow[];
+  /** Service catalog, for changing what the visit is. */
+  schedulerServices?: SchedulerServiceRow[];
+  /** Opens the edit panel straight away (list-view "Reschedule"). */
+  autoOpenEdit?: boolean;
 };
+
+type SlotChoice = { startIso: string; label: string };
+
+const DURATION_CHOICES = [30, 60, 90, 120];
+
+function serviceLineLabel(line: string | undefined): string {
+  if (line === "massage") return "Massage therapy";
+  if (line === "chiropractic") return "Chiropractic";
+  if (line === "stretch") return "Stretch";
+  return line ?? "—";
+}
+
+/** Chicago-local yyyy-MM-dd for a booking, for the date input. */
+function localDateOf(booking: BookingRow): string {
+  if (typeof booking.startAtMs === "number") {
+    return DateTime.fromMillis(booking.startAtMs).setZone(TIME_ZONE).toFormat("yyyy-MM-dd");
+  }
+  return DateTime.now().setZone(TIME_ZONE).toFormat("yyyy-MM-dd");
+}
 
 const DECLINE_QUICK_REASONS = [
   "Provider unavailable",
@@ -41,7 +67,16 @@ type DrawerAction =
   | "email"
   | null;
 
-export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken, readOnly = false }: Props) {
+export function BookingDrawer({
+  booking,
+  onClose,
+  onActionComplete,
+  getIdToken,
+  readOnly = false,
+  providers = [],
+  schedulerServices = [],
+  autoOpenEdit = false,
+}: Props) {
   const [events, setEvents] = useState<BookingEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [eventsError, setEventsError] = useState<string | null>(null);
@@ -60,9 +95,39 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken, 
   const [notesDraft, setNotesDraft] = useState("");
   const [visitBusy, setVisitBusy] = useState(false);
 
+  // ── Edit appointment (time / provider / service / length) ──
+  const [editing, setEditing] = useState(false);
+  const [editDate, setEditDate] = useState("");
+  const [editProviderId, setEditProviderId] = useState("");
+  const [editServiceLine, setEditServiceLine] = useState<ServiceLine>("massage");
+  const [editDurationMin, setEditDurationMin] = useState(60);
+  const [editServiceId, setEditServiceId] = useState("");
+  const [editStartIso, setEditStartIso] = useState("");
+  const [slots, setSlots] = useState<SlotChoice[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState<string | null>(null);
+
   useEffect(() => {
     setNotesDraft(booking?.internalNotes ?? "");
   }, [booking?.id, booking?.internalNotes]);
+
+  /** Seed the edit form from the booking as it stands right now. */
+  const seedEditForm = useCallback((b: BookingRow) => {
+    setEditDate(localDateOf(b));
+    setEditProviderId(b.providerId ?? "");
+    setEditServiceLine((b.serviceLine as ServiceLine) ?? "massage");
+    setEditDurationMin(typeof b.durationMin === "number" ? b.durationMin : 60);
+    setEditServiceId(b.schedulerServiceId ?? "");
+    setEditStartIso(b.startIso ?? "");
+    setSlots([]);
+    setSlotsError(null);
+  }, []);
+
+  // Latest booking, readable from effects that must NOT re-run on the 15 s poll.
+  const latestBooking = useRef<BookingRow | null>(booking);
+  useEffect(() => {
+    latestBooking.current = booking;
+  });
 
   // Keyed on the booking *id*: the scheduler re-fetches bookings every 15 s and
   // hands us a fresh object each time, which must not wipe in-progress input.
@@ -78,6 +143,13 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken, 
     setChargeDescription("");
     setEmailSubject("");
     setEmailMessage("");
+    const b = latestBooking.current;
+    if (autoOpenEdit && b) {
+      seedEditForm(b);
+      setEditing(true);
+    } else {
+      setEditing(false);
+    }
     if (!bookingId) return;
     let cancelled = false;
     (async () => {
@@ -101,7 +173,60 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken, 
     return () => {
       cancelled = true;
     };
-  }, [bookingId, getIdToken]);
+  }, [bookingId, getIdToken, autoOpenEdit, seedEditForm]);
+
+  // Open times for the chosen date / provider / service / length.
+  useEffect(() => {
+    if (!editing || !bookingId || !editProviderId) {
+      setSlots([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      void (async () => {
+        setSlotsLoading(true);
+        setSlotsError(null);
+        try {
+          const token = await getIdToken();
+          if (!token) {
+            if (!cancelled) setSlotsError("Not signed in.");
+            return;
+          }
+          const qs = new URLSearchParams({
+            date: editDate,
+            providerId: editProviderId,
+            serviceLine: editServiceLine,
+            durationMin: String(editDurationMin),
+          });
+          const res = await fetch(
+            `/api/admin/bookings/${encodeURIComponent(bookingId)}/reschedule-options?${qs}`,
+            { headers: { Authorization: `Bearer ${token}` } },
+          );
+          const data = (await res.json().catch(() => ({}))) as {
+            slots?: SlotChoice[];
+            message?: string;
+            error?: string;
+          };
+          if (cancelled) return;
+          if (!res.ok) {
+            setSlots([]);
+            setSlotsError(data.error ?? "Could not load open times.");
+            return;
+          }
+          setSlots(data.slots ?? []);
+          setSlotsError(data.message ?? null);
+        } catch {
+          if (!cancelled) setSlotsError("Could not load open times.");
+        } finally {
+          if (!cancelled) setSlotsLoading(false);
+        }
+      })();
+    }, 200);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [editing, bookingId, editDate, editProviderId, editServiceLine, editDurationMin, getIdToken]);
 
   async function pushDeskFlags(patch: { checkedIn?: boolean; needsReschedule?: boolean }) {
     const b = booking;
@@ -273,6 +398,58 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken, 
       setChargeAmount("");
       setChargeDescription("");
       onActionComplete();
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  async function saveScheduleEdit() {
+    const b = booking;
+    if (!b) return;
+    const payload: Record<string, unknown> = {};
+    if (editStartIso && editStartIso !== (b.startIso ?? "")) payload.startIso = editStartIso;
+    if (editProviderId && editProviderId !== (b.providerId ?? "")) payload.providerId = editProviderId;
+    if (editServiceLine !== b.serviceLine) payload.serviceLine = editServiceLine;
+    if (editDurationMin !== b.durationMin) payload.durationMin = editDurationMin;
+    if (editServiceId !== (b.schedulerServiceId ?? "")) payload.schedulerServiceId = editServiceId;
+
+    if (Object.keys(payload).length === 0) {
+      setError("Nothing changed yet.");
+      return;
+    }
+
+    setWorking(true);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      const token = await getIdToken();
+      if (!token) {
+        setError("Not signed in.");
+        return;
+      }
+      const res = await fetch(`/api/admin/bookings/${encodeURIComponent(b.id)}/reschedule`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        notifiedPatient?: boolean;
+        error?: string;
+      };
+      if (!res.ok) {
+        setError(data.error ?? "Could not save the change.");
+        return;
+      }
+      setSuccessMsg(
+        data.notifiedPatient
+          ? "Appointment updated. The patient was emailed the new time."
+          : "Appointment updated. No patient email was sent.",
+      );
+      setEditing(false);
+      onActionComplete();
+    } catch {
+      setError("Could not save the change.");
     } finally {
       setWorking(false);
     }
@@ -471,6 +648,61 @@ export function BookingDrawer({ booking, onClose, onActionComplete, getIdToken, 
             ) : null}
           </DetailRow>
         </section>
+
+        {!readOnly && (status === "pending" || status === "confirmed") ? (
+          <section className="space-y-3 border-b border-slate-200 px-6 py-4 text-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Edit appointment
+            </p>
+            {editing ? (
+              <EditScheduleForm
+                booking={booking}
+                providers={providers}
+                services={schedulerServices}
+                date={editDate}
+                setDate={setEditDate}
+                providerId={editProviderId}
+                setProviderId={setEditProviderId}
+                serviceLine={editServiceLine}
+                setServiceLine={setEditServiceLine}
+                durationMin={editDurationMin}
+                setDurationMin={setEditDurationMin}
+                serviceId={editServiceId}
+                setServiceId={setEditServiceId}
+                startIso={editStartIso}
+                setStartIso={setEditStartIso}
+                slots={slots}
+                slotsLoading={slotsLoading}
+                slotsError={slotsError}
+                working={working}
+                onCancel={() => {
+                  setEditing(false);
+                  setError(null);
+                }}
+                onSave={() => void saveScheduleEdit()}
+              />
+            ) : (
+              <div className="space-y-2">
+                <p className="text-xs text-slate-600">
+                  Change the time, provider, service or length without cancelling and rebooking.
+                </p>
+                <button
+                  type="button"
+                  disabled={working}
+                  onClick={() => {
+                    seedEditForm(booking);
+                    setEditing(true);
+                    setError(null);
+                    setSuccessMsg(null);
+                  }}
+                  className="rounded-full border border-cyan-300 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-800 hover:bg-cyan-100 disabled:opacity-50"
+                >
+                  Edit time / provider / service
+                </button>
+              </div>
+            )}
+          </section>
+        ) : null}
 
         {!readOnly && (status === "pending" || status === "confirmed") ? (
           <section className="space-y-4 border-b border-slate-200 px-6 py-4 text-sm">
@@ -806,6 +1038,256 @@ function EventMeta({ meta, type }: { meta: Record<string, unknown>; type: Bookin
     );
   }
   return null;
+}
+
+function EditScheduleForm(props: {
+  booking: BookingRow;
+  providers: ProviderRow[];
+  services: SchedulerServiceRow[];
+  date: string;
+  setDate: (s: string) => void;
+  providerId: string;
+  setProviderId: (s: string) => void;
+  serviceLine: ServiceLine;
+  setServiceLine: (s: ServiceLine) => void;
+  durationMin: number;
+  setDurationMin: (n: number) => void;
+  serviceId: string;
+  setServiceId: (s: string) => void;
+  startIso: string;
+  setStartIso: (s: string) => void;
+  slots: SlotChoice[];
+  slotsLoading: boolean;
+  slotsError: string | null;
+  working: boolean;
+  onCancel: () => void;
+  onSave: () => void;
+}) {
+  const b = props.booking;
+  const locationId = b.locationId;
+
+  const eligibleProviders = props.providers.filter(
+    (p) =>
+      p.active &&
+      (!locationId || p.locationIds.includes(locationId as "paris" | "sulphur_springs")) &&
+      p.serviceLines.includes(props.serviceLine),
+  );
+  const eligibleServices = props.services.filter(
+    (s) => s.active !== false && (!s.serviceLines || s.serviceLines.includes(props.serviceLine)),
+  );
+
+  const durations = DURATION_CHOICES.includes(props.durationMin)
+    ? DURATION_CHOICES
+    : [...DURATION_CHOICES, props.durationMin].sort((x, y) => x - y);
+
+  const currentStartLabel =
+    typeof b.startAtMs === "number"
+      ? DateTime.fromMillis(b.startAtMs).setZone(TIME_ZONE).toFormat("LLL d, h:mm a")
+      : "—";
+  const nextStartLabel = props.startIso
+    ? DateTime.fromISO(props.startIso).setZone(TIME_ZONE).toFormat("LLL d, h:mm a")
+    : "—";
+
+  const changes: string[] = [];
+  if (props.startIso && props.startIso !== (b.startIso ?? "")) {
+    changes.push(`Time: ${currentStartLabel} → ${nextStartLabel}`);
+  }
+  if (props.providerId && props.providerId !== (b.providerId ?? "")) {
+    const to = props.providers.find((p) => p.id === props.providerId)?.displayName ?? props.providerId;
+    changes.push(`Provider: ${b.providerDisplayName || "—"} → ${to}`);
+  }
+  if (props.serviceLine !== b.serviceLine) {
+    changes.push(`Service: ${serviceLineLabel(b.serviceLine)} → ${serviceLineLabel(props.serviceLine)}`);
+  }
+  if (props.durationMin !== b.durationMin) {
+    changes.push(`Length: ${b.durationMin ?? "—"} → ${props.durationMin} minutes`);
+  }
+  if (props.serviceId !== (b.schedulerServiceId ?? "")) {
+    const to = props.services.find((s) => s.id === props.serviceId)?.name ?? "None";
+    changes.push(`Service type: ${b.serviceTypeName || "None"} → ${to}`);
+  }
+  const timeMoves = props.startIso !== "" && props.startIso !== (b.startIso ?? "");
+
+  return (
+    <div className="space-y-3 rounded-xl border border-cyan-200 bg-cyan-50 p-3">
+      <p className="text-sm text-cyan-900">
+        Move this appointment without cancelling it. The slot is re-checked for conflicts when you
+        save.
+      </p>
+
+      <div className="grid grid-cols-2 gap-2">
+        <label className="block space-y-1 text-sm">
+          <span className="text-xs font-medium text-cyan-900">Date</span>
+          <input
+            type="date"
+            className="w-full rounded-lg border border-cyan-300 bg-white px-2 py-2 text-sm"
+            value={props.date}
+            onChange={(e) => props.setDate(e.target.value)}
+            disabled={props.working}
+          />
+        </label>
+        <label className="block space-y-1 text-sm">
+          <span className="text-xs font-medium text-cyan-900">Length</span>
+          <select
+            className="w-full rounded-lg border border-cyan-300 bg-white px-2 py-2 text-sm"
+            value={props.durationMin}
+            onChange={(e) => props.setDurationMin(Number(e.target.value))}
+            disabled={props.working}
+          >
+            {durations.map((n) => (
+              <option key={n} value={n}>
+                {n} minutes
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <label className="block space-y-1 text-sm">
+        <span className="text-xs font-medium text-cyan-900">Service</span>
+        <select
+          className="w-full rounded-lg border border-cyan-300 bg-white px-2 py-2 text-sm"
+          value={props.serviceLine}
+          onChange={(e) => {
+            const next = e.target.value as ServiceLine;
+            props.setServiceLine(next);
+            // Keep the provider valid for the new service line.
+            const stillOk = props.providers.some(
+              (p) => p.id === props.providerId && p.serviceLines.includes(next),
+            );
+            if (!stillOk) {
+              const first = props.providers.find(
+                (p) =>
+                  p.active &&
+                  (!locationId || p.locationIds.includes(locationId as "paris" | "sulphur_springs")) &&
+                  p.serviceLines.includes(next),
+              );
+              props.setProviderId(first?.id ?? "");
+            }
+          }}
+          disabled={props.working}
+        >
+          <option value="massage">Massage therapy</option>
+          <option value="chiropractic">Chiropractic</option>
+          <option value="stretch">Stretch</option>
+        </select>
+      </label>
+
+      <label className="block space-y-1 text-sm">
+        <span className="text-xs font-medium text-cyan-900">Provider</span>
+        <select
+          className="w-full rounded-lg border border-cyan-300 bg-white px-2 py-2 text-sm"
+          value={props.providerId}
+          onChange={(e) => props.setProviderId(e.target.value)}
+          disabled={props.working}
+        >
+          {eligibleProviders.length === 0 ? <option value="">No bookable providers</option> : null}
+          {eligibleProviders.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.displayName}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {eligibleServices.length > 0 ? (
+        <label className="block space-y-1 text-sm">
+          <span className="text-xs font-medium text-cyan-900">Service type (sets length)</span>
+          <select
+            className="w-full rounded-lg border border-cyan-300 bg-white px-2 py-2 text-sm"
+            value={props.serviceId}
+            onChange={(e) => {
+              const id = e.target.value;
+              props.setServiceId(id);
+              const svc = props.services.find((s) => s.id === id);
+              if (svc?.durationMinutes) props.setDurationMin(svc.durationMinutes);
+            }}
+            disabled={props.working}
+          >
+            <option value="">— None —</option>
+            {eligibleServices.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name} ({s.durationMinutes} min)
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+
+      <div className="space-y-1">
+        <p className="text-xs font-medium text-cyan-900">Start time</p>
+        {props.slotsLoading ? (
+          <p className="text-xs text-cyan-800">Loading open times…</p>
+        ) : slotsListEmpty(props.slots) ? (
+          <p className="text-xs text-cyan-800">
+            {props.slotsError ?? "No open times for that day. Try another date or provider."}
+          </p>
+        ) : (
+          <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto rounded-lg border border-cyan-200 bg-white p-2">
+            {props.slots.map((s) => (
+              <button
+                key={s.startIso}
+                type="button"
+                disabled={props.working}
+                onClick={() => props.setStartIso(s.startIso)}
+                className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                  props.startIso === s.startIso
+                    ? "border-cyan-900 bg-cyan-900 text-white"
+                    : "border-cyan-300 bg-white text-cyan-900 hover:border-cyan-500"
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        )}
+        {props.slotsError && !slotsListEmpty(props.slots) ? (
+          <p className="text-xs text-amber-800">{props.slotsError}</p>
+        ) : null}
+      </div>
+
+      <div className="rounded-lg border border-cyan-200 bg-white px-3 py-2">
+        <p className="text-xs font-semibold text-cyan-900">Summary</p>
+        {changes.length === 0 ? (
+          <p className="mt-1 text-xs text-slate-600">Nothing changed yet.</p>
+        ) : (
+          <ul className="mt-1 space-y-0.5 text-xs text-slate-800">
+            {changes.map((c) => (
+              <li key={c}>• {c}</li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-2 text-[11px] text-slate-600">
+          {timeMoves
+            ? "The patient will be emailed the new time."
+            : "No patient email is sent for provider or service changes."}
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={props.working || changes.length === 0}
+          onClick={props.onSave}
+          className="rounded-full bg-cyan-700 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-800 disabled:opacity-50"
+        >
+          {props.working ? "Saving…" : "Save changes"}
+        </button>
+        <button
+          type="button"
+          disabled={props.working}
+          onClick={props.onCancel}
+          className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-slate-400 disabled:opacity-50"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function slotsListEmpty(slots: SlotChoice[]): boolean {
+  return slots.length === 0;
 }
 
 function ReasonForm(props: {

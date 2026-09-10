@@ -103,6 +103,8 @@ function AdminDashboard() {
   const [holds, setHolds] = useState<HoldRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  /** Set by the list "Reschedule" action so the drawer opens straight into edit. */
+  const [editRequestId, setEditRequestId] = useState<string | null>(null);
   const [newBookingOpen, setNewBookingOpen] = useState(false);
   const [blockTimeOpen, setBlockTimeOpen] = useState(false);
   const [csvImportSkipConflict, setCsvImportSkipConflict] = useState(false);
@@ -695,6 +697,10 @@ function AdminDashboard() {
                 filters={filters}
                 isManager={isOperationsManager}
                 onSelect={setSelectedId}
+                onRescheduleRequest={(id) => {
+                  setSelectedId(id);
+                  setEditRequestId(id);
+                }}
                 onRescheduleBooking={isOperationsManager ? handleRescheduleBooking : undefined}
                 onInvalidCrossProviderDrop={handleInvalidCrossProviderDrop}
                 onInvalidCrossPatientTimeDrop={handleInvalidCrossPatientTimeDrop}
@@ -719,6 +725,10 @@ function AdminDashboard() {
                 filters={filters}
                 isManager={isOperationsManager}
                 onSelect={setSelectedId}
+                onRescheduleRequest={(id) => {
+                  setSelectedId(id);
+                  setEditRequestId(id);
+                }}
               />
             ) : null}
           </>
@@ -727,12 +737,18 @@ function AdminDashboard() {
 
       <BookingDrawer
         booking={selectedBooking}
-        onClose={() => setSelectedId(null)}
+        onClose={() => {
+          setSelectedId(null);
+          setEditRequestId(null);
+        }}
         onActionComplete={async () => {
           await refreshBookings();
         }}
         getIdToken={getIdToken}
         readOnly={!isDeskWrite}
+        providers={providers}
+        schedulerServices={schedulerServices}
+        autoOpenEdit={Boolean(selectedId) && editRequestId === selectedId}
       />
 
       <NewBookingDrawer

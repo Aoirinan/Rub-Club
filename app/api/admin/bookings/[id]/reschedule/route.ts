@@ -1,15 +1,24 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
-import { rescheduleBookingForStartChange } from "@/lib/booking-reschedule";
+import { updateBookingSchedule } from "@/lib/booking-reschedule";
 import { sendRescheduleNotifications } from "@/lib/booking-reschedule-notify";
 import { requireStaff } from "@/lib/staff-auth";
+import { isValidBookingDurationMin } from "@/lib/booking-duration";
 import { recomputeNextAppointmentForBooking } from "@/lib/patients-db";
 
 export const runtime = "nodejs";
 
 const bodySchema = z.object({
-  startIso: z.string().min(8),
+  startIso: z.string().min(8).optional(),
+  providerId: z.string().trim().min(1).max(200).optional(),
+  serviceLine: z.enum(["massage", "chiropractic", "stretch"]).optional(),
+  durationMin: z
+    .number()
+    .int()
+    .refine(isValidBookingDurationMin, "Duration must be a multiple of 30 minutes.")
+    .optional(),
+  schedulerServiceId: z.string().trim().max(200).optional(),
 });
 
 type Params = { params: Promise<{ id: string }> };
@@ -24,8 +33,12 @@ function messageFor(code: string): string {
       return "That time is outside the provider's bookable hours.";
     case "invalid_time":
       return "Invalid start time.";
+    case "invalid_duration":
+      return "Length must be a multiple of 30 minutes.";
+    case "unknown_service":
+      return "That service is no longer in the catalog.";
     case "no_provider":
-      return "This booking cannot be moved online (missing provider). Call the office.";
+      return "That provider is not bookable for this location and service.";
     case "bad_status":
       return "Only pending or confirmed appointments can be rescheduled here.";
     case "server_error":
@@ -36,7 +49,8 @@ function messageFor(code: string): string {
 }
 
 export async function POST(req: Request, ctx: Params) {
-  const staff = await requireStaff(req.headers.get("authorization"), "manager");
+  // Front desk is exactly who needs to move an appointment when a patient calls.
+  const staff = await requireStaff(req.headers.get("authorization"), "front_desk");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -50,16 +64,30 @@ export async function POST(req: Request, ctx: Params) {
 
   const parsed = bodySchema.safeParse(json);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Invalid request" },
+      { status: 400 },
+    );
+  }
+
+  const changes = parsed.data;
+  if (
+    changes.startIso === undefined &&
+    changes.providerId === undefined &&
+    changes.serviceLine === undefined &&
+    changes.durationMin === undefined &&
+    changes.schedulerServiceId === undefined
+  ) {
+    return NextResponse.json({ error: "Nothing to change." }, { status: 400 });
   }
 
   const { id } = await ctx.params;
   const db = getFirestore();
 
-  const result = await rescheduleBookingForStartChange(
+  const result = await updateBookingSchedule(
     db,
     id,
-    parsed.data.startIso,
+    changes,
     { uid: staff.uid, email: staff.email ?? null },
     { allowPending: true },
   );
@@ -71,6 +99,8 @@ export async function POST(req: Request, ctx: Params) {
     );
   }
 
+  // Only a moved start time emails the patient. A provider or service swap is
+  // recorded in history; staff can send a note with the "Send email" action.
   if (result.changed) {
     try {
       await sendRescheduleNotifications({
@@ -86,5 +116,12 @@ export async function POST(req: Request, ctx: Params) {
 
   await recomputeNextAppointmentForBooking(db, id).catch(() => {});
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({
+    ok: true,
+    changed: result.changed,
+    providerChanged: result.providerChanged,
+    serviceChanged: result.serviceChanged,
+    anyChange: result.anyChange,
+    notifiedPatient: result.changed,
+  });
 }
