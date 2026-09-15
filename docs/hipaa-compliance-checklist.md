@@ -9,7 +9,7 @@
 
 ## Current scope of this website
 
-This website is intentionally **scheduling, marketing, and customer-list only**. It does **not** collect, store, or transmit clinical PHI through any public form, admin upload, or notification email.
+In production this website is **scheduling, marketing, and customer-list only**. No clinical PHI flows through any public form, admin upload, or notification email **while the online patient forms module stays switched off** (see "Online patient forms module" below). The code for that module is in the repo; it is not live.
 
 What the site does:
 
@@ -20,7 +20,7 @@ What the site does:
 
 What the site explicitly does **not** do (any longer):
 
-- Online intake form with medical history / allergies / medications / pregnancy / pacemaker fields. (Retired — `/api/intake` returns 410 Gone.)
+- Online intake form with medical history / allergies / medications / pregnancy / pacemaker fields. The original v0.13 intake was removed (`/api/intake` returns 410 Gone). A **new** online forms module was added in v0.44.0 and is gated off in production — see the section below. Do not switch it on before Phase 2A is done.
 - Insurance card or photo-ID image uploads, either by patients or by staff. (Retired.)
 - Clinical / treatment notes. Those belong in the clinic's EMR or paper chart, not in this admin.
 - Email/SMS messages that contain clinical PHI.
@@ -69,7 +69,22 @@ Then you also need:
 6. **PHI-free email notifications**, opaque tokens for any "complete your intake" links, no PHI in URLs or analytics.
 7. **Breach response plan** (60-day notification to patients; ≥500 records → HHS notice).
 
-The code that previously implemented an online intake form and admin-side insurance-card uploads has been **fully removed** from this repo. Deleted modules include `components/IntakeForm.tsx`, `lib/patient-insurance-upload.ts`, `lib/intake-documents.ts`, `lib/intake-phi-audit.ts`, `lib/intake-office-notification.ts`, `lib/intake-form-fields.ts`, the entire `app/api/admin/intake-forms/` folder, `app/api/admin/patients/[id]/insurance/route.ts`, and the superadmin `IntakePhiSection.tsx` viewer. The `insuranceCardFront` / `insuranceCardBack` URL fields have been removed from the patient data model and admin patient profile UI. If the clinic later decides to accept online intake or insurance uploads, the compliance items above must be signed and in place first, and the upload/intake code must be re-implemented from scratch under that scope.
+## Online patient forms module (in the repo, switched OFF in production)
+
+**This section corrects the older text below it.** v0.44.0 (`fc68121`) added a full online patient forms module after the v0.13 intake code was deleted. It is still here:
+
+- Definitions: `lib/intakeForms/definitions.ts` — five forms (`new-patient-intake-and-consents`, `massage-intake-form`, `vehicle-accident-form`, `consent-only-form`, `pediatric-intake`). They collect pain diagrams, symptom history, medications, allergies, pregnancy/LMP, surgeries, a past-conditions list (AIDS/HIV, alcoholism, bleeding disorders, …), insurance company on accident claims, and e-signatures. **This is PHI.**
+- Public route: `/online-forms` and `/online-forms/[slug]`, submitting to `POST /api/online-forms/submit`. Submissions land in Firestore `intake_submissions`; staff read them via `/api/admin/online-forms/**`. Firestore rules deny all direct client access.
+- Notification email (`lib/intakeForms/notify.ts`) carries an opaque admin link only — no names, answers, or field values. Keep it that way.
+- **Master switch:** Firestore `intake_forms_config/<global doc>` field `enabled`. Code defaults to OFF when the doc is missing (`getGlobalConfig` in `lib/intakeForms/config-db.ts`). Each form also has its own `enabled` flag; the public page shows "temporarily unavailable" unless the master switch is on **and** at least one form is enabled. Staff toggle it from Admin → Online forms (`PATCH /api/admin/online-forms`).
+
+**Verified 2026-09-15** against project `rub-club-ba251` with a read-only Admin SDK script: the global config doc does not exist (so `enabled` reads false), no per-form config docs exist, and `intake_submissions` holds **0** documents. The production deployment (`rub-club.vercel.app`) renders the "temporarily unavailable" message on `/online-forms`. The custom domain still pointed at the legacy site on that date.
+
+**Rule:** nobody flips this switch until every "(required for PHI)" item in Phase 2A of [`two-phase-client-sow.md`](two-phase-client-sow.md) is checked and the developer↔clinic BAA is executed. Turning it on makes the developer a HIPAA Business Associate the same day. If it is ever found on by accident, turn it off first, then count `intake_submissions` and treat any rows as PHI held without a BAA.
+
+## Historical note — v0.13 removal
+
+The v0.13 code that implemented the earlier online intake form and admin-side insurance-card uploads was **fully removed** from this repo (the v0.44 module above is a separate, later implementation). Deleted modules include `components/IntakeForm.tsx`, `lib/patient-insurance-upload.ts`, `lib/intake-documents.ts`, `lib/intake-phi-audit.ts`, `lib/intake-office-notification.ts`, `lib/intake-form-fields.ts`, the entire `app/api/admin/intake-forms/` folder, `app/api/admin/patients/[id]/insurance/route.ts`, and the superadmin `IntakePhiSection.tsx` viewer. The `insuranceCardFront` / `insuranceCardBack` URL fields have been removed from the patient data model and admin patient profile UI. If the clinic later decides to accept online intake, the compliance items above must be signed and in place first; the v0.44 forms module is the implementation that would then be switched on. Insurance-card uploads have no current implementation and would need to be rebuilt under that scope.
 
 A one-time cleanup script `scripts/purge-insurance-uploads.ts` is provided (run with `npm run purge:insurance-uploads`) to delete any historical Storage objects under `patients/*/insurance_*` and `intake_documents/**`, strip `insuranceCardFront` / `insuranceCardBack` fields from existing Firestore patient docs, and optionally drop the `intake_forms` collection. It is not executed automatically.
 
