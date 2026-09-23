@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { adminUploadTooLargeMessage, readAdminUploadJson } from "@/lib/admin-upload-limit";
 import {
   PRACTICE_LOCATION_IDS,
   PRACTICE_LOCATION_LABELS,
@@ -23,7 +24,12 @@ type Props = {
   initialLocation?: PracticeLocationId;
   /** Embedded in the Website editor: hide the page tabs, heading, and outer padding. */
   embedded?: boolean;
+  /** Told when the form gains or loses unsaved changes (the embedding editor asks before leaving). */
+  onDirtyChange?: (dirty: boolean) => void;
 };
+
+const CONFLICT_MESSAGE =
+  "Someone else saved this page after you opened it — reload to see their changes. Your edits are still in the form below.";
 
 const INPUT = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm";
 const TEXTAREA = `${INPUT} min-h-[90px]`;
@@ -172,7 +178,12 @@ function ImageField({
   );
 }
 
-export function PracticePagesEditor({ getIdToken, initialLocation, embedded = false }: Props) {
+export function PracticePagesEditor({
+  getIdToken,
+  initialLocation,
+  embedded = false,
+  onDirtyChange,
+}: Props) {
   const [location, setLocation] = useState<PracticeLocationId>(
     initialLocation ?? "paris-chiro",
   );
@@ -181,28 +192,58 @@ export function PracticePagesEditor({ getIdToken, initialLocation, embedded = fa
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  // Bumped by every load: a response (load, save, upload) that arrives after
+  // the page was switched or reloaded is dropped instead of filling the form.
+  const loadSeq = useRef(0);
+  // The page the form was loaded for and its stored version, sent back on save
+  // so the server can refuse to overwrite a save made since.
+  const loaded = useRef<{ location: PracticeLocationId; version: string | null } | null>(null);
+  // Bumped by every edit, so a save can tell whether typing happened meanwhile.
+  const editSeq = useRef(0);
 
   // Keep the locked page in sync when the embedding scope changes.
   useEffect(() => {
     if (initialLocation) setLocation(initialLocation);
   }, [initialLocation]);
 
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
+
+  useEffect(() => {
+    if (!onDirtyChange) return;
+    return () => onDirtyChange(false);
+  }, [onDirtyChange]);
+
   const load = useCallback(async () => {
+    const seq = ++loadSeq.current;
+    loaded.current = null;
     setLoading(true);
     setDoc(null);
     setDirty(false);
     setMessage(null);
     try {
       const token = await getIdToken();
-      if (!token) return;
+      if (!token || seq !== loadSeq.current) return;
       const res = await fetch(`/api/admin/practice-pages/${location}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = (await res.json()) as { page?: PracticePageDoc; error?: string };
-      if (res.ok && data.page) setDoc(data.page);
-      else setMessage(data.error ?? "Could not load page content.");
+      const data = (await res.json()) as {
+        page?: PracticePageDoc;
+        version?: string | null;
+        error?: string;
+      };
+      // An older request (e.g. the page picked before this one) finishing
+      // last must not show its content under this page's name.
+      if (seq !== loadSeq.current) return;
+      if (res.ok && data.page) {
+        loaded.current = { location, version: data.version ?? null };
+        setDoc(data.page);
+      } else setMessage(data.error ?? "Could not load page content.");
+    } catch {
+      if (seq === loadSeq.current) setMessage("Could not load page content.");
     } finally {
-      setLoading(false);
+      if (seq === loadSeq.current) setLoading(false);
     }
   }, [getIdToken, location]);
 
@@ -211,51 +252,87 @@ export function PracticePagesEditor({ getIdToken, initialLocation, embedded = fa
   }, [load]);
 
   function update(updater: (prev: PracticePageDoc) => PracticePageDoc) {
+    editSeq.current += 1;
     setDoc((prev) => (prev ? updater(prev) : prev));
     setDirty(true);
   }
 
   async function save() {
-    if (!doc) return;
+    const base = loaded.current;
+    if (!doc || !base) return;
+    const seq = loadSeq.current;
+    const editsAtStart = editSeq.current;
     setSaving(true);
     setMessage(null);
     try {
       const token = await getIdToken();
       if (!token) throw new Error("Not signed in");
-      const res = await fetch(`/api/admin/practice-pages/${location}`, {
+      const res = await fetch(`/api/admin/practice-pages/${base.location}`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
-        body: JSON.stringify(doc),
+        body: JSON.stringify({ page: doc, version: base.version }),
       });
-      const data = (await res.json()) as { page?: PracticePageDoc; error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        page?: PracticePageDoc;
+        version?: string | null;
+        error?: string;
+      };
+      if (seq !== loadSeq.current) return;
+      if (res.status === 409) {
+        // Keep the form (and its unsaved state) exactly as typed.
+        setMessage(CONFLICT_MESSAGE);
+        return;
+      }
       if (!res.ok) throw new Error(data.error ?? "Save failed");
-      if (data.page) setDoc(data.page);
-      setDirty(false);
-      setMessage("Saved. The public page updates within a minute.");
+      loaded.current = { location: base.location, version: data.version ?? null };
+      // Only swap in the saved copy and mark clean if nothing was typed while
+      // the request was in flight; otherwise those newer edits stay unsaved.
+      if (editSeq.current === editsAtStart) {
+        if (data.page) setDoc(data.page);
+        setDirty(false);
+        setMessage("Saved. The public page updates within a minute.");
+      } else {
+        setMessage("Saved — you made more changes while saving; save again to publish those too.");
+      }
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Save failed");
+      if (seq === loadSeq.current) setMessage(e instanceof Error ? e.message : "Save failed");
     } finally {
       setSaving(false);
     }
   }
 
   async function uploadImage(slot: string, file: File): Promise<string | null> {
-    const token = await getIdToken();
-    if (!token) return null;
-    const form = new FormData();
-    form.set("file", file);
-    form.set("slot", slot);
-    const res = await fetch(`/api/admin/practice-pages/${location}/upload`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: form,
-    });
-    const data = (await res.json()) as { url?: string; error?: string };
-    if (!res.ok || !data.url) {
-      setMessage(data.error ?? "Upload failed");
+    const base = loaded.current;
+    if (!base) return null;
+    const tooLarge = adminUploadTooLargeMessage(file);
+    if (tooLarge) {
+      setMessage(tooLarge);
       return null;
     }
-    return data.url;
+    const seq = loadSeq.current;
+    try {
+      const token = await getIdToken();
+      if (!token) return null;
+      const form = new FormData();
+      form.set("file", file);
+      form.set("slot", slot);
+      const res = await fetch(`/api/admin/practice-pages/${base.location}/upload`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      const data = await readAdminUploadJson<{ url?: string }>(res);
+      // Switched pages meanwhile: don't drop this page's image into another.
+      if (seq !== loadSeq.current) return null;
+      if (!res.ok || !data.url) {
+        setMessage(data.error ?? "Upload failed");
+        return null;
+      }
+      return data.url;
+    } catch {
+      if (seq === loadSeq.current) setMessage("Upload failed — check your connection and try again.");
+      return null;
+    }
   }
 
   return (

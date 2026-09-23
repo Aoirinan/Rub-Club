@@ -13,6 +13,8 @@ import {
   deleteSiteStaffStorageObject,
   resolveSiteStaffImageContentType,
   resolveSiteStaffVideoContentType,
+  SITE_STAFF_PHOTO_MAX_BYTES,
+  SITE_STAFF_VIDEO_MAX_BYTES,
   uploadSiteStaffPhoto,
   uploadSiteStaffVideo,
 } from "@/lib/site-staff-upload";
@@ -45,6 +47,15 @@ const patchJsonSchema = z.object({
 });
 
 type Params = { params: Promise<{ id: string }> };
+
+/** Best-effort removal of managed Storage objects (non-strings are skipped). */
+async function deleteStorageObjects(paths: unknown[]): Promise<void> {
+  for (const path of paths) {
+    if (typeof path === "string") {
+      await deleteSiteStaffStorageObject(path).catch(() => {});
+    }
+  }
+}
 
 function bumpCache(): void {
   revalidateTag(SITE_STAFF_CACHE_TAG);
@@ -126,67 +137,87 @@ export async function PATCH(req: Request, ctx: Params) {
         : [];
     }
 
-    const file = form.get("photo");
-    if (file instanceof File && file.size > 0) {
-      const buf = Buffer.from(await file.arrayBuffer());
-      const contentType = resolveSiteStaffImageContentType(file.type, buf);
+    // Validate every file before touching Storage: a bad video must not leave
+    // the photo half-replaced.
+    const photoFile = form.get("photo");
+    let photo: { buffer: Buffer; contentType: string } | null = null;
+    if (photoFile instanceof File && photoFile.size > 0) {
+      const buffer = Buffer.from(await photoFile.arrayBuffer());
+      const contentType = resolveSiteStaffImageContentType(photoFile.type, buffer);
       if (!contentType) {
         return NextResponse.json({ error: "Unsupported image type." }, { status: 400 });
       }
-      const oldPath = existing.get("photoStoragePath");
-      try {
-        const up = await uploadSiteStaffPhoto({ memberId: id, buffer: buf, contentType });
-        updates.photoUrl = up.photoUrl;
-        updates.photoStoragePath = up.photoStoragePath;
-        // Same extension ⇒ same deterministic key: never delete the object just written.
-        if (typeof oldPath === "string" && oldPath !== up.photoStoragePath) {
-          await deleteSiteStaffStorageObject(oldPath).catch(() => {});
-        }
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "Upload failed";
-        return NextResponse.json({ error: msg }, { status: 400 });
+      if (buffer.length > SITE_STAFF_PHOTO_MAX_BYTES) {
+        return NextResponse.json({ error: "Image is too large (max 5 MB)." }, { status: 400 });
       }
+      photo = { buffer, contentType };
     }
 
     const videoFile = form.get("video");
+    let video: { buffer: Buffer; contentType: string } | null = null;
     if (videoFile instanceof File && videoFile.size > 0) {
-      const videoContentType = resolveSiteStaffVideoContentType(videoFile.type);
-      if (!videoContentType) {
+      const contentType = resolveSiteStaffVideoContentType(videoFile.type);
+      if (!contentType) {
         return NextResponse.json(
           { error: "Unsupported video type. Use MP4, MOV, or WebM." },
           { status: 400 },
         );
       }
-      const oldVideoPath = existing.get("videoStoragePath");
-      try {
-        const up = await uploadSiteStaffVideo({
-          memberId: id,
-          buffer: Buffer.from(await videoFile.arrayBuffer()),
-          contentType: videoContentType,
-        });
-        updates.videoUrl = up.videoUrl;
-        updates.videoStoragePath = up.videoStoragePath;
-        if (typeof oldVideoPath === "string" && oldVideoPath !== up.videoStoragePath) {
-          await deleteSiteStaffStorageObject(oldVideoPath).catch(() => {});
-        }
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "Video upload failed";
-        return NextResponse.json({ error: msg }, { status: 400 });
+      if (videoFile.size > SITE_STAFF_VIDEO_MAX_BYTES) {
+        return NextResponse.json({ error: "Video is too large (max 80 MB)." }, { status: 400 });
       }
-    } else if (String(form.get("removeVideo") ?? "") === "true") {
-      const oldVideoPath = existing.get("videoStoragePath");
-      if (typeof oldVideoPath === "string") {
-        await deleteSiteStaffStorageObject(oldVideoPath).catch(() => {});
-      }
+      video = { buffer: Buffer.from(await videoFile.arrayBuffer()), contentType };
+    }
+
+    const removeVideo = !video && String(form.get("removeVideo") ?? "") === "true";
+    if (removeVideo) {
       updates.videoUrl = FieldValue.delete();
       updates.videoStoragePath = FieldValue.delete();
     }
 
-    if (Object.keys(updates).length <= 2) {
+    if (Object.keys(updates).length <= 2 && !photo && !video) {
       return NextResponse.json({ error: "No changes submitted" }, { status: 400 });
     }
 
-    await ref.update(updates);
+    const oldPhotoPath = existing.get("photoStoragePath");
+    const oldVideoPath = existing.get("videoStoragePath");
+    // New objects written by this request. Same extension ⇒ same deterministic
+    // key as the old object, which the record still uses: never delete those.
+    const written: string[] = [];
+    const discardWritten = () =>
+      deleteStorageObjects(written.filter((p) => p !== oldPhotoPath && p !== oldVideoPath));
+
+    try {
+      if (photo) {
+        const up = await uploadSiteStaffPhoto({ memberId: id, ...photo });
+        written.push(up.photoStoragePath);
+        updates.photoUrl = up.photoUrl;
+        updates.photoStoragePath = up.photoStoragePath;
+      }
+      if (video) {
+        const up = await uploadSiteStaffVideo({ memberId: id, ...video });
+        written.push(up.videoStoragePath);
+        updates.videoUrl = up.videoUrl;
+        updates.videoStoragePath = up.videoStoragePath;
+      }
+    } catch (e) {
+      await discardWritten();
+      const msg = e instanceof Error ? e.message : "Upload failed";
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
+
+    try {
+      await ref.update(updates);
+    } catch (e) {
+      await discardWritten();
+      throw e;
+    }
+
+    // The record now points at the new files: remove the ones it replaced.
+    await deleteStorageObjects([
+      photo && oldPhotoPath !== updates.photoStoragePath ? oldPhotoPath : null,
+      (video || removeVideo) && oldVideoPath !== updates.videoStoragePath ? oldVideoPath : null,
+    ]);
     bumpCache();
     const next = await ref.get();
     const row = parseSiteStaffDoc(next.id, next.data());
@@ -223,16 +254,8 @@ export async function PATCH(req: Request, ctx: Params) {
   if (body.photoUrl !== undefined) {
     updates.photoUrl = body.photoUrl.trim();
     updates.photoStoragePath = FieldValue.delete();
-    const oldPath = existing.get("photoStoragePath");
-    if (typeof oldPath === "string") {
-      await deleteSiteStaffStorageObject(oldPath).catch(() => {});
-    }
   }
   if (body.removeVideo === true) {
-    const oldVideoPath = existing.get("videoStoragePath");
-    if (typeof oldVideoPath === "string") {
-      await deleteSiteStaffStorageObject(oldVideoPath).catch(() => {});
-    }
     updates.videoUrl = FieldValue.delete();
     updates.videoStoragePath = FieldValue.delete();
   }
@@ -242,6 +265,11 @@ export async function PATCH(req: Request, ctx: Params) {
   }
 
   await ref.update(updates);
+  // Only once the record no longer points at them.
+  await deleteStorageObjects([
+    body.photoUrl !== undefined ? existing.get("photoStoragePath") : null,
+    body.removeVideo === true ? existing.get("videoStoragePath") : null,
+  ]);
   bumpCache();
   const next = await ref.get();
   const row = parseSiteStaffDoc(next.id, next.data());

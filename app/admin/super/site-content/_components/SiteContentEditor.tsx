@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
+import { adminUploadTooLargeMessage, readAdminUploadJson } from "@/lib/admin-upload-limit";
 import type { ContentFieldType, ContentPageKey } from "@/lib/cms";
 import Link from "next/link";
 import { MassageTeamAdminSection } from "@/app/admin/super/_components/MassageTeamAdminSection";
@@ -281,6 +282,8 @@ export function SiteContentEditor() {
       const token = await getToken();
       const headers = { Authorization: `Bearer ${token}` };
       if (file) {
+        const tooLarge = adminUploadTooLargeMessage(file);
+        if (tooLarge) throw new Error(tooLarge);
         const fd = new FormData();
         fd.append("file", file);
         const up = await fetch(`/api/admin/site-content/${encodeURIComponent(id)}/upload`, {
@@ -288,7 +291,7 @@ export function SiteContentEditor() {
           headers,
           body: fd,
         });
-        const upData = (await up.json()) as { error?: string };
+        const upData = await readAdminUploadJson<object>(up);
         if (!up.ok) throw new Error(upData.error ?? "Upload failed");
       } else {
         const res = await fetch(`/api/admin/site-content/${encodeURIComponent(id)}`, {

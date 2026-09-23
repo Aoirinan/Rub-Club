@@ -28,6 +28,8 @@ type Props = {
   excludeFieldIds?: string[];
   /** When set, only this section is shown (used by the service-page picker). */
   onlySectionId?: string | null;
+  /** Told when a field box gains or loses unsaved typing. */
+  onDirtyChange?: (id: string, dirty: boolean) => void;
 };
 
 type SectionDef = {
@@ -110,6 +112,7 @@ export function ScopeFieldForm({
   onReset,
   excludeFieldIds,
   onlySectionId,
+  onDirtyChange,
 }: Props) {
   const sections = useMemo<SectionDef[]>(() => {
     const base = isPageLayoutId(scope)
@@ -156,6 +159,7 @@ export function ScopeFieldForm({
                   busy={busy}
                   onSave={onSave}
                   onReset={onReset}
+                  onDirtyChange={onDirtyChange}
                   compact
                 />
               ))}

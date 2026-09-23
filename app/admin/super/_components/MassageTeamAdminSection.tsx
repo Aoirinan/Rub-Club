@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { Auth } from "firebase/auth";
+import { adminUploadTooLargeMessage, readAdminUploadJson } from "@/lib/admin-upload-limit";
 import type { MassageTeamMemberStored } from "@/lib/massage-team";
 
 type Props = {
@@ -227,6 +228,11 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
       setSectionAlert({ kind: "error", text: "Choose a portrait image." });
       return;
     }
+    const tooLarge = adminUploadTooLargeMessage(newPhoto);
+    if (tooLarge) {
+      setSectionAlert({ kind: "error", text: tooLarge });
+      return;
+    }
     setSaving(true);
     try {
       const token = await user.getIdToken();
@@ -244,7 +250,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
         headers: { Authorization: `Bearer ${token}` },
         body: form,
       });
-      const data = await parseAdminJson(res);
+      const data = await readAdminUploadJson<Record<string, unknown>>(res);
       if (!res.ok) {
         setSectionAlert({
           kind: "error",
@@ -279,6 +285,11 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
       setSectionAlert({ kind: "error", text: "Name and bio are required." });
       return;
     }
+    const tooLarge = adminUploadTooLargeMessage([editPhoto]);
+    if (tooLarge) {
+      setSectionAlert({ kind: "error", text: tooLarge });
+      return;
+    }
     setSaving(true);
     try {
       const token = await user.getIdToken();
@@ -298,7 +309,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
           headers: { Authorization: `Bearer ${token}` },
           body: form,
         });
-        const data = await parseAdminJson(res);
+        const data = await readAdminUploadJson<Record<string, unknown>>(res);
         if (!res.ok) {
           setSectionAlert({
             kind: "error",
@@ -450,7 +461,7 @@ export function MassageTeamAdminSection({ auth, onNotify }: Props) {
       <div>
         <h2 className="text-lg font-semibold text-slate-900">Massage team (Meet the team)</h2>
         <p className="mt-2 text-sm text-slate-600">
-          Photos and bios on the home page and massage page. Upload JPEG, PNG, or WebP (up to 5 MB).
+          Photos and bios on the home page and massage page. Upload JPEG, PNG, or WebP (up to 4.5 MB).
         </p>
         {sectionAlert ? (
           <div

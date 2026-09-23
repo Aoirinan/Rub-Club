@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import { AdminAuthGate } from "@/app/admin/_components/AdminAuthGate";
+import { adminUploadTooLargeMessage, readAdminUploadJson } from "@/lib/admin-upload-limit";
 import type { StretchFlexExercise, StretchFlexImage } from "@/lib/stretch-flex";
 
 export default function StretchFlexAdminPage() {
@@ -89,6 +90,8 @@ function StretchFlexEditor() {
       setBusyId(row.id);
       setMessage(null);
       try {
+        const tooLarge = adminUploadTooLargeMessage(file);
+        if (tooLarge) throw new Error(tooLarge);
         const token = await getIdToken();
         if (!token) throw new Error("Not signed in");
         const fd = new FormData();
@@ -98,7 +101,7 @@ function StretchFlexEditor() {
           headers: { Authorization: `Bearer ${token}` },
           body: fd,
         });
-        const data = (await res.json()) as { url?: string; error?: string };
+        const data = await readAdminUploadJson<{ url?: string }>(res);
         if (!res.ok || !data.url) throw new Error(data.error ?? "Upload failed");
         // Read the latest images from state: edits made while the upload was
         // in flight must not be overwritten by the snapshot captured at click.

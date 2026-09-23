@@ -17,6 +17,7 @@ import {
   type StaffLocationScope,
 } from "@/lib/staff-roles";
 import type { ProviderRow } from "@/lib/provider-types";
+import { adminUploadTooLargeMessage, readAdminUploadJson } from "@/lib/admin-upload-limit";
 import {
   ProviderProfileEditor,
   providerToProfileDraft,
@@ -546,6 +547,11 @@ export default function SuperAdminPage() {
       setMessage("Display name, location(s), and service(s) are required.");
       return;
     }
+    const tooLarge = adminUploadTooLargeMessage([editProviderPhoto]);
+    if (tooLarge) {
+      setMessage(tooLarge);
+      return;
+    }
     setSavingProvider(true);
     try {
       const token = await auth.currentUser.getIdToken();
@@ -602,7 +608,12 @@ export default function SuperAdminPage() {
         });
       }
 
-      const data = (await res.json().catch(() => ({}))) as {
+      // With a photo attached the body can exceed Vercel's limit (non-JSON reply).
+      const data = (
+        editProviderPhoto
+          ? await readAdminUploadJson<{ provider?: ProviderRow }>(res)
+          : await res.json().catch(() => ({}))
+      ) as {
         error?: string;
         provider?: ProviderRow;
       };

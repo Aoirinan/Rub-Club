@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { parseCmsToggle } from "@/lib/sticky-call-bar";
 import type { SiteContentFieldRow } from "./useSiteContentFields";
 import { RichTextArea } from "./RichTextArea";
@@ -11,18 +11,54 @@ type Props = {
   onSave: (id: string, value: string, file?: File) => Promise<void>;
   onReset: (id: string, label: string) => Promise<void>;
   compact?: boolean;
+  /** Told whether this box holds unsaved typing (so pickers can ask before leaving). */
+  onDirtyChange?: (id: string, dirty: boolean) => void;
 };
 
-export function CmsFieldEditor({ field, busy, onSave, onReset, compact }: Props) {
+export function CmsFieldEditor({ field, busy, onSave, onReset, compact, onDirtyChange }: Props) {
   const [draft, setDraft] = useState(field.value);
   const [expanded, setExpanded] = useState(compact ? false : true);
   const textareaId = `cms-field-${field.id}`;
+  // Stored value the draft was last synced to, and the draft this box's own
+  // Save/Reset sent (its result should replace that draft).
+  const syncedValue = useRef(field.value);
+  const sentDraft = useRef<string | null>(null);
 
   useEffect(() => {
-    setDraft(field.value);
+    // A refresh after saving some other field must not wipe typing here: only
+    // follow the stored value while the draft is untouched, or when this
+    // field's own save/reset produced it (and nothing was typed since).
+    const synced = syncedValue.current;
+    const sent = sentDraft.current;
+    setDraft((d) => (d === synced || d === sent ? field.value : d));
+    syncedValue.current = field.value;
   }, [field.id, field.value]);
 
   const isBoolean = field.type === "boolean";
+  const dirty = isBoolean
+    ? parseCmsToggle(draft) !== parseCmsToggle(field.value)
+    : draft !== field.value;
+
+  useEffect(() => {
+    onDirtyChange?.(field.id, dirty);
+  }, [onDirtyChange, field.id, dirty]);
+
+  useEffect(() => {
+    if (!onDirtyChange) return;
+    const id = field.id;
+    return () => onDirtyChange(id, false);
+  }, [onDirtyChange, field.id]);
+
+  function runOwnWrite(write: () => Promise<void>) {
+    sentDraft.current = draft;
+    void write()
+      .catch(() => {
+        /* the shared message line shows the error; the draft is kept */
+      })
+      .finally(() => {
+        sentDraft.current = null;
+      });
+  }
 
   const valuePreview = isBoolean
     ? parseCmsToggle(field.value)
@@ -109,7 +145,13 @@ export function CmsFieldEditor({ field, busy, onSave, onReset, compact }: Props)
                 }
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) void onSave(field.id, field.value, file);
+                  // Clear the picker so choosing the same (or a smaller) file again re-triggers.
+                  e.target.value = "";
+                  if (file) {
+                    void onSave(field.id, field.value, file).catch(() => {
+                      /* the shared message line shows the error */
+                    });
+                  }
                 }}
               />
               {field.type === "image" && field.value ? (
@@ -130,7 +172,7 @@ export function CmsFieldEditor({ field, busy, onSave, onReset, compact }: Props)
                 type="button"
                 disabled={busy}
                 className="rounded-lg bg-[#c0392b] px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
-                onClick={() => void onSave(field.id, draft)}
+                onClick={() => runOwnWrite(() => onSave(field.id, draft))}
               >
                 Save
               </button>
@@ -138,7 +180,7 @@ export function CmsFieldEditor({ field, busy, onSave, onReset, compact }: Props)
                 type="button"
                 disabled={busy}
                 className="text-xs font-semibold text-slate-600 underline"
-                onClick={() => void onReset(field.id, field.fieldLabel)}
+                onClick={() => runOwnWrite(() => onReset(field.id, field.fieldLabel))}
               >
                 Reset
               </button>

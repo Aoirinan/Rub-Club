@@ -10,6 +10,7 @@
  * either page. Client-safe types/constants are in lib/practice-pages-shared.ts.
  */
 
+import { Timestamp } from "firebase-admin/firestore";
 import { getFirestore } from "@/lib/firebase-admin";
 import { getContentMany } from "@/lib/cms";
 import { parseChiroTreatments } from "@/lib/chiro-treatments";
@@ -633,6 +634,31 @@ export async function buildPracticePageDefaults(
 /* ------------------------------------------------------------------ */
 /*  Reads                                                              */
 /* ------------------------------------------------------------------ */
+
+/**
+ * Edit version of a stored practice page: its `updatedAt` (every writer sets
+ * it), or null when the doc has never been saved. Opaque — compare, don't parse.
+ */
+export function practicePageVersion(data: Record<string, unknown> | undefined): string | null {
+  const ts = data?.updatedAt;
+  if (!(ts instanceof Timestamp)) return null;
+  return `${ts.seconds}.${String(ts.nanoseconds).padStart(9, "0")}`;
+}
+
+/**
+ * Editor read: the page plus the version the editor sends back when saving.
+ * Unlike getPracticePage, a failed read throws — editing defaults in place of
+ * an unreadable doc would overwrite it.
+ */
+export async function getPracticePageForEditing(
+  loc: PracticeLocationId,
+): Promise<{ page: PracticePageDoc; version: string | null }> {
+  const defaults = await buildPracticePageDefaults(loc);
+  const snap = await getFirestore().collection(PRACTICE_PAGES_COLLECTION).doc(loc).get();
+  if (!snap.exists) return { page: defaults, version: null };
+  const data = snap.data();
+  return { page: mergePracticePageDoc(data, defaults), version: practicePageVersion(data) };
+}
 
 /** Practice page content: Firestore doc merged over current live defaults. */
 export async function getPracticePage(loc: PracticeLocationId): Promise<PracticePageDoc> {

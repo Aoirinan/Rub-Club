@@ -1,6 +1,7 @@
 import { Buffer } from "node:buffer";
 import { NextResponse } from "next/server";
 import { uploadSiteContentMedia } from "@/lib/cms-upload";
+import { resolveMassageTeamImageContentType } from "@/lib/massage-team-upload";
 import { requireStaff } from "@/lib/staff-auth";
 import { isPracticeLocationId } from "@/lib/practice-pages-shared";
 
@@ -35,12 +36,14 @@ export async function POST(
       ? slotRaw.trim().replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 60)
       : "image";
 
-  const contentType = file.type || "application/octet-stream";
-  if (!ALLOWED.includes(contentType)) {
+  const buf = Buffer.from(await file.arrayBuffer());
+  // Some browsers (seen on Windows) send an empty File.type for valid JPEGs:
+  // sniff magic bytes like the other image upload routes do.
+  const contentType = resolveMassageTeamImageContentType(file.type, buf);
+  if (!contentType || !ALLOWED.includes(contentType)) {
     return NextResponse.json({ error: "Unsupported file type" }, { status: 400 });
   }
 
-  const buf = Buffer.from(await file.arrayBuffer());
   if (buf.length > MAX_IMAGE) {
     return NextResponse.json({ error: "File too large" }, { status: 400 });
   }

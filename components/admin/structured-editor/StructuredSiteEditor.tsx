@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import { MassageTeamAdminSection } from "@/app/admin/super/_components/MassageTeamAdminSection";
@@ -134,8 +134,10 @@ function practiceLocationForScope(scope: PageBuilderScopeId): PracticeLocationId
 /**
  * Legacy fields superseded by the practice editor for each landing scope.
  * Kept (not listed) where still consumed elsewhere: home_awards_text (awards
- * strip), chiro_treatments_list (Services nav), and the SS hours / massage /
- * contact fields used by other Sulphur Springs pages.
+ * strip) and the SS hours / massage / contact fields used by other Sulphur
+ * Springs pages. chiro_treatments_heading / chiro_treatments_list only seed
+ * the practice page defaults (the Services nav uses a fixed list), so they are
+ * hidden here; stored values are left untouched.
  */
 const SUPERSEDED_FIELD_IDS: Record<string, string[]> = {
   home: [
@@ -153,7 +155,9 @@ const SUPERSEDED_FIELD_IDS: Record<string, string[]> = {
     "chiro_conditions_list",
     "chiro_doctors_heading",
     "chiro_doctors_intro",
+    "chiro_treatments_heading",
     "chiro_treatments_intro",
+    "chiro_treatments_list",
     "chiro_testimonials_heading",
     "chiro_cta_heading",
     "chiro_cta_subtext",
@@ -201,6 +205,26 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
 
   const livePath = scopeLivePath(scope);
 
+  // Editors holding unsaved typing (the embedded practice page form, CMS field
+  // boxes). Switching page unmounts them, so the pickers ask first.
+  const unsavedRef = useRef(new Set<string>());
+  const trackUnsaved = useCallback((key: string, dirty: boolean) => {
+    if (dirty) unsavedRef.current.add(key);
+    else unsavedRef.current.delete(key);
+  }, []);
+  const trackFieldUnsaved = useCallback(
+    (id: string, dirty: boolean) => trackUnsaved(`field:${id}`, dirty),
+    [trackUnsaved],
+  );
+  const trackPracticeUnsaved = useCallback(
+    (dirty: boolean) => trackUnsaved("practice-page", dirty),
+    [trackUnsaved],
+  );
+  const confirmDiscard = useCallback(
+    () => unsavedRef.current.size === 0 || window.confirm("Discard unsaved changes?"),
+    [],
+  );
+
   const pages = useMemo(
     () => PAGE_LAYOUT_PAGES.map((p) => ({ id: p.id, label: p.label })),
     [],
@@ -235,19 +259,32 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
     window.history.replaceState(null, "", url);
   }, [scope, activeSectionId]);
 
+  /** Switch the edited page, asking first when that would drop unsaved typing. */
+  const goTo = useCallback(
+    (nextScope: PageBuilderScopeId, nextSectionId: string | null): boolean => {
+      if (nextScope === scope && nextSectionId === sectionId) return true;
+      if (!confirmDiscard()) return false;
+      setScope(nextScope);
+      setSectionId(nextSectionId);
+      return true;
+    },
+    [scope, sectionId, confirmDiscard],
+  );
+
   const chooseOffice = useCallback(
     (next: EditorOffice) => {
-      setOffice(next);
       // Same page in the other office (site settings) keeps the selection;
       // otherwise land on the same menu group there.
-      if (findSelection(next, scope, sectionId)) return;
+      if (findSelection(next, scope, sectionId)) {
+        setOffice(next);
+        return;
+      }
       const sameGroup = groupsForOffice(next).find((g) => g.id === selection?.group.id);
       const target =
         sameGroup?.items.find((i) => !i.href) ?? firstSelectionForOffice(next).item;
-      setScope(target.scope);
-      setSectionId(target.sectionId ?? null);
+      if (goTo(target.scope, target.sectionId ?? null)) setOffice(next);
     },
-    [scope, sectionId, selection],
+    [scope, sectionId, selection, goTo],
   );
 
   const chooseGroup = useCallback(
@@ -255,10 +292,9 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
       const group = groups.find((g) => g.id === id);
       const target = group?.items.find((i) => !i.href) ?? group?.items[0];
       if (!target) return;
-      setScope(target.scope);
-      setSectionId(target.sectionId ?? null);
+      goTo(target.scope, target.sectionId ?? null);
     },
-    [groups],
+    [groups, goTo],
   );
 
   const chooseItem = useCallback(
@@ -266,13 +302,12 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
       const target = activeGroup.items.find((i) => i.key === key);
       if (!target) return;
       if (target.href) {
-        window.location.assign(target.href);
+        if (confirmDiscard()) window.location.assign(target.href);
         return;
       }
-      setScope(target.scope);
-      setSectionId(target.sectionId ?? null);
+      goTo(target.scope, target.sectionId ?? null);
     },
-    [activeGroup],
+    [activeGroup, confirmDiscard, goTo],
   );
 
   const loadCms = cms.load;
@@ -316,6 +351,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
           message={cms.message}
           onSave={cms.saveField}
           onReset={cms.resetField}
+          onDirtyChange={trackFieldUnsaved}
           excludeFieldIds={ALL_HEADER_LOGO_HEIGHT_FIELD_IDS}
         />
       </div>
@@ -332,6 +368,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
           message={cms.message}
           onSave={cms.saveField}
           onReset={cms.resetField}
+          onDirtyChange={trackFieldUnsaved}
         />
         <FaqItemsPanel getIdToken={getIdToken} category="general" />
       </div>
@@ -360,6 +397,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
           message={cms.message}
           onSave={cms.saveField}
           onReset={cms.resetField}
+          onDirtyChange={trackFieldUnsaved}
         />
         <SiteStaffAdminSection
           auth={auth}
@@ -377,6 +415,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
           getIdToken={getIdToken}
           initialLocation={practiceLocation}
           embedded
+          onDirtyChange={trackPracticeUnsaved}
         />
         <ScopeFieldForm
           scope={scope}
@@ -385,6 +424,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
           message={cms.message}
           onSave={cms.saveField}
           onReset={cms.resetField}
+          onDirtyChange={trackFieldUnsaved}
           excludeFieldIds={SUPERSEDED_FIELD_IDS[scope]}
         />
       </div>
@@ -399,6 +439,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
           message={cms.message}
           onSave={cms.saveField}
           onReset={cms.resetField}
+          onDirtyChange={trackFieldUnsaved}
         />
         <SiteStaffAdminSection
           auth={auth}
@@ -418,6 +459,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
         message={cms.message}
         onSave={cms.saveField}
         onReset={cms.resetField}
+        onDirtyChange={trackFieldUnsaved}
         onlySectionId={activeSectionId}
       />
     );
@@ -516,7 +558,9 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
               </p>
             ) : null}
           </div>
-          {cms.loading ? (
+          {/* Placeholder only until the first field list arrives: later refreshes
+              (after each save) must keep the editors, and their drafts, mounted. */}
+          {cms.loading && cms.fields.length === 0 ? (
             <p className="text-sm text-slate-600">Loading…</p>
           ) : (
             main

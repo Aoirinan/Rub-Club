@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import {
+  adminUploadTooLargeMessage,
+  readAdminUploadJson,
+} from "@/lib/admin-upload-limit";
 import type { ContentFieldMeta, ContentFieldType } from "@/lib/cms-registry";
 
 export type SiteContentFieldRow = ContentFieldMeta & {
@@ -21,24 +25,44 @@ export function useSiteContentFields({ getIdToken, onSaved }: UseSiteContentFiel
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
+  const fetchFields = useCallback(async () => {
+    const token = await getIdToken();
+    if (!token) return;
+    const res = await fetch("/api/admin/site-content", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = (await res.json()) as { fields?: SiteContentFieldRow[]; error?: string };
+    if (!res.ok) throw new Error(data.error ?? "Could not load fields");
+    if (data.fields) setFields(data.fields);
+  }, [getIdToken]);
+
+  /** Full load: `loading` is true meanwhile (callers show a placeholder). */
   const load = useCallback(async () => {
     setLoading(true);
     setMessage(null);
     try {
-      const token = await getIdToken();
-      if (!token) return;
-      const res = await fetch("/api/admin/site-content", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = (await res.json()) as { fields?: SiteContentFieldRow[]; error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Could not load fields");
-      if (data.fields) setFields(data.fields);
+      await fetchFields();
     } catch (e) {
       setMessage({ kind: "err", text: e instanceof Error ? e.message : "Load failed" });
     } finally {
       setLoading(false);
     }
-  }, [getIdToken]);
+  }, [fetchFields]);
+
+  /**
+   * Refresh after a save/reset without touching `loading`: the editor must stay
+   * mounted so unsaved drafts in other fields (and embedded editors) survive.
+   */
+  const refresh = useCallback(async () => {
+    try {
+      await fetchFields();
+    } catch {
+      setMessage({
+        kind: "err",
+        text: "Saved, but the field list could not be refreshed — reload the page to see the latest values.",
+      });
+    }
+  }, [fetchFields]);
 
   const getField = useCallback(
     (id: string) => fields.find((f) => f.id === id),
@@ -59,6 +83,8 @@ export function useSiteContentFields({ getIdToken, onSaved }: UseSiteContentFiel
         if (!token) throw new Error("Not signed in");
         const headers = { Authorization: `Bearer ${token}` };
         if (file) {
+          const tooLarge = adminUploadTooLargeMessage(file);
+          if (tooLarge) throw new Error(tooLarge);
           const fd = new FormData();
           fd.append("file", file);
           const up = await fetch(`/api/admin/site-content/${encodeURIComponent(id)}/upload`, {
@@ -66,7 +92,7 @@ export function useSiteContentFields({ getIdToken, onSaved }: UseSiteContentFiel
             headers,
             body: fd,
           });
-          const upData = (await up.json()) as { error?: string };
+          const upData = await readAdminUploadJson<object>(up);
           if (!up.ok) throw new Error(upData.error ?? "Upload failed");
         } else {
           const res = await fetch(`/api/admin/site-content/${encodeURIComponent(id)}`, {
@@ -78,7 +104,7 @@ export function useSiteContentFields({ getIdToken, onSaved }: UseSiteContentFiel
           if (!res.ok) throw new Error(data.error ?? "Save failed");
         }
         setMessage({ kind: "ok", text: "Saved — live within about 60 seconds" });
-        await load();
+        await refresh();
         onSaved?.();
       } catch (e) {
         setMessage({ kind: "err", text: e instanceof Error ? e.message : "Save failed" });
@@ -87,7 +113,7 @@ export function useSiteContentFields({ getIdToken, onSaved }: UseSiteContentFiel
         setBusy(false);
       }
     },
-    [getIdToken, load, onSaved],
+    [getIdToken, refresh, onSaved],
   );
 
   const resetField = useCallback(
@@ -104,7 +130,7 @@ export function useSiteContentFields({ getIdToken, onSaved }: UseSiteContentFiel
         const data = (await res.json()) as { error?: string };
         if (!res.ok) throw new Error(data.error ?? "Reset failed");
         setMessage({ kind: "ok", text: "Reset to default" });
-        await load();
+        await refresh();
         onSaved?.();
       } catch (e) {
         setMessage({ kind: "err", text: e instanceof Error ? e.message : "Reset failed" });
@@ -112,7 +138,7 @@ export function useSiteContentFields({ getIdToken, onSaved }: UseSiteContentFiel
         setBusy(false);
       }
     },
-    [getIdToken, load, onSaved],
+    [getIdToken, refresh, onSaved],
   );
 
   return {

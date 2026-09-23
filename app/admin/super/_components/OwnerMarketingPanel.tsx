@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useSearchParams } from "next/navigation";
 import { ownerMarketingFetch } from "@/lib/owner-marketing-client";
+import { adminUploadTooLargeMessage, readAdminUploadJson } from "@/lib/admin-upload-limit";
 import type {
   BannerConfig,
   DoctorMediaItem,
@@ -969,6 +970,11 @@ function SpecialsPopupImageControls({
       onMessage("Choose an image file first.");
       return;
     }
+    const tooLarge = adminUploadTooLargeMessage(file);
+    if (tooLarge) {
+      onMessage(tooLarge);
+      return;
+    }
     setBusy(true);
     onMessage(null);
     try {
@@ -980,10 +986,7 @@ function SpecialsPopupImageControls({
         body: fd,
         credentials: "include",
       });
-      const data = (await res.json().catch(() => ({}))) as {
-        error?: string;
-        specials?: SpecialsConfig;
-      };
+      const data = await readAdminUploadJson<{ specials?: SpecialsConfig }>(res);
       if (!res.ok) {
         onMessage(data.error ?? "Upload failed");
         return;

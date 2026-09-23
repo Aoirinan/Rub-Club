@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Auth } from "firebase/auth";
+import { adminUploadTooLargeMessage, readAdminUploadJson } from "@/lib/admin-upload-limit";
 import type { SiteStaffBrand, SiteStaffMemberStored } from "@/lib/site-staff";
 
 type Props = {
@@ -235,6 +236,11 @@ export function SiteStaffAdminSection({
       setSectionAlert({ kind: "error", text: "Choose a portrait image." });
       return;
     }
+    const tooLarge = adminUploadTooLargeMessage([newPhoto, newVideo]);
+    if (tooLarge) {
+      setSectionAlert({ kind: "error", text: tooLarge });
+      return;
+    }
     setSaving(true);
     try {
       const token = await user.getIdToken();
@@ -252,7 +258,7 @@ export function SiteStaffAdminSection({
         headers: { Authorization: `Bearer ${token}` },
         body: form,
       });
-      const data = await parseAdminJson(res);
+      const data = await readAdminUploadJson<Record<string, unknown>>(res);
       if (!res.ok) {
         setSectionAlert({
           kind: "error",
@@ -283,6 +289,11 @@ export function SiteStaffAdminSection({
       setSectionAlert({ kind: "error", text: "Name and title are required." });
       return;
     }
+    const tooLarge = adminUploadTooLargeMessage([editPhoto, editVideo]);
+    if (tooLarge) {
+      setSectionAlert({ kind: "error", text: tooLarge });
+      return;
+    }
     setSaving(true);
     try {
       const token = await user.getIdToken();
@@ -303,7 +314,7 @@ export function SiteStaffAdminSection({
           headers: { Authorization: `Bearer ${token}` },
           body: form,
         });
-        const data = await parseAdminJson(res);
+        const data = await readAdminUploadJson<Record<string, unknown>>(res);
         if (!res.ok) {
           setSectionAlert({
             kind: "error",
@@ -568,7 +579,9 @@ export function SiteStaffAdminSection({
             className="w-full text-sm"
             onChange={(e) => setNewVideo(e.target.files?.[0] ?? null)}
           />
-          <span className="block text-xs text-slate-500">MP4, MOV, or WebM — max 80 MB.</span>
+          <span className="block text-xs text-slate-500">
+            MP4, MOV, or WebM — max 4.5 MB together with the portrait.
+          </span>
         </label>
         <button
           type="button"
@@ -667,7 +680,8 @@ export function SiteStaffAdminSection({
               onChange={(e) => setEditVideo(e.target.files?.[0] ?? null)}
             />
             <span className="block text-xs text-slate-500">
-              MP4, MOV, or WebM — max 80 MB. Shows a &ldquo;Meet&rdquo; button under their name on the website.
+              MP4, MOV, or WebM — max 4.5 MB together with a new portrait. Shows a &ldquo;Meet&rdquo;
+              button under their name on the website.
             </span>
           </label>
           {editing.videoUrl && !editVideo ? (
