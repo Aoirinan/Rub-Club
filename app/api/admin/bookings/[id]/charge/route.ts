@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
+import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
 import { requireStaff } from "@/lib/staff-auth";
 import { recordBookingEvent } from "@/lib/booking-events";
@@ -14,23 +15,39 @@ export const runtime = "nodejs";
 
 type Params = { params: Promise<{ id: string }> };
 
+// Same amount/description limits as app/api/payments/square-link, plus the
+// $0.50 minimum this route has always enforced.
+const bodySchema = z.object({
+  amountCents: z.number().int().min(50).max(500_000),
+  description: z.string().max(200).optional(),
+});
+
 export async function POST(req: Request, ctx: Params) {
   const staff = await requireStaff(req.headers.get("authorization"), "front_desk");
   if (!staff) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = (await req.json().catch(() => null)) as {
-    amountCents?: number;
-    description?: string;
-  } | null;
-
-  if (!body?.amountCents || typeof body.amountCents !== "number" || body.amountCents < 50) {
+  let json: unknown;
+  try {
+    json = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  const parsed = bodySchema.safeParse(json);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "amountCents is required and must be at least 50 ($0.50)." },
+      {
+        error:
+          "amountCents must be a whole number of cents from 50 ($0.50) to 500000 ($5,000); description is limited to 200 characters.",
+      },
       { status: 400 },
     );
   }
+  const body = {
+    amountCents: parsed.data.amountCents,
+    description: parsed.data.description?.trim() || undefined,
+  };
 
   const { id } = await ctx.params;
   const db = getFirestore();
@@ -65,9 +82,11 @@ export async function POST(req: Request, ctx: Params) {
   });
 
   if (!linkResult.created) {
+    // Square's error text is logged by lib/square.ts; don't pass it to the client.
+    console.error("[charge] payment link not created", { bookingId: id, reason: linkResult.reason });
     return NextResponse.json(
-      { error: `Could not create payment link: ${linkResult.detail ?? linkResult.reason}` },
-      { status: 502 },
+      { error: "Could not create payment link. Please try again later." },
+      { status: linkResult.reason === "missing_env" ? 503 : 502 },
     );
   }
 

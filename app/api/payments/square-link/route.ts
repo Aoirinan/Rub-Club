@@ -82,16 +82,17 @@ export async function POST(req: Request) {
         message: "Square payment link created.",
       });
     }
+    // Square's error text stays in the server log (lib/square.ts); the client
+    // only gets a generic reason, same as the charge route.
     return NextResponse.json(
       {
         ok: false,
         reason: linkResult.reason,
-        detail: linkResult.detail,
         url: null,
         message:
           linkResult.reason === "missing_env"
             ? "Square is not configured (set SQUARE_ACCESS_TOKEN and SQUARE_LOCATION_ID)."
-            : `Square did not return a link: ${linkResult.detail ?? linkResult.reason}`,
+            : "Square did not return a payment link. Try again, or check the Square dashboard.",
       },
       { status: linkResult.reason === "missing_env" ? 503 : 502 },
     );

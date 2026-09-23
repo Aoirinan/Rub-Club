@@ -3,6 +3,7 @@ import { emailFromName, siteShortName } from "@/lib/site-content";
 import { getPublicAppOrigin } from "@/lib/app-origin";
 import { LOCATIONS, telHref } from "@/lib/constants";
 import { emailLocations } from "@/lib/email-locations";
+import { maskEmailForLog } from "@/lib/log-redact";
 import type { EmailLocations } from "@/lib/email-templates";
 
 let configured = false;
@@ -221,11 +222,11 @@ export async function sendOutboundEmail(params: {
   const key = getSendgridApiKey();
   const fromEmail = getSendgridFromEmailNormalized();
   if (!key) {
-    console.warn("[sendgrid] SENDGRID_API_KEY is missing — email NOT sent to", params.to);
+    console.warn("[sendgrid] SENDGRID_API_KEY is missing — email NOT sent to", maskEmailForLog(params.to));
     return { ok: false, reason: "missing_api_key" };
   }
   if (!isValidOutboundFromEmail(fromEmail)) {
-    console.warn("[sendgrid] SENDGRID_FROM_EMAIL is missing or invalid — email NOT sent to", params.to);
+    console.warn("[sendgrid] SENDGRID_FROM_EMAIL is missing or invalid — email NOT sent to", maskEmailForLog(params.to));
     return { ok: false, reason: "invalid_from_email" };
   }
 
@@ -250,7 +251,7 @@ export async function sendOutboundEmail(params: {
     });
     return { ok: true };
   } catch (err) {
-    console.error("[sendgrid] send failed to", params.to, err);
+    console.error("[sendgrid] send failed to", maskEmailForLog(params.to), err);
     return { ok: false, reason: "send_failed", detail: sendgridDisplayForAdmin(err) };
   }
 }

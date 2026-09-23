@@ -3,6 +3,7 @@ import { DateTime } from "luxon";
 import { getFirestore } from "@/lib/firebase-admin";
 import { TIME_ZONE } from "@/lib/constants";
 import { PATIENTS_COLLECTION } from "@/lib/patients-db";
+import { NOTIFICATIONS_LOG_COLLECTION } from "@/lib/notifications-log";
 
 const FIRESTORE_BATCH_LIMIT = 400;
 
@@ -11,6 +12,7 @@ export type DataRetentionConfig = {
   retentionYears: number;
   maxBookings: number;
   maxSms: number;
+  maxNotifications: number;
   maxPatients: number;
 };
 
@@ -21,6 +23,8 @@ export type DataRetentionResult = {
   deletedBookings: number;
   deletedEvents: number;
   deletedSms: number;
+  /** notifications_log entries (reminder SMS/email bodies, phone, email, patientId). */
+  deletedNotifications: number;
   deletedPatients: number;
   skippedUndatedBookings: number;
   truncated: boolean;
@@ -31,6 +35,7 @@ export function getDataRetentionConfig(): DataRetentionConfig {
   const years = yearsRaw ? Number.parseInt(yearsRaw, 10) : 7;
   const maxBookingsRaw = process.env.DATA_RETENTION_MAX_BOOKINGS?.trim();
   const maxSmsRaw = process.env.DATA_RETENTION_MAX_SMS?.trim();
+  const maxNotificationsRaw = process.env.DATA_RETENTION_MAX_NOTIFICATIONS?.trim();
   const maxPatientsRaw = process.env.DATA_RETENTION_MAX_PATIENTS?.trim();
 
   return {
@@ -42,6 +47,10 @@ export function getDataRetentionConfig(): DataRetentionConfig {
         : 500,
     maxSms:
       Number.isFinite(Number(maxSmsRaw)) && Number(maxSmsRaw) > 0 ? Number(maxSmsRaw) : 1000,
+    maxNotifications:
+      Number.isFinite(Number(maxNotificationsRaw)) && Number(maxNotificationsRaw) > 0
+        ? Number(maxNotificationsRaw)
+        : 1000,
     maxPatients:
       Number.isFinite(Number(maxPatientsRaw)) && Number(maxPatientsRaw) > 0
         ? Number(maxPatientsRaw)
@@ -100,7 +109,8 @@ async function purgeOldBookings(
   deletedEvents: number;
   skippedUndatedBookings: number;
   truncated: boolean;
-  patientIdsTouched: Set<string>;
+  /** Purged (or, in dry run, would-be-purged) booking IDs per linked patient. */
+  purgedBookingIdsByPatient: Map<string, Set<string>>;
 }> {
   const byStartAt = await db
     .collection("bookings")
@@ -135,7 +145,7 @@ async function purgeOldBookings(
   let deletedBookings = 0;
   let deletedEvents = 0;
   let skippedUndatedBookings = 0;
-  const patientIdsTouched = new Set<string>();
+  const purgedBookingIdsByPatient = new Map<string, Set<string>>();
 
   for (const doc of docs) {
     const retentionTs = bookingRetentionTimestamp(doc.data());
@@ -149,7 +159,10 @@ async function purgeOldBookings(
 
     const patientId = doc.get("patientId");
     if (typeof patientId === "string" && patientId.trim()) {
-      patientIdsTouched.add(patientId.trim());
+      const key = patientId.trim();
+      const ids = purgedBookingIdsByPatient.get(key) ?? new Set<string>();
+      ids.add(doc.id);
+      purgedBookingIdsByPatient.set(key, ids);
     }
 
     deletedEvents += await deleteBookingEvents(db, doc.id, dryRun);
@@ -164,24 +177,26 @@ async function purgeOldBookings(
     deletedEvents,
     skippedUndatedBookings,
     truncated,
-    patientIdsTouched,
+    purgedBookingIdsByPatient,
   };
 }
 
-async function purgeOldSms(
+/** Deletes up to `max` entries of a log collection whose `sentAt` is before the cutoff. */
+async function purgeOldLogEntries(
   db: Firestore,
+  collectionName: string,
   cutoff: Timestamp,
-  maxSms: number,
+  max: number,
   dryRun: boolean,
-): Promise<{ deletedSms: number; truncated: boolean }> {
+): Promise<{ deleted: number; truncated: boolean }> {
   const snap = await db
-    .collection("sms_send_log")
+    .collection(collectionName)
     .where("sentAt", "<", cutoff)
-    .limit(maxSms + 1)
+    .limit(max + 1)
     .get();
 
-  const truncated = snap.size > maxSms;
-  const docs = snap.docs.slice(0, maxSms);
+  const truncated = snap.size > max;
+  const docs = snap.docs.slice(0, max);
 
   if (!dryRun && docs.length > 0) {
     for (let i = 0; i < docs.length; i += FIRESTORE_BATCH_LIMIT) {
@@ -193,12 +208,25 @@ async function purgeOldSms(
     }
   }
 
-  return { deletedSms: docs.length, truncated };
+  return { deleted: docs.length, truncated };
 }
 
-async function patientHasBookings(db: Firestore, patientId: string): Promise<boolean> {
-  const snap = await db.collection("bookings").where("patientId", "==", patientId).limit(1).get();
-  return !snap.empty;
+/**
+ * True when the patient still has a booking that this run does not purge. In a
+ * dry run the purged bookings still exist, so they are ignored explicitly.
+ */
+async function patientHasBookings(
+  db: Firestore,
+  patientId: string,
+  purgedBookingIds: ReadonlySet<string> | undefined,
+): Promise<boolean> {
+  const ignore = purgedBookingIds ?? new Set<string>();
+  const snap = await db
+    .collection("bookings")
+    .where("patientId", "==", patientId)
+    .limit(ignore.size + 1)
+    .get();
+  return snap.docs.some((d) => !ignore.has(d.id));
 }
 
 function patientEligibleForDeletion(
@@ -225,9 +253,10 @@ async function purgeInactivePatients(
   cutoff: Timestamp,
   maxPatients: number,
   dryRun: boolean,
-  patientIdsFromBookings: Set<string>,
+  purgedBookingIdsByPatient: Map<string, Set<string>>,
 ): Promise<{ deletedPatients: number; truncated: boolean }> {
   const candidates = new Map<string, QueryDocumentSnapshot>();
+  const patientIdsFromBookings = new Set(purgedBookingIdsByPatient.keys());
 
   for (const id of patientIdsFromBookings) {
     if (candidates.size >= maxPatients) break;
@@ -270,7 +299,7 @@ async function purgeInactivePatients(
   for (const doc of docList) {
     const data = doc.data();
     if (!patientEligibleForDeletion(data, cutoff)) continue;
-    if (await patientHasBookings(db, doc.id)) continue;
+    if (await patientHasBookings(db, doc.id, purgedBookingIdsByPatient.get(doc.id))) continue;
     if (!dryRun) {
       await doc.ref.delete();
     }
@@ -285,7 +314,8 @@ async function purgeInactivePatients(
 }
 
 /**
- * Permanently removes scheduling data older than the configured retention period.
+ * Permanently removes scheduling data (bookings, SMS and notification logs,
+ * inactive patients) older than the configured retention period.
  * No-ops unless DATA_RETENTION_ENABLED=true (except dry-run CLI which bypasses enabled).
  */
 export async function runDataRetentionPurge(opts: {
@@ -303,6 +333,7 @@ export async function runDataRetentionPurge(opts: {
       deletedBookings: 0,
       deletedEvents: 0,
       deletedSms: 0,
+      deletedNotifications: 0,
       deletedPatients: 0,
       skippedUndatedBookings: 0,
       truncated: false,
@@ -319,13 +350,20 @@ export async function runDataRetentionPurge(opts: {
     config.maxBookings,
     dryRun,
   );
-  const smsResult = await purgeOldSms(db, cutoff, config.maxSms, dryRun);
+  const smsResult = await purgeOldLogEntries(db, "sms_send_log", cutoff, config.maxSms, dryRun);
+  const notificationsResult = await purgeOldLogEntries(
+    db,
+    NOTIFICATIONS_LOG_COLLECTION,
+    cutoff,
+    config.maxNotifications,
+    dryRun,
+  );
   const patientResult = await purgeInactivePatients(
     db,
     cutoff,
     config.maxPatients,
     dryRun,
-    bookingResult.patientIdsTouched,
+    bookingResult.purgedBookingIdsByPatient,
   );
 
   return {
@@ -333,10 +371,14 @@ export async function runDataRetentionPurge(opts: {
     cutoffIso: cutoff.toDate().toISOString(),
     deletedBookings: bookingResult.deletedBookings,
     deletedEvents: bookingResult.deletedEvents,
-    deletedSms: smsResult.deletedSms,
+    deletedSms: smsResult.deleted,
+    deletedNotifications: notificationsResult.deleted,
     deletedPatients: patientResult.deletedPatients,
     skippedUndatedBookings: bookingResult.skippedUndatedBookings,
     truncated:
-      bookingResult.truncated || smsResult.truncated || patientResult.truncated,
+      bookingResult.truncated ||
+      smsResult.truncated ||
+      notificationsResult.truncated ||
+      patientResult.truncated,
   };
 }

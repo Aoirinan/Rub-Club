@@ -30,6 +30,7 @@ import {
   type BookingEmailContext,
 } from "@/lib/email-templates";
 import { recordBookingEventInTx, recordBookingEvent } from "@/lib/booking-events";
+import { officeSeriesLines, patientSeriesNote } from "@/lib/booking-series-notes";
 import { resolvePublicBookingPrepayCents } from "@/lib/public-booking-prepay";
 import { sendSms } from "@/lib/twilio";
 import { logSmsSent } from "@/lib/sms-audit";
@@ -240,6 +241,8 @@ export async function POST(req: Request) {
   }
 
   const createdIds: string[] = [];
+  // Start of each booked visit, parallel to createdIds (skipped dates are left out).
+  const createdStarts: DateTime[] = [];
   const conflicts: string[] = [];
   const multiVisit = starts.length > 1;
 
@@ -414,6 +417,7 @@ export async function POST(req: Request) {
         });
       }
       createdIds.push(bookingRef.id);
+      createdStarts.push(thisStart);
       await linkBookingAfterCreate(db, bookingRef.id, "online_booking").catch((err) =>
         console.error("[patients] link after public booking", err),
       );
@@ -447,7 +451,8 @@ export async function POST(req: Request) {
     ? eligible.find((p) => p.id === preferredProviderId)?.displayName
     : undefined;
 
-  const firstStart = starts[0]!;
+  // Describe the first visit actually booked (the first requested date may have been taken).
+  const firstStart = createdStarts[0]!;
   const emailContext: BookingEmailContext = {
     bookingId: createdIds[0]!,
     locationId,
@@ -463,21 +468,31 @@ export async function POST(req: Request) {
     preferredProviderName,
   };
 
-  const recurrenceNote =
-    createdIds.length > 1
-      ? `We also received ${createdIds.length - 1} additional weekly visit(s) on the same weekday. Each is pending office confirmation (references: ${createdIds.slice(1).join(", ")}).`
-      : undefined;
+  const recurrenceNote = body.recurrence
+    ? patientSeriesNote({
+        frequency: body.recurrence.frequency,
+        bookedIds: createdIds,
+        skippedLabels: conflicts,
+      })
+    : undefined;
 
   const officeTo = process.env.OFFICE_NOTIFICATION_EMAIL;
   if (officeTo) {
     try {
-      const officePayload = officeNotificationEmail(emailContext);
+      const officePayload = officeNotificationEmail(emailContext, undefined, {
+        seriesLines: body.recurrence
+          ? officeSeriesLines({
+              frequency: body.recurrence.frequency,
+              requestedCount: starts.length,
+              bookedIds: createdIds,
+              skippedLabels: conflicts,
+            })
+          : undefined,
+      });
       let subject = officePayload.subject;
-      let text = officePayload.text;
-      const html = officePayload.html;
+      const { text, html } = officePayload;
       if (createdIds.length > 1) {
         subject = `[${createdIds.length} visits] ${subject}`;
-        text = `Patient requested ${createdIds.length} recurring visits (same weekday).\nBooking IDs: ${createdIds.join(", ")}\n\n${text}`;
       }
       await sendBookingNotification({
         to: officeTo,

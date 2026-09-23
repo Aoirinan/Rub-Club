@@ -1,4 +1,5 @@
 import twilio from "twilio";
+import { maskPhoneForLog } from "@/lib/log-redact";
 
 let client: ReturnType<typeof twilio> | null = null;
 
@@ -38,7 +39,7 @@ export async function sendSms(
   const c = getTwilioClient();
   const from = getTwilioPhone();
   if (!c || !from) {
-    console.warn("[twilio] Missing TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_PHONE_NUMBER — SMS NOT sent to", to);
+    console.warn("[twilio] Missing TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_PHONE_NUMBER — SMS NOT sent to", maskPhoneForLog(to));
     return { sent: false, reason: "missing_env" };
   }
 
@@ -51,7 +52,8 @@ export async function sendSms(
     return { sent: true, sid: msg.sid };
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
-    console.error("[twilio] SMS send failed:", detail);
+    // Twilio errors often quote the destination number; keep it out of logs.
+    console.error("[twilio] SMS send failed:", detail.split(toE164(to)).join(maskPhoneForLog(to)));
     return { sent: false, reason: "send_error", detail };
   }
 }

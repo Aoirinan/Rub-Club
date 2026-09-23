@@ -5,7 +5,7 @@ import { runDataRetentionPurge } from "@/lib/data-retention";
 export const runtime = "nodejs";
 
 /**
- * Weekly purge of bookings, SMS logs, and inactive patient profiles older than
+ * Weekly purge of bookings, SMS logs, notification logs, and inactive patient profiles older than
  * DATA_RETENTION_YEARS (default 7). Requires DATA_RETENTION_ENABLED=true.
  */
 export async function GET(req: Request) {

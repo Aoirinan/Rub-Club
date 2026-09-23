@@ -18,6 +18,7 @@
     "seed:practice-pages": "npx tsx scripts/seed-practice-pages.ts",
     "seed:online-forms": "npx tsx scripts/seed-online-forms.ts",
     "purge:insurance-uploads": "npx tsx scripts/purge-insurance-uploads.ts",
+    "purge:old-records": "npx tsx scripts/purge-old-records.ts",
     "generate:baa-pdf": "npx tsx scripts/generate-baa-pdf.ts",
     "generate:sow-pdf": "npx tsx scripts/generate-sow-pdf.ts",
     "build:chiro-packet": "node scripts/build-chiro-packet.mjs",

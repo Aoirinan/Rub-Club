@@ -14,6 +14,7 @@ import { linkBookingAfterCreate, onBookingStatusChange } from "@/lib/patients-db
 import { sendBookingNotification } from "@/lib/sendgrid";
 import { siteUrl } from "@/lib/site-content";
 import { verifySquareWebhook } from "@/lib/square";
+import { decideSquarePaymentEvent, type SquarePaymentWebhookPayload } from "@/lib/square-webhook";
 
 export const runtime = "nodejs";
 
@@ -26,20 +27,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
-  let payload: {
-    type?: string;
-    data?: {
-      object?: {
-        payment?: {
-          id?: string;
-          amount_money?: { amount?: number; currency?: string };
-          note?: string;
-          status?: string;
-          order_id?: string;
-        };
-      };
-    };
-  };
+  let payload: SquarePaymentWebhookPayload;
 
   try {
     payload = JSON.parse(rawBody);
@@ -47,23 +35,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (payload.type !== "payment.completed") {
+  // Square sends payment.created / payment.updated (there is no payment.completed);
+  // only a COMPLETED payment is recorded. Redeliveries and the later
+  // payment.updated for the same payment are de-duplicated in the transaction.
+  const decision = decideSquarePaymentEvent(payload);
+  if (!decision.accept) {
+    if (decision.reason === "no_booking_id") {
+      console.warn("[square-webhook] Could not extract bookingId from payment note; payment:", decision.squarePaymentId);
+    }
     return NextResponse.json({ ok: true, skipped: true });
   }
 
-  const payment = payload.data?.object?.payment;
-  if (!payment?.id) {
-    return NextResponse.json({ ok: true, skipped: true });
-  }
-
-  const amountCents = Number(payment.amount_money?.amount ?? 0);
-  const squarePaymentId = payment.id;
-
-  const bookingId = extractBookingId(payment.note);
-  if (!bookingId) {
-    console.warn("[square-webhook] Could not extract bookingId from payment note:", payment.note);
-    return NextResponse.json({ ok: true, skipped: true });
-  }
+  const { amountCents, squarePaymentId, bookingId } = decision;
 
   const db = getFirestore();
   const bookingRef = db.collection("bookings").doc(bookingId);
@@ -228,6 +211,7 @@ export async function POST(req: Request) {
           location: `${locations[emailCtx.locationId].addressLocality}, ${locations[emailCtx.locationId].addressRegion}`,
           organizerEmail: process.env.OFFICE_NOTIFICATION_EMAIL,
           organizerName: "Paris Wellness",
+          status: "confirmed",
         });
         const icsBase64 = Buffer.from(ics, "utf8").toString("base64");
         const { subject, text, html } = patientAcceptedEmail(
@@ -255,17 +239,4 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({ ok: true });
-}
-
-/**
- * Extract a booking ID from the payment note.
- * The charge route sets note as "Booking {bookingId} — {patientName}".
- */
-function extractBookingId(note?: string): string | null {
-  if (!note) return null;
-  const m1 = note.match(/^Booking\s+(\S+)/);
-  if (m1) return m1[1] ?? null;
-  const m2 = note.match(/bookingId=([^&\s]+)/i);
-  if (m2) return m2[1] ?? null;
-  return null;
 }

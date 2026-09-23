@@ -12,7 +12,25 @@ type IcsEvent = {
   url?: string;
   /** RFC 5545 calendar method — use REQUEST when updating an existing invite. */
   method?: "PUBLISH" | "REQUEST";
+  /**
+   * Booking status. Pending requests are marked TENTATIVE; every current caller
+   * only attaches an invite once the visit is confirmed, so that is the default.
+   */
+  status?: "confirmed" | "pending";
+  /**
+   * RFC 5545 SEQUENCE. Calendar apps only replace an event with the same UID
+   * when the SEQUENCE is higher, so it must grow each time the invite is
+   * regenerated (e.g. after a reschedule). Defaults to icsSequenceNow().
+   */
+  sequence?: number;
 };
+
+/** Seconds since 2025-01-01 UTC: increases on every regeneration and stays well inside RFC 5545's 32-bit INTEGER. */
+const ICS_SEQUENCE_EPOCH_MS = Date.UTC(2025, 0, 1);
+
+export function icsSequenceNow(nowMs: number = Date.now()): number {
+  return Math.max(0, Math.floor((nowMs - ICS_SEQUENCE_EPOCH_MS) / 1000));
+}
 
 function pad(n: number): string {
   return n < 10 ? `0${n}` : String(n);
@@ -51,6 +69,10 @@ export function buildIcs(event: IcsEvent): string {
   const dtStart = toIcsUtc(event.startUtc);
   const dtEnd = toIcsUtc(event.startUtc.plus({ minutes: event.durationMinutes }));
   const dtStamp = toIcsUtc(DateTime.utc());
+  const sequence =
+    typeof event.sequence === "number" && Number.isInteger(event.sequence) && event.sequence >= 0
+      ? event.sequence
+      : icsSequenceNow();
 
   const lines = [
     "BEGIN:VCALENDAR",
@@ -60,6 +82,7 @@ export function buildIcs(event: IcsEvent): string {
     `METHOD:${event.method ?? "PUBLISH"}`,
     "BEGIN:VEVENT",
     `UID:${event.uid}`,
+    `SEQUENCE:${sequence}`,
     `DTSTAMP:${dtStamp}`,
     `DTSTART:${dtStart}`,
     `DTEND:${dtEnd}`,
@@ -70,7 +93,7 @@ export function buildIcs(event: IcsEvent): string {
     event.organizerEmail
       ? `ORGANIZER;CN=${escapeText(event.organizerName ?? event.organizerEmail)}:mailto:${event.organizerEmail}`
       : "",
-    "STATUS:TENTATIVE",
+    `STATUS:${event.status === "pending" ? "TENTATIVE" : "CONFIRMED"}`,
     "TRANSP:OPAQUE",
     "BEGIN:VALARM",
     "ACTION:DISPLAY",

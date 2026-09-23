@@ -1,6 +1,9 @@
 import { FieldValue, type Firestore } from "firebase-admin/firestore";
 import { getFirestore } from "./firebase-admin";
 
+/** Purged by lib/data-retention.ts after the retention period (keyed on `sentAt`). */
+export const NOTIFICATIONS_LOG_COLLECTION = "notifications_log";
+
 export async function logNotificationSent(
   opts: {
     type: "sms" | "email";
@@ -14,7 +17,7 @@ export async function logNotificationSent(
   },
   db: Firestore = getFirestore(),
 ): Promise<void> {
-  await db.collection("notifications_log").add({
+  await db.collection(NOTIFICATIONS_LOG_COLLECTION).add({
     type: opts.type,
     phone: opts.phone ?? null,
     email: opts.email ?? null,

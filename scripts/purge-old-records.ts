@@ -9,6 +9,7 @@
  *   DATA_RETENTION_YEARS=7
  *   DATA_RETENTION_MAX_BOOKINGS=500
  *   DATA_RETENTION_MAX_SMS=1000
+ *   DATA_RETENTION_MAX_NOTIFICATIONS=1000
  *   DATA_RETENTION_MAX_PATIENTS=200
  *
  * CLI always scans Firestore (--dry-run or --execute). --execute does not require

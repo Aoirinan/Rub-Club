@@ -489,7 +489,11 @@ export function patientCancelledEmail(
 export const patientConfirmationEmail = patientPendingEmail;
 
 /** Office-facing rich HTML notification. */
-export function officeNotificationEmail(ctx: BookingEmailContext, locations: EmailLocations = LOCATIONS): {
+export function officeNotificationEmail(
+  ctx: BookingEmailContext,
+  locations: EmailLocations = LOCATIONS,
+  opts?: { seriesLines?: string[] },
+): {
   subject: string;
   text: string;
   html: string;
@@ -504,7 +508,8 @@ export function officeNotificationEmail(ctx: BookingEmailContext, locations: Ema
         ? "Client requested a specific provider."
         : "Client requested first available.";
 
-  const text = [
+  const seriesLines = opts?.seriesLines?.filter(Boolean) ?? [];
+  const detailsText = [
     "NEW ONLINE BOOKING REQUEST",
     "",
     `Reference: ${ctx.bookingId}`,
@@ -522,6 +527,7 @@ export function officeNotificationEmail(ctx: BookingEmailContext, locations: Ema
   ]
     .filter(Boolean)
     .join("\n");
+  const text = seriesLines.length ? `${seriesLines.join("\n")}\n\n${detailsText}` : detailsText;
 
   const adminFocusUrl = siteUrl(`/admin?focus=${encodeURIComponent(ctx.bookingId)}`);
 
@@ -532,6 +538,11 @@ export function officeNotificationEmail(ctx: BookingEmailContext, locations: Ema
       <br>
       <a href="${escapeHtml(adminFocusUrl)}" style="display:inline-block;margin-top:6px;color:${PRIMARY};font-weight:700;">Open this booking in /admin →</a>
     </p>
+    ${
+      seriesLines.length
+        ? `<p style="margin:12px 0 0 0;padding:10px 12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;font-size:14px;color:${TEXT};">${seriesLines.map(escapeHtml).join("<br>")}</p>`
+        : ""
+    }
     ${detailsTable(ctx, locations)}
     <h2 style="margin:20px 0 6px 0;font-size:16px;color:${TEXT};">Patient</h2>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
