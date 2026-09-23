@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   buildPageMetadata,
+  CANONICAL_OVERRIDES,
+  canonicalPathFor,
   descriptionFromBlocks,
   stripTrailingBrand,
   titleAlreadyBranded,
@@ -48,6 +50,34 @@ describe("buildPageMetadata", () => {
       canonical: "/services/massage/swedish-massage",
     });
     expect(meta.alternates?.canonical).toBe("/services/massage/swedish-massage");
+    expect(meta.openGraph?.url).toBe("/services/massage/swedish-massage");
+  });
+
+  it("uses the page's own path as canonical and og:url by default", () => {
+    const meta = buildPageMetadata({ title: "About Us", description: "d", path: "/about" });
+    expect(meta.alternates?.canonical).toBe("/about");
+    expect(meta.openGraph?.url).toBe("/about");
+  });
+
+  it("points a known imported copy at the newer page without being told", () => {
+    const meta = buildPageMetadata({
+      title: "Stretch & Flex Rehab",
+      description: "d",
+      path: "/services/chiropractic/stretch---flex-rehab",
+    });
+    expect(meta.alternates?.canonical).toBe("/services/chiropractic/stretch-and-flex-rehab");
+    expect(meta.openGraph?.url).toBe("/services/chiropractic/stretch-and-flex-rehab");
+  });
+
+  it("lets an explicit canonical win over the override table", () => {
+    const meta = buildPageMetadata({
+      title: "Massage Prices",
+      description: "d",
+      path: "/services/massage/massage-prices",
+      canonical: "/services/massage",
+    });
+    expect(meta.alternates?.canonical).toBe("/services/massage");
+    expect(meta.openGraph?.url).toBe("/services/massage");
   });
 
   it("keeps a page out of search when asked", () => {
@@ -58,6 +88,38 @@ describe("buildPageMetadata", () => {
       noindex: true,
     });
     expect(meta.robots).toEqual({ index: false, follow: true });
+  });
+});
+
+describe("canonicalPathFor", () => {
+  it("maps the imported duplicates the sitemap must leave out", () => {
+    const duplicates = [
+      ...["swedish", "thai", "hot-stone", "deep-tissue", "prenatal", "sports"].map(
+        (m) => `/services/chiropractic/${m}-massage`,
+      ),
+      "/services/massage/massage-prices",
+      "/services/massage/chiropractic-care",
+      "/services/chiropractic/stretch---flex-rehab",
+      "/services/chiropractic/electrical-muscle-stimulation",
+      "/services/chiropractic/ice-pack-cryotherapy",
+    ];
+    for (const path of duplicates) expect(canonicalPathFor(path)).not.toBe(path);
+    expect(Object.keys(CANONICAL_OVERRIDES).sort()).toEqual([...duplicates].sort());
+  });
+
+  it("never points a duplicate at another duplicate", () => {
+    for (const target of Object.values(CANONICAL_OVERRIDES)) {
+      expect(canonicalPathFor(target)).toBe(target);
+    }
+  });
+
+  it("leaves every other page as its own canonical", () => {
+    expect(canonicalPathFor("/services/massage/swedish-massage")).toBe(
+      "/services/massage/swedish-massage",
+    );
+    expect(canonicalPathFor("/sulphur-springs/electrical-muscle-stimulation")).toBe(
+      "/sulphur-springs/electrical-muscle-stimulation",
+    );
   });
 });
 

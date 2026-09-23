@@ -23,7 +23,7 @@ const SECURITY_HEADERS = [
   },
 ];
 
-// ── Legacy URL redirects (provenance + review notes: docs/legacy-redirect-map.csv) ──
+// ── Legacy URL redirects (provenance + review notes: docs/legacy-redirect-map.csv — update it with every rule change) ──
 
 const PRIMARY_ORIGIN = "https://www.chiropracticparistexas.com";
 
@@ -40,7 +40,7 @@ const LEGACY_PRIMARY_REDIRECTS: Record<string, string> = {
   "/attorneys.php": "/contact",
   "/auto-accident-chiropractic.php": "/services/chiropractic/auto-injury",
   "/auto-injury": "/services/chiropractic/auto-injury",
-  "/burn-scar-massage": "/services/massage",
+  "/burn-scar-massage": "/services/massage/burn-scar-massage",
   "/chiropractic-care": "/services/chiropractic",
   "/chiropractic-care.php": "/services/chiropractic",
   "/chiropractic-massage-therapy": "/services/chiropractic/therapeutic-massage",
@@ -107,7 +107,9 @@ const LEGACY_PRIMARY_REDIRECTS: Record<string, string> = {
   "/knee-pain-treatments": "/services/chiropractic/knee-pain-treatments",
   "/spine-specialist": "/services/chiropractic/spine-specialist",
   // No direct equivalent — sent to the closest live page rather than a 404.
-  "/what-is-chiropractic": "/sulphur-springs/about-chiropractic",
+  // Paris pages only: a Sulphur Springs destination would switch a Paris
+  // visitor to the Sulphur Springs brand. (/about-chiro goes here too.)
+  "/what-is-chiropractic": "/services/chiropractic",
   "/chiropractic-massage": "/services/massage/therapeutic-massage",
   "/youth-massage": "/services/massage",
   "/dot-physical": "/services",
@@ -124,7 +126,7 @@ const LEGACY_PRIMARY_REDIRECTS: Record<string, string> = {
   "/injury-rehab": "/services/chiropractic/injury-rehab",
   "/therapeutic-ultrasound": "/services/chiropractic/therapeutic-ultrasound",
   "/ultra-sound.php": "/services/chiropractic/therapeutic-ultrasound",
-  "/vertebral-subluxation-complex": "/sulphur-springs/vertebral-subluxation-complex",
+  "/vertebral-subluxation-complex": "/services/chiropractic/vertebral-subluxation-complex",
   "/wellness-care-plans": "/services/chiropractic/wellness-care-plans",
   "/x-ray.php": "/services/chiropractic",
   "/3d-spine-simulator": "/services/chiropractic",
@@ -168,6 +170,7 @@ const MASSAGE_LEGACY_PAGE_SLUGS = [
   "adjustments-and-manipulation",
   "auto-injury",
   "back-pain-relief",
+  "burn-scar-massage",
   "cold-laser-therapy",
   "common-chiropractic-conditions",
   "custom-foot-orthotics",
@@ -191,6 +194,7 @@ const MASSAGE_LEGACY_PAGE_SLUGS = [
   "sports-injury",
   "sports-massage",
   "swedish-massage",
+  "thai-massage",
   "therapeutic---swedish",
   "therapeutic-exercise",
   "therapeutic-massage",
@@ -198,6 +202,19 @@ const MASSAGE_LEGACY_PAGE_SLUGS = [
   "vertebral-subluxation-complex",
   "what-is-chiropractic-massage-therapy",
   "whole-body-cryotherapy",
+];
+
+/**
+ * Older `.php` addresses of massageparistexas.com pages (Wayback CDX, see
+ * docs/legacy-redirect-map.csv) whose page still exists. Other `.php` paths
+ * (trigger-point-therapy, therapists) have no page and fall to the catch-all.
+ */
+const MASSAGE_LEGACY_PHP_SLUGS = [
+  "deep-tissue-massage",
+  "prenatal-massage",
+  "sports-massage",
+  "swedish-massage",
+  "therapeutic-massage",
 ];
 
 const LEGACY_MASSAGE_REDIRECTS: Record<string, string> = {
@@ -211,8 +228,6 @@ const LEGACY_MASSAGE_REDIRECTS: Record<string, string> = {
   "/massage-prices": "/services/massage/prices",
   "/massage-prices.php": "/services/massage/prices",
   "/patient-forms": "/patient-forms",
-  "/burn-scar-massage": "/services/massage",
-  "/thai-massage": "/services/massage",
   // Retired modalities — sent straight to Swedish so these resolve in one hop.
   // Both are excluded from MASSAGE_LEGACY_PAGE_SLUGS above; the spread below is
   // last and would otherwise override these keys.
@@ -220,6 +235,9 @@ const LEGACY_MASSAGE_REDIRECTS: Record<string, string> = {
   "/gentle-massage-therapy": "/services/massage/swedish-massage",
   ...Object.fromEntries(
     MASSAGE_LEGACY_PAGE_SLUGS.map((slug) => [`/${slug}`, `/services/massage/${slug}`]),
+  ),
+  ...Object.fromEntries(
+    MASSAGE_LEGACY_PHP_SLUGS.map((slug) => [`/${slug}.php`, `/services/massage/${slug}`]),
   ),
 };
 
@@ -231,11 +249,14 @@ const LEGACY_SS_REDIRECTS: Record<string, string> = {
   "/-massage-therapy": "/sulphur-springs/massage",
   "/about-chiro": "/sulphur-springs/about-chiropractic",
   "/about-us": "/locations/sulphur-springs",
-  "/acupuncture": "/sulphur-springs",
+  "/acupuncture": "/sulphur-springs/acupuncture",
   "/adjustments-and-manipulation": "/sulphur-springs/adjustments-and-manipulation",
   "/appointment-request": "/book",
   "/auto-injury": "/sulphur-springs/auto-injury",
-  "/chiro-fitness/rub-club": "/services/chiropractic/wellness-care-plans",
+  // This and /testimonials land on SS pages, not the shared wellness/reviews
+  // pages: a visitor arriving from this domain has no brand cookie yet, so a
+  // shared page would show the Paris office.
+  "/chiro-fitness/rub-club": "/sulphur-springs/wellness-care-plans",
   "/chiropractic-massage-therapy": "/sulphur-springs/massage",
   "/common-chiropractic-conditions": "/sulphur-springs/common-chiropractic-conditions",
   "/contact-us": "/sulphur-springs/contact",
@@ -245,6 +266,7 @@ const LEGACY_SS_REDIRECTS: Record<string, string> = {
   "/exercise-videos": "/sulphur-springs/patient-resources",
   "/electrical-muscle-stimulation": "/sulphur-springs/electrical-muscle-stimulation",
   "/ice-pack-cryotherapy": "/sulphur-springs/ice-pack-cryotherapy",
+  "/injuries": "/sulphur-springs/injuries",
   "/links": "/sulphur-springs/patient-resources",
   "/meet-the-doctors": "/sulphur-springs/staff",
   "/meet-the-staff": "/sulphur-springs/staff",
@@ -260,7 +282,7 @@ const LEGACY_SS_REDIRECTS: Record<string, string> = {
   "/spinal-decompression": "/sulphur-springs/spinal-decompression",
   "/spinal-wellness-tips": "/sulphur-springs/q-and-a",
   "/sports-injury": "/sulphur-springs/sports-injury",
-  "/testimonials": "/reviews",
+  "/testimonials": "/sulphur-springs/reviews",
   "/therapeutic-exercise": "/sulphur-springs/therapeutic-exercise",
   "/therapeutic-ultrasound": "/sulphur-springs/therapeutic-ultrasound",
   "/vertebral-subluxation-complex": "/sulphur-springs/vertebral-subluxation-complex",

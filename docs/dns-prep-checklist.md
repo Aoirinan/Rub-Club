@@ -41,7 +41,7 @@ You can do almost everything below **while the site still runs on `rub-club.verc
 Do **not** choose “Redirect to Another Domain” unless you are forwarding to a completely different website.
 
 1. Add **production domain** in Vercel → Domains (can stay on “Invalid configuration” until DNS points).
-2. Set **`NEXT_PUBLIC_APP_URL`** to your **final** primary domain (e.g. `https://www.chiropracticparistexas.com`) — do this **right before** or **when** DNS goes live, then redeploy once.
+2. Confirm **`NEXT_PUBLIC_APP_URL`** is **`https://www.chiropracticparistexas.com`** now, before DNS moves — never the `*.vercel.app` URL. Only the host it names may be indexed, so a Vercel URL there would mark the real domain `noindex` after cutover (details: [production-env-checklist.md](production-env-checklist.md#why-next_public_app_url-is-never-the-vercel-url)). If you change it, redeploy.
 3. Firebase Auth → **Authorized domains** (Authentication → Settings):
    - **Vercel:** `rub-club.vercel.app`, `project-bav0l.vercel.app` (if you use that hostname)
    - **Primary:** `chiropracticparistexas.com`, `www.chiropracticparistexas.com`
@@ -52,11 +52,11 @@ Do **not** choose “Redirect to Another Domain” unless you are forwarding to 
 ## DNS cutover day (when ready)
 
 1. Point **A/CNAME** for primary domain to Vercel (per Vercel’s DNS instructions).
-2. Add **legacy** domains to the **same** Vercel project (Project → Settings → Domains) as **normal domains** — **not** the "Redirect to" dropdown (that only does root-to-root and can't target a section). Once their traffic reaches this deployment, `next.config.ts` `redirects()` permanently redirects **all paths** cross-domain:
+2. Add **legacy** domains to the **same** Vercel project (Project → Settings → Domains) as **normal domains** — **not** the "Redirect to" dropdown (that only does root-to-root and can't target a section). Once their traffic reaches this deployment, `next.config.ts` `redirects()` permanently redirects **all paths** cross-domain — each old page to its own new page ([legacy-redirect-map.csv](legacy-redirect-map.csv)), anything else to the section:
    - `massageparistexas.com` / `www` → `https://www.chiropracticparistexas.com/services/massage`
    - `chiropracticsulphursprings.com` / `www` → `https://www.chiropracticparistexas.com/sulphur-springs`
 3. Wait for SSL “Ready” on all domains in Vercel.
-4. Set `NEXT_PUBLIC_APP_URL` to primary domain → **production redeploy**.
+4. Check `NEXT_PUBLIC_APP_URL` is still `https://www.chiropracticparistexas.com` (no change or redeploy needed if so).
 5. Smoke test: home, contact, reviews, one service page, admin login on the new hostname.
 
 ## Phase 2 — scheduler & payments (later)

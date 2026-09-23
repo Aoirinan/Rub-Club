@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { allParisChiroServiceSlugs } from "@/lib/paris-chiro-services";
 import { getSiteOrigin } from "@/lib/site-content";
 import { listAllPublishedLegacyPages } from "@/lib/legacy-pages";
+import { canonicalPathFor } from "@/lib/page-metadata";
 import { allSSPageSlugs } from "@/lib/ss-cms-content";
 import { SS_RESOURCE_ARTICLES } from "@/lib/sulphur-springs-content";
 
@@ -14,6 +15,14 @@ export const revalidate = 3600;
 const BUILD_LAST_MODIFIED = new Date();
 
 type ChangeFrequency = NonNullable<MetadataRoute.Sitemap[number]["changeFrequency"]>;
+
+/**
+ * Sitemaps list only canonical URLs: a page whose canonical points at another
+ * page (lib/page-metadata.ts CANONICAL_OVERRIDES) is left out.
+ */
+function isOwnCanonical(path: string): boolean {
+  return canonicalPathFor(path) === path;
+}
 
 const ENTRIES: { path: string; changeFrequency: ChangeFrequency; priority: number }[] = [
   { path: "/", changeFrequency: "weekly", priority: 1 },
@@ -68,7 +77,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const seen = new Set<string>();
   const staticEntries = ENTRIES.filter((e) => {
-    if (seen.has(e.path)) return false;
+    if (seen.has(e.path) || !isOwnCanonical(e.path)) return false;
     seen.add(e.path);
     return true;
   }).map((e) => ({
@@ -78,13 +87,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: e.priority,
   }));
 
-  // Every published legacy page is a canonical 200 route (CURSOR_PROMPT §5).
+  // Every published legacy page is a 200 route (CURSOR_PROMPT §5), but the
+  // imported copies of a newer page name that page as canonical — list only it.
   const known = new Set(ENTRIES.map((e) => e.path));
   let legacyEntries: MetadataRoute.Sitemap = [];
   try {
     const legacyPages = await listAllPublishedLegacyPages();
     legacyEntries = legacyPages
-      .filter((p) => !known.has(p.route))
+      .filter((p) => !known.has(p.route) && isOwnCanonical(p.route))
       .map((p) => ({
         url: `${origin}${p.route}`,
         lastModified,

@@ -30,6 +30,7 @@ export interface PageMetadataInput {
   /**
    * Canonical URL when it differs from `path` — used by the imported pages that
    * duplicate a curated page at a second URL, so search engines credit one of them.
+   * Defaults to `CANONICAL_OVERRIDES[path]`, else `path`. Also used as og:url.
    */
   canonical?: string;
   /** Keep this page out of search results (patient paperwork, thank-you pages). */
@@ -93,6 +94,41 @@ export function descriptionFromBlocks(
   return `${(lastSpace > 40 ? cut.slice(0, lastSpace) : cut).replace(/[.,;:]$/, "")}…`;
 }
 
+/**
+ * Imported pages that duplicate a newer page at a second URL. Both keep
+ * rendering (old inbound links still land), but canonical and og:url point at
+ * the newer page, and the sitemap lists only the newer one (app/sitemap.ts
+ * skips every path this table maps elsewhere). A page may still pass its own
+ * `canonical`; this table is the fallback.
+ */
+export const CANONICAL_OVERRIDES: Readonly<Record<string, string>> = {
+  // Massage topics the old chiropractic site published under /services/chiropractic/.
+  ...Object.fromEntries(
+    [
+      "swedish-massage",
+      "thai-massage",
+      "hot-stone-massage",
+      "deep-tissue-massage",
+      "prenatal-massage",
+      "sports-massage",
+    ].map((slug) => [`/services/chiropractic/${slug}`, `/services/massage/${slug}`]),
+  ),
+  // Old massage-site pages that a curated page replaces.
+  "/services/massage/massage-prices": "/services/massage/prices",
+  "/services/massage/chiropractic-care": "/services/chiropractic",
+  // Old chiropractic-site copies of a curated page; their old URLs already
+  // redirect to the curated page (next.config.ts).
+  "/services/chiropractic/stretch---flex-rehab": "/services/chiropractic/stretch-and-flex-rehab",
+  "/services/chiropractic/electrical-muscle-stimulation":
+    "/services/chiropractic/electric-muscle-stimulation",
+  "/services/chiropractic/ice-pack-cryotherapy": "/services/chiropractic/heat-and-cryotherapy",
+};
+
+/** The URL search engines should credit for `path` (itself unless it duplicates another page). */
+export function canonicalPathFor(path: string): string {
+  return CANONICAL_OVERRIDES[path] ?? path;
+}
+
 /** True when the title already carries the site brand, so the "%s | Brand" template would repeat it. */
 export function titleAlreadyBranded(title: string, brand: string = siteShortName): boolean {
   return title.toLowerCase().includes(brand.toLowerCase());
@@ -105,17 +141,20 @@ export function buildPageMetadata(input: PageMetadataInput): Metadata {
   const image = input.image ?? siteOgImage;
   // A title that already names the brand bypasses the "%s | Brand" template.
   const brandInTitle = input.brandInTitle ?? titleAlreadyBranded(input.title);
+  // og:url must name the same page as the canonical link, or shares of a
+  // duplicate copy are credited to the copy instead of the canonical page.
+  const canonical = input.canonical ?? canonicalPathFor(input.path);
   return {
     title: brandInTitle ? { absolute: input.title } : input.title,
     description: input.description,
     ...(input.keywords ? { keywords: input.keywords } : {}),
-    alternates: { canonical: input.canonical ?? input.path },
+    alternates: { canonical },
     ...(input.noindex ? { robots: { index: false, follow: true } } : {}),
     openGraph: {
       type: "website",
       siteName: siteShortName,
       locale: "en_US",
-      url: input.path,
+      url: canonical,
       title: socialTitle,
       description: socialDescription,
       images: [{ url: image, width: 1200, height: 630, alt: siteShortName }],

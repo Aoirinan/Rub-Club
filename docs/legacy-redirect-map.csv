@@ -1,14 +1,14 @@
 legacy_domain,legacy_path,proposed_destination,confidence,notes
-# WIRED into next.config.ts (June 2026). This file remains the provenance/review record.
-# Source: Wayback Machine CDX index (200-status HTML pages) for all three legacy domains, June 2026.
-# Current behavior in next.config.ts: massageparistexas.com/* -> /services/massage (catch-all) and
-# chiropracticsulphursprings.com/* -> /sulphur-springs (catch-all). The rows below propose per-path
-# upgrades to those catch-alls plus path redirects on the primary domain.
+# Mirrors the redirects() rules in next.config.ts (regenerated 2026-09-23). Keep the two in sync.
+# Source: Wayback Machine CDX index (200-status HTML pages) for all three legacy domains (June 2026)
+# plus the old site's live sitemap (Sept 2026).
+# Order = next.config.ts order; first match wins. The massageparistexas.com and chiropracticsulphursprings.com
+# rules (apex + www) run before everything else and end in a host catch-all (the /:rest* rows).
+# The chiropracticparistexas.com rules are host-agnostic path redirects on the canonical domain.
+# Rows marked 'no rule' have no rule of their own: the path is a live route or a pattern/catch-all covers it.
 # confidence: exact = same content exists at destination; close = nearest current equivalent; fallback = content retired, send to best hub.
 #
-# ── chiropracticparistexas.com (primary domain — these become path redirects) ──
-chiropracticparistexas.com,/,/,exact,already the homepage — no rule needed
-chiropracticparistexas.com,/about,/about,exact,same route — no rule needed
+# ── chiropracticparistexas.com (primary domain — path redirects) ──
 chiropracticparistexas.com,/about.php,/about,exact,
 chiropracticparistexas.com,/about-chiro,/services/chiropractic,close,
 chiropracticparistexas.com,/acupuncture,/services/chiropractic/acupuncture,exact,
@@ -17,27 +17,25 @@ chiropracticparistexas.com,/adjustments-and-manipulation,/services/chiropractic/
 chiropracticparistexas.com,/attorneys.php,/contact,fallback,attorney-referral page retired
 chiropracticparistexas.com,/auto-accident-chiropractic.php,/services/chiropractic/auto-injury,exact,Paris injury page restored
 chiropracticparistexas.com,/auto-injury,/services/chiropractic/auto-injury,exact,
-chiropracticparistexas.com,/burn-scar-massage,/services/massage,close,specialty blurb retired
+chiropracticparistexas.com,/burn-scar-massage,/services/massage/burn-scar-massage,exact,imported massage-site page
 chiropracticparistexas.com,/chiropractic-care,/services/chiropractic,exact,
 chiropracticparistexas.com,/chiropractic-care.php,/services/chiropractic,exact,
 chiropracticparistexas.com,/chiropractic-massage-therapy,/services/chiropractic/therapeutic-massage,exact,
 chiropracticparistexas.com,/cold-laser-therapy,/services/chiropractic,fallback,service no longer offered/listed
 chiropracticparistexas.com,/common-chiropractic-conditions,/services/chiropractic/common-chiropractic-conditions,exact,Paris conditions page restored
 chiropracticparistexas.com,/conditions/index.php,/services/chiropractic,fallback,
-chiropracticparistexas.com,/contact,/contact,exact,same route — no rule needed
 chiropracticparistexas.com,/contact-us.php,/contact,exact,
 chiropracticparistexas.com,/cryotherapy,/services/chiropractic/heat-and-cryotherapy,exact,
 chiropracticparistexas.com,/ice-pack-cryotherapy,/services/chiropractic/heat-and-cryotherapy,exact,
 chiropracticparistexas.com,/whole-body-cryotherapy,/services/chiropractic/heat-and-cryotherapy,close,
 chiropracticparistexas.com,/custom-foot-orthotics,/services/chiropractic,fallback,service retired
-chiropracticparistexas.com,/deep-tissue-massage,/services/massage,exact,
+chiropracticparistexas.com,/deep-tissue-massage,/services/massage/deep-tissue-massage,exact,
 chiropracticparistexas.com,/degenerative-disc-disease,/services/chiropractic/degenerative-disc-disease,exact,
 chiropracticparistexas.com,/disclaimers/hipaa_policy,/privacy,exact,
 chiropracticparistexas.com,/disclaimers/privacy_policy,/website-privacy,exact,
 chiropracticparistexas.com,/disclaimers/terms_of_use,/terms,exact,
 chiropracticparistexas.com,/downloads.php,/patient-forms,exact,
 chiropracticparistexas.com,/paperwork.php,/patient-forms,exact,
-chiropracticparistexas.com,/patient-forms,/patient-forms,exact,same route — no rule needed
 chiropracticparistexas.com,/new-patients,/patient-forms,close,
 chiropracticparistexas.com,/patient-resources,/patient-forms,close,Paris resources merged into patient forms
 chiropracticparistexas.com,/educational-videos,/,close,videos now on homepage
@@ -46,9 +44,9 @@ chiropracticparistexas.com,/videos.php,/,close,videos now on homepage
 chiropracticparistexas.com,/electrical-muscle-stimulation,/services/chiropractic/electric-muscle-stimulation,exact,
 chiropracticparistexas.com,/electrical-stimulation-therapies,/services/chiropractic/electric-muscle-stimulation,exact,
 chiropracticparistexas.com,/ems.php,/services/chiropractic/electric-muscle-stimulation,exact,
-chiropracticparistexas.com,/interferential-current-therapy,/services/chiropractic/electric-muscle-stimulation,close,
-chiropracticparistexas.com,/microcurrent-therapy,/services/chiropractic/electric-muscle-stimulation,close,
-chiropracticparistexas.com,/hot-stone-massage,/services/massage,exact,
+chiropracticparistexas.com,/interferential-current-therapy,/services/chiropractic/interferential-current-therapy,exact,Paris page restored
+chiropracticparistexas.com,/microcurrent-therapy,/services/chiropractic/microcurrent-therapy,exact,Paris page restored
+chiropracticparistexas.com,/hot-stone-massage,/services/massage/hot-stone-massage,exact,
 chiropracticparistexas.com,/injuries,/services/chiropractic/auto-injury,close,legacy injury hub → auto injury page
 chiropracticparistexas.com,/injured-we-can-help,/services/chiropractic/personal-injury,close,
 chiropracticparistexas.com,/massage.php,/services/massage,exact,
@@ -60,30 +58,44 @@ chiropracticparistexas.com,/physical-therapy,/services/chiropractic,close,
 chiropracticparistexas.com,/physiotherapy.php,/services/chiropractic,close,
 chiropracticparistexas.com,/postural-rehabilitation.php,/services/chiropractic/postural-rehabilitation,exact,
 chiropracticparistexas.com,/prenatal-chiropractic,/services/chiropractic/prenatal-chiropractic,exact,Paris prenatal page restored
-chiropracticparistexas.com,/prenatal-massage,/services/massage,exact,
+chiropracticparistexas.com,/prenatal-massage,/services/massage/prenatal-massage,exact,
 chiropracticparistexas.com,/products.php,/services,fallback,
 chiropracticparistexas.com,/q-and-a,/faq,exact,
-chiropracticparistexas.com,/relaxation-massage,/services/massage,exact,
-chiropracticparistexas.com,/swedish-massage,/services/massage,exact,
-chiropracticparistexas.com,/thai-massage,/services/massage,exact,
-chiropracticparistexas.com,/sports-massage,/services/massage,exact,
-chiropracticparistexas.com,/what-is-chiropractic-massage-therapy,/services/massage,close,
-chiropracticparistexas.com,/services,/services,exact,same route — no rule needed
+chiropracticparistexas.com,/relaxation-massage,/services/massage/swedish-massage,close,relaxation retired — Swedish is the closest live service
+chiropracticparistexas.com,/swedish-massage,/services/massage/swedish-massage,exact,
+chiropracticparistexas.com,/thai-massage,/services/massage/thai-massage,exact,
+chiropracticparistexas.com,/sports-massage,/services/massage/sports-massage,exact,
+chiropracticparistexas.com,/what-is-chiropractic-massage-therapy,/services/massage/therapeutic-massage,close,massage explainer page
 chiropracticparistexas.com,/services.php,/services,exact,
 chiropracticparistexas.com,/spinal-decompression,/services/chiropractic/spinal-decompression,exact,
 chiropracticparistexas.com,/spinal-decompression.php,/services/chiropractic/spinal-decompression,exact,
 chiropracticparistexas.com,/spinal-wellness-tips,/faq,close,
 chiropracticparistexas.com,/spine-care,/services/chiropractic/spine-care,exact,
+chiropracticparistexas.com,/low-back-pain-treatments,/services/chiropractic/low-back-pain-treatments,exact,imported Paris page
+chiropracticparistexas.com,/neck-pain-treatments,/services/chiropractic/neck-pain-treatments,exact,imported Paris page
+chiropracticparistexas.com,/sciatica-treatments,/services/chiropractic/sciatica-treatments,exact,imported Paris page
+chiropracticparistexas.com,/herniated-disc-treatments,/services/chiropractic/herniated-disc-treatments,exact,imported Paris page
+chiropracticparistexas.com,/pinched-nerve-treatments,/services/chiropractic/pinched-nerve-treatments,exact,imported Paris page
+chiropracticparistexas.com,/knee-pain-treatments,/services/chiropractic/knee-pain-treatments,exact,imported Paris page
+chiropracticparistexas.com,/spine-specialist,/services/chiropractic/spine-specialist,exact,imported Paris page
+chiropracticparistexas.com,/what-is-chiropractic,/services/chiropractic,close,no Paris equivalent — chiropractic hub (same as /about-chiro); was the SS page
+chiropracticparistexas.com,/chiropractic-massage,/services/massage/therapeutic-massage,close,
+chiropracticparistexas.com,/youth-massage,/services/massage,fallback,service retired
+chiropracticparistexas.com,/dot-physical,/services,fallback,service retired
+chiropracticparistexas.com,/gallery,/about,fallback,page retired
+chiropracticparistexas.com,/patient-education,/faq,fallback,page retired
+chiropracticparistexas.com,/wellness-tips,/faq,fallback,page retired
+chiropracticparistexas.com,/what-can-i-expect,/patient-forms,close,
 chiropracticparistexas.com,/sports-injury,/services/chiropractic/sports-injury,exact,
 chiropracticparistexas.com,/staff,/locations/paris/staff,exact,
 chiropracticparistexas.com,/stretch---flex-rehab,/services/chiropractic/stretch-and-flex-rehab,exact,
 chiropracticparistexas.com,/testimonials.php,/reviews,exact,
-chiropracticparistexas.com,/testimonials/page,/reviews,exact,
+chiropracticparistexas.com,/testimonials/:rest*,/reviews,exact,covers /testimonials/page
 chiropracticparistexas.com,/therapeutic-exercise,/services/chiropractic/therapeutic-exercise,exact,
 chiropracticparistexas.com,/injury-rehab,/services/chiropractic/injury-rehab,exact,
 chiropracticparistexas.com,/therapeutic-ultrasound,/services/chiropractic/therapeutic-ultrasound,exact,
 chiropracticparistexas.com,/ultra-sound.php,/services/chiropractic/therapeutic-ultrasound,exact,
-chiropracticparistexas.com,/vertebral-subluxation-complex,/sulphur-springs/vertebral-subluxation-complex,close,page now lives under SS section
+chiropracticparistexas.com,/vertebral-subluxation-complex,/services/chiropractic/vertebral-subluxation-complex,exact,imported Paris page (was the SS page — switched visitors to the SS brand)
 chiropracticparistexas.com,/wellness-care-plans,/services/chiropractic/wellness-care-plans,exact,
 chiropracticparistexas.com,/x-ray.php,/services/chiropractic,fallback,
 chiropracticparistexas.com,/3d-spine-simulator,/services/chiropractic,fallback,third-party widget retired
@@ -95,77 +107,113 @@ chiropracticparistexas.com,/tech-neck,/faq,fallback,blog post retired
 chiropracticparistexas.com,/tendons-muscles-and-ligaments,/faq,fallback,blog post retired
 chiropracticparistexas.com,/whats-the-difference-between-tens-and-ems,/faq,fallback,blog post retired
 chiropracticparistexas.com,/where-is-your-wallet,/faq,fallback,blog post retired
-chiropracticparistexas.com,/index.php/about/,/about,exact,old WordPress paths
-chiropracticparistexas.com,/index.php/chiropractic-care/,/services/chiropractic,exact,
-chiropracticparistexas.com,/index.php/contact-us/,/contact,exact,
-chiropracticparistexas.com,/index.php/paperwork/,/patient-forms,exact,
-chiropracticparistexas.com,/index.php/physiotherapy/,/services/chiropractic,close,
-chiropracticparistexas.com,/index.php/services/,/services,exact,
-chiropracticparistexas.com,/index.php/special-offers/,/services/chiropractic/wellness-care-plans,close,
+chiropracticparistexas.com,/index.php/about,/about,exact,old WordPress paths
+chiropracticparistexas.com,/index.php/chiropractic-care,/services/chiropractic,exact,
+chiropracticparistexas.com,/index.php/contact-us,/contact,exact,
+chiropracticparistexas.com,/index.php/paperwork,/patient-forms,exact,
+chiropracticparistexas.com,/index.php/physiotherapy,/services/chiropractic,close,
+chiropracticparistexas.com,/index.php/services,/services,exact,
+chiropracticparistexas.com,/index.php/special-offers,/services/chiropractic/wellness-care-plans,close,
 chiropracticparistexas.com,/index.php/spinal-decompression,/services/chiropractic/spinal-decompression,exact,
 chiropracticparistexas.com,/index.php/:rest*,/,fallback,catch remaining WP blog/category junk
 chiropracticparistexas.com,/links,/,fallback,
 chiropracticparistexas.com,/sitemap,/,fallback,
 chiropracticparistexas.com,/geosearch.php,/,fallback,SEO junk page
 chiropracticparistexas.com,/rankings.php,/,fallback,SEO junk page
-chiropracticparistexas.com,/meet-the-doctors,/about,exact,ALREADY WIRED in next.config.ts
-chiropracticparistexas.com,/massage,/services/massage,exact,ALREADY WIRED in next.config.ts
-chiropracticparistexas.com,/chiropractic,/services/chiropractic,exact,ALREADY WIRED in next.config.ts
-chiropracticparistexas.com,/locations,/contact,exact,ALREADY WIRED in next.config.ts
+chiropracticparistexas.com,/services/massage/relaxation-massage,/services/massage/swedish-massage,close,modality retired — Swedish is the closest live service
+chiropracticparistexas.com,/services/massage/gentle-massage-therapy,/services/massage/swedish-massage,close,modality retired — Swedish is the closest live service
+chiropracticparistexas.com,/services/chiropractic/relaxation-massage,/services/massage/swedish-massage,close,old chiropractic-site copy of the retired relaxation page
+chiropracticparistexas.com,/massage,/services/massage,exact,
+chiropracticparistexas.com,/chiropractic,/services/chiropractic,exact,
+chiropracticparistexas.com,/meet-the-doctors,/about,exact,
+chiropracticparistexas.com,/locations,/contact,exact,
+chiropracticparistexas.com,/,/,exact,already the homepage — no rule needed
+chiropracticparistexas.com,/about,/about,exact,same route — no rule needed
+chiropracticparistexas.com,/contact,/contact,exact,same route — no rule needed
+chiropracticparistexas.com,/patient-forms,/patient-forms,exact,same route — no rule needed
+chiropracticparistexas.com,/services,/services,exact,same route — no rule needed
+chiropracticparistexas.com,/testimonials/page,/reviews,exact,no rule — covered by /testimonials/:rest*
 #
-# ── massageparistexas.com (currently catch-all -> /services/massage) ──
-massageparistexas.com,/,/services/massage,exact,matches current catch-all
+# ── massageparistexas.com (per-path rules then catch-all -> /services/massage) ──
 massageparistexas.com,/about.htm,/about,close,upgrade from catch-all
-massageparistexas.com,/blogs/:rest*,/services/massage,fallback,blog retired
 massageparistexas.com,/chiropactic.htm,/services/chiropractic,close,(sic — legacy typo)
 massageparistexas.com,/chiropractic-care,/services/chiropractic,exact,
 massageparistexas.com,/chiropractic.php,/services/chiropractic,exact,
 massageparistexas.com,/contact,/contact,exact,
 massageparistexas.com,/contact.htm,/contact,exact,
 massageparistexas.com,/contact.php,/contact,exact,
-massageparistexas.com,/deep-tissue-massage,/services/massage,exact,
-massageparistexas.com,/deep-tissue-massage.php,/services/massage,exact,
-massageparistexas.com,/hot-stone-massage,/services/massage,exact,
-massageparistexas.com,/joint-pain-relief,/services/massage,close,
 massageparistexas.com,/massage-prices,/services/massage/prices,exact,
 massageparistexas.com,/massage-prices.php,/services/massage/prices,exact,
-massageparistexas.com,/massage-therapy,/services/massage,exact,
-massageparistexas.com,/muscle-pain-treatments,/services/massage,close,
 massageparistexas.com,/patient-forms,/patient-forms,exact,
-massageparistexas.com,/prenatal-massage,/services/massage,exact,
-massageparistexas.com,/prenatal-massage.php,/services/massage,exact,
-massageparistexas.com,/sports-massage,/services/massage,exact,
-massageparistexas.com,/sports-massage.php,/services/massage,exact,
-massageparistexas.com,/swedish-massage.php,/services/massage,exact,
-massageparistexas.com,/therapeutic---swedish,/services/massage,exact,
-massageparistexas.com,/therapeutic-massage,/services/massage,exact,
-massageparistexas.com,/therapeutic-massage.php,/services/massage,exact,
-massageparistexas.com,/trigger-point-therapy.php,/services/massage,close,
-massageparistexas.com,/staff,/services/massage,close,therapist bios live on massage page
-massageparistexas.com,/therapists.php,/services/massage,close,
+massageparistexas.com,/relaxation-massage,/services/massage/swedish-massage,close,modality retired — Swedish is the closest live service
+massageparistexas.com,/gentle-massage-therapy,/services/massage/swedish-massage,close,modality retired — Swedish is the closest live service
+massageparistexas.com,/acupuncture,/services/massage/acupuncture,exact,imported massage-site page
+massageparistexas.com,/adjustments-and-manipulation,/services/massage/adjustments-and-manipulation,exact,imported massage-site page
+massageparistexas.com,/auto-injury,/services/massage/auto-injury,exact,imported massage-site page
+massageparistexas.com,/back-pain-relief,/services/massage/back-pain-relief,exact,imported massage-site page
+massageparistexas.com,/burn-scar-massage,/services/massage/burn-scar-massage,exact,imported massage-site page
+massageparistexas.com,/cold-laser-therapy,/services/massage/cold-laser-therapy,exact,imported massage-site page
+massageparistexas.com,/common-chiropractic-conditions,/services/massage/common-chiropractic-conditions,exact,imported massage-site page
+massageparistexas.com,/custom-foot-orthotics,/services/massage/custom-foot-orthotics,exact,imported massage-site page
+massageparistexas.com,/deep-tissue-massage,/services/massage/deep-tissue-massage,exact,imported massage-site page
+massageparistexas.com,/degenerative-disc-disease,/services/massage/degenerative-disc-disease,exact,imported massage-site page
+massageparistexas.com,/electrical-muscle-stimulation,/services/massage/electrical-muscle-stimulation,exact,imported massage-site page
+massageparistexas.com,/hot-stone-massage,/services/massage/hot-stone-massage,exact,imported massage-site page
+massageparistexas.com,/ice-pack-cryotherapy,/services/massage/ice-pack-cryotherapy,exact,imported massage-site page
+massageparistexas.com,/injury-pain-relief,/services/massage/injury-pain-relief,exact,imported massage-site page
+massageparistexas.com,/interferential-current-therapy,/services/massage/interferential-current-therapy,exact,imported massage-site page
+massageparistexas.com,/joint-pain-relief,/services/massage/joint-pain-relief,exact,imported massage-site page
+massageparistexas.com,/massage-therapy,/services/massage/massage-therapy,exact,imported massage-site page
+massageparistexas.com,/microcurrent-therapy,/services/massage/microcurrent-therapy,exact,imported massage-site page
+massageparistexas.com,/muscle-pain-treatments,/services/massage/muscle-pain-treatments,exact,imported massage-site page
+massageparistexas.com,/natural-stress-relief,/services/massage/natural-stress-relief,exact,imported massage-site page
+massageparistexas.com,/neck-pain-relief,/services/massage/neck-pain-relief,exact,imported massage-site page
+massageparistexas.com,/personal-injury,/services/massage/personal-injury,exact,imported massage-site page
+massageparistexas.com,/prenatal-massage,/services/massage/prenatal-massage,exact,imported massage-site page
+massageparistexas.com,/sciatica,/services/massage/sciatica,exact,imported massage-site page
+massageparistexas.com,/spinal-decompression,/services/massage/spinal-decompression,exact,imported massage-site page
+massageparistexas.com,/sports-injury,/services/massage/sports-injury,exact,imported massage-site page
+massageparistexas.com,/sports-massage,/services/massage/sports-massage,exact,imported massage-site page
+massageparistexas.com,/swedish-massage,/services/massage/swedish-massage,exact,imported massage-site page
+massageparistexas.com,/thai-massage,/services/massage/thai-massage,exact,imported massage-site page
+massageparistexas.com,/therapeutic---swedish,/services/massage/therapeutic---swedish,exact,imported massage-site page
+massageparistexas.com,/therapeutic-exercise,/services/massage/therapeutic-exercise,exact,imported massage-site page
+massageparistexas.com,/therapeutic-massage,/services/massage/therapeutic-massage,exact,imported massage-site page
+massageparistexas.com,/therapeutic-ultrasound,/services/massage/therapeutic-ultrasound,exact,imported massage-site page
+massageparistexas.com,/vertebral-subluxation-complex,/services/massage/vertebral-subluxation-complex,exact,imported massage-site page
+massageparistexas.com,/what-is-chiropractic-massage-therapy,/services/massage/what-is-chiropractic-massage-therapy,exact,imported massage-site page
+massageparistexas.com,/whole-body-cryotherapy,/services/massage/whole-body-cryotherapy,exact,imported massage-site page
+massageparistexas.com,/deep-tissue-massage.php,/services/massage/deep-tissue-massage,exact,older .php address of the imported page
+massageparistexas.com,/prenatal-massage.php,/services/massage/prenatal-massage,exact,older .php address of the imported page
+massageparistexas.com,/sports-massage.php,/services/massage/sports-massage,exact,older .php address of the imported page
+massageparistexas.com,/swedish-massage.php,/services/massage/swedish-massage,exact,older .php address of the imported page
+massageparistexas.com,/therapeutic-massage.php,/services/massage/therapeutic-massage,exact,older .php address of the imported page
+massageparistexas.com,/,/services/massage,exact,no rule — matches current catch-all
+massageparistexas.com,/blogs/:rest*,/services/massage,fallback,no rule — blog retired
+massageparistexas.com,/trigger-point-therapy.php,/services/massage,close,no rule — no own page; host catch-all
+massageparistexas.com,/staff,/services/massage,close,no rule — therapist bios live on massage page
+massageparistexas.com,/therapists.php,/services/massage,close,no rule — therapist bios live on massage page; host catch-all
 massageparistexas.com,/:rest*,/services/massage,fallback,keep existing catch-all as the final rule (sitemap/rankings/3d-spine/img/content junk)
 #
-# ── chiropracticsulphursprings.com (currently catch-all -> /sulphur-springs) ──
-chiropracticsulphursprings.com,/,/sulphur-springs,exact,matches current catch-all
+# ── chiropracticsulphursprings.com (per-path rules then catch-all -> /sulphur-springs) ──
 chiropracticsulphursprings.com,/-massage-therapy,/sulphur-springs/massage,exact,
 chiropracticsulphursprings.com,/about-chiro,/sulphur-springs/about-chiropractic,exact,
 chiropracticsulphursprings.com,/about-us,/locations/sulphur-springs,close,
-chiropracticsulphursprings.com,/acupuncture,/sulphur-springs,exact,
+chiropracticsulphursprings.com,/acupuncture,/sulphur-springs/acupuncture,exact,SS acupuncture page
 chiropracticsulphursprings.com,/adjustments-and-manipulation,/sulphur-springs/adjustments-and-manipulation,exact,
 chiropracticsulphursprings.com,/appointment-request,/book,exact,
 chiropracticsulphursprings.com,/auto-injury,/sulphur-springs/auto-injury,exact,
-chiropracticsulphursprings.com,/chiro-fitness/rub-club,/services/chiropractic/wellness-care-plans,close,Chiro-Fitness pricing lives on wellness plans page
+chiropracticsulphursprings.com,/chiro-fitness/rub-club,/sulphur-springs/wellness-care-plans,close,Chiro-Fitness pricing on the SS wellness plans page (keeps the SS brand)
 chiropracticsulphursprings.com,/chiropractic-massage-therapy,/sulphur-springs/massage,exact,
 chiropracticsulphursprings.com,/common-chiropractic-conditions,/sulphur-springs/common-chiropractic-conditions,exact,
 chiropracticsulphursprings.com,/contact-us,/sulphur-springs/contact,exact,
-chiropracticsulphursprings.com,/covid--19,/sulphur-springs,fallback,page retired
 chiropracticsulphursprings.com,/deep-tissue-massage,/sulphur-springs/massage,exact,
 chiropracticsulphursprings.com,/degenerative-disc-disease,/sulphur-springs/degenerative-disc-disease,exact,
 chiropracticsulphursprings.com,/educational-videos,/sulphur-springs/patient-resources,close,
 chiropracticsulphursprings.com,/exercise-videos,/sulphur-springs/patient-resources,close,
 chiropracticsulphursprings.com,/electrical-muscle-stimulation,/sulphur-springs/electrical-muscle-stimulation,exact,
 chiropracticsulphursprings.com,/ice-pack-cryotherapy,/sulphur-springs/ice-pack-cryotherapy,exact,
-chiropracticsulphursprings.com,/injuries,/sulphur-springs,close,injuries now in services grid
+chiropracticsulphursprings.com,/injuries,/sulphur-springs/injuries,exact,imported SS page
 chiropracticsulphursprings.com,/links,/sulphur-springs/patient-resources,close,
 chiropracticsulphursprings.com,/meet-the-doctors,/sulphur-springs/staff,exact,
 chiropracticsulphursprings.com,/meet-the-staff,/sulphur-springs/staff,exact,
@@ -178,14 +226,16 @@ chiropracticsulphursprings.com,/sports-massage,/sulphur-springs/massage,exact,
 chiropracticsulphursprings.com,/swedish-massage,/sulphur-springs/massage,exact,
 chiropracticsulphursprings.com,/what-is-chiropractic-massage-therapy,/sulphur-springs/massage,close,
 chiropracticsulphursprings.com,/q-and-a,/sulphur-springs/q-and-a,exact,
-chiropracticsulphursprings.com,/services,/sulphur-springs,exact,services grid on SS homepage
 chiropracticsulphursprings.com,/spinal-decompression,/sulphur-springs/spinal-decompression,exact,
 chiropracticsulphursprings.com,/spinal-wellness-tips,/sulphur-springs/q-and-a,close,
 chiropracticsulphursprings.com,/sports-injury,/sulphur-springs/sports-injury,exact,
-chiropracticsulphursprings.com,/testimonials,/reviews,exact,
+chiropracticsulphursprings.com,/testimonials,/sulphur-springs/reviews,exact,SS reviews page (keeps the SS brand)
 chiropracticsulphursprings.com,/therapeutic-exercise,/sulphur-springs/therapeutic-exercise,exact,
 chiropracticsulphursprings.com,/therapeutic-ultrasound,/sulphur-springs/therapeutic-ultrasound,exact,
 chiropracticsulphursprings.com,/vertebral-subluxation-complex,/sulphur-springs/vertebral-subluxation-complex,exact,
-chiropracticsulphursprings.com,/x-rays,/sulphur-springs,fallback,x-ray page retired
-chiropracticsulphursprings.com,/sitemap,/sulphur-springs,fallback,
+chiropracticsulphursprings.com,/,/sulphur-springs,exact,no rule — matches current catch-all
+chiropracticsulphursprings.com,/covid--19,/sulphur-springs,fallback,no rule — page retired
+chiropracticsulphursprings.com,/services,/sulphur-springs,exact,no rule — services grid on SS homepage
+chiropracticsulphursprings.com,/x-rays,/sulphur-springs,fallback,no rule — x-ray page retired
+chiropracticsulphursprings.com,/sitemap,/sulphur-springs,fallback,no rule — host catch-all
 chiropracticsulphursprings.com,/:rest*,/sulphur-springs,fallback,keep existing catch-all as the final rule

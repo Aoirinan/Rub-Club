@@ -135,10 +135,30 @@ function openingHoursSpec(location: LocationInfo): JsonLd[] {
   }));
 }
 
+/**
+ * The full street line, suite included ("3305 NE Loop 286, Suite A").
+ * `location.streetAddress` can't be used: when the address is edited in the
+ * CMS it holds only the first comma segment (it is the visible heading on
+ * /locations/paris), which drops the suite. The edited line in `addressLines[0]`
+ * also carries "Paris, TX 75460"; those trailing city and state/ZIP segments
+ * are removed the same way lib/site-display-overrides.ts parses them.
+ */
+export function fullStreetAddress(location: LocationInfo): string {
+  const line = location.addressLines[0]?.trim();
+  if (!line) return location.streetAddress;
+  let parts = line.split(",").map((s) => s.trim()).filter(Boolean);
+  const tail = parts.length >= 3 ? (parts[parts.length - 1] ?? "") : "";
+  if (/\b[A-Z]{2}\b/.test(tail) || /\b\d{5}\b/.test(tail)) parts = parts.slice(0, -2);
+  // A line typed without state/ZIP may still end in the city.
+  const last = parts[parts.length - 1]?.toLowerCase();
+  if (parts.length > 1 && last === location.addressLocality.toLowerCase()) parts = parts.slice(0, -1);
+  return parts.join(", ") || location.streetAddress;
+}
+
 function postalAddress(location: LocationInfo): JsonLd {
   return {
     "@type": "PostalAddress",
-    streetAddress: location.streetAddress,
+    streetAddress: fullStreetAddress(location),
     addressLocality: location.addressLocality,
     addressRegion: location.addressRegion,
     postalCode: location.postalCode,

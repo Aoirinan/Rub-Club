@@ -88,13 +88,18 @@ export async function middleware(request: NextRequest) {
     res.cookies.set(DOMAIN_CTX_COOKIE, ctx, cookieOpts());
   }
 
-  // Don't mutate context cookies on link prefetches — only on real navigations.
-  const isPrefetch =
-    request.headers.get("next-router-prefetch") === "1" ||
-    request.headers.get("purpose") === "prefetch" ||
-    request.headers.get("sec-purpose")?.includes("prefetch");
+  // Only a real navigation may change the brand cookie. <Link> prefetches
+  // (`Next-Router-Prefetch: 1`) and `Purpose: prefetch` requests never reach
+  // this code: the `missing` conditions in `config.matcher` below skip them.
+  // It must be done there because Next strips `Next-Router-Prefetch`/`RSC`
+  // from the headers middleware code sees, so checking them here is always
+  // false — which is how prefetching the header's Paris links used to clear
+  // a Sulphur Springs visitor's cookie and show Paris on /contact and /book.
+  // `Sec-Purpose` (browser speculation rules, <link rel="prefetch">) is not
+  // stripped and not excluded by the matcher, so it is still checked here.
+  const isBrowserPrefetch = request.headers.get("sec-purpose")?.includes("prefetch") ?? false;
 
-  if (!isPrefetch) {
+  if (!isBrowserPrefetch) {
     const { pathname } = request.nextUrl;
     const businessCtx = businessContextCookieValue(pathname);
     if (businessCtx) {
@@ -119,5 +124,22 @@ function cookieOpts() {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|pdf)$).*)"],
+  matcher: [
+    // The superadmin API gate must run on every request, whatever its headers:
+    // the prefetch exclusion below must never become a way around it.
+    "/api/superadmin/:path*",
+    {
+      // robots.txt and sitemap.xml stay matched: on *.vercel.app they need
+      // the X-Robots-Tag header set above.
+      source:
+        "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|pdf|mp4|webm|mov)$).*)",
+      // Router prefetches must not touch the brand cookie (see middleware()).
+      // Next removes these headers before middleware code runs, so they can
+      // only be filtered here, where the original request is matched.
+      missing: [
+        { type: "header", key: "next-router-prefetch" },
+        { type: "header", key: "purpose", value: "prefetch" },
+      ],
+    },
+  ],
 };

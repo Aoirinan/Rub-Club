@@ -8,12 +8,21 @@ Use this when deploying to Vercel (or similar). Copy `env.example` to Vercel **P
 |----------|-----------------|
 | `FIREBASE_SERVICE_ACCOUNT_KEY` | Full JSON from Firebase → Project settings → Service accounts → Generate new private key |
 | `NEXT_PUBLIC_FIREBASE_*` | Web app config from Firebase console (API key, auth domain, project ID, storage bucket) |
-| `NEXT_PUBLIC_APP_URL` | Your live URL with `https://` and no trailing slash (e.g. `https://www.chiropracticparistexas.com` or the Vercel URL until DNS is ready) |
+| `NEXT_PUBLIC_APP_URL` | **Exactly `https://www.chiropracticparistexas.com`** — before and after the DNS switch. Never the `*.vercel.app` URL. See [below](#why-next_public_app_url-is-never-the-vercel-url). |
 | `SENDGRID_API_KEY` | From SendGrid → API Keys |
 | `SENDGRID_FROM_EMAIL` | A **verified** sender in SendGrid — see [Transition email](#transition-email-developer-domain--clinic-domain) below |
 | `SENDGRID_REPLY_TO` | Inbox that receives **replies** to system mail (`scheduling@massageparistx.com` now; clinic scheduling inbox after cutover) |
 | `SENDGRID_FROM_NAME` | Optional display name in inboxes (default: `Chiropractic Associates · The Rub Club`) |
 | `OFFICE_NOTIFICATION_EMAIL` | Optional email copies for bookings + contact form. Use **`dr.seanwelborn@gmail.com`**. Front desk should use **Admin → Contact inbox**, not email. |
+
+### Why `NEXT_PUBLIC_APP_URL` is never the Vercel URL
+
+`NEXT_PUBLIC_APP_URL` names the **canonical domain**. The site lets search engines index only the host it names (`isCanonicalHost()` in `lib/site-content.ts`) and marks every other host `noindex`. Canonical links, `og:url`, the sitemap and JSON-LD are all built from it.
+
+- Set to `https://www.chiropracticparistexas.com` (correct): while DNS still points at the old site, `rub-club.vercel.app` is kept out of search; once DNS moves, `www.chiropracticparistexas.com` is indexable with no change.
+- Set to the Vercel URL (wrong): once DNS moves, every page on `www.chiropracticparistexas.com` is marked **noindex** and all canonical links point at `vercel.app`. The site can drop out of Google.
+
+It is a `NEXT_PUBLIC_` value, baked in at build time — after changing it, redeploy. Test on `rub-club.vercel.app` all you like; just don't put that URL in this variable.
 
 ## Transition email (developer domain → clinic domain)
 
@@ -110,7 +119,7 @@ Ensure that same hostname is in **Firebase Auth → Settings → Authorized doma
 
 ### Later (clinic go-live)
 
-Authenticate `chiropracticparistexas.com` in SendGrid and set the Firebase action URL + `NEXT_PUBLIC_APP_URL` to the clinic production domain.
+Authenticate `chiropracticparistexas.com` in SendGrid and set the Firebase action URL to `https://www.chiropracticparistexas.com/auth/action`. (`NEXT_PUBLIC_APP_URL` is already the clinic domain — leave it.)
 
 ## Online booking (no payment required)
 
@@ -158,8 +167,8 @@ When you are ready:
 
 1. Point your **primary** domain A/CNAME to Vercel.
 2. Add the same domains in Vercel → Project → Domains.
-3. Point legacy domains (`massageparistexas.com`, `chiropracticsulphursprings.com`) to the same deployment; middleware forwards their homepages automatically.
-4. Update `NEXT_PUBLIC_APP_URL` to the primary domain and redeploy.
+3. Point legacy domains (`massageparistexas.com`, `chiropracticsulphursprings.com`) to the same deployment; the `redirects()` rules in `next.config.ts` permanently redirect every path on them to the matching page on the primary domain (see `docs/legacy-redirect-map.csv`).
+4. Check `NEXT_PUBLIC_APP_URL` is still `https://www.chiropracticparistexas.com` (it should already be — see above). Nothing to change.
 
 ## Ownership / HIPAA note
 
