@@ -127,6 +127,9 @@ function AdminDashboard() {
   const [patientCsvImportOpen, setPatientCsvImportOpen] = useState(false);
   const [patientCsvImportBusy, setPatientCsvImportBusy] = useState(false);
   const [businessFilter, setBusinessFilter] = useState<SchedulerBusinessId>("all");
+  // Patient search (name/phone) lives here, not in the URL: page URLs land in
+  // request logs. See writeFilters.
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     setAuth(getFirebaseClientAuth());
@@ -142,8 +145,8 @@ function AdminDashboard() {
   );
 
   const filters = useMemo<FilterState>(
-    () => ({ ...filtersFromUrl, business: businessFilter, serviceLine: serviceScope }),
-    [filtersFromUrl, businessFilter, serviceScope],
+    () => ({ ...filtersFromUrl, q: searchQuery, business: businessFilter, serviceLine: serviceScope }),
+    [filtersFromUrl, searchQuery, businessFilter, serviceScope],
   );
 
   const providerStyles = useMemo(() => buildProviderStylesMap(providers), [providers]);
@@ -164,6 +167,7 @@ function AdminDashboard() {
         setBusinessFilter(patch.business);
         writeSchedulerBusinessToSession(patch.business);
       }
+      if (patch.q !== undefined) setSearchQuery(patch.q);
       const next: FilterState = {
         ...filters,
         ...patch,
@@ -171,7 +175,10 @@ function AdminDashboard() {
         serviceLine: serviceScope,
       };
       const qs = writeFilters(next);
-      router.replace(qs ? `${basePath}?${qs}` : basePath);
+      // A search-only change leaves the URL as it is; skip the navigation.
+      if (qs !== writeFilters(filters)) {
+        router.replace(qs ? `${basePath}?${qs}` : basePath);
+      }
       if (patch.date !== undefined || patch.locationId !== undefined) {
         broadcastSchedulerSync({ date: next.date, locationId: next.locationId });
       }
@@ -224,9 +231,12 @@ function AdminDashboard() {
       if (!opts?.silent) setLoading(true);
       const seq = ++bookingsReqSeqRef.current;
       try {
-        const { qs } = bookingsApiQuery(filters);
-        const res = await fetch(`/api/admin/bookings?${qs}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        // POST so the search term stays out of the URL (and hosting request logs).
+        const { body } = bookingsApiQuery(filters);
+        const res = await fetch("/api/admin/bookings", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify(body),
         });
         if (seq !== bookingsReqSeqRef.current) return; // a newer request superseded this one
         if (!res.ok) {
@@ -567,9 +577,11 @@ function AdminDashboard() {
         onExportAppointments={async () => {
           const token = await getIdToken();
           if (!token) return;
-          const { qs } = bookingsApiQuery(filters);
-          const res = await fetch(`/api/admin/bookings/export?${qs}`, {
-            headers: { Authorization: `Bearer ${token}` },
+          const { body } = bookingsApiQuery(filters);
+          const res = await fetch("/api/admin/bookings/export", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            body: JSON.stringify(body),
           });
           if (!res.ok) {
             setToastMessage("Appointment export failed.");
@@ -749,6 +761,15 @@ function AdminDashboard() {
         providers={providers}
         schedulerServices={schedulerServices}
         autoOpenEdit={Boolean(selectedId) && editRequestId === selectedId}
+        onRescheduled={({ newStartIso }) => {
+          // The edit is done; a later reload must not reopen it in edit mode.
+          setEditRequestId(null);
+          // Follow the booking to its new date so it — and the drawer's email
+          // result — stay on screen. The filter change reloads that range.
+          const nextDate = dateToFollowMovedBooking(filters, newStartIso);
+          if (nextDate) updateFilters({ date: nextDate });
+          else void refreshBookings();
+        }}
       />
 
       <NewBookingDrawer
@@ -884,6 +905,26 @@ function AdminDashboard() {
       />
     </div>
   );
+}
+
+/**
+ * Chicago date to switch the calendar to after a booking moved to `startIso`,
+ * or null when the current view already shows that time.
+ */
+function dateToFollowMovedBooking(filters: FilterState, startIso: string): string | null {
+  const start = DateTime.fromISO(startIso, { setZone: true }).setZone(TIME_ZONE);
+  if (!start.isValid) return null;
+  const day = start.toFormat("yyyy-LL-dd");
+  if (filters.view === "day") return day === filters.date ? null : day;
+  if (filters.view === "week") {
+    return chicagoStartOfWeek(day).toMillis() === chicagoStartOfWeek(filters.date).toMillis()
+      ? null
+      : day;
+  }
+  // List view covers a range starting at the chosen date.
+  const { fromIso, toIso } = bookingsApiQuery(filters);
+  const ms = start.toMillis();
+  return ms >= Date.parse(fromIso) && ms <= Date.parse(toIso) ? null : day;
 }
 
 /* ---------------- Toolbar ---------------- */

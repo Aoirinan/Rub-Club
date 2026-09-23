@@ -11,6 +11,22 @@ export const runtime = "nodejs";
 
 const EXPORT_LIMIT = 5000;
 
+/** JSON body `{ from, to, status, … }` → the same params the GET query string carries. */
+async function paramsFromJsonBody(req: Request): Promise<URLSearchParams | null> {
+  let json: unknown;
+  try {
+    json = await req.json();
+  } catch {
+    return null;
+  }
+  if (!json || typeof json !== "object" || Array.isArray(json)) return null;
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(json)) {
+    if (typeof value === "string") params.set(key, value);
+  }
+  return params;
+}
+
 export async function GET(req: Request) {
   const staff = await requireStaff(req.headers.get("authorization"), "manager");
   if (!staff) {
@@ -18,6 +34,32 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url);
+  // Search terms (patient names, phones) must not ride in the URL, where they
+  // end up in hosting request logs. Searches use POST with the same filters.
+  if (searchParams.has("q")) {
+    return NextResponse.json(
+      { error: "Send the search in a POST body, not the URL." },
+      { status: 400 },
+    );
+  }
+  return exportBookings(searchParams);
+}
+
+/** Same filters as GET, sent as a JSON body so `q` stays out of the URL. */
+export async function POST(req: Request) {
+  const staff = await requireStaff(req.headers.get("authorization"), "manager");
+  if (!staff) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const params = await paramsFromJsonBody(req);
+  if (!params) {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  return exportBookings(params);
+}
+
+async function exportBookings(searchParams: URLSearchParams) {
   const fromStr = searchParams.get("from");
   const toStr = searchParams.get("to");
   const statusStr = searchParams.get("status");

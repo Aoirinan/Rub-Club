@@ -62,7 +62,8 @@ export function readFilters(params: URLSearchParams): FilterState {
     serviceLine,
     providerId,
     statuses,
-    q: params.get("q") ?? "",
+    // The patient search is kept in page state, never the URL (request logs).
+    q: "",
   };
 }
 
@@ -83,7 +84,6 @@ export function writeFilters(s: FilterState): string {
   if (s.statuses.length && !statusListEquals(s.statuses, DEFAULT_STATUSES)) {
     params.set("status", s.statuses.join(","));
   }
-  if (s.q.trim()) params.set("q", s.q.trim());
   return params.toString();
 }
 
@@ -97,10 +97,14 @@ function statusListEquals(
   return true;
 }
 
-/** API query string used for the GET /api/admin/bookings call. */
+/**
+ * Filters for the POST /api/admin/bookings (and /export) calls. They travel in
+ * the JSON body, not a query string, so a patient search term never lands in
+ * hosting request logs.
+ */
 export function bookingsApiQuery(
   filters: FilterState,
-): { qs: string; fromIso: string; toIso: string } {
+): { body: Record<string, string>; fromIso: string; toIso: string } {
   const fromIso = filters.view === "day"
     ? chicagoDayStart(filters.date).minus({ hours: 1 }).toUTC().toISO() ?? ""
     : filters.view === "week"
@@ -113,18 +117,14 @@ export function bookingsApiQuery(
       ? chicagoStartOfWeek(filters.date).plus({ days: 7, hours: 1 }).toUTC().toISO() ?? ""
       : chicagoDayStart(filters.date).plus({ days: 60 }).toUTC().toISO() ?? "";
 
-  const params = new URLSearchParams();
-  if (fromIso) params.set("from", fromIso);
-  if (toIso) params.set("to", toIso);
-  if (filters.statuses.length) {
-    params.set("status", filters.statuses.join(","));
-  } else {
-    params.set("status", ALL_STATUSES.join(","));
-  }
-  if (filters.locationId !== "all") params.set("locationId", filters.locationId);
-  if (filters.providerId !== "all") params.set("providerId", filters.providerId);
-  if (filters.q.trim()) params.set("q", filters.q.trim());
-  return { qs: params.toString(), fromIso, toIso };
+  const body: Record<string, string> = {};
+  if (fromIso) body.from = fromIso;
+  if (toIso) body.to = toIso;
+  body.status = (filters.statuses.length ? filters.statuses : ALL_STATUSES).join(",");
+  if (filters.locationId !== "all") body.locationId = filters.locationId;
+  if (filters.providerId !== "all") body.providerId = filters.providerId;
+  if (filters.q.trim()) body.q = filters.q.trim();
+  return { body, fromIso, toIso };
 }
 
 /** Apply client-side service-line filter (the API can't filter by it today). */

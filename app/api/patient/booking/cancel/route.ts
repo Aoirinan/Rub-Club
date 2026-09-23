@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
+import { APPOINTMENT_STARTED_MESSAGE, appointmentHasStarted } from "@/lib/appointment-started";
 import { recordBookingEventInTx } from "@/lib/booking-events";
 import { bookingDocToEmailContext } from "@/lib/booking-doc";
 import { patientCancelledEmail } from "@/lib/email-templates";
@@ -63,10 +64,17 @@ export async function POST(req: Request) {
       if (prev !== "confirmed") {
         throw new Error("bad_status");
       }
+      if (appointmentHasStarted(snap.get("startIso"))) {
+        throw new Error("already_started");
+      }
       const bucketIds = snap.get("bucketIds") as string[] | undefined;
       if (bucketIds?.length) {
-        for (const bid of bucketIds) {
-          tx.delete(db.collection("slot_buckets").doc(bid));
+        // Only release buckets this booking actually owns. Bookings created with
+        // "allow double-booking" may list bucket ids that belong to another booking.
+        const bucketRefs = bucketIds.map((bid) => db.collection("slot_buckets").doc(bid));
+        const bucketSnaps = await Promise.all(bucketRefs.map((r) => tx.get(r)));
+        for (const bs of bucketSnaps) {
+          if (bs.exists && bs.get("bookingId") === bookingId) tx.delete(bs.ref);
         }
       }
       tx.update(bookingRef, {
@@ -92,6 +100,9 @@ export async function POST(req: Request) {
     }
     if (e instanceof Error && e.message === "bad_status") {
       return NextResponse.json({ error: "This appointment can no longer be cancelled online." }, { status: 409 });
+    }
+    if (e instanceof Error && e.message === "already_started") {
+      return NextResponse.json({ error: APPOINTMENT_STARTED_MESSAGE }, { status: 409 });
     }
     console.error(e);
     return NextResponse.json({ error: "Could not cancel" }, { status: 500 });

@@ -8,6 +8,7 @@ import { onAuthStateChanged, type Auth } from "firebase/auth";
 import { TIME_ZONE } from "@/lib/constants";
 import { getFirebaseClientAuth } from "@/lib/firebase-client";
 import { committedPatientSearchFromRaw } from "@/lib/patient-search-parse";
+import { PATIENT_LOOKUP_PATH, takePatientLookup } from "@/app/admin/_scheduler/PatientLookupLink";
 
 type BookingDoc = Record<string, unknown> & { id?: string };
 
@@ -35,11 +36,10 @@ export default function AdminPatientPage() {
 function AdminPatientContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialRaw = searchParams.get("q") ?? searchParams.get("phone") ?? "";
 
   const [auth, setAuth] = useState<Auth | null>(null);
-  const [searchDraft, setSearchDraft] = useState(initialRaw);
-  const [searchQuery, setSearchQuery] = useState(() => committedPatientSearchFromRaw(initialRaw));
+  const [searchDraft, setSearchDraft] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bookings, setBookings] = useState<BookingDoc[]>([]);
@@ -100,17 +100,21 @@ function AdminPatientContent() {
     void load();
   }, [load]);
 
+  // The search arrives from a PatientLookupLink hand-off, never the URL (page
+  // URLs land in request logs). Old `?q=` / `?phone=` bookmarks still work once
+  // and are stripped from the address bar.
   useEffect(() => {
-    const raw = searchParams.get("q") ?? searchParams.get("phone") ?? "";
+    const legacy = searchParams.get("q") ?? searchParams.get("phone") ?? "";
+    const raw = takePatientLookup() || legacy;
+    if (legacy) router.replace(PATIENT_LOOKUP_PATH);
+    if (!raw) return;
     setSearchDraft(raw);
     setSearchQuery(committedPatientSearchFromRaw(raw));
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   function submitSearch(e: FormEvent) {
     e.preventDefault();
-    const q = searchDraft.trim();
-    router.replace(q ? `/admin/patient?q=${encodeURIComponent(q)}` : "/admin/patient");
-    setSearchQuery(committedPatientSearchFromRaw(q));
+    setSearchQuery(committedPatientSearchFromRaw(searchDraft.trim()));
   }
 
   return (

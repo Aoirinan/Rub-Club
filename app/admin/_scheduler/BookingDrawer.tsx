@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { DateTime } from "luxon";
 import { TIME_ZONE, type ServiceLine } from "@/lib/constants";
 import {
@@ -9,8 +8,10 @@ import {
   bookingStatusPillClasses,
   type BookingStatus,
 } from "@/lib/booking-status";
+import { schedulerServiceMatchesLine } from "@/lib/scheduler-service-lines";
 import type { SchedulerServiceRow } from "@/lib/scheduler-service-types";
 import type { BookingEvent, BookingRow, ProviderRow } from "./types";
+import { PatientLookupLink } from "./PatientLookupLink";
 
 type Props = {
   booking: BookingRow | null;
@@ -25,6 +26,11 @@ type Props = {
   schedulerServices?: SchedulerServiceRow[];
   /** Opens the edit panel straight away (list-view "Reschedule"). */
   autoOpenEdit?: boolean;
+  /**
+   * Called instead of `onActionComplete` after a successful time / provider /
+   * service edit, so the page can follow the booking to its new date.
+   */
+  onRescheduled?: (result: { bookingId: string; newStartIso: string }) => void;
 };
 
 type SlotChoice = { startIso: string; label: string };
@@ -76,6 +82,7 @@ export function BookingDrawer({
   providers = [],
   schedulerServices = [],
   autoOpenEdit = false,
+  onRescheduled,
 }: Props) {
   const [events, setEvents] = useState<BookingEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
@@ -97,6 +104,12 @@ export function BookingDrawer({
 
   // ── Edit appointment (time / provider / service / length) ──
   const [editing, setEditing] = useState(false);
+  /**
+   * The booking as it stood when the edit panel opened. Saves diff against this
+   * (not the copy the 15 s poll keeps refreshing), and send it as `expected` so
+   * the server refuses the save if someone else changed the booking meanwhile.
+   */
+  const [editBase, setEditBase] = useState<BookingRow | null>(null);
   const [editDate, setEditDate] = useState("");
   const [editProviderId, setEditProviderId] = useState("");
   const [editServiceLine, setEditServiceLine] = useState<ServiceLine>("massage");
@@ -113,6 +126,7 @@ export function BookingDrawer({
 
   /** Seed the edit form from the booking as it stands right now. */
   const seedEditForm = useCallback((b: BookingRow) => {
+    setEditBase(b);
     setEditDate(localDateOf(b));
     setEditProviderId(b.providerId ?? "");
     setEditServiceLine((b.serviceLine as ServiceLine) ?? "massage");
@@ -123,34 +137,44 @@ export function BookingDrawer({
     setSlotsError(null);
   }, []);
 
-  // Latest booking, readable from effects that must NOT re-run on the 15 s poll.
+  // Latest booking / auto-open flag, readable from effects that must NOT re-run
+  // on the 15 s poll.
   const latestBooking = useRef<BookingRow | null>(booking);
+  const latestAutoOpenEdit = useRef(autoOpenEdit);
   useEffect(() => {
     latestBooking.current = booking;
+    latestAutoOpenEdit.current = autoOpenEdit;
   });
 
   // Keyed on the booking *id*: the scheduler re-fetches bookings every 15 s and
   // hands us a fresh object each time, which must not wipe in-progress input.
+  // The booking can also vanish for a moment while the page loads the day it
+  // was just moved to; coming back to the SAME booking keeps the drawer's state
+  // (e.g. the "patient was emailed" message) and only reloads the history.
   const bookingId = booking?.id ?? null;
+  const shownBookingId = useRef<string | null>(null);
   useEffect(() => {
-    setEvents([]);
-    setAction(null);
-    setReason("");
-    setError(null);
-    setSuccessMsg(null);
-    setEventsError(null);
-    setChargeAmount("");
-    setChargeDescription("");
-    setEmailSubject("");
-    setEmailMessage("");
-    const b = latestBooking.current;
-    if (autoOpenEdit && b) {
-      seedEditForm(b);
-      setEditing(true);
-    } else {
-      setEditing(false);
-    }
     if (!bookingId) return;
+    if (bookingId !== shownBookingId.current) {
+      shownBookingId.current = bookingId;
+      setEvents([]);
+      setAction(null);
+      setReason("");
+      setError(null);
+      setSuccessMsg(null);
+      setChargeAmount("");
+      setChargeDescription("");
+      setEmailSubject("");
+      setEmailMessage("");
+      const b = latestBooking.current;
+      if (latestAutoOpenEdit.current && b) {
+        seedEditForm(b);
+        setEditing(true);
+      } else {
+        setEditing(false);
+      }
+    }
+    setEventsError(null);
     let cancelled = false;
     (async () => {
       setLoadingEvents(true);
@@ -173,9 +197,18 @@ export function BookingDrawer({
     return () => {
       cancelled = true;
     };
-  }, [bookingId, getIdToken, autoOpenEdit, seedEditForm]);
+  }, [bookingId, getIdToken, seedEditForm]);
 
-  // Open times for the chosen date / provider / service / length.
+  // "Reschedule" on the booking that is already open. Only the switch ON acts:
+  // the page clears the request after a save, which must not reset the drawer.
+  useEffect(() => {
+    const b = latestBooking.current;
+    if (!autoOpenEdit || !b) return;
+    seedEditForm(b);
+    setEditing(true);
+  }, [autoOpenEdit, seedEditForm]);
+
+  // Open times for the chosen date / provider / service / length / buffers.
   useEffect(() => {
     if (!editing || !bookingId || !editProviderId) {
       setSlots([]);
@@ -197,6 +230,8 @@ export function BookingDrawer({
             providerId: editProviderId,
             serviceLine: editServiceLine,
             durationMin: String(editDurationMin),
+            // The catalog service decides the buffers the save will hold.
+            schedulerServiceId: editServiceId,
           });
           const res = await fetch(
             `/api/admin/bookings/${encodeURIComponent(bookingId)}/reschedule-options?${qs}`,
@@ -226,7 +261,16 @@ export function BookingDrawer({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [editing, bookingId, editDate, editProviderId, editServiceLine, editDurationMin, getIdToken]);
+  }, [
+    editing,
+    bookingId,
+    editDate,
+    editProviderId,
+    editServiceLine,
+    editDurationMin,
+    editServiceId,
+    getIdToken,
+  ]);
 
   async function pushDeskFlags(patch: { checkedIn?: boolean; needsReschedule?: boolean }) {
     const b = booking;
@@ -284,6 +328,12 @@ export function BookingDrawer({
   }
 
   if (!booking) return null;
+
+  function closeDrawer() {
+    // Reopening this booking later starts fresh.
+    shownBookingId.current = null;
+    onClose();
+  }
 
   async function runAction(kind: "accept" | "decline" | "cancel", payloadReason?: string) {
     if (!booking) return;
@@ -404,7 +454,10 @@ export function BookingDrawer({
   }
 
   async function saveScheduleEdit() {
-    const b = booking;
+    // Diff against the booking as it was when the panel opened, not the copy
+    // the poll has refreshed since — otherwise a colleague's change would be
+    // silently reverted.
+    const b = editBase ?? booking;
     if (!b) return;
     const payload: Record<string, unknown> = {};
     if (editStartIso && editStartIso !== (b.startIso ?? "")) payload.startIso = editStartIso;
@@ -417,6 +470,15 @@ export function BookingDrawer({
       setError("Nothing changed yet.");
       return;
     }
+    payload.expected = {
+      startIso: b.startIso ?? "",
+      providerId: b.providerId ?? "",
+      ...(typeof b.durationMin === "number" ? { durationMin: b.durationMin } : {}),
+      ...(b.serviceLine === "massage" || b.serviceLine === "chiropractic" || b.serviceLine === "stretch"
+        ? { serviceLine: b.serviceLine }
+        : {}),
+      schedulerServiceId: b.schedulerServiceId ?? "",
+    };
 
     setWorking(true);
     setError(null);
@@ -434,20 +496,29 @@ export function BookingDrawer({
       });
       const data = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
+        changed?: boolean;
+        newStartIso?: string;
         notifiedPatient?: boolean;
+        notifyFailure?: "no_email" | "send_failed";
+        code?: string;
         error?: string;
       };
       if (!res.ok) {
         setError(data.error ?? "Could not save the change.");
+        if (data.code === "stale") {
+          // Reopening the panel starts from the latest copy.
+          setEditing(false);
+          onActionComplete();
+        }
         return;
       }
-      setSuccessMsg(
-        data.notifiedPatient
-          ? "Appointment updated. The patient was emailed the new time."
-          : "Appointment updated. No patient email was sent.",
-      );
+      setSuccessMsg(rescheduleResultMessage(data));
       setEditing(false);
-      onActionComplete();
+      if (onRescheduled && data.newStartIso) {
+        onRescheduled({ bookingId: b.id, newStartIso: data.newStartIso });
+      } else {
+        onActionComplete();
+      }
     } catch {
       setError("Could not save the change.");
     } finally {
@@ -505,7 +576,7 @@ export function BookingDrawer({
     <>
       <div
         className="fixed inset-0 z-40 bg-slate-900/40"
-        onClick={onClose}
+        onClick={closeDrawer}
         aria-label="Close drawer"
       />
       <aside
@@ -530,7 +601,7 @@ export function BookingDrawer({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeDrawer}
             className="rounded-full p-2 text-slate-500 hover:bg-slate-100"
             aria-label="Close"
           >
@@ -634,12 +705,12 @@ export function BookingDrawer({
               </a>
             ) : null}
             {booking.phone && booking.phone.replace(/\D/g, "").length >= 7 ? (
-              <Link
-                href={`/admin/patient?phone=${encodeURIComponent(booking.phone)}`}
+              <PatientLookupLink
+                q={booking.phone}
                 className="mt-1 inline-block text-xs font-semibold text-sky-800 underline"
               >
                 Patient record
-              </Link>
+              </PatientLookupLink>
             ) : null}
             {booking.email ? (
               <a href={`mailto:${booking.email}`} className="block break-all text-slate-600 hover:underline">
@@ -656,7 +727,7 @@ export function BookingDrawer({
             </p>
             {editing ? (
               <EditScheduleForm
-                booking={booking}
+                booking={editBase ?? booking}
                 providers={providers}
                 services={schedulerServices}
                 date={editDate}
@@ -1023,12 +1094,15 @@ function EventMeta({ meta, type }: { meta: Record<string, unknown>; type: Bookin
       </p>
     );
   }
-  if (type === "rescheduled" && meta.newStartIso) {
-    return (
-      <p className="mt-1 rounded bg-cyan-50 px-2 py-1 text-xs text-cyan-900">
-        New start: {String(meta.newStartIso)}
-      </p>
-    );
+  if (type === "rescheduled") {
+    const lines = rescheduleMetaLines(meta);
+    return lines.length > 0 ? (
+      <ul className="mt-1 space-y-0.5 rounded bg-cyan-50 px-2 py-1 text-xs text-cyan-900">
+        {lines.map((l) => (
+          <li key={l}>{l}</li>
+        ))}
+      </ul>
+    ) : null;
   }
   if (type === "survey_sent") {
     return (
@@ -1072,8 +1146,9 @@ function EditScheduleForm(props: {
       (!locationId || p.locationIds.includes(locationId as "paris" | "sulphur_springs")) &&
       p.serviceLines.includes(props.serviceLine),
   );
+  // Same line match the server applies on save.
   const eligibleServices = props.services.filter(
-    (s) => s.active !== false && (!s.serviceLines || s.serviceLines.includes(props.serviceLine)),
+    (s) => s.active !== false && schedulerServiceMatchesLine(s, props.serviceLine),
   );
 
   const durations = DURATION_CHOICES.includes(props.durationMin)
@@ -1151,6 +1226,9 @@ function EditScheduleForm(props: {
           onChange={(e) => {
             const next = e.target.value as ServiceLine;
             props.setServiceLine(next);
+            // A catalog service belongs to one line: drop it on a line change
+            // (switching back restores the booking's own).
+            props.setServiceId(next === b.serviceLine ? (b.schedulerServiceId ?? "") : "");
             // Keep the provider valid for the new service line.
             const stillOk = props.providers.some(
               (p) => p.id === props.providerId && p.serviceLines.includes(next),
@@ -1259,7 +1337,9 @@ function EditScheduleForm(props: {
         )}
         <p className="mt-2 text-[11px] text-slate-600">
           {timeMoves
-            ? "The patient will be emailed the new time."
+            ? b.email
+              ? "The patient will be emailed the new time."
+              : "There is no email on file, so the patient will not be notified of the new time."
             : "No patient email is sent for provider or service changes."}
         </p>
       </div>
@@ -1585,6 +1665,61 @@ function formatEventTime(iso: string | null): string {
   const dt = DateTime.fromISO(iso).setZone(TIME_ZONE);
   if (!dt.isValid) return iso;
   return dt.toFormat("LLL d yyyy, h:mm a (z)");
+}
+
+/** Chicago-local appointment time stored in event meta (saved as UTC ISO). */
+function formatMetaStart(raw: unknown): string | null {
+  if (typeof raw !== "string" || !raw) return null;
+  const dt = DateTime.fromISO(raw, { setZone: true }).setZone(TIME_ZONE);
+  return dt.isValid ? dt.toFormat("ccc, LLL d yyyy · h:mm a") : raw;
+}
+
+function metaName(raw: unknown, empty = "—"): string {
+  return typeof raw === "string" && raw.trim() ? raw : empty;
+}
+
+/** What a "rescheduled" event changed, one line per field that moved. */
+function rescheduleMetaLines(meta: Record<string, unknown>): string[] {
+  const lines: string[] = [];
+  const prevStart = formatMetaStart(meta.prevStartIso);
+  const newStart = formatMetaStart(meta.newStartIso);
+  if (newStart && newStart !== prevStart) {
+    lines.push(prevStart ? `Time: ${prevStart} → ${newStart}` : `Time: ${newStart}`);
+  }
+  if ("newProviderName" in meta) {
+    lines.push(`Provider: ${metaName(meta.prevProviderName)} → ${metaName(meta.newProviderName)}`);
+  }
+  if ("newServiceLine" in meta) {
+    lines.push(
+      `Service: ${serviceLineLabel(metaName(meta.prevServiceLine))} → ${serviceLineLabel(metaName(meta.newServiceLine))}`,
+    );
+  }
+  if ("newDurationMin" in meta) {
+    lines.push(`Length: ${String(meta.prevDurationMin ?? "—")} → ${String(meta.newDurationMin)} minutes`);
+  }
+  if ("prevServiceTypeName" in meta) {
+    lines.push(
+      `Service type: ${metaName(meta.prevServiceTypeName, "None")} → ${metaName(meta.newServiceTypeName, "None")}`,
+    );
+  } else if ("newServiceTypeName" in meta) {
+    // Older events recorded only the new service type.
+    lines.push(`Service type: ${metaName(meta.newServiceTypeName, "None")}`);
+  }
+  return lines;
+}
+
+/** Drawer message after a successful edit — says whether the patient really got the email. */
+function rescheduleResultMessage(r: {
+  changed?: boolean;
+  notifiedPatient?: boolean;
+  notifyFailure?: "no_email" | "send_failed";
+}): string {
+  if (!r.changed) return "Appointment updated. No patient email was sent.";
+  if (r.notifiedPatient) return "Appointment updated. The patient was emailed the new time.";
+  if (r.notifyFailure === "no_email") {
+    return "Appointment updated. There is no email on file, so the patient was NOT notified — call them with the new time.";
+  }
+  return "Appointment updated, but the email to the patient could not be sent — call them with the new time.";
 }
 
 // keep `BookingStatus` import used (helps IDE inference if drawer is reused)

@@ -52,7 +52,15 @@ export async function GET(req: Request) {
     return NextResponse.json({ patients, total: patients.length, page: 1, limit: patients.length });
   }
 
-  const search = searchParams.get("search") ?? undefined;
+  // Search terms (names, phones) must not ride in the URL, where they end up in
+  // hosting request logs. Searches go to POST /api/admin/patients/search.
+  if (searchParams.has("search")) {
+    return NextResponse.json(
+      { error: "Send the search in a POST to /api/admin/patients/search." },
+      { status: 400 },
+    );
+  }
+
   const page = Number(searchParams.get("page")) || 1;
   const limit = Number(searchParams.get("limit")) || 50;
   const paymentRaw = searchParams.get("paymentType");
@@ -68,7 +76,6 @@ export async function GET(req: Request) {
       : "all";
 
   const result = await listPatients({
-    search,
     page,
     limit,
     paymentType,

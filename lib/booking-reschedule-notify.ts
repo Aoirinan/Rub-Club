@@ -10,22 +10,34 @@ import { buildIcs } from "@/lib/ics";
 import { emailLocations } from "@/lib/email-locations";
 import { sendBookingNotification } from "@/lib/sendgrid";
 
+/**
+ * Whether SendGrid accepted the patient's email. `no_email`: nothing on file to
+ * send to. `send_failed`: SendGrid is not configured, rejected the message, or
+ * the booking is missing details the email needs.
+ */
+export type PatientRescheduleEmailResult =
+  | { sent: true }
+  | { sent: false; reason: "no_email" | "send_failed" };
+
 export async function sendRescheduleNotifications(params: {
   db: Firestore;
   bookingId: string;
   prevStartIso: string;
   rescheduledBy: "patient" | "staff";
   notifyOffice?: boolean;
-}): Promise<void> {
+}): Promise<PatientRescheduleEmailResult> {
   const snap = await params.db.collection("bookings").doc(params.bookingId).get();
-  if (!snap.exists) return;
+  if (!snap.exists) return { sent: false, reason: "send_failed" };
+
+  const to = snap.get("email");
+  if (typeof to !== "string" || !to.trim()) return { sent: false, reason: "no_email" };
 
   const emailCtx = bookingDocToEmailContext(snap);
-  if (!emailCtx) return;
+  if (!emailCtx) return { sent: false, reason: "send_failed" };
   const locations = await emailLocations();
 
   const previousStart = DateTime.fromISO(params.prevStartIso, { zone: "utc" }).setZone(TIME_ZONE);
-  if (!previousStart.isValid) return;
+  if (!previousStart.isValid) return { sent: false, reason: "send_failed" };
 
   const status = snap.get("status");
   const isConfirmed = status === "confirmed";
@@ -59,8 +71,9 @@ export async function sendRescheduleNotifications(params: {
       ]
     : undefined;
 
+  let patientSent = false;
   try {
-    await sendBookingNotification({
+    patientSent = await sendBookingNotification({
       to: emailCtx.email,
       subject,
       text,
@@ -87,4 +100,6 @@ export async function sendRescheduleNotifications(params: {
       }
     }
   }
+
+  return patientSent ? { sent: true } : { sent: false, reason: "send_failed" };
 }

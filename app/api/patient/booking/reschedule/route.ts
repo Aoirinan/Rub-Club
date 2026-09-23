@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
+import { APPOINTMENT_STARTED_MESSAGE } from "@/lib/appointment-started";
 import { rescheduleBookingForStartChange } from "@/lib/booking-reschedule";
 import { sendRescheduleNotifications } from "@/lib/booking-reschedule-notify";
 import { findBookingByPortalToken } from "@/lib/patient-portal-lookup";
@@ -28,6 +29,10 @@ function messageFor(code: string): string {
       return "This appointment cannot be rescheduled online. Call the office.";
     case "bad_status":
       return "Only confirmed appointments can be rescheduled online.";
+    case "already_started":
+      return APPOINTMENT_STARTED_MESSAGE;
+    case "stale":
+      return "This appointment was just updated by the office. Reload the page and try again.";
     default:
       return "Could not reschedule.";
   }
@@ -65,7 +70,7 @@ export async function POST(req: Request) {
     snap.id,
     parsed.data.startIso,
     { uid: null, email: "patient/portal" },
-    { allowPending: false },
+    { allowPending: false, refuseIfStarted: true },
   );
 
   if (!result.ok) {

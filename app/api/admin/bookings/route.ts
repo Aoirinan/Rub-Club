@@ -106,6 +106,24 @@ function matchesQuery(row: BookingRowDto, q: string): boolean {
   return hay.includes(needle);
 }
 
+type Staff = NonNullable<Awaited<ReturnType<typeof requireStaff>>>;
+
+/** JSON body `{ from, to, status, … }` → the same params the GET query string carries. */
+async function paramsFromJsonBody(req: Request): Promise<URLSearchParams | null> {
+  let json: unknown;
+  try {
+    json = await req.json();
+  } catch {
+    return null;
+  }
+  if (!json || typeof json !== "object" || Array.isArray(json)) return null;
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(json)) {
+    if (typeof value === "string") params.set(key, value);
+  }
+  return params;
+}
+
 export async function GET(req: Request) {
   const staff = await requireStaff(req.headers.get("authorization"), "massage_therapist");
   if (!staff) {
@@ -113,6 +131,32 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url);
+  // Search terms (patient names, phones) must not ride in the URL, where they
+  // end up in hosting request logs. Searches use POST with the same filters.
+  if (searchParams.has("q")) {
+    return NextResponse.json(
+      { error: "Send the search in a POST body, not the URL." },
+      { status: 400 },
+    );
+  }
+  return listBookings(staff, searchParams);
+}
+
+/** Same filters as GET, sent as a JSON body so `q` stays out of the URL. */
+export async function POST(req: Request) {
+  const staff = await requireStaff(req.headers.get("authorization"), "massage_therapist");
+  if (!staff) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const params = await paramsFromJsonBody(req);
+  if (!params) {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  return listBookings(staff, params);
+}
+
+async function listBookings(staff: Staff, searchParams: URLSearchParams) {
   const fromStr = searchParams.get("from");
   const toStr = searchParams.get("to");
   const statusStr = searchParams.get("status");

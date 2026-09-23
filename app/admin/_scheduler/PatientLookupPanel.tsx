@@ -35,10 +35,12 @@ export function PatientLookupPanel({ open, getIdToken, isSuperadmin, onClose }: 
     if (!token) return;
     setLoading(true);
     try {
-      const res = await fetch(
-        `/api/admin/patients?search=${encodeURIComponent(debounced)}&limit=30`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      // POST so the search term stays out of the URL (and hosting request logs).
+      const res = await fetch("/api/admin/patients/search", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ search: debounced, limit: 30 }),
+      });
       const data = (await res.json()) as { patients?: PatientApiRow[] };
       setPatients(data.patients ?? []);
     } finally {

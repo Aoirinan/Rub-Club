@@ -1,24 +1,38 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
-import { updateBookingSchedule } from "@/lib/booking-reschedule";
-import { sendRescheduleNotifications } from "@/lib/booking-reschedule-notify";
+import { isValidAdminBookingDurationMin, updateBookingSchedule } from "@/lib/booking-reschedule";
+import {
+  sendRescheduleNotifications,
+  type PatientRescheduleEmailResult,
+} from "@/lib/booking-reschedule-notify";
 import { requireStaff } from "@/lib/staff-auth";
-import { isValidBookingDurationMin } from "@/lib/booking-duration";
 import { recomputeNextAppointmentForBooking } from "@/lib/patients-db";
 
 export const runtime = "nodejs";
 
+const serviceLineSchema = z.enum(["massage", "chiropractic", "stretch"]);
+
 const bodySchema = z.object({
   startIso: z.string().min(8).optional(),
   providerId: z.string().trim().min(1).max(200).optional(),
-  serviceLine: z.enum(["massage", "chiropractic", "stretch"]).optional(),
+  serviceLine: serviceLineSchema.optional(),
   durationMin: z
     .number()
     .int()
-    .refine(isValidBookingDurationMin, "Duration must be a multiple of 30 minutes.")
+    .refine(isValidAdminBookingDurationMin, "Length must be between 15 and 480 minutes.")
     .optional(),
   schedulerServiceId: z.string().trim().max(200).optional(),
+  /** The booking as the editor saw it; a mismatch means someone else changed it. */
+  expected: z
+    .object({
+      startIso: z.string().max(100).optional(),
+      providerId: z.string().max(200).optional(),
+      durationMin: z.number().int().optional(),
+      serviceLine: serviceLineSchema.optional(),
+      schedulerServiceId: z.string().max(200).optional(),
+    })
+    .optional(),
 });
 
 type Params = { params: Promise<{ id: string }> };
@@ -34,9 +48,15 @@ function messageFor(code: string): string {
     case "invalid_time":
       return "Invalid start time.";
     case "invalid_duration":
-      return "Length must be a multiple of 30 minutes.";
+      return "Length must be between 15 and 480 minutes.";
     case "unknown_service":
       return "That service is no longer in the catalog.";
+    case "inactive_service":
+      return "That service type is no longer active. Pick another.";
+    case "service_line_mismatch":
+      return "That service type does not belong to the chosen service. Pick one that matches.";
+    case "stale":
+      return "This booking was just changed by someone else — reload and try again.";
     case "no_provider":
       return "That provider is not bookable for this location and service.";
     case "bad_status":
@@ -70,7 +90,7 @@ export async function POST(req: Request, ctx: Params) {
     );
   }
 
-  const changes = parsed.data;
+  const { expected, ...changes } = parsed.data;
   if (
     changes.startIso === undefined &&
     changes.providerId === undefined &&
@@ -89,7 +109,7 @@ export async function POST(req: Request, ctx: Params) {
     id,
     changes,
     { uid: staff.uid, email: staff.email ?? null },
-    { allowPending: true },
+    { allowPending: true, expected },
   );
 
   if (!result.ok) {
@@ -101,9 +121,10 @@ export async function POST(req: Request, ctx: Params) {
 
   // Only a moved start time emails the patient. A provider or service swap is
   // recorded in history; staff can send a note with the "Send email" action.
+  let patientEmail: PatientRescheduleEmailResult | null = null;
   if (result.changed) {
     try {
-      await sendRescheduleNotifications({
+      patientEmail = await sendRescheduleNotifications({
         db,
         bookingId: id,
         prevStartIso: result.prevStartIso,
@@ -111,6 +132,7 @@ export async function POST(req: Request, ctx: Params) {
       });
     } catch (err) {
       console.error("[admin/reschedule] email failed", err);
+      patientEmail = { sent: false, reason: "send_failed" };
     }
   }
 
@@ -122,6 +144,9 @@ export async function POST(req: Request, ctx: Params) {
     providerChanged: result.providerChanged,
     serviceChanged: result.serviceChanged,
     anyChange: result.anyChange,
-    notifiedPatient: result.changed,
+    newStartIso: result.newStartIso,
+    // True only when SendGrid accepted the patient email.
+    notifiedPatient: patientEmail?.sent === true,
+    ...(patientEmail && !patientEmail.sent ? { notifyFailure: patientEmail.reason } : {}),
   });
 }

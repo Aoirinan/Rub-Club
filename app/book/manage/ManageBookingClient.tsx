@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { DateTime } from "luxon";
+import { APPOINTMENT_STARTED_MESSAGE } from "@/lib/appointment-started";
 import { LOCATIONS, TIME_ZONE } from "@/lib/constants";
 
 type Slot = { startIso: string; label: string };
@@ -17,6 +18,8 @@ type BookingInfo = {
   providerDisplayName: string;
   name: string;
   canReschedule: boolean;
+  /** The visit has begun: no online cancel / reschedule. */
+  hasStarted: boolean;
 };
 
 function addDaysIso(days: number): string {
@@ -67,6 +70,7 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
         providerDisplayName: String(data.providerDisplayName ?? ""),
         name: String(data.name ?? ""),
         canReschedule: Boolean(data.canReschedule),
+        hasStarted: Boolean(data.hasStarted),
       };
       setInfo(row);
       const d = DateTime.fromISO(row.startIso, { zone: "utc" }).setZone(TIME_ZONE);
@@ -84,24 +88,30 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
   }, [loadInfo]);
 
   const loadSlots = useCallback(async () => {
-    if (!info?.canReschedule || !pickDate) return;
+    if (!info?.canReschedule || info.hasStarted || !pickDate || !initialToken.trim()) return;
     setSlotsLoading(true);
     setSlotsError(null);
     setSlots(null);
     setSelectedSlot(null);
     try {
-      const qs = new URLSearchParams({
-        locationId: info.locationId,
-        serviceLine: info.serviceLine,
-        durationMin: String(info.durationMin),
-        date: pickDate,
-        providerMode: "specific",
-        providerId: info.providerId,
+      // Token goes in the body, not the URL. Works while public booking is off.
+      const res = await fetch("/api/patient/booking/slots", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token: initialToken.trim(), date: pickDate }),
+        cache: "no-store",
       });
-      const res = await fetch(`/api/slots?${qs.toString()}`, { cache: "no-store" });
-      const data = (await res.json().catch(() => ({}))) as { slots?: Slot[]; error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        slots?: Slot[];
+        message?: string;
+        error?: string;
+      };
       if (!res.ok) {
         setSlotsError(typeof data.error === "string" ? data.error : "Could not load times.");
+        return;
+      }
+      if (typeof data.message === "string" && data.message) {
+        setSlotsError(data.message);
         return;
       }
       setSlots(data.slots ?? []);
@@ -110,10 +120,10 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
     } finally {
       setSlotsLoading(false);
     }
-  }, [info, pickDate]);
+  }, [info, pickDate, initialToken]);
 
   useEffect(() => {
-    if (info?.canReschedule && pickDate) void loadSlots();
+    if (info?.canReschedule && !info.hasStarted && pickDate) void loadSlots();
   }, [info, pickDate, loadSlots]);
 
   const dateOptions = useMemo(() => {
@@ -250,81 +260,89 @@ export default function ManageBookingClient({ initialToken }: { initialToken: st
                 </div>
               </dl>
 
-              <div className="border-t border-stone-100 pt-4">
-                <label className="block space-y-1 text-sm">
-                  <span className="text-xs font-semibold text-stone-600">Optional note (sent to the office)</span>
-                  <textarea
-                    rows={2}
-                    maxLength={500}
-                    className="w-full rounded-md border border-stone-300 px-3 py-2 text-sm"
-                    value={cancelReason}
-                    onChange={(e) => setCancelReason(e.target.value)}
-                    placeholder="e.g. schedule conflict"
-                  />
-                </label>
-                <button
-                  type="button"
-                  disabled={working}
-                  onClick={() => void cancelAppointment()}
-                  className="mt-3 w-full rounded-full bg-rose-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-rose-700 disabled:opacity-50"
-                >
-                  {working ? "Working…" : "Cancel appointment"}
-                </button>
-              </div>
-
-              {info.canReschedule ? (
-                <div className="border-t border-stone-100 pt-4">
-                  <h3 className="text-sm font-bold text-[#4a1515]">Reschedule</h3>
-                  <p className="mt-1 text-xs text-stone-600">
-                    Pick a new date, then a time. Your provider stays the same.
-                  </p>
-                  <label className="mt-3 block text-sm">
-                    <span className="text-xs font-semibold text-stone-600">Date</span>
-                    <select
-                      className="mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm"
-                      value={pickDate}
-                      onChange={(e) => setPickDate(e.target.value)}
+              {info.hasStarted ? (
+                <p className="border-t border-stone-100 pt-4 text-sm text-stone-700">
+                  {APPOINTMENT_STARTED_MESSAGE}
+                </p>
+              ) : (
+                <>
+                  <div className="border-t border-stone-100 pt-4">
+                    <label className="block space-y-1 text-sm">
+                      <span className="text-xs font-semibold text-stone-600">Optional note (sent to the office)</span>
+                      <textarea
+                        rows={2}
+                        maxLength={500}
+                        className="w-full rounded-md border border-stone-300 px-3 py-2 text-sm"
+                        value={cancelReason}
+                        onChange={(e) => setCancelReason(e.target.value)}
+                        placeholder="e.g. schedule conflict"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      disabled={working}
+                      onClick={() => void cancelAppointment()}
+                      className="mt-3 w-full rounded-full bg-rose-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-rose-700 disabled:opacity-50"
                     >
-                      {dateOptions.map((d) => (
-                        <option key={d} value={d}>
-                          {DateTime.fromISO(d, { zone: TIME_ZONE }).toFormat("ccc, LLL d, yyyy")}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  {slotsLoading ? <p className="mt-2 text-xs text-stone-500">Loading times…</p> : null}
-                  {slotsError ? <p className="mt-2 text-xs text-rose-700">{slotsError}</p> : null}
-                  {slots && slots.length === 0 && !slotsLoading ? (
-                    <p className="mt-2 text-xs text-stone-600">No openings that day. Try another date.</p>
-                  ) : null}
-                  {slots && slots.length > 0 ? (
-                    <div className="mt-2 grid max-h-48 gap-1 overflow-y-auto rounded-md border border-stone-200 p-2">
-                      {slots.map((s) => (
-                        <button
-                          key={s.startIso}
-                          type="button"
-                          onClick={() => setSelectedSlot(s)}
-                          className={`rounded-md px-2 py-1.5 text-left text-sm ${
-                            selectedSlot?.startIso === s.startIso
-                              ? "bg-[#c0392b] font-semibold text-white"
-                              : "bg-stone-50 text-stone-800 hover:bg-stone-100"
-                          }`}
+                      {working ? "Working…" : "Cancel appointment"}
+                    </button>
+                  </div>
+
+                  {info.canReschedule ? (
+                    <div className="border-t border-stone-100 pt-4">
+                      <h3 className="text-sm font-bold text-[#4a1515]">Reschedule</h3>
+                      <p className="mt-1 text-xs text-stone-600">
+                        Pick a new date, then a time. Your provider stays the same.
+                      </p>
+                      <label className="mt-3 block text-sm">
+                        <span className="text-xs font-semibold text-stone-600">Date</span>
+                        <select
+                          className="mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm"
+                          value={pickDate}
+                          onChange={(e) => setPickDate(e.target.value)}
                         >
-                          {s.label}
-                        </button>
-                      ))}
+                          {dateOptions.map((d) => (
+                            <option key={d} value={d}>
+                              {DateTime.fromISO(d, { zone: TIME_ZONE }).toFormat("ccc, LLL d, yyyy")}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      {slotsLoading ? <p className="mt-2 text-xs text-stone-500">Loading times…</p> : null}
+                      {slotsError ? <p className="mt-2 text-xs text-rose-700">{slotsError}</p> : null}
+                      {slots && slots.length === 0 && !slotsLoading ? (
+                        <p className="mt-2 text-xs text-stone-600">No openings that day. Try another date.</p>
+                      ) : null}
+                      {slots && slots.length > 0 ? (
+                        <div className="mt-2 grid max-h-48 gap-1 overflow-y-auto rounded-md border border-stone-200 p-2">
+                          {slots.map((s) => (
+                            <button
+                              key={s.startIso}
+                              type="button"
+                              onClick={() => setSelectedSlot(s)}
+                              className={`rounded-md px-2 py-1.5 text-left text-sm ${
+                                selectedSlot?.startIso === s.startIso
+                                  ? "bg-[#c0392b] font-semibold text-white"
+                                  : "bg-stone-50 text-stone-800 hover:bg-stone-100"
+                              }`}
+                            >
+                              {s.label}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                      <button
+                        type="button"
+                        disabled={working || !selectedSlot}
+                        onClick={() => void rescheduleAppointment()}
+                        className="mt-3 w-full rounded-full bg-[#c0392b] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0c4d4b] disabled:opacity-50"
+                      >
+                        {working ? "Working…" : "Confirm new time"}
+                      </button>
                     </div>
                   ) : null}
-                  <button
-                    type="button"
-                    disabled={working || !selectedSlot}
-                    onClick={() => void rescheduleAppointment()}
-                    className="mt-3 w-full rounded-full bg-[#c0392b] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0c4d4b] disabled:opacity-50"
-                  >
-                    {working ? "Working…" : "Confirm new time"}
-                  </button>
-                </div>
-              ) : null}
+                </>
+              )}
             </section>
           ) : null}
 

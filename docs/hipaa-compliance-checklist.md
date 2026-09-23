@@ -16,6 +16,7 @@ What the site does:
 - Public marketing pages.
 - Online booking that collects only **name, phone, email, appointment time/service, and optional scheduling notes** — the same info a front desk would write down on the phone.
 - Staff admin: appointment management, patient list (name/phone/email/appointment history/payment type), **scheduling-only** notes fields with banners warning against entering clinical information.
+- Staff-entered patient profile fields: **date of birth, mailing address, insurance carrier, and insurance member ID**. Front desk and managers type these into the admin patient profile (managers can also fill date of birth, address, and carrier from a patient CSV import). The public booking form does not ask for them. They are stored in the Firestore `patients` collection. See the table below.
 - Printable PDFs (chiropractic 9-page packet, massage new-client form) for the patient to complete on paper and bring in person.
 
 What the site explicitly does **not** do (any longer):
@@ -39,8 +40,11 @@ If the clinic later decides it wants real online intake, insurance uploads, or P
 | Appointment time, service line, location | Scheduler | Same as above. |
 | Scheduling notes (optional) | Booking + admin (with "no health info" banner) | Should not contain clinical info; banner enforces. |
 | Payment type / Square payment link | Billing | Not clinical PHI. |
+| Date of birth, mailing address, insurance carrier, insurance member ID | **Staff-entered only** in the admin patient profile (`POST /api/admin/patients`, `PATCH /api/admin/patients/[id]`); a manager patient CSV import can also set date of birth, address, and carrier. Stored in Firestore `patients`. Shown on the admin patient profile; the manager-only patient CSV export includes date of birth, address, and carrier (not member ID). | **Identifiers.** Held for the clinic, these are generally treated as PHI; treat them as confidential. |
 
-No diagnoses, treatment details, insurance member IDs, images, or medical history are collected on this site.
+**Collected from patients online:** only the booking fields above (name, phone, email, appointment, optional scheduling notes) while the online patient forms module stays off (see below). No diagnoses, treatment details, images, or medical history are collected on this site.
+
+**Entered by staff and stored on this site:** date of birth, mailing address, insurance carrier, and insurance member ID on the patient profile (see the table). The booking form does not collect them, but they are stored in Firestore and shown in the admin. Review with your compliance advisor whether storing them affects the Business Associate position described under "Why this matters." This checklist does not assume any BAA is in place.
 
 ## Action items (still recommended)
 
@@ -94,11 +98,12 @@ The app can **permanently delete** old operational scheduling data so it no long
 
 - Firestore `bookings` (and each booking’s `events` subcollection) whose appointment `startAt` is older than the retention window (default **7 years**; falls back to `createdAt` when `startAt` is missing).
 - `sms_send_log` entries with `sentAt` before the cutoff.
+- `notifications_log` entries (reminder/notification message bodies, phone, email, patient id) with `sentAt` before the cutoff.
 - `patients` profiles with `lastVisitDate` before the cutoff (or no visits and `createdAt` before the cutoff) **and** no remaining linked bookings.
 
 **Defaults:** retention is **off** until `DATA_RETENTION_ENABLED=true` in Vercel production. A weekly cron hits `GET /api/cron/data-retention` (Sunday 03:00 UTC; see `vercel.json`). Requires `CRON_SECRET` like other crons.
 
-**Optional env:** `DATA_RETENTION_YEARS` (default `7`), `DATA_RETENTION_MAX_BOOKINGS`, `DATA_RETENTION_MAX_SMS`, `DATA_RETENTION_MAX_PATIENTS` (per-run caps so large backlogs purge over multiple weeks).
+**Optional env:** `DATA_RETENTION_YEARS` (default `7`), `DATA_RETENTION_MAX_BOOKINGS`, `DATA_RETENTION_MAX_SMS`, `DATA_RETENTION_MAX_NOTIFICATIONS`, `DATA_RETENTION_MAX_PATIENTS` (per-run caps so large backlogs purge over multiple weeks).
 
 **Manual preview / one-off run:** `npm run purge:old-records` (dry-run) or `npm run purge:old-records -- --execute`. Confirm the retention period with the clinic’s accountant and Texas counsel before enabling in production. Deletion is **irreversible** in the live database; recovery is only from [Firestore export backups](ownership-transfer-runbook.md) if configured.
 

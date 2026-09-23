@@ -2,6 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { PatientLookupLink } from "@/app/admin/_scheduler/PatientLookupLink";
 import { DateTime } from "luxon";
 import { TIME_ZONE } from "@/lib/constants";
 import { bookingStatusLabel } from "@/lib/booking-status";
@@ -105,19 +106,23 @@ export function AppointmentLookupSection({
       }
       const fromIso = fromDt.startOf("day").minus({ hours: 1 }).toUTC().toISO() ?? "";
       const toIso = toDt.endOf("day").plus({ hours: 1 }).toUTC().toISO() ?? "";
-      const params = new URLSearchParams();
-      params.set("from", fromIso);
-      params.set("to", toIso);
-      params.set("status", ALL_STATUSES.join(","));
-      if (locationId) params.set("locationId", locationId);
-      if (providerId) params.set("providerId", providerId);
+      const body: Record<string, string> = {
+        from: fromIso,
+        to: toIso,
+        status: ALL_STATUSES.join(","),
+      };
+      if (locationId) body.locationId = locationId;
+      if (providerId) body.providerId = providerId;
       if (confirmationStatus === "confirmed_online" || confirmationStatus === "not_online") {
-        params.set("confirmationStatus", confirmationStatus);
+        body.confirmationStatus = confirmationStatus;
       }
-      if (qDebounced) params.set("q", qDebounced);
+      if (qDebounced) body.q = qDebounced;
 
-      const res = await fetch(`/api/admin/bookings?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      // POST so the search term stays out of the URL (and hosting request logs).
+      const res = await fetch("/api/admin/bookings", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         setError("Could not load appointments.");
@@ -408,12 +413,12 @@ export function AppointmentLookupSection({
                         return (
                           <span className="inline-flex flex-col gap-0.5">
                             {b.phone && b.phone.replace(/\D/g, "").length >= 7 ? (
-                              <Link
-                                href={`/admin/patient?phone=${encodeURIComponent(b.phone)}`}
+                              <PatientLookupLink
+                                q={b.phone}
                                 className="text-sky-800 underline hover:text-sky-950"
                               >
                                 {label}
-                              </Link>
+                              </PatientLookupLink>
                             ) : (
                               label
                             )}

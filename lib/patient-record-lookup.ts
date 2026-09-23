@@ -85,7 +85,7 @@ async function mergeSmsLogsForPhoneDigits(
 }
 
 /**
- * Loads bookings and SMS log for a phone query. Used by superadmin and staff
+ * Loads bookings and SMS log for a phone query. Used by the staff
  * patient views. This website never stores clinical intake or insurance uploads,
  * so no PHI documents are returned here.
  */

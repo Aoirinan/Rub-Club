@@ -237,6 +237,10 @@ export function BookingWizard({
       if (providerMode === "specific") {
         qs.set("providerId", selectedProviderId);
       }
+      // The service's buffers decide which times are really open.
+      if (schedulerServiceId) {
+        qs.set("schedulerServiceId", schedulerServiceId);
+      }
       const res = await fetch(`/api/slots?${qs.toString()}`, { method: "GET", cache: "no-store" });
       const data = (await res.json().catch(() => ({}))) as {
         slots?: Slot[];

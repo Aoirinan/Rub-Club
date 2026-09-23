@@ -84,13 +84,16 @@ function PatientsListContent() {
     const seq = ++loadSeq.current;
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (debounced) params.set("search", debounced);
-      if (paymentFilter !== "all") params.set("paymentType", paymentFilter);
-      if (activeOnly) params.set("active", "true");
-      params.set("limit", "100");
-      const res = await fetch(`/api/admin/patients?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      // POST so the search term stays out of the URL (and hosting request logs).
+      const res = await fetch("/api/admin/patients/search", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          search: debounced || undefined,
+          paymentType: paymentFilter,
+          activeOnly,
+          limit: 100,
+        }),
       });
       const data = (await res.json()) as { patients?: PatientApiRow[] };
       if (seq !== loadSeq.current) return;

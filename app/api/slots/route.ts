@@ -8,6 +8,8 @@ import { formatChicagoSlotChoice } from "@/lib/chicago-datetime-format";
 import { fetchActiveProvidersForPublicBooking } from "@/lib/providers-db";
 import { providerAllowsAppointmentTime } from "@/lib/provider-scheduling";
 import { providerHoursContext } from "@/lib/provider-profile";
+import { fetchSchedulerServiceById } from "@/lib/scheduler-services-db";
+import { isCustomerVisibleService, schedulerServiceMatchesLine } from "@/lib/scheduler-service-lines";
 import {
   bucketDocIdsForAppointment,
   holdBucketIdsForPublicBooking,
@@ -23,6 +25,8 @@ export const runtime = "nodejs";
 
 type ProviderMode = "specific" | "any";
 
+type Buffers = { bufferBeforeMinutes: number; bufferAfterMinutes: number };
+
 async function bucketsFree(
   db: Firestore,
   locationId: LocationId,
@@ -30,8 +34,9 @@ async function bucketsFree(
   serviceLine: ServiceLine,
   start: DateTime,
   durationMin: number,
+  buffers: Buffers,
 ): Promise<boolean> {
-  const providerIds = bucketDocIdsForAppointment(locationId, providerId, start, durationMin);
+  const providerIds = bucketDocIdsForAppointment(locationId, providerId, start, durationMin, buffers);
   const holdIds = holdBucketIdsForPublicBooking(locationId, serviceLine, start, durationMin);
   const allIds = [...providerIds, ...holdIds];
   const refs = allIds.map((id) => db.collection("slot_buckets").doc(id));
@@ -63,6 +68,7 @@ export async function GET(req: Request) {
     const serviceLine = searchParams.get("serviceLine") as ServiceLine | null;
     const providerMode = (searchParams.get("providerMode") ?? "specific") as ProviderMode;
     const providerIdRaw = searchParams.get("providerId");
+    const schedulerServiceId = searchParams.get("schedulerServiceId")?.trim();
 
     if (locationId !== "paris" && locationId !== "sulphur_springs") {
       return NextResponse.json({ error: "Invalid locationId" }, { status: 400 });
@@ -85,6 +91,23 @@ export async function GET(req: Request) {
     }
 
     const db = getFirestore();
+    // Same service lookup as the booking POST, so a time offered here is not
+    // refused there for the service's buffers.
+    const buffers: Buffers = { bufferBeforeMinutes: 0, bufferAfterMinutes: 0 };
+    if (schedulerServiceId) {
+      const svc = await fetchSchedulerServiceById(db, schedulerServiceId);
+      if (!svc || !isCustomerVisibleService(svc) || !schedulerServiceMatchesLine(svc, serviceLine)) {
+        return NextResponse.json({ error: "Invalid service selection" }, { status: 400 });
+      }
+      if (svc.durationMinutes !== durationMin) {
+        return NextResponse.json(
+          { error: "Duration does not match the selected service" },
+          { status: 400 },
+        );
+      }
+      buffers.bufferBeforeMinutes = svc.bufferBeforeMinutes;
+      buffers.bufferAfterMinutes = svc.bufferAfterMinutes;
+    }
     // Specific-provider lookups (including existing patients rescheduling with
     // their current therapist) may target a provider who is no longer taking
     // NEW clients; the booking route still enforces that filter for new bookings.
@@ -117,7 +140,7 @@ export async function GET(req: Request) {
       for (const start of candidates) {
         if (start < earliest) continue;
         if (!providerAllowsAppointmentTime(provider, start, durationMin)) continue;
-        if (await bucketsFree(db, locationId, providerId, serviceLine, start, durationMin)) {
+        if (await bucketsFree(db, locationId, providerId, serviceLine, start, durationMin, buffers)) {
           available.push({
             startIso: start.toUTC().toISO()!,
             label: formatChicagoSlotChoice(start),
@@ -132,7 +155,7 @@ export async function GET(req: Request) {
         const usable = eligible.filter((p) => providerAllowsAppointmentTime(p, start, durationMin));
         let open = false;
         for (const p of usable) {
-          if (await bucketsFree(db, locationId, p.id, serviceLine, start, durationMin)) {
+          if (await bucketsFree(db, locationId, p.id, serviceLine, start, durationMin, buffers)) {
             open = true;
             break;
           }

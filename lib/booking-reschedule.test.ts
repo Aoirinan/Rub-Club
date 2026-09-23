@@ -2,16 +2,24 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Firestore } from "firebase-admin/firestore";
 import { DateTime } from "luxon";
 import { TIME_ZONE } from "./constants";
-import { rescheduleBookingForStartChange, updateBookingSchedule } from "./booking-reschedule";
+import {
+  bookingMatchesExpected,
+  rescheduleBookingForStartChange,
+  updateBookingSchedule,
+} from "./booking-reschedule";
+import { listOpenStartsForExistingBooking } from "./booking-reschedule-slots";
+import type { ProviderRow } from "./provider-types";
 
 /**
  * Minimal in-memory stand-in for the Admin SDK surface these functions use:
- * doc get/set/update/delete, a providers `where("active","==",true)` query and
- * a transaction that applies writes only when the body resolves.
+ * doc get/set/update/delete, getAll, a providers `where("active","==",true)`
+ * query and a transaction that applies writes only when the body resolves.
+ * `beforeTx` runs just before the transaction body, to simulate someone else
+ * saving in between the pre-read and the transaction.
  */
 type Docs = Map<string, Record<string, unknown>>;
 
-function makeDb(docs: Docs) {
+function makeDb(docs: Docs, hooks: { beforeTx?: () => void } = {}) {
   const pathOf = (col: string, id: string) => `${col}/${id}`;
 
   const makeSnap = (col: string, id: string) => {
@@ -69,7 +77,10 @@ function makeDb(docs: Docs) {
 
   const db = {
     collection,
+    getAll: async (...refs: { __col: string; __id: string }[]) =>
+      refs.map((r) => makeSnap(r.__col, r.__id)),
     runTransaction: async (fn: (tx: unknown) => Promise<void>) => {
+      hooks.beforeTx?.();
       const staged: (() => void)[] = [];
       const tx = {
         get: async (ref: { __col: string; __id: string }) => makeSnap(ref.__col, ref.__id),
@@ -134,7 +145,43 @@ function seed(overrides: Record<string, unknown> = {}): { docs: Docs; startIso: 
     serviceLines: ["massage"],
     sortOrder: 1,
   });
+  // Catalog services.
+  docs.set("scheduler_services/massage60", {
+    name: "Massage (60 min)",
+    serviceLines: ["massage"],
+    durationMinutes: 60,
+  });
+  docs.set("scheduler_services/hotstone60", {
+    name: "Hot Stone",
+    serviceLines: ["massage"],
+    durationMinutes: 60,
+  });
+  docs.set("scheduler_services/massage60buffer", {
+    name: "Massage + turnover",
+    serviceLines: ["massage"],
+    durationMinutes: 60,
+    bufferAfterMinutes: 30,
+  });
+  docs.set("scheduler_services/chiro30", {
+    name: "1/2 HR Dr",
+    serviceLines: ["chiropractic"],
+    durationMinutes: 30,
+  });
+  docs.set("scheduler_services/retired", {
+    name: "Old promo",
+    serviceLines: ["massage"],
+    durationMinutes: 60,
+    active: false,
+  });
   return { docs, startIso };
+}
+
+function bookingUpdate(db: ReturnType<typeof makeDb>) {
+  return db.__writes.find((w) => w.op === "update" && w.path === "bookings/b1");
+}
+
+function slotWrites(db: ReturnType<typeof makeDb>) {
+  return db.__writes.filter((w) => w.path.startsWith("slot_buckets/"));
 }
 
 beforeEach(() => {
@@ -229,13 +276,40 @@ describe("updateBookingSchedule", () => {
     expect(res.code).toBe("no_provider");
   });
 
-  it("rejects a duration that is not on the 30-minute grid", async () => {
+  it("accepts a 45-minute length (catalog steps by 15) and blocks every slot it touches", async () => {
     const { docs } = seed();
     const db = makeDb(docs);
     const res = await updateBookingSchedule(db, "b1", { durationMin: 45 }, ACTOR, OPTS);
-    expect(res.ok).toBe(false);
-    if (res.ok) return;
-    expect(res.code).toBe("invalid_duration");
+    expect(res.ok).toBe(true);
+    const update = bookingUpdate(db);
+    expect(update!.data!.durationMin).toBe(45);
+    // 10:00–10:45 touches the 10:00 and 10:30 slots.
+    const start = futureStart();
+    expect(update!.data!.bucketIds).toEqual([bucketKey(start), bucketKey(start.plus({ minutes: 30 }))]);
+  });
+
+  it("can still move a booking that already has an off-grid length", async () => {
+    const { docs } = seed({ durationMin: 45 });
+    const db = makeDb(docs);
+    const res = await updateBookingSchedule(
+      db,
+      "b1",
+      { startIso: futureStart(8).toUTC().toISO()! },
+      ACTOR,
+      OPTS,
+    );
+    expect(res.ok).toBe(true);
+  });
+
+  it("rejects a length outside 15–480 minutes", async () => {
+    for (const durationMin of [10, 481]) {
+      const { docs } = seed();
+      const db = makeDb(docs);
+      const res = await updateBookingSchedule(db, "b1", { durationMin }, ACTOR, OPTS);
+      expect(res.ok).toBe(false);
+      if (res.ok) return;
+      expect(res.code).toBe("invalid_duration");
+    }
   });
 
   it("detects a conflict when the target slot belongs to another booking", async () => {
@@ -359,5 +433,244 @@ describe("updateBookingSchedule", () => {
     expect(res.ok).toBe(false);
     if (res.ok) return;
     expect(res.code).toBe("not_found");
+  });
+});
+
+describe("updateBookingSchedule — concurrent edits", () => {
+  it("refuses the save when someone else changed the booking after it was read", async () => {
+    const { docs } = seed();
+    const db = makeDb(docs, {
+      // A colleague moves the visit to Sam between our pre-read and our transaction.
+      beforeTx: () => {
+        docs.set("bookings/b1", { ...docs.get("bookings/b1")!, providerId: "p2", providerDisplayName: "Sam" });
+      },
+    });
+    const res = await updateBookingSchedule(
+      db,
+      "b1",
+      { startIso: futureStart(8).toUTC().toISO()! },
+      ACTOR,
+      OPTS,
+    );
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.code).toBe("stale");
+    expect(res.status).toBe(409);
+    // Nothing written: no buckets for the old provider, no reverted provider.
+    expect(db.__writes.length).toBe(0);
+  });
+
+  it("refuses the save when the editor's snapshot no longer matches", async () => {
+    const { docs, startIso } = seed();
+    const db = makeDb(docs);
+    const res = await updateBookingSchedule(db, "b1", { durationMin: 90 }, ACTOR, {
+      ...OPTS,
+      // The editor opened while the visit was still with Sam.
+      expected: { startIso, providerId: "p2", durationMin: 60, serviceLine: "massage", schedulerServiceId: "" },
+    });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.code).toBe("stale");
+    expect(db.__writes.length).toBe(0);
+  });
+
+  it("saves when the editor's snapshot still matches", async () => {
+    const { docs } = seed();
+    const db = makeDb(docs);
+    const start = futureStart();
+    const res = await updateBookingSchedule(db, "b1", { durationMin: 90 }, ACTOR, {
+      ...OPTS,
+      // Same instant written with a Chicago offset instead of UTC.
+      expected: {
+        startIso: start.toISO()!,
+        providerId: "p1",
+        durationMin: 60,
+        serviceLine: "massage",
+        schedulerServiceId: "",
+      },
+    });
+    expect(res.ok).toBe(true);
+  });
+
+  it("bookingMatchesExpected only compares the fields it is given", () => {
+    const d = { providerId: " p1 ", durationMin: 60, serviceLine: "massage" };
+    expect(bookingMatchesExpected(d, {})).toBe(true);
+    expect(bookingMatchesExpected(d, { providerId: "p1" })).toBe(true);
+    expect(bookingMatchesExpected(d, { schedulerServiceId: "" })).toBe(true);
+    expect(bookingMatchesExpected(d, { durationMin: 90 })).toBe(false);
+    expect(bookingMatchesExpected(d, { schedulerServiceId: "massage60" })).toBe(false);
+  });
+});
+
+describe("updateBookingSchedule — catalog service", () => {
+  it("rejects a service line change that keeps a service of the old line", async () => {
+    const { docs } = seed({ schedulerServiceId: "massage60", serviceTypeName: "Massage (60 min)" });
+    const db = makeDb(docs);
+    const res = await updateBookingSchedule(db, "b1", { serviceLine: "stretch" }, ACTOR, OPTS);
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.code).toBe("service_line_mismatch");
+    expect(res.status).toBe(400);
+  });
+
+  it("allows the line change when the service is cleared with it", async () => {
+    const { docs } = seed({ schedulerServiceId: "massage60", serviceTypeName: "Massage (60 min)" });
+    const db = makeDb(docs);
+    const res = await updateBookingSchedule(
+      db,
+      "b1",
+      { serviceLine: "stretch", schedulerServiceId: "" },
+      ACTOR,
+      OPTS,
+    );
+    expect(res.ok).toBe(true);
+    expect(bookingUpdate(db)!.data!.serviceLine).toBe("stretch");
+  });
+
+  it("rejects a newly chosen service from another service line", async () => {
+    const { docs } = seed();
+    const db = makeDb(docs);
+    const res = await updateBookingSchedule(db, "b1", { schedulerServiceId: "chiro30" }, ACTOR, OPTS);
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.code).toBe("service_line_mismatch");
+  });
+
+  it("rejects a newly chosen inactive service", async () => {
+    const { docs } = seed();
+    const db = makeDb(docs);
+    const res = await updateBookingSchedule(db, "b1", { schedulerServiceId: "retired" }, ACTOR, OPTS);
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.code).toBe("inactive_service");
+  });
+
+  it("a new service's buffers extend the slots the visit holds", async () => {
+    const { docs } = seed();
+    const db = makeDb(docs);
+    const res = await updateBookingSchedule(
+      db,
+      "b1",
+      { schedulerServiceId: "massage60buffer" },
+      ACTOR,
+      OPTS,
+    );
+    expect(res.ok).toBe(true);
+    const start = futureStart();
+    expect(bookingUpdate(db)!.data!.bucketIds).toEqual([
+      bucketKey(start),
+      bucketKey(start.plus({ minutes: 30 })),
+      bucketKey(start.plus({ minutes: 60 })),
+    ]);
+  });
+
+  it("relabelling the service (same time, length, buffers) leaves slot buckets alone", async () => {
+    // Booked with "allow double-booking": owns no buckets, and its slot is now
+    // held by another visit and an admin hold.
+    const { docs } = seed({ schedulerServiceId: "massage60", serviceTypeName: "Massage (60 min)" });
+    const start = futureStart();
+    const day = start.toFormat("yyyy-LL-dd");
+    docs.set(`slot_buckets/${bucketKey(start)}`, { bookingId: "someone-else" });
+    docs.set(`slot_buckets/paris__hold__all__${day}__${start.toFormat("HHmm")}`, { holdId: "hold1" });
+    const db = makeDb(docs);
+
+    const res = await updateBookingSchedule(db, "b1", { schedulerServiceId: "hotstone60" }, ACTOR, OPTS);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.changed).toBe(false);
+    expect(slotWrites(db)).toEqual([]);
+    expect(Object.keys(bookingUpdate(db)!.data!).sort()).toEqual([
+      "bufferAfterMinutes",
+      "bufferBeforeMinutes",
+      "schedulerServiceId",
+      "serviceTypeName",
+    ]);
+    expect(bookingUpdate(db)!.data!.serviceTypeName).toBe("Hot Stone");
+  });
+});
+
+describe("updateBookingSchedule — patient portal", () => {
+  const PATIENT = { uid: null, email: "patient/portal" };
+  const PATIENT_OPTS = { allowPending: false, refuseIfStarted: true };
+
+  it("refuses once the appointment has started", async () => {
+    const started = DateTime.now().setZone(TIME_ZONE).minus({ minutes: 5 });
+    const { docs } = seed({ startIso: started.toUTC().toISO()! });
+    const db = makeDb(docs);
+    const newIso = futureStart(8).toUTC().toISO()!;
+    const res = await rescheduleBookingForStartChange(db, "b1", newIso, PATIENT, PATIENT_OPTS);
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.code).toBe("already_started");
+    expect(db.__writes.length).toBe(0);
+  });
+
+  it("still moves an upcoming appointment without an editor snapshot", async () => {
+    const { docs } = seed();
+    const db = makeDb(docs);
+    const newIso = futureStart(8).toUTC().toISO()!;
+    const res = await rescheduleBookingForStartChange(db, "b1", newIso, PATIENT, PATIENT_OPTS);
+    expect(res.ok).toBe(true);
+  });
+});
+
+describe("listOpenStartsForExistingBooking", () => {
+  const provider: ProviderRow = {
+    id: "p1",
+    displayName: "Alex",
+    active: true,
+    locationIds: ["paris"],
+    serviceLines: ["massage"],
+    sortOrder: 0,
+    acceptsNewClients: true,
+  };
+
+  function list(docs: Docs, date: DateTime, buffers = { before: 0, after: 0 }) {
+    return listOpenStartsForExistingBooking(makeDb(docs), {
+      bookingId: "b1",
+      locationId: "paris",
+      provider,
+      serviceLine: "massage",
+      durationMin: 60,
+      bufferBeforeMinutes: buffers.before,
+      bufferAfterMinutes: buffers.after,
+      date: date.toFormat("yyyy-LL-dd"),
+    });
+  }
+
+  const hhmm = (slots: { startIso: string }[]) =>
+    slots.map((s) => DateTime.fromISO(s.startIso).setZone(TIME_ZONE).toFormat("HH:mm"));
+
+  it("applies the visit's buffers, like the save does", async () => {
+    const { docs } = seed();
+    const day = futureStart(7);
+    docs.set(`slot_buckets/${bucketKey(day.set({ hour: 11 }))}`, { bookingId: "someone-else" });
+
+    const plain = hhmm(await list(docs, day));
+    expect(plain).toContain("10:00");
+    expect(plain).not.toContain("10:30");
+
+    // 30 minutes of turnover after the visit: 10:00–11:00 now needs 11:00 too.
+    const buffered = hhmm(await list(docs, day, { before: 0, after: 30 }));
+    expect(buffered).toContain("09:30");
+    expect(buffered).not.toContain("10:00");
+  });
+
+  it("offers the booking's own slots and skips admin holds", async () => {
+    const { docs } = seed();
+    const day = futureStart(7);
+    docs.set(`slot_buckets/${bucketKey(day)}`, { bookingId: "b1" });
+    const at14 = day.set({ hour: 14 });
+    docs.set(`slot_buckets/paris__hold__massage__${at14.toFormat("yyyy-LL-dd")}__1400`, { holdId: "h1" });
+
+    const times = hhmm(await list(docs, day));
+    expect(times).toContain("10:00");
+    expect(times).not.toContain("14:00");
+    expect(times).not.toContain("13:30");
+  });
+
+  it("offers nothing past the 90-day horizon", async () => {
+    const { docs } = seed();
+    expect(await list(docs, futureStart(95))).toEqual([]);
   });
 });

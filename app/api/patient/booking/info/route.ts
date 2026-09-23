@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
+import { appointmentHasStarted } from "@/lib/appointment-started";
 import { assertRateLimitOk } from "@/lib/rate-limit";
 import { findBookingByPortalToken } from "@/lib/patient-portal-lookup";
 
@@ -64,5 +65,8 @@ export async function POST(req: Request) {
     providerDisplayName: typeof providerDisplayName === "string" ? providerDisplayName : "",
     name: typeof name === "string" ? name : "",
     canReschedule: typeof providerId === "string" && providerId.trim().length > 0,
+    // Once the visit has started the page offers no cancel / reschedule (the
+    // routes refuse it too).
+    hasStarted: appointmentHasStarted(startIso),
   });
 }

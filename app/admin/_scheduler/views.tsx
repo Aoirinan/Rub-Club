@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { PatientLookupLink } from "./PatientLookupLink";
 import { DateTime } from "luxon";
 import { bookingStatusLabel, bookingStatusPillClasses } from "@/lib/booking-status";
 import { bufferOnlyIntervals } from "@/lib/appointment-buffers";
@@ -17,7 +18,6 @@ import {
   groupBookingsForList,
   patientKeyFromBooking,
   paymentHintSuffix,
-  relativeDayLabel,
   sortedColumnRowsWithStackMeta,
 } from "./helpers";
 import type { SameDayStackMeta } from "./helpers";
@@ -97,11 +97,11 @@ function blockStyleForBooking(
   });
 }
 
-function patientProfileHref(b: BookingRow): string | null {
-  if (b.patientId) return `/admin/patients/${encodeURIComponent(b.patientId)}`;
+/** Profile link by id, or a phone/email/name lookup handed off outside the URL. */
+function patientProfileTarget(b: BookingRow): { href: string } | { lookup: string } | null {
+  if (b.patientId) return { href: `/admin/patients/${encodeURIComponent(b.patientId)}` };
   const q = (b.phone ?? b.email ?? b.name ?? "").trim();
-  if (!q) return null;
-  return `/admin/patient?q=${encodeURIComponent(q)}`;
+  return q ? { lookup: q } : null;
 }
 
 function SchedulerListRow({
@@ -116,7 +116,7 @@ function SchedulerListRow({
   onRescheduleRequest?: (id: string) => void;
 }) {
   const timeLabel = b.startAtMs ? formatChicagoTime(b.startAtMs) : "—";
-  const patientHref = patientProfileHref(b);
+  const patientTarget = patientProfileTarget(b);
 
   if (!isManager) {
     return (
@@ -176,14 +176,22 @@ function SchedulerListRow({
           >
             Cancel
           </button>
-          {patientHref ? (
+          {patientTarget && "href" in patientTarget ? (
             <Link
-              href={patientHref}
+              href={patientTarget.href}
               className="block px-3 py-2 text-left text-slate-800 hover:bg-slate-50"
               onClick={(e) => e.stopPropagation()}
             >
               View patient record
             </Link>
+          ) : patientTarget ? (
+            <PatientLookupLink
+              q={patientTarget.lookup}
+              className="block px-3 py-2 text-left text-slate-800 hover:bg-slate-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              View patient record
+            </PatientLookupLink>
           ) : (
             <span className="block px-3 py-2 text-left text-slate-400">View patient record</span>
           )}

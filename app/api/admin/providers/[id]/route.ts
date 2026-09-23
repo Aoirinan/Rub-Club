@@ -46,7 +46,7 @@ const httpsUrl = z.string().url().refine((u) => u.startsWith("https:"), "Must be
 
 type Params = { params: Promise<{ id: string }> };
 
-function parseJsonArray<T>(raw: string, label: string): T[] | null {
+function parseJsonArray<T>(raw: string): T[] | null {
   try {
     const v = JSON.parse(raw) as unknown;
     return Array.isArray(v) ? (v as T[]) : null;
@@ -113,14 +113,14 @@ export async function PATCH(req: Request, ctx: Params) {
     updates.displayName = displayName;
 
     const locationIdsRaw = String(form.get("locationIds") ?? "");
-    const locationIds = parseJsonArray<LocationId>(locationIdsRaw, "locationIds");
+    const locationIds = parseJsonArray<LocationId>(locationIdsRaw);
     if (!locationIds?.length || !locationIds.every((x) => x === "paris" || x === "sulphur_springs")) {
       return NextResponse.json({ error: "Invalid locations" }, { status: 400 });
     }
     updates.locationIds = locationIds;
 
     const serviceLinesRaw = String(form.get("serviceLines") ?? "");
-    const serviceLines = parseJsonArray<ServiceLine>(serviceLinesRaw, "serviceLines");
+    const serviceLines = parseJsonArray<ServiceLine>(serviceLinesRaw);
     if (
       !serviceLines?.length ||
       !serviceLines.every((x) => x === "massage" || x === "chiropractic" || x === "stretch")
@@ -166,7 +166,6 @@ export async function PATCH(req: Request, ctx: Params) {
     if (form.has("blockOutTimes")) {
       const blockOutTimes = parseJsonArray<Record<string, unknown>>(
         String(form.get("blockOutTimes") ?? ""),
-        "blockOutTimes",
       );
       if (blockOutTimes) updates.blockOutTimes = blockOutTimes;
     }

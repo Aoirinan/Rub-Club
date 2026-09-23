@@ -154,10 +154,12 @@ export function NewBookingDrawer({
       void (async () => {
         const token = await getIdToken();
         if (!token) return;
-        const res = await fetch(
-          `/api/admin/patients?search=${encodeURIComponent(patientSearch.trim())}&limit=12`,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
+        // POST so the search term stays out of the URL (and hosting request logs).
+        const res = await fetch("/api/admin/patients/search", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ search: patientSearch.trim(), limit: 12 }),
+        });
         if (!res.ok) return;
         const data = (await res.json()) as { patients?: PatientApiRow[] };
         setPatientHits(data.patients ?? []);

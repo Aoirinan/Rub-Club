@@ -2,11 +2,13 @@ import { FieldValue, Timestamp, type Firestore } from "firebase-admin/firestore"
 import { DateTime } from "luxon";
 import type { LocationId, ServiceLine } from "./constants";
 import { TIME_ZONE } from "./constants";
+import { appointmentHasStarted } from "./appointment-started";
 import { recordBookingEventInTx } from "./booking-events";
 import type { BookingStatus } from "./booking-status";
-import { isValidBookingDurationMin } from "./booking-duration";
 import { providerAllowsAppointmentTime } from "./provider-scheduling";
+import type { ProviderRow } from "./provider-types";
 import { fetchActiveProvidersForService } from "./providers-db";
+import { schedulerServiceMatchesLine } from "./scheduler-service-lines";
 import { fetchSchedulerServiceById } from "./scheduler-services-db";
 import {
   bucketDocIdsForAppointment,
@@ -25,7 +27,26 @@ export type RescheduleFailureCode =
   | "slot_blocked"
   | "invalid_duration"
   | "unknown_service"
+  | "inactive_service"
+  | "service_line_mismatch"
+  | "stale"
+  | "already_started"
   | "server_error";
+
+/** A moved start must be at least this far in the future… */
+export const RESCHEDULE_MIN_LEAD_MINUTES = 2;
+/** …and no further out than this. Open-time lists apply the same bounds. */
+export const RESCHEDULE_HORIZON_DAYS = 90;
+
+/**
+ * Lengths staff may give a booking: the same range admin create accepts from
+ * the catalog (15–480 minutes, any whole minute). Slot buckets round a partial
+ * 30-minute slot up, so an off-grid length still blocks every slot it touches.
+ * Start times stay on the 30-minute grid.
+ */
+export function isValidAdminBookingDurationMin(n: number): boolean {
+  return Number.isInteger(n) && n >= 15 && n <= 480;
+}
 
 export type RescheduleSuccess = {
   ok: true;
@@ -59,6 +80,148 @@ export type BookingScheduleChanges = {
   schedulerServiceId?: string;
 };
 
+/**
+ * What the editor saw when it opened. When given, the save is refused with
+ * `stale` if the stored booking no longer matches, so one person's edit can't
+ * silently undo another's. Fields left out are not compared.
+ */
+export type ExpectedBookingSchedule = {
+  startIso?: string;
+  providerId?: string;
+  durationMin?: number;
+  serviceLine?: ServiceLine;
+  /** "" means "no catalog service". */
+  schedulerServiceId?: string;
+};
+
+export type UpdateBookingScheduleOptions = {
+  allowPending: boolean;
+  expected?: ExpectedBookingSchedule;
+  /** Patient portal: refuse once the current appointment time has arrived. */
+  refuseIfStarted?: boolean;
+};
+
+function trimmedString(raw: unknown): string {
+  return typeof raw === "string" ? raw.trim() : "";
+}
+
+function sameInstant(a: string, b: string): boolean {
+  if (a === b) return true;
+  const da = DateTime.fromISO(a, { setZone: true });
+  const db = DateTime.fromISO(b, { setZone: true });
+  return da.isValid && db.isValid && da.toMillis() === db.toMillis();
+}
+
+export function bookingMatchesExpected(
+  d: Record<string, unknown>,
+  expected: ExpectedBookingSchedule,
+): boolean {
+  if (expected.startIso !== undefined && !sameInstant(trimmedString(d.startIso), expected.startIso.trim())) {
+    return false;
+  }
+  if (expected.providerId !== undefined && trimmedString(d.providerId) !== expected.providerId.trim()) {
+    return false;
+  }
+  if (expected.durationMin !== undefined && d.durationMin !== expected.durationMin) return false;
+  if (expected.serviceLine !== undefined && d.serviceLine !== expected.serviceLine) return false;
+  if (
+    expected.schedulerServiceId !== undefined &&
+    trimmedString(d.schedulerServiceId) !== expected.schedulerServiceId.trim()
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Every stored field the edit was planned from. The transaction compares the
+ * fresh snapshot against the pre-read one: if anything moved in between, the
+ * precomputed buckets/provider would be wrong, so the save is refused rather
+ * than retried (a Firestore retry re-runs the same stale closure).
+ */
+function scheduleFingerprint(d: Record<string, unknown> | undefined): string {
+  const x = d ?? {};
+  return JSON.stringify([
+    x.locationId ?? null,
+    trimmedString(x.providerId),
+    x.serviceLine ?? null,
+    x.durationMin ?? null,
+    trimmedString(x.schedulerServiceId),
+    numberOr(x.bufferBeforeMinutes, 0),
+    numberOr(x.bufferAfterMinutes, 0),
+    typeof x.startIso === "string" ? x.startIso : "",
+  ]);
+}
+
+export type TargetServiceResolution =
+  | {
+      ok: true;
+      schedulerServiceId: string | undefined;
+      /** True when the catalog service id itself changes (including cleared). */
+      serviceChangedId: boolean;
+      serviceTypeName: string | undefined;
+      bufferBeforeMinutes: number;
+      bufferAfterMinutes: number;
+      /** Catalog length of a newly chosen service. */
+      defaultDurationMin?: number;
+    }
+  | { ok: false; code: "unknown_service" | "inactive_service" | "service_line_mismatch" };
+
+/**
+ * Work out which catalog service (and so which buffers) a booking ends up with.
+ * `requestedServiceId` undefined keeps the current one; "" clears it. A newly
+ * chosen service must be active (as admin create requires), and the resulting
+ * service must belong to the target service line.
+ */
+export async function resolveTargetService(
+  db: Firestore,
+  booking: Record<string, unknown>,
+  requestedServiceId: string | undefined,
+  targetServiceLine: ServiceLine,
+): Promise<TargetServiceResolution> {
+  const curId = trimmedString(booking.schedulerServiceId) || undefined;
+  const targetId = (requestedServiceId ?? curId)?.trim() || undefined;
+  const serviceChangedId = targetId !== curId;
+  const lineChanged = targetServiceLine !== booking.serviceLine;
+
+  let serviceTypeName = typeof booking.serviceTypeName === "string" ? booking.serviceTypeName : undefined;
+  let bufferBeforeMinutes = numberOr(booking.bufferBeforeMinutes, 0);
+  let bufferAfterMinutes = numberOr(booking.bufferAfterMinutes, 0);
+  let defaultDurationMin: number | undefined;
+
+  if (targetId) {
+    if (serviceChangedId || lineChanged) {
+      const svc = await fetchSchedulerServiceById(db, targetId);
+      if (!svc) return { ok: false, code: "unknown_service" };
+      if (serviceChangedId && !svc.active) return { ok: false, code: "inactive_service" };
+      if (!schedulerServiceMatchesLine(svc, targetServiceLine)) {
+        return { ok: false, code: "service_line_mismatch" };
+      }
+      if (serviceChangedId) {
+        serviceTypeName = svc.name;
+        bufferBeforeMinutes = svc.bufferBeforeMinutes ?? 0;
+        bufferAfterMinutes = svc.bufferAfterMinutes ?? 0;
+        defaultDurationMin = svc.durationMinutes;
+      }
+    }
+  } else if (serviceChangedId) {
+    // Cleared the catalog service: drop its name and buffers.
+    serviceTypeName = undefined;
+    bufferBeforeMinutes = 0;
+    bufferAfterMinutes = 0;
+  }
+
+  return {
+    ok: true,
+    schedulerServiceId: targetId,
+    serviceChangedId,
+    serviceTypeName,
+    bufferBeforeMinutes,
+    bufferAfterMinutes,
+    defaultDurationMin,
+  };
+}
+
 function isBookingFieldOk(
   locationId: unknown,
   serviceLine: unknown,
@@ -88,7 +251,7 @@ export async function rescheduleBookingForStartChange(
   bookingId: string,
   startIso: string,
   actor: { uid: string | null; email: string | null },
-  options: { allowPending: boolean },
+  options: UpdateBookingScheduleOptions,
 ): Promise<RescheduleResult> {
   return updateBookingSchedule(db, bookingId, { startIso }, actor, options);
 }
@@ -97,14 +260,16 @@ export async function rescheduleBookingForStartChange(
  * Change a booking's time and/or provider, service line, duration and catalog
  * service in one transaction. Slot buckets are re-checked against the NEW
  * provider/duration/buffers, and only buckets this booking actually owns are
- * released (a booking created with "allow double-booking" lists none).
+ * released (a booking created with "allow double-booking" lists none). An edit
+ * that only relabels the catalog service (same time, provider, line, length and
+ * buffers) leaves the slot buckets alone.
  */
 export async function updateBookingSchedule(
   db: Firestore,
   bookingId: string,
   changes: BookingScheduleChanges,
   actor: { uid: string | null; email: string | null },
-  options: { allowPending: boolean },
+  options: UpdateBookingScheduleOptions,
 ): Promise<RescheduleResult> {
   const bookingRef = db.collection("bookings").doc(bookingId);
   const preSnap = await bookingRef.get();
@@ -119,6 +284,12 @@ export async function updateBookingSchedule(
     }
   } else if (status !== "confirmed") {
     return { ok: false, code: "bad_status", status: 409 };
+  }
+  if (options.expected && !bookingMatchesExpected(d, options.expected)) {
+    return { ok: false, code: "stale", status: 409 };
+  }
+  if (options.refuseIfStarted && appointmentHasStarted(d.startIso)) {
+    return { ok: false, code: "already_started", status: 409 };
   }
 
   const curProviderId = typeof d.providerId === "string" ? d.providerId.trim() : "";
@@ -138,49 +309,25 @@ export async function updateBookingSchedule(
 
   // A catalog service supplies the default duration and the buffers that decide
   // how many slot buckets the visit occupies.
-  const curSchedulerServiceId =
-    typeof d.schedulerServiceId === "string" && d.schedulerServiceId.trim()
-      ? d.schedulerServiceId.trim()
-      : undefined;
-  // An empty string from the editor means "no catalog service" — normalise it
-  // to undefined so the field is deleted rather than blanked.
-  const rawTargetServiceId = changes.schedulerServiceId ?? curSchedulerServiceId;
-  const targetSchedulerServiceId =
-    typeof rawTargetServiceId === "string" && rawTargetServiceId.trim()
-      ? rawTargetServiceId.trim()
-      : undefined;
-  const serviceChangedId = targetSchedulerServiceId !== curSchedulerServiceId;
-
-  let targetServiceName: string | undefined =
-    typeof d.serviceTypeName === "string" ? d.serviceTypeName : undefined;
-  let targetBufferBefore = numberOr(d.bufferBeforeMinutes, 0);
-  let targetBufferAfter = numberOr(d.bufferAfterMinutes, 0);
-  let serviceDefaultDuration: number | undefined;
-
-  if (targetSchedulerServiceId) {
-    if (serviceChangedId) {
-      const svcRow = await fetchSchedulerServiceById(db, targetSchedulerServiceId);
-      if (!svcRow) {
-        return { ok: false, code: "unknown_service", status: 400 };
-      }
-      targetServiceName = svcRow.name;
-      targetBufferBefore = svcRow.bufferBeforeMinutes ?? 0;
-      targetBufferAfter = svcRow.bufferAfterMinutes ?? 0;
-      serviceDefaultDuration = svcRow.durationMinutes;
-    }
-  } else if (serviceChangedId) {
-    // Cleared the catalog service: drop its name and buffers.
-    targetServiceName = undefined;
-    targetBufferBefore = 0;
-    targetBufferAfter = 0;
+  const svc = await resolveTargetService(db, d, changes.schedulerServiceId, targetServiceLine);
+  if (!svc.ok) {
+    return { ok: false, code: svc.code, status: 400 };
   }
+  const {
+    schedulerServiceId: targetSchedulerServiceId,
+    serviceChangedId,
+    serviceTypeName: targetServiceName,
+    bufferBeforeMinutes: targetBufferBefore,
+    bufferAfterMinutes: targetBufferAfter,
+  } = svc;
+  const curServiceName = typeof d.serviceTypeName === "string" ? d.serviceTypeName : undefined;
 
   const targetDurationMin =
-    changes.durationMin ?? serviceDefaultDuration ?? (curDurationMin as number);
+    changes.durationMin ?? svc.defaultDurationMin ?? (curDurationMin as number);
   const durationChanged = targetDurationMin !== curDurationMin;
-  // Only hold a changed duration to the 30-minute slot grid — existing bookings
-  // may legitimately carry an off-grid length from an older catalog entry.
-  if (durationChanged && !isValidBookingDurationMin(targetDurationMin)) {
+  // Only hold a changed duration to the allowed range — existing bookings may
+  // legitimately carry a length from an older catalog entry.
+  if (durationChanged && !isValidAdminBookingDurationMin(targetDurationMin)) {
     return { ok: false, code: "invalid_duration", status: 400 };
   }
   if (!isBookingFieldOk(locationId, targetServiceLine, targetDurationMin)) {
@@ -198,8 +345,8 @@ export async function updateBookingSchedule(
   // A booking with no stored start is being given one, so that counts as a move.
   const timeChanged = !prevStartIso || newStartIso !== prevStartIso;
   const providerChanged = targetProviderId !== curProviderId;
-  const serviceChanged =
-    targetServiceLine !== curServiceLine || durationChanged || serviceChangedId;
+  const serviceLineChanged = targetServiceLine !== curServiceLine;
+  const serviceChanged = serviceLineChanged || durationChanged || serviceChangedId;
   const anyChange = timeChanged || providerChanged || serviceChanged;
 
   if (!anyChange) {
@@ -214,26 +361,53 @@ export async function updateBookingSchedule(
     };
   }
 
+  // Nothing that decides which slot buckets the visit holds is moving (only the
+  // catalog label is), so don't re-check or rewrite them. A visit booked with
+  // "allow double-booking", or later overlapped by a hold, can still be relabelled.
+  const bucketsUnchanged =
+    !timeChanged &&
+    !providerChanged &&
+    !serviceLineChanged &&
+    !durationChanged &&
+    targetBufferBefore === numberOr(d.bufferBeforeMinutes, 0) &&
+    targetBufferAfter === numberOr(d.bufferAfterMinutes, 0);
+
   // Past / horizon bounds apply only when the appointment actually moves, so a
   // provider swap on a booking happening in ten minutes still works.
   if (timeChanged) {
     const now = DateTime.now().setZone(TIME_ZONE);
-    if (newStart < now.plus({ minutes: 2 })) {
+    if (newStart < now.plus({ minutes: RESCHEDULE_MIN_LEAD_MINUTES })) {
       return { ok: false, code: "invalid_time", status: 400 };
     }
-    if (newStart > now.plus({ days: 90 })) {
+    if (newStart > now.plus({ days: RESCHEDULE_HORIZON_DAYS })) {
       return { ok: false, code: "invalid_time", status: 400 };
     }
   }
 
-  const eligible = await fetchActiveProvidersForService(db, locationId, targetServiceLine);
-  const provider = eligible.find((p) => p.id === targetProviderId);
-  if (!provider) {
-    return { ok: false, code: "no_provider", status: 400 };
+  let provider: ProviderRow | undefined;
+  if (!bucketsUnchanged) {
+    const eligible = await fetchActiveProvidersForService(db, locationId, targetServiceLine);
+    provider = eligible.find((p) => p.id === targetProviderId);
+    if (!provider) {
+      return { ok: false, code: "no_provider", status: 400 };
+    }
+    if (!providerAllowsAppointmentTime(provider, newStart, targetDurationMin)) {
+      return { ok: false, code: "outside_hours", status: 400 };
+    }
   }
-  if (!providerAllowsAppointmentTime(provider, newStart, targetDurationMin)) {
-    return { ok: false, code: "outside_hours", status: 400 };
-  }
+
+  const planned = scheduleFingerprint(d);
+  const serviceFields = serviceChangedId
+    ? {
+        schedulerServiceId: targetSchedulerServiceId ?? FieldValue.delete(),
+        serviceTypeName: targetServiceName ?? FieldValue.delete(),
+        bufferBeforeMinutes: targetBufferBefore,
+        bufferAfterMinutes: targetBufferAfter,
+      }
+    : {};
+  const serviceMeta = serviceChangedId
+    ? { prevServiceTypeName: curServiceName ?? null, newServiceTypeName: targetServiceName ?? null }
+    : {};
 
   try {
     await db.runTransaction(async (tx) => {
@@ -249,12 +423,26 @@ export async function updateBookingSchedule(
       } else if (st !== "confirmed") {
         throw new Error("bad_status");
       }
-
-      const locId = snap.get("locationId");
-      if (!isBookingFieldOk(locId, targetServiceLine, targetDurationMin)) {
-        throw new Error("bad_status");
+      // Someone else changed the booking after it was read above.
+      if (scheduleFingerprint(snap.data()) !== planned) {
+        throw new Error("stale");
+      }
+      if (options.refuseIfStarted && appointmentHasStarted(snap.get("startIso"))) {
+        throw new Error("already_started");
       }
 
+      if (bucketsUnchanged) {
+        tx.update(bookingRef, serviceFields);
+        recordBookingEventInTx(db, tx, bookingId, {
+          type: "rescheduled",
+          byUid: actor.uid,
+          byEmail: actor.email,
+          meta: { prevStartIso, newStartIso: prevStartIso, ...serviceMeta },
+        });
+        return;
+      }
+
+      const locId = locationId;
       const oldBucketIds = (snap.get("bucketIds") as string[]) ?? [];
       const nb = bucketDocIdsForAppointment(locId, targetProviderId, newStart, targetDurationMin, {
         bufferBeforeMinutes: targetBufferBefore,
@@ -317,18 +505,11 @@ export async function updateBookingSchedule(
         startAt,
         bucketIds: nb,
         ...(providerChanged
-          ? { providerId: targetProviderId, providerDisplayName: provider.displayName }
+          ? { providerId: targetProviderId, providerDisplayName: provider!.displayName }
           : {}),
-        ...(targetServiceLine !== curServiceLine ? { serviceLine: targetServiceLine } : {}),
+        ...(serviceLineChanged ? { serviceLine: targetServiceLine } : {}),
         ...(durationChanged ? { durationMin: targetDurationMin } : {}),
-        ...(serviceChangedId
-          ? {
-              schedulerServiceId: targetSchedulerServiceId ?? FieldValue.delete(),
-              serviceTypeName: targetServiceName ?? FieldValue.delete(),
-              bufferBeforeMinutes: targetBufferBefore,
-              bufferAfterMinutes: targetBufferAfter,
-            }
-          : {}),
+        ...serviceFields,
       });
 
       recordBookingEventInTx(db, tx, bookingId, {
@@ -341,18 +522,16 @@ export async function updateBookingSchedule(
           ...(providerChanged
             ? {
                 prevProviderName: snap.get("providerDisplayName") ?? null,
-                newProviderName: provider.displayName,
+                newProviderName: provider!.displayName,
               }
             : {}),
-          ...(targetServiceLine !== curServiceLine
+          ...(serviceLineChanged
             ? { prevServiceLine: curServiceLine, newServiceLine: targetServiceLine }
             : {}),
           ...(durationChanged
             ? { prevDurationMin: curDurationMin, newDurationMin: targetDurationMin }
             : {}),
-          ...(serviceChangedId && targetServiceName
-            ? { newServiceTypeName: targetServiceName }
-            : {}),
+          ...serviceMeta,
         },
       });
     });
@@ -366,6 +545,12 @@ export async function updateBookingSchedule(
       }
       if (e.message === "not_found_tx") {
         return { ok: false, code: "not_found", status: 404 };
+      }
+      if (e.message === "stale") {
+        return { ok: false, code: "stale", status: 409 };
+      }
+      if (e.message === "already_started") {
+        return { ok: false, code: "already_started", status: 409 };
       }
       if (e.message === "bad_status" || e.message === "no_provider") {
         return { ok: false, code: "bad_status", status: 409 };
