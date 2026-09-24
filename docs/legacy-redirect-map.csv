@@ -5,6 +5,8 @@ legacy_domain,legacy_path,proposed_destination,confidence,notes
 # Order = next.config.ts order; first match wins. The massageparistexas.com and chiropracticsulphursprings.com
 # rules (apex + www) run before everything else and end in a host catch-all (the /:rest* rows).
 # The chiropracticparistexas.com rules are host-agnostic path redirects on the canonical domain.
+# First of all, a host rule sends the apex chiropracticparistexas.com (no www) to https://www.chiropracticparistexas.com
+# with the same path and query (308). It can't loop — no rule matches the www host — so keep www the primary domain in Vercel.
 # Rows marked 'no rule' have no rule of their own: the path is a live route or a pattern/catch-all covers it.
 # confidence: exact = same content exists at destination; close = nearest current equivalent; fallback = content retired, send to best hub.
 #
@@ -47,7 +49,7 @@ chiropracticparistexas.com,/ems.php,/services/chiropractic/electric-muscle-stimu
 chiropracticparistexas.com,/interferential-current-therapy,/services/chiropractic/interferential-current-therapy,exact,Paris page restored
 chiropracticparistexas.com,/microcurrent-therapy,/services/chiropractic/microcurrent-therapy,exact,Paris page restored
 chiropracticparistexas.com,/hot-stone-massage,/services/massage/hot-stone-massage,exact,
-chiropracticparistexas.com,/injuries,/services/chiropractic/auto-injury,close,legacy injury hub → auto injury page
+chiropracticparistexas.com,/injuries,/services/chiropractic/injuries,exact,imported Paris injuries page (live; canonical is itself)
 chiropracticparistexas.com,/injured-we-can-help,/services/chiropractic/personal-injury,close,
 chiropracticparistexas.com,/massage.php,/services/massage,exact,
 chiropracticparistexas.com,/meet-the-doctor,/about,exact,already redirected via /meet-the-doctors rule — add singular form
@@ -201,7 +203,8 @@ chiropracticsulphursprings.com,/about-chiro,/sulphur-springs/about-chiropractic,
 chiropracticsulphursprings.com,/about-us,/locations/sulphur-springs,close,
 chiropracticsulphursprings.com,/acupuncture,/sulphur-springs/acupuncture,exact,SS acupuncture page
 chiropracticsulphursprings.com,/adjustments-and-manipulation,/sulphur-springs/adjustments-and-manipulation,exact,
-chiropracticsulphursprings.com,/appointment-request,/book,exact,
+chiropracticsulphursprings.com,/appointment,/book?service=chiropractic&location=sulphur_springs,exact,SS booking; location=sulphur_springs makes middleware.ts set the SS brand (first-time visitors have no cookie)
+chiropracticsulphursprings.com,/appointment-request,/book?service=chiropractic&location=sulphur_springs,exact,SS booking; location=sulphur_springs makes middleware.ts set the SS brand (first-time visitors have no cookie)
 chiropracticsulphursprings.com,/auto-injury,/sulphur-springs/auto-injury,exact,
 chiropracticsulphursprings.com,/chiro-fitness/rub-club,/sulphur-springs/wellness-care-plans,close,Chiro-Fitness pricing on the SS wellness plans page (keeps the SS brand)
 chiropracticsulphursprings.com,/chiropractic-massage-therapy,/sulphur-springs/massage,exact,

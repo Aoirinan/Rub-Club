@@ -5,6 +5,7 @@ import { getContentMany } from "@/lib/cms";
 import { pageOgDescriptionId, parisText } from "@/lib/paris-pages-cms";
 import Link from "next/link";
 import { BookingWizard } from "@/components/BookingWizard";
+import { ConfirmFromLink } from "./ConfirmFromLink";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
 import { pageKeywords } from "@/lib/seo-keywords";
@@ -66,6 +67,8 @@ export default async function BookPage({
   if (!bookingEnabled) {
     return (
       <div className="min-h-screen bg-[#f4f2ea] pb-20">
+        {/* Appointment-reminder "confirm" links land here (see /api/confirm). */}
+        <ConfirmFromLink />
         <div className="mx-auto max-w-2xl px-4 py-12 sm:py-16">
           <nav aria-label="Breadcrumb" className="text-xs text-stone-600">
             <Link href="/" className="hover:underline">
@@ -107,6 +110,8 @@ export default async function BookPage({
 
   return (
     <>
+      {/* Appointment-reminder "confirm" links land here (see /api/confirm). */}
+      <ConfirmFromLink />
       <JsonLd
         data={breadcrumbJsonLd([
           { name: "Home", url: "/" },

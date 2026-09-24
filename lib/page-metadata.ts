@@ -98,8 +98,10 @@ export function descriptionFromBlocks(
  * Imported pages that duplicate a newer page at a second URL. Both keep
  * rendering (old inbound links still land), but canonical and og:url point at
  * the newer page, and the sitemap lists only the newer one (app/sitemap.ts
- * skips every path this table maps elsewhere). A page may still pass its own
- * `canonical`; this table is the fallback.
+ * skips every path this table maps elsewhere). This is the one list of them:
+ * the imported-page routes (app/services/{chiropractic,massage}/[slug]) keep
+ * no map of their own. A page may still pass its own `canonical`; this table
+ * is the fallback.
  */
 export const CANONICAL_OVERRIDES: Readonly<Record<string, string>> = {
   // Massage topics the old chiropractic site published under /services/chiropractic/.

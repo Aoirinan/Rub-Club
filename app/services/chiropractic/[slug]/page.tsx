@@ -48,22 +48,6 @@ async function getSharedCopy() {
   return (id: (typeof SHARED_COPY_IDS)[number]) => parisText(c, id);
 }
 
-/**
- * Massage topics that the old site published under /services/chiropractic/ and
- * that also live at /services/massage/. Both keep rendering (old inbound links
- * still land), but search engines are pointed at the massage copy.
- */
-const MASSAGE_TOPIC_CANONICAL: Record<string, string> = Object.fromEntries(
-  [
-    "swedish-massage",
-    "thai-massage",
-    "hot-stone-massage",
-    "deep-tissue-massage",
-    "prenatal-massage",
-    "sports-massage",
-  ].map((slug) => [slug, `/services/massage/${slug}`]),
-);
-
 export const revalidate = 60;
 
 type Props = { params: Promise<{ slug: string }> };
@@ -132,8 +116,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: `${legacyTitle}${shared("paris_chiro_pages_title_suffix")}`,
       brandInTitle: true,
       description: legacy.metaDescription.trim() || descriptionFromBlocks(legacy.blocks),
+      // Imported duplicates (e.g. the massage topics the old site published
+      // here) get their canonical from CANONICAL_OVERRIDES in lib/page-metadata.ts.
       path: legacy.route,
-      canonical: MASSAGE_TOPIC_CANONICAL[slug],
       ogTitle: `${legacyTitle}${shared("paris_chiro_pages_og_suffix")}`,
     });
   }

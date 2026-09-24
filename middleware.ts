@@ -100,8 +100,11 @@ export async function middleware(request: NextRequest) {
   const isBrowserPrefetch = request.headers.get("sec-purpose")?.includes("prefetch") ?? false;
 
   if (!isBrowserPrefetch) {
-    const { pathname } = request.nextUrl;
-    const businessCtx = businessContextCookieValue(pathname);
+    const { pathname, searchParams } = request.nextUrl;
+    // `/book?location=sulphur_springs` counts as a Sulphur Springs page, so a
+    // first-time visitor sent there from chiropracticsulphursprings.com (no
+    // brand cookie yet) sees that office, not Paris.
+    const businessCtx = businessContextCookieValue(pathname, searchParams);
     if (businessCtx) {
       res.cookies.set(BUSINESS_CTX_COOKIE, businessCtx, cookieOpts());
     } else if (!isSharedPathname(pathname)) {

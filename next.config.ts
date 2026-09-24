@@ -70,7 +70,7 @@ const LEGACY_PRIMARY_REDIRECTS: Record<string, string> = {
   "/interferential-current-therapy": "/services/chiropractic/interferential-current-therapy",
   "/microcurrent-therapy": "/services/chiropractic/microcurrent-therapy",
   "/hot-stone-massage": "/services/massage/hot-stone-massage",
-  "/injuries": "/services/chiropractic/auto-injury",
+  "/injuries": "/services/chiropractic/injuries",
   "/injured-we-can-help": "/services/chiropractic/personal-injury",
   "/massage.php": "/services/massage",
   "/meet-the-doctor": "/about",
@@ -241,6 +241,9 @@ const LEGACY_MASSAGE_REDIRECTS: Record<string, string> = {
   ),
 };
 
+/** Booking page opened for the Sulphur Springs office (see LEGACY_SS_REDIRECTS). */
+const SS_BOOKING_PATH = "/book?service=chiropractic&location=sulphur_springs";
+
 /**
  * chiropracticsulphursprings.com paths that map somewhere OTHER than the
  * /sulphur-springs host catch-all (which remains the final fallback).
@@ -251,7 +254,12 @@ const LEGACY_SS_REDIRECTS: Record<string, string> = {
   "/about-us": "/locations/sulphur-springs",
   "/acupuncture": "/sulphur-springs/acupuncture",
   "/adjustments-and-manipulation": "/sulphur-springs/adjustments-and-manipulation",
-  "/appointment-request": "/book",
+  // The booking page opened for this office: `location=sulphur_springs` makes
+  // middleware.ts set the SS brand cookie, so a first-time visitor from this
+  // domain sees Sulphur Springs (blue, SS phone) instead of Paris. Same URL as
+  // the SS "Book Now" button (lib/business-nav-defaults.ts).
+  "/appointment": SS_BOOKING_PATH,
+  "/appointment-request": SS_BOOKING_PATH,
   "/auto-injury": "/sulphur-springs/auto-injury",
   // This and /testimonials land on SS pages, not the shared wellness/reviews
   // pages: a visitor arriving from this domain has no brand cookie yet, so a
@@ -323,6 +331,17 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Apex → www, same path and query. Vercel's Domains setting may already do
+      // this at the edge; this keeps it true if that setting changes. It cannot
+      // loop: no rule here matches the www host. (Keep www the primary domain in
+      // Vercel — never set Vercel to redirect www → apex.)
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "chiropracticparistexas.com" }],
+        destination: `${PRIMARY_ORIGIN}/:path*`,
+        permanent: true,
+      },
+
       // Per-path legacy-domain redirects MUST precede the host catch-alls below
       // (first match wins). Provenance: docs/legacy-redirect-map.csv.
       ...legacyHostRedirects("massageparistexas.com", LEGACY_MASSAGE_REDIRECTS),

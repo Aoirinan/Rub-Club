@@ -21,16 +21,6 @@ import {
   LEGACY_SITE_LABEL,
 } from "@/lib/legacy-pages";
 
-/**
- * Imported pages that duplicate a curated page at a second URL. Both keep
- * rendering (old inbound links still land); search engines are pointed at the
- * curated copy.
- */
-const DUPLICATE_CANONICAL: Record<string, string> = {
-  "massage-prices": "/services/massage/prices",
-  "chiropractic-care": "/services/chiropractic",
-};
-
 export const revalidate = 60;
 
 type Props = { params: Promise<{ slug: string }> };
@@ -66,8 +56,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     brandInTitle: true,
     description: page.metaDescription.trim() || descriptionFromBlocks(page.blocks),
+    // Imported duplicates of a curated page (massage-prices, chiropractic-care)
+    // get their canonical from CANONICAL_OVERRIDES in lib/page-metadata.ts.
     path: page.route,
-    canonical: DUPLICATE_CANONICAL[slug],
     ogTitle: `${pageTitle}${text.massage_subpage_og_suffix}`,
   });
 }

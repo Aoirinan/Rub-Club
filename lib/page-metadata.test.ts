@@ -107,6 +107,17 @@ describe("canonicalPathFor", () => {
     expect(Object.keys(CANONICAL_OVERRIDES).sort()).toEqual([...duplicates].sort());
   });
 
+  it("points each imported copy at the page its route used to name itself", () => {
+    // app/services/{chiropractic,massage}/[slug] rely on this table alone.
+    for (const m of ["swedish", "thai", "hot-stone", "deep-tissue", "prenatal", "sports"]) {
+      expect(canonicalPathFor(`/services/chiropractic/${m}-massage`)).toBe(
+        `/services/massage/${m}-massage`,
+      );
+    }
+    expect(canonicalPathFor("/services/massage/massage-prices")).toBe("/services/massage/prices");
+    expect(canonicalPathFor("/services/massage/chiropractic-care")).toBe("/services/chiropractic");
+  });
+
   it("never points a duplicate at another duplicate", () => {
     for (const target of Object.values(CANONICAL_OVERRIDES)) {
       expect(canonicalPathFor(target)).toBe(target);

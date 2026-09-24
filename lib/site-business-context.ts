@@ -86,8 +86,37 @@ export function readBusinessContextCookie(): SiteBusinessContext {
   return parseBusinessContextValue(v);
 }
 
-/** Cookie value to set in middleware when entering a business route. */
-export function businessContextCookieValue(pathname: string): SiteBusinessContext | null {
+/**
+ * The booking page opened for the Sulphur Springs office
+ * (`/book?location=sulphur_springs`: the SS "Book Now" links and the old
+ * chiropracticsulphursprings.com appointment URLs). /book is a shared page and
+ * normally keeps the visitor's current brand, but a first-time visitor from the
+ * old SS domain has no brand cookie yet and would see the Paris office — so the
+ * office named in the URL decides. Every other /book URL is left to the cookie.
+ * Accepts the same `location` spellings as the booking wizard.
+ */
+export function bookingPageBusinessContext(
+  pathname: string,
+  search: URLSearchParams | string,
+): SiteBusinessContext | null {
+  const p = pathname.split("?")[0] ?? "/";
+  if (p !== "/book") return null;
+  const params = typeof search === "string" ? new URLSearchParams(search) : search;
+  const location = params.get("location");
+  return location === "sulphur_springs" || location === "sulphur-springs"
+    ? "sulphur_springs"
+    : null;
+}
+
+/**
+ * Cookie value to set in middleware when entering a business route, or the
+ * booking page opened for Sulphur Springs (pass the query string for that).
+ */
+export function businessContextCookieValue(
+  pathname: string,
+  search?: URLSearchParams | string,
+): SiteBusinessContext | null {
   const ctx = businessContextFromPathname(pathname);
-  return ctx === "default" ? null : ctx;
+  if (ctx !== "default") return ctx;
+  return search === undefined ? null : bookingPageBusinessContext(pathname, search);
 }
