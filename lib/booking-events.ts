@@ -17,7 +17,12 @@ export type BookingEventType =
   | "payment_completed"
   | "custom_email"
   | "rescheduled"
-  | "survey_sent";
+  | "survey_sent"
+  // In-office payment marked / removed at the desk. Meta: method and amount only.
+  | "payment_recorded"
+  | "payment_cleared"
+  | "no_show_marked"
+  | "no_show_cleared";
 
 export type BookingEventRecord = {
   type: BookingEventType;

@@ -9,14 +9,14 @@ import { sendBookingNotification } from "@/lib/sendgrid";
 import { recordBookingEvent } from "@/lib/booking-events";
 import { TIME_ZONE } from "@/lib/constants";
 import { emailLocations } from "@/lib/email-locations";
-import { surveyStartAtWindow, surveyTiming } from "@/lib/survey-window";
+import { surveySkippedForNoShow, surveyStartAtWindow, surveyTiming } from "@/lib/survey-window";
 
 export const runtime = "nodejs";
 
 /**
  * Sends a short post-visit survey email for confirmed appointments whose end
- * time was 20+ minutes ago but within the last 7 days. At most one email per
- * booking (guarded by `survey_sent` events).
+ * time was 20+ minutes ago but within the last 7 days, except visits marked
+ * as a no-show. At most one email per booking (guarded by `survey_sent` events).
  *
  * The query covers only visits that can currently be in that window and pages
  * through all of them, so a busy week of already-surveyed visits can't crowd
@@ -71,6 +71,10 @@ export async function GET(req: Request) {
         continue;
       }
       if (surveyTiming(start.toMillis(), doc.get("durationMin"), nowMs) !== "eligible") {
+        skipped++;
+        continue;
+      }
+      if (surveySkippedForNoShow(doc.get("noShow"))) {
         skipped++;
         continue;
       }

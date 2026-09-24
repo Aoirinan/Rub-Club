@@ -34,6 +34,10 @@ export type BookingRow = {
   /** Patient tapped /confirm link (SMS). */
   confirmationStatus?: string;
   checkedInAtMs?: number;
+  /** Marked a no-show at the desk (never set together with a check-in). */
+  noShow?: boolean;
+  noShowAtMs?: number;
+  noShowByEmail?: string;
   needsReschedule?: boolean;
   patientId?: string;
   status?: BookingStatus;
@@ -41,9 +45,14 @@ export type BookingRow = {
   prepaidOnline?: boolean;
   paymentLinkUrl?: string;
   paymentAmountCents?: number;
+  /** Paid = `paidAtMs` set, or (older online payments) `paidAmountCents` > 0. */
   paidAtMs?: number;
   paidAmountCents?: number;
   squarePaymentId?: string;
+  /** "card" | "cash" | "check" | "other" (desk) or "square_online" (webhook). */
+  paymentMethod?: string;
+  paymentNote?: string;
+  paymentRecordedByEmail?: string;
   accepted?: StaffActor;
   declined?: StaffActor;
   cancelled?: StaffActor;
@@ -63,7 +72,11 @@ export type BookingEvent = {
     | "payment_completed"
     | "custom_email"
     | "rescheduled"
-    | "survey_sent";
+    | "survey_sent"
+    | "payment_recorded"
+    | "payment_cleared"
+    | "no_show_marked"
+    | "no_show_cleared";
   atIso: string | null;
   byUid: string | null;
   byEmail: string | null;

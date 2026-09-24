@@ -10,8 +10,21 @@ import {
 } from "@/lib/booking-status";
 import { schedulerServiceMatchesLine } from "@/lib/scheduler-service-lines";
 import type { SchedulerServiceRow } from "@/lib/scheduler-service-types";
+import { staffMeetsMin, type StaffRole } from "@/lib/staff-roles";
+import {
+  IN_OFFICE_PAYMENT_METHODS,
+  PAYMENT_NOTE_MAX,
+  bookingIsPaid,
+  formatUsdCents,
+  isSquareOnlinePayment,
+  paidStatusLabel,
+  parseOptionalDollars,
+  paymentMethodLabel,
+  type InOfficePaymentMethod,
+} from "@/lib/booking-payment";
 import type { BookingEvent, BookingRow, ProviderRow } from "./types";
 import { PatientLookupLink } from "./PatientLookupLink";
+import { STARTED_REQUIRES_MANAGER_MESSAGE, visitHasStarted } from "./helpers";
 
 type Props = {
   booking: BookingRow | null;
@@ -31,7 +44,20 @@ type Props = {
    * service edit, so the page can follow the booking to its new date.
    */
   onRescheduled?: (result: { bookingId: string; newStartIso: string }) => void;
+  /** Signed-in staff role: moving a visit that has started is manager-only. */
+  staffRole?: StaffRole | null;
+  /** Square checkout is set up (list API); otherwise the payment-link action is hidden. */
+  squareConfigured?: boolean;
 };
+
+type PaymentRequestBody =
+  | {
+      action: "mark_paid";
+      method: InOfficePaymentMethod;
+      amountCents?: number;
+      note?: string;
+    }
+  | { action: "mark_unpaid" };
 
 type SlotChoice = { startIso: string; label: string };
 
@@ -83,8 +109,12 @@ export function BookingDrawer({
   schedulerServices = [],
   autoOpenEdit = false,
   onRescheduled,
+  staffRole = null,
+  squareConfigured = false,
 }: Props) {
   const [events, setEvents] = useState<BookingEvent[]>([]);
+  /** Bumped after a change the history should show, to reload it in place. */
+  const [historyVersion, setHistoryVersion] = useState(0);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [eventsError, setEventsError] = useState<string | null>(null);
   const [action, setAction] = useState<DrawerAction>(null);
@@ -119,6 +149,10 @@ export function BookingDrawer({
   const [slots, setSlots] = useState<SlotChoice[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
+
+  const isManager = staffRole ? staffMeetsMin(staffRole, "manager") : false;
+  /** Started (or checked in) and the viewer is not a manager: the time can't change. */
+  const timeLocked = booking ? visitHasStarted(booking) && !isManager : false;
 
   useEffect(() => {
     setNotesDraft(booking?.internalNotes ?? "");
@@ -197,7 +231,7 @@ export function BookingDrawer({
     return () => {
       cancelled = true;
     };
-  }, [bookingId, getIdToken, seedEditForm]);
+  }, [bookingId, getIdToken, seedEditForm, historyVersion]);
 
   // "Reschedule" on the booking that is already open. Only the switch ON acts:
   // the page clears the request after a save, which must not reset the drawer.
@@ -210,8 +244,10 @@ export function BookingDrawer({
 
   // Open times for the chosen date / provider / service / length / buffers.
   useEffect(() => {
-    if (!editing || !bookingId || !editProviderId) {
+    // A started visit keeps its time for front desk: no open times to offer.
+    if (!editing || !bookingId || !editProviderId || timeLocked) {
       setSlots([]);
+      setSlotsLoading(false);
       return;
     }
     let cancelled = false;
@@ -270,9 +306,14 @@ export function BookingDrawer({
     editDurationMin,
     editServiceId,
     getIdToken,
+    timeLocked,
   ]);
 
-  async function pushDeskFlags(patch: { checkedIn?: boolean; needsReschedule?: boolean }) {
+  async function pushDeskFlags(patch: {
+    checkedIn?: boolean;
+    noShow?: boolean;
+    needsReschedule?: boolean;
+  }) {
     const b = booking;
     if (!b) return;
     setVisitBusy(true);
@@ -293,9 +334,41 @@ export function BookingDrawer({
         setError(data.error ?? "Could not update visit flags.");
         return;
       }
+      if (patch.noShow !== undefined || patch.checkedIn !== undefined) {
+        setHistoryVersion((v) => v + 1);
+      }
       onActionComplete();
     } finally {
       setVisitBusy(false);
+    }
+  }
+
+  /** Record / remove an in-office payment. Resolves to an error message, or null on success. */
+  async function submitPayment(body: PaymentRequestBody): Promise<string | null> {
+    const b = booking;
+    if (!b) return "No appointment selected.";
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      const token = await getIdToken();
+      if (!token) return "Not signed in.";
+      const res = await fetch(`/api/admin/bookings/${encodeURIComponent(b.id)}/payment`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        // 409: someone else changed the payment meanwhile — show the latest.
+        if (res.status === 409) onActionComplete();
+        return data.error ?? "Could not update the payment.";
+      }
+      setSuccessMsg(body.action === "mark_paid" ? "Payment recorded." : "Payment record removed.");
+      setHistoryVersion((v) => v + 1);
+      onActionComplete();
+      return null;
+    } catch {
+      return "Could not update the payment.";
     }
   }
 
@@ -470,6 +543,15 @@ export function BookingDrawer({
       setError("Nothing changed yet.");
       return;
     }
+    // Moving a visit that has already started (or is checked in) to another
+    // time is manager-only; the route enforces it too. Check the latest copy.
+    if (payload.startIso && visitHasStarted(booking ?? b)) {
+      if (!isManager) {
+        setError(STARTED_REQUIRES_MANAGER_MESSAGE);
+        return;
+      }
+      if (!window.confirm("This visit has already started. Move it anyway?")) return;
+    }
     payload.expected = {
       startIso: b.startIso ?? "",
       providerId: b.providerId ?? "",
@@ -504,6 +586,15 @@ export function BookingDrawer({
         error?: string;
       };
       if (!res.ok) {
+        if (res.status === 403 && data.code === "started_requires_manager") {
+          // Put the time back so the provider / service / length part can still be saved.
+          setEditStartIso(b.startIso ?? "");
+          setEditDate(localDateOf(b));
+          setError(
+            `${data.error ?? STARTED_REQUIRES_MANAGER_MESSAGE} The time was put back; other changes can still be saved.`,
+          );
+          return;
+        }
         setError(data.error ?? "Could not save the change.");
         if (data.code === "stale") {
           // Reopening the panel starts from the latest copy.
@@ -514,6 +605,7 @@ export function BookingDrawer({
       }
       setSuccessMsg(rescheduleResultMessage(data));
       setEditing(false);
+      setHistoryVersion((v) => v + 1);
       if (onRescheduled && data.newStartIso) {
         onRescheduled({ bookingId: b.id, newStartIso: data.newStartIso });
       } else {
@@ -596,6 +688,16 @@ export function BookingDrawer({
               >
                 {bookingStatusLabel(status)}
               </span>
+              {booking.noShow ? (
+                <span className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 font-semibold text-orange-900">
+                  No-show
+                </span>
+              ) : null}
+              {bookingIsPaid(booking) ? (
+                <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-900">
+                  {paidStatusLabel(booking)}
+                </span>
+              ) : null}
               <span className="text-slate-500">Ref: {booking.id.slice(0, 8)}…</span>
             </div>
           </div>
@@ -643,54 +745,18 @@ export function BookingDrawer({
               </div>
             ) : null}
           </DetailRow>
-          <DetailRow label="Payment">
-            {typeof booking.paidAmountCents === "number" && booking.paidAmountCents > 0 ? (
-              <>
-                <p className="font-medium text-emerald-800">
-                  Paid ${(booking.paidAmountCents / 100).toFixed(2)}
-                  {typeof booking.paidAtMs === "number" ? (
-                    <span className="font-normal text-slate-700">
-                      {" "}
-                      ·{" "}
-                      {DateTime.fromMillis(booking.paidAtMs)
-                        .setZone(TIME_ZONE)
-                        .toFormat("LLL d yyyy · h:mm a")}
-                    </span>
-                  ) : null}
-                </p>
-                {booking.squarePaymentId ? (
-                  <p className="text-xs text-slate-500" title={booking.squarePaymentId}>
-                    Square ID: {booking.squarePaymentId.length > 14
-                      ? `${booking.squarePaymentId.slice(0, 14)}…`
-                      : booking.squarePaymentId}
-                  </p>
-                ) : null}
-              </>
-            ) : booking.paymentLinkUrl ? (
-              <>
-                <p className="text-slate-800">Checkout link active</p>
-                {typeof booking.paymentAmountCents === "number" ? (
-                  <p className="text-xs text-slate-600">
-                    Amount: ${(booking.paymentAmountCents / 100).toFixed(2)}
-                  </p>
-                ) : null}
-                <a
-                  href={booking.paymentLinkUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-block text-xs font-semibold text-sky-800 underline"
-                >
-                  Open Square checkout
-                </a>
-              </>
-            ) : booking.prepaidOnline ? (
-              <p className="text-sm text-amber-900">
-                Prepay expected for this booking; payment link is created when checkout is generated.
-              </p>
-            ) : (
-              <span className="text-slate-500">No online prepayment on file.</span>
-            )}
-          </DetailRow>
+          {booking.noShow || typeof booking.checkedInAtMs === "number" ? (
+            <DetailRow label="Visit">
+              {booking.noShow ? (
+                <span className="font-medium text-orange-900">No-show</span>
+              ) : (
+                <span className="font-medium text-emerald-800">
+                  Checked in{" "}
+                  {DateTime.fromMillis(booking.checkedInAtMs!).setZone(TIME_ZONE).toFormat("h:mm a")}
+                </span>
+              )}
+            </DetailRow>
+          ) : null}
         </section>
 
         <section className="space-y-3 border-b border-slate-200 px-6 py-4 text-sm">
@@ -720,6 +786,16 @@ export function BookingDrawer({
           </DetailRow>
         </section>
 
+        {!readOnly ? (
+          <PaymentSection
+            key={booking.id}
+            booking={booking}
+            status={status}
+            isManager={isManager}
+            onSubmit={submitPayment}
+          />
+        ) : null}
+
         {!readOnly && (status === "pending" || status === "confirmed") ? (
           <section className="space-y-3 border-b border-slate-200 px-6 py-4 text-sm">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -738,6 +814,8 @@ export function BookingDrawer({
                 setServiceLine={setEditServiceLine}
                 durationMin={editDurationMin}
                 setDurationMin={setEditDurationMin}
+                timeLocked={timeLocked}
+                started={visitHasStarted(booking)}
                 serviceId={editServiceId}
                 setServiceId={setEditServiceId}
                 startIso={editStartIso}
@@ -755,7 +833,9 @@ export function BookingDrawer({
             ) : (
               <div className="space-y-2">
                 <p className="text-xs text-slate-600">
-                  Change the time, provider, service or length without cancelling and rebooking.
+                  {timeLocked
+                    ? "This visit has already started. Only a manager can move it to another time; you can still correct the provider, service or length."
+                    : "Change the time, provider, service or length without cancelling and rebooking."}
                 </p>
                 <button
                   type="button"
@@ -803,6 +883,53 @@ export function BookingDrawer({
               />
               <span>Checked in at office (★)</span>
             </label>
+            {booking.noShow ? (
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-orange-900">✗ Marked no-show</p>
+                  <p className="text-xs text-orange-800">
+                    {typeof booking.noShowAtMs === "number"
+                      ? DateTime.fromMillis(booking.noShowAtMs).setZone(TIME_ZONE).toFormat("LLL d, h:mm a")
+                      : ""}
+                    {booking.noShowByEmail ? ` · by ${booking.noShowByEmail}` : ""}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={visitBusy || working}
+                  onClick={() => void pushDeskFlags({ noShow: false })}
+                  className="rounded-full border border-orange-300 bg-white px-3 py-1 text-xs font-semibold text-orange-900 hover:bg-orange-100 disabled:opacity-50"
+                >
+                  Undo no-show
+                </button>
+              </div>
+            ) : status === "confirmed" &&
+              typeof booking.startAtMs === "number" &&
+              Date.now() >= booking.startAtMs ? (
+              <div>
+                <button
+                  type="button"
+                  disabled={visitBusy || working}
+                  onClick={() => {
+                    if (
+                      booking.checkedInAtMs &&
+                      !window.confirm(
+                        "This visit is checked in. Mark it as a no-show instead? The check-in will be removed.",
+                      )
+                    ) {
+                      return;
+                    }
+                    void pushDeskFlags({ noShow: true });
+                  }}
+                  className="rounded-full border border-orange-300 bg-white px-3 py-1 text-xs font-semibold text-orange-900 hover:bg-orange-50 disabled:opacity-50"
+                >
+                  Mark no-show
+                </button>
+                <p className="mt-1 text-[11px] text-slate-500">
+                  For a patient who didn&apos;t come. No message is sent to the patient.
+                </p>
+              </div>
+            ) : null}
             <label className="flex cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
@@ -857,7 +984,7 @@ export function BookingDrawer({
 
         <section className="space-y-3 border-b border-slate-200 px-6 py-4 text-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">History</p>
-          {loadingEvents ? (
+          {loadingEvents && events.length === 0 ? (
             <p className="text-slate-500">Loading…</p>
           ) : eventsError ? (
             <p className="text-rose-700">{eventsError}</p>
@@ -904,20 +1031,23 @@ export function BookingDrawer({
               >
                 Send reminder
               </button>
-              <button
-                type="button"
-                disabled={working}
-                onClick={() => {
-                  setAction("charge");
-                  setError(null);
-                  setSuccessMsg(null);
-                  setChargeAmount("");
-                  setChargeDescription("");
-                }}
-                className="rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-50"
-              >
-                Charge
-              </button>
+              {/* Square payment links only work once Square is set up (it isn't today). */}
+              {squareConfigured && !bookingIsPaid(booking) ? (
+                <button
+                  type="button"
+                  disabled={working}
+                  onClick={() => {
+                    setAction("charge");
+                    setError(null);
+                    setSuccessMsg(null);
+                    setChargeAmount("");
+                    setChargeDescription("");
+                  }}
+                  className="rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+                >
+                  Charge
+                </button>
+              ) : null}
               <button
                 type="button"
                 disabled={working}
@@ -1013,7 +1143,7 @@ export function BookingDrawer({
               onCancel={() => setAction(null)}
               onConfirm={runReminder}
             />
-          ) : action === "charge" ? (
+          ) : action === "charge" && squareConfigured ? (
             <ChargeForm
               amount={chargeAmount}
               setAmount={setChargeAmount}
@@ -1111,7 +1241,263 @@ function EventMeta({ meta, type }: { meta: Record<string, unknown>; type: Bookin
       </p>
     );
   }
+  if (type === "payment_recorded") {
+    const parts = [paymentMethodLabel(meta.method)];
+    if (typeof meta.amountCents === "number") parts.push(formatUsdCents(meta.amountCents));
+    return (
+      <p className="mt-1 rounded bg-emerald-50 px-2 py-1 text-xs text-emerald-800">
+        {parts.filter(Boolean).join(" · ") || "Paid"}
+      </p>
+    );
+  }
+  if (type === "payment_cleared") {
+    const parts = [paymentMethodLabel(meta.prevMethod)];
+    if (typeof meta.prevAmountCents === "number") parts.push(formatUsdCents(meta.prevAmountCents));
+    const was = parts.filter(Boolean).join(" · ");
+    return was ? (
+      <p className="mt-1 rounded bg-slate-50 px-2 py-1 text-xs text-slate-700">Was: {was}</p>
+    ) : null;
+  }
+  if (type === "no_show_cleared" && meta.via === "checked_in") {
+    return (
+      <p className="mt-1 rounded bg-slate-50 px-2 py-1 text-xs text-slate-700">
+        Cleared by checking the patient in
+      </p>
+    );
+  }
   return null;
+}
+
+/**
+ * Payment for this visit. The office takes payment in person (card, cash,
+ * check); staff record it here so the calendar shows who has paid. Nothing is
+ * charged and the patient gets no message.
+ */
+function PaymentSection(props: {
+  booking: BookingRow;
+  status: BookingStatus;
+  isManager: boolean;
+  onSubmit: (body: PaymentRequestBody) => Promise<string | null>;
+}) {
+  const b = props.booking;
+  const [method, setMethod] = useState<InOfficePaymentMethod | null>(null);
+  const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const paid = bookingIsPaid(b);
+  const online = isSquareOnlinePayment(b);
+  const payable = props.status !== "cancelled" && props.status !== "declined";
+
+  async function save() {
+    if (!method) return;
+    const parsed = parseOptionalDollars(amount);
+    if (!parsed.ok) {
+      setError("Enter an amount like 65 or 65.00 (up to $5,000), or leave it blank.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const trimmed = note.trim();
+    const err = await props.onSubmit({
+      action: "mark_paid",
+      method,
+      ...(parsed.cents !== null ? { amountCents: parsed.cents } : {}),
+      ...(trimmed ? { note: trimmed } : {}),
+    });
+    setBusy(false);
+    if (err) {
+      setError(err);
+      return;
+    }
+    setMethod(null);
+    setAmount("");
+    setNote("");
+  }
+
+  async function undo() {
+    const question = online
+      ? "Remove this online Square payment record? The visit will show as unpaid. This does NOT refund the patient; refunds are done in Square."
+      : "Remove this payment record? The visit will show as unpaid.";
+    if (!window.confirm(question)) return;
+    setBusy(true);
+    setError(null);
+    const err = await props.onSubmit({ action: "mark_unpaid" });
+    setBusy(false);
+    if (err) setError(err);
+  }
+
+  const paidLine = [
+    paidStatusLabel(b),
+    typeof b.paidAmountCents === "number" && b.paidAmountCents > 0
+      ? formatUsdCents(b.paidAmountCents)
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const paidWhen =
+    typeof b.paidAtMs === "number"
+      ? DateTime.fromMillis(b.paidAtMs).setZone(TIME_ZONE).toFormat("LLL d, h:mm a")
+      : "";
+  // The label already says "Online (Square)" for a webhook payment.
+  const paidBy = !online && b.paymentRecordedByEmail ? `by ${b.paymentRecordedByEmail}` : "";
+
+  return (
+    <section className="space-y-3 border-b border-slate-200 px-6 py-4 text-sm">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Payment</p>
+      {paid ? (
+        <div className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+          <p className="font-semibold text-emerald-900">{paidLine}</p>
+          {paidWhen || paidBy ? (
+            <p className="break-words text-xs text-emerald-900/80">
+              {[paidWhen, paidBy].filter(Boolean).join(" · ")}
+            </p>
+          ) : null}
+          {b.paymentNote ? (
+            <p className="whitespace-pre-line text-xs text-slate-700">Note: {b.paymentNote}</p>
+          ) : null}
+          {b.squarePaymentId ? (
+            <p className="text-xs text-slate-500" title={b.squarePaymentId}>
+              Square ID:{" "}
+              {b.squarePaymentId.length > 14 ? `${b.squarePaymentId.slice(0, 14)}…` : b.squarePaymentId}
+            </p>
+          ) : null}
+          {online && !props.isManager ? (
+            <p className="text-[11px] text-slate-600">Only a manager can undo an online payment.</p>
+          ) : (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void undo()}
+              className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-800 hover:border-slate-400 disabled:opacity-50"
+            >
+              {busy ? "Working…" : "Undo"}
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {b.paymentLinkUrl ? (
+            <div className="rounded-lg border border-amber-100 bg-amber-50/60 px-3 py-2 text-xs text-slate-800">
+              Square checkout link sent
+              {typeof b.paymentAmountCents === "number"
+                ? ` · ${formatUsdCents(b.paymentAmountCents)}`
+                : ""}{" "}
+              ·{" "}
+              <a
+                href={b.paymentLinkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-sky-800 underline"
+              >
+                Open
+              </a>
+            </div>
+          ) : b.prepaidOnline ? (
+            <p className="text-xs text-amber-900">Online prepay was expected for this booking.</p>
+          ) : null}
+          <p className="text-slate-600">Not marked paid.</p>
+          {!payable ? null : method === null ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 text-xs font-semibold text-slate-600">Mark paid:</span>
+              {IN_OFFICE_PAYMENT_METHODS.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => {
+                    setMethod(m);
+                    setError(null);
+                  }}
+                  className="rounded-full border border-emerald-300 bg-white px-3 py-1 text-xs font-semibold text-emerald-800 hover:bg-emerald-50"
+                >
+                  {paymentMethodLabel(m)}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+              <div className="flex flex-wrap gap-1.5">
+                {IN_OFFICE_PAYMENT_METHODS.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setMethod(m)}
+                    aria-pressed={method === m}
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                      method === m
+                        ? "border-emerald-800 bg-emerald-800 text-white"
+                        : "border-emerald-300 bg-white text-emerald-800 hover:bg-emerald-100"
+                    }`}
+                  >
+                    {paymentMethodLabel(m)}
+                  </button>
+                ))}
+              </div>
+              <label className="block space-y-1">
+                <span className="text-xs font-medium text-emerald-900">Amount (optional)</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-semibold text-emerald-900">$</span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    className="w-32 rounded-lg border border-emerald-300 bg-white px-2 py-1.5 text-sm"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.00"
+                    disabled={busy}
+                  />
+                </div>
+              </label>
+              <label className="block space-y-1">
+                <span className="text-xs font-medium text-emerald-900">Note (optional)</span>
+                <input
+                  type="text"
+                  maxLength={PAYMENT_NOTE_MAX}
+                  className="w-full rounded-lg border border-emerald-300 bg-white px-2 py-1.5 text-sm"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="e.g. check #1042, gift card"
+                  disabled={busy}
+                />
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void save()}
+                  className="rounded-full bg-emerald-700 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
+                >
+                  {busy ? "Saving…" : `Mark paid · ${paymentMethodLabel(method)}`}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    setMethod(null);
+                    setError(null);
+                  }}
+                  className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-semibold text-slate-900 hover:border-slate-400 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+              <p className="text-[11px] text-emerald-900/80">
+                Records a payment taken in the office. Nothing is charged and the patient is not
+                contacted.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+      {error ? (
+        <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900">
+          {error}
+        </p>
+      ) : null}
+    </section>
+  );
 }
 
 function EditScheduleForm(props: {
@@ -1126,6 +1512,10 @@ function EditScheduleForm(props: {
   setServiceLine: (s: ServiceLine) => void;
   durationMin: number;
   setDurationMin: (n: number) => void;
+  /** Front desk on a visit that has started: date and time stay as they are. */
+  timeLocked: boolean;
+  /** The visit has started (or is checked in). */
+  started: boolean;
   serviceId: string;
   setServiceId: (s: string) => void;
   startIso: string;
@@ -1195,10 +1585,11 @@ function EditScheduleForm(props: {
           <span className="text-xs font-medium text-cyan-900">Date</span>
           <input
             type="date"
-            className="w-full rounded-lg border border-cyan-300 bg-white px-2 py-2 text-sm"
+            className="w-full rounded-lg border border-cyan-300 bg-white px-2 py-2 text-sm disabled:bg-slate-100 disabled:text-slate-500"
             value={props.date}
             onChange={(e) => props.setDate(e.target.value)}
-            disabled={props.working}
+            disabled={props.working || props.timeLocked}
+            title={props.timeLocked ? STARTED_REQUIRES_MANAGER_MESSAGE : undefined}
           />
         </label>
         <label className="block space-y-1 text-sm">
@@ -1294,7 +1685,11 @@ function EditScheduleForm(props: {
 
       <div className="space-y-1">
         <p className="text-xs font-medium text-cyan-900">Start time</p>
-        {props.slotsLoading ? (
+        {props.timeLocked ? (
+          <p className="rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-900">
+            Stays at {currentStartLabel}. {STARTED_REQUIRES_MANAGER_MESSAGE}
+          </p>
+        ) : props.slotsLoading ? (
           <p className="text-xs text-cyan-800">Loading open times…</p>
         ) : slotsListEmpty(props.slots) ? (
           <p className="text-xs text-cyan-800">
@@ -1319,8 +1714,14 @@ function EditScheduleForm(props: {
             ))}
           </div>
         )}
-        {props.slotsError && !slotsListEmpty(props.slots) ? (
+        {props.slotsError && !props.timeLocked && !slotsListEmpty(props.slots) ? (
           <p className="text-xs text-amber-800">{props.slotsError}</p>
+        ) : null}
+        {props.started && !props.timeLocked ? (
+          <p className="text-[11px] text-amber-800">
+            This visit has already started. You&apos;ll be asked to confirm before moving it to
+            another time.
+          </p>
         ) : null}
       </div>
 
@@ -1630,6 +2031,16 @@ function eventLabel(type: BookingEvent["type"]): string {
       return "Rescheduled";
     case "survey_sent":
       return "Post-visit survey sent";
+    case "payment_recorded":
+      return "Marked paid (in office)";
+    case "payment_cleared":
+      return "Payment record removed";
+    case "no_show_marked":
+      return "Marked no-show";
+    case "no_show_cleared":
+      return "No-show mark removed";
+    default:
+      return "Update";
   }
 }
 
@@ -1657,6 +2068,16 @@ function eventDotClasses(type: BookingEvent["type"]): string {
       return "bg-cyan-500";
     case "survey_sent":
       return "bg-teal-400";
+    case "payment_recorded":
+      return "bg-emerald-600";
+    case "payment_cleared":
+      return "bg-slate-400";
+    case "no_show_marked":
+      return "bg-orange-500";
+    case "no_show_cleared":
+      return "bg-slate-400";
+    default:
+      return "bg-slate-300";
   }
 }
 

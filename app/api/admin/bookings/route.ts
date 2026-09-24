@@ -5,6 +5,12 @@ import { getFirestore } from "@/lib/firebase-admin";
 import { requireStaff } from "@/lib/staff-auth";
 import { isBookingStatus, type BookingStatus } from "@/lib/booking-status";
 import { TIME_ZONE } from "@/lib/constants";
+import { squareCheckoutConfigured } from "@/lib/square-config";
+import {
+  clampToTherapistWindow,
+  therapistScheduleWindow,
+  withoutTherapistHiddenFields,
+} from "@/lib/therapist-schedule-window";
 
 export const runtime = "nodejs";
 
@@ -40,6 +46,9 @@ type BookingRowDto = {
   internalNotes?: string;
   confirmationStatus?: string;
   checkedInAtMs?: number;
+  noShow?: boolean;
+  noShowAtMs?: number;
+  noShowByEmail?: string;
   needsReschedule?: boolean;
   status?: BookingStatus;
   prepaidOnline?: boolean;
@@ -48,6 +57,9 @@ type BookingRowDto = {
   paidAtMs?: number;
   paidAmountCents?: number;
   squarePaymentId?: string;
+  paymentMethod?: string;
+  paymentNote?: string;
+  paymentRecordedByEmail?: string;
   patientId?: string;
   accepted?: StaffActor;
   declined?: StaffActor;
@@ -175,23 +187,43 @@ async function listBookings(staff: Staff, searchParams: URLSearchParams) {
     providerId = staff.linkedProviderId;
   }
 
-  const nowChicago = DateTime.now().setZone(TIME_ZONE);
+  const isTherapist = staff.role === "massage_therapist";
+  const nowMs = Date.now();
+  const nowChicago = DateTime.fromMillis(nowMs).setZone(TIME_ZONE);
   const todayStart = nowChicago.startOf("day");
   const todayEnd = todayStart.plus({ days: 1 }).minus({ milliseconds: 1 });
 
-  const defaultFrom =
-    staff.role === "massage_therapist"
-      ? todayStart.toMillis()
-      : Date.now() - 24 * 60 * 60 * 1000;
-  const defaultTo =
-    staff.role === "massage_therapist"
-      ? todayEnd.toMillis()
-      : Date.now() + 30 * 24 * 60 * 60 * 1000;
+  const defaultFrom = isTherapist ? todayStart.toMillis() : nowMs - 24 * 60 * 60 * 1000;
+  const defaultTo = isTherapist ? todayEnd.toMillis() : nowMs + 30 * 24 * 60 * 60 * 1000;
 
-  const fromMs = fromStr ? Date.parse(fromStr) : defaultFrom;
-  const toMs = toStr ? Date.parse(toStr) : defaultTo;
+  let fromMs = fromStr ? Date.parse(fromStr) : defaultFrom;
+  let toMs = toStr ? Date.parse(toStr) : defaultTo;
   if (!Number.isFinite(fromMs) || !Number.isFinite(toMs)) {
     return NextResponse.json({ error: "Invalid date range." }, { status: 400 });
+  }
+
+  const squareConfigured = squareCheckoutConfigured();
+
+  // Therapists: their own bookings near today only, whatever range was asked for.
+  let therapistWindow: { fromIso: string; toIso: string; clamped: boolean } | undefined;
+  if (isTherapist) {
+    const clamp = clampToTherapistWindow(fromMs, toMs, nowMs);
+    const w = therapistScheduleWindow(nowMs);
+    therapistWindow = {
+      fromIso: new Date(w.fromMs).toISOString(),
+      toIso: new Date(w.toMs).toISOString(),
+      clamped: clamp.clamped,
+    };
+    if (clamp.empty) {
+      return NextResponse.json({
+        bookings: [],
+        truncated: false,
+        squareConfigured,
+        therapistWindow,
+      });
+    }
+    fromMs = clamp.fromMs;
+    toMs = clamp.toMs;
   }
   const from = Timestamp.fromMillis(fromMs);
   const to = Timestamp.fromMillis(toMs);
@@ -226,7 +258,7 @@ async function listBookings(staff: Staff, searchParams: URLSearchParams) {
       if (data.confirmationStatus === "confirmed_online") continue;
     }
 
-    const row: BookingRowDto = {
+    const fullRow: BookingRowDto = {
       id: d.id,
       startIso: typeof data.startIso === "string" ? data.startIso : undefined,
       startAtMs: timestampToMs(data.startAt),
@@ -261,6 +293,9 @@ async function listBookings(staff: Staff, searchParams: URLSearchParams) {
           ? data.confirmationStatus
           : undefined,
       checkedInAtMs: timestampToMs(data.checkedInAt),
+      noShow: data.noShow === true ? true : undefined,
+      noShowAtMs: timestampToMs(data.noShowAt),
+      noShowByEmail: typeof data.noShowByEmail === "string" ? data.noShowByEmail : undefined,
       needsReschedule: typeof data.needsReschedule === "boolean" ? data.needsReschedule : undefined,
       prepaidOnline: typeof data.prepaidOnline === "boolean" ? data.prepaidOnline : undefined,
       paymentLinkUrl: typeof data.paymentLinkUrl === "string" ? data.paymentLinkUrl : undefined,
@@ -269,6 +304,10 @@ async function listBookings(staff: Staff, searchParams: URLSearchParams) {
       paidAtMs: timestampToMs(data.paidAt),
       paidAmountCents: typeof data.paidAmountCents === "number" ? data.paidAmountCents : undefined,
       squarePaymentId: typeof data.squarePaymentId === "string" ? data.squarePaymentId : undefined,
+      paymentMethod: typeof data.paymentMethod === "string" ? data.paymentMethod : undefined,
+      paymentNote: typeof data.paymentNote === "string" ? data.paymentNote : undefined,
+      paymentRecordedByEmail:
+        typeof data.paymentRecordedByEmail === "string" ? data.paymentRecordedByEmail : undefined,
       patientId: typeof data.patientId === "string" ? data.patientId : undefined,
       status,
       accepted: actor(data.acceptedByUid, data.acceptedByEmail, data.acceptedAt, undefined),
@@ -286,10 +325,17 @@ async function listBookings(staff: Staff, searchParams: URLSearchParams) {
       ),
       createdAtMs: timestampToMs(data.createdAt),
     };
+    // Strip before searching, so a therapist's search can't probe hidden fields.
+    const row = isTherapist ? withoutTherapistHiddenFields(fullRow) : fullRow;
 
     if (!matchesQuery(row, q)) continue;
     rows.push(row);
   }
 
-  return NextResponse.json({ bookings: rows, truncated: snap.size >= LIST_LIMIT });
+  return NextResponse.json({
+    bookings: rows,
+    truncated: snap.size >= LIST_LIMIT,
+    squareConfigured,
+    ...(therapistWindow ? { therapistWindow } : {}),
+  });
 }

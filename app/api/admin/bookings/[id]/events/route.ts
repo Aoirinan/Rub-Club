@@ -28,5 +28,11 @@ export async function GET(req: Request, ctx: Params) {
   }
 
   const events = await listBookingEvents(db, id);
-  return NextResponse.json({ events });
+  // Therapists don't see payment details on the booking itself, so not in its
+  // history either.
+  const visible =
+    staff.role === "massage_therapist"
+      ? events.filter((e) => !String(e.type ?? "").startsWith("payment_"))
+      : events;
+  return NextResponse.json({ events: visible });
 }

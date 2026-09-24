@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { surveyStartAtWindow, surveyTiming } from "./survey-window";
+import { surveySkippedForNoShow, surveyStartAtWindow, surveyTiming } from "./survey-window";
 
 const MIN = 60 * 1000;
 const DAY = 24 * 60 * MIN;
@@ -47,5 +47,15 @@ describe("surveyStartAtWindow", () => {
   it("excludes visits that are too old for any duration", () => {
     expect(inQuery(now - 8 * DAY)).toBe(false);
     expect(inQuery(now)).toBe(false);
+  });
+});
+
+describe("surveySkippedForNoShow", () => {
+  it("skips only an explicit no-show", () => {
+    expect(surveySkippedForNoShow(true)).toBe(true);
+    // No check-in is not a no-show: those visits are still surveyed.
+    expect(surveySkippedForNoShow(undefined)).toBe(false);
+    expect(surveySkippedForNoShow(false)).toBe(false);
+    expect(surveySkippedForNoShow("true")).toBe(false);
   });
 });

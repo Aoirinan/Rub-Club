@@ -2,6 +2,12 @@ import { Timestamp, type QueryDocumentSnapshot } from "firebase-admin/firestore"
 import { DateTime } from "luxon";
 import { TIME_ZONE } from "@/lib/constants";
 import { isBookingStatus, type BookingStatus } from "@/lib/booking-status";
+import {
+  bookingIsPaid,
+  effectivePaymentMethod,
+  paymentMethodLabel,
+  type BookingPaymentState,
+} from "@/lib/booking-payment";
 
 function tsToChicago(value: unknown): string {
   if (value instanceof Timestamp) {
@@ -26,12 +32,26 @@ function prettyLocation(id: string | undefined): string {
   return id ?? "";
 }
 
+function paymentState(data: Record<string, unknown>): BookingPaymentState {
+  return {
+    paidAtMs: data.paidAt instanceof Timestamp ? data.paidAt.toMillis() : null,
+    paidAmountCents: typeof data.paidAmountCents === "number" ? data.paidAmountCents : null,
+    paymentMethod: typeof data.paymentMethod === "string" ? data.paymentMethod : null,
+    squarePaymentId: typeof data.squarePaymentId === "string" ? data.squarePaymentId : null,
+  };
+}
+
 function payStatusLabel(data: Record<string, unknown>): string {
-  const paid = data.paidAmountCents;
-  if (typeof paid === "number" && paid > 0) return "Paid";
+  if (bookingIsPaid(paymentState(data))) return "Paid";
   if (typeof data.paymentLinkUrl === "string" && data.paymentLinkUrl.length > 0) return "Pay link";
   if (data.prepaidOnline === true) return "Prepay";
   return "";
+}
+
+/** Card / Cash / Check / Other / Online (Square), for paid visits only. */
+function payMethodLabel(data: Record<string, unknown>): string {
+  const state = paymentState(data);
+  return bookingIsPaid(state) ? paymentMethodLabel(effectivePaymentMethod(state)) : "";
 }
 
 function paidAmountDollars(data: Record<string, unknown>): string {
@@ -55,10 +75,14 @@ export const BOOKING_EXPORT_CSV_HEADERS = [
   "Internal notes",
   "Online confirm",
   "Checked in",
+  "No-show",
   "Needs reschedule",
   "Pay status",
+  "Payment method",
   "Paid amount",
   "Paid at (Chicago)",
+  "Payment recorded by",
+  "Payment note",
   "Square payment ID",
   "Created",
   "Booking ID",
@@ -86,10 +110,14 @@ export function bookingRowToCsvCells(id: string, data: Record<string, unknown>):
     typeof data.internalNotes === "string" ? data.internalNotes : "",
     typeof data.confirmationStatus === "string" ? data.confirmationStatus : "",
     tsToChicago(data.checkedInAt),
+    data.noShow === true ? "yes" : "",
     data.needsReschedule === true ? "yes" : data.needsReschedule === false ? "no" : "",
     payStatusLabel(data),
+    payMethodLabel(data),
     paidAmountDollars(data),
     tsToChicago(data.paidAt),
+    typeof data.paymentRecordedByEmail === "string" ? data.paymentRecordedByEmail : "",
+    typeof data.paymentNote === "string" ? data.paymentNote : "",
     typeof data.squarePaymentId === "string" ? data.squarePaymentId : "",
     tsToChicago(data.createdAt),
     id,

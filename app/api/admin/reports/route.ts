@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
 import { DateTime } from "luxon";
 import { getFirestore } from "@/lib/firebase-admin";
+import { bookingIsPaid } from "@/lib/booking-payment";
 import { requireStaff } from "@/lib/staff-auth";
 import { isBookingStatus, type BookingStatus } from "@/lib/booking-status";
 import { TIME_ZONE } from "@/lib/constants";
@@ -102,9 +103,14 @@ export async function GET(req: Request) {
     const durationMin = typeof data.durationMin === "number" ? data.durationMin : 0;
     if (status === "confirmed") totalMinutes += durationMin;
 
-    if (typeof data.paidAmountCents === "number" && data.paidAmountCents > 0) {
-      paidTotal += data.paidAmountCents;
+    // In-office payments may be recorded without an amount: they count as paid
+    // visits but add nothing to the total.
+    const paidAtMs = data.paidAt instanceof Timestamp ? data.paidAt.toMillis() : null;
+    if (bookingIsPaid({ paidAtMs, paidAmountCents: data.paidAmountCents })) {
       paidCount++;
+      if (typeof data.paidAmountCents === "number" && data.paidAmountCents > 0) {
+        paidTotal += data.paidAmountCents;
+      }
     }
 
     const startAt = data.startAt instanceof Timestamp

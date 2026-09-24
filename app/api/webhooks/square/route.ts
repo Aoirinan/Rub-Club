@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getFirestore } from "@/lib/firebase-admin";
 import { recordBookingEvent } from "@/lib/booking-events";
+import { SQUARE_ONLINE_PAYMENT_METHOD } from "@/lib/booking-payment";
 import { bookingDocToEmailContext } from "@/lib/booking-doc";
 import {
   patientAcceptedEmail,
@@ -98,6 +99,8 @@ export async function POST(req: Request) {
       paidAt: FieldValue.serverTimestamp(),
       paidAmountCents: amountCents,
       squarePaymentId,
+      // Tells the scheduler this was paid online, not recorded at the desk.
+      paymentMethod: SQUARE_ONLINE_PAYMENT_METHOD,
       ...(underpaid ? { paymentUnderpaid: true } : {}),
     };
     if (autoConfirm && portalHash) {

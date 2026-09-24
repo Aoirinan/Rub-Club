@@ -9,6 +9,7 @@ import { DateTime } from "luxon";
 import { getFirestore } from "@/lib/firebase-admin";
 import { TIME_ZONE } from "@/lib/constants";
 import { phoneVariantsForLookup, normalizeSmsDigits } from "@/lib/patient-record-lookup";
+import { countsAsNoShow } from "@/lib/visit-outcome";
 
 export const PATIENTS_COLLECTION = "patients";
 
@@ -587,6 +588,8 @@ export async function getPatientBookings(
       ...data,
       startAtMs,
       checkedInAtMs,
+      // The field name lib/patient-visit-display.ts reads.
+      visitNoShow: data.noShow === true,
       paidAtMs,
       paidAmountCents: typeof data.paidAmountCents === "number" ? data.paidAmountCents : null,
     };
@@ -621,10 +624,8 @@ export async function recalculatePatientStats(db: Firestore, patientId: string):
     const checkedInAt = d.checkedInAt instanceof Timestamp ? d.checkedInAt : null;
 
     if (status === "cancelled") totalCanceled++;
-    if (status === "confirmed") {
-      totalConfirmed++;
-      if (startAt && startAt.toMillis() < nowMs && !checkedInAt) totalNoShow++;
-    }
+    if (status === "confirmed") totalConfirmed++;
+    if (bookingCountsAsNoShow(d, nowMs)) totalNoShow++;
     if (checkedInAt) {
       totalVisits++;
       if (!lastVisitDate || checkedInAt.toMillis() > lastVisitDate.toMillis()) {
@@ -650,6 +651,42 @@ export async function recalculatePatientStats(db: Firestore, patientId: string):
     totalPaid,
     lastVisitDate: lastVisitDate ?? null,
     nextAppointmentDate: nextAppointmentDate ?? null,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
+
+/** An explicit no-show mark, or (neither mark) confirmed, past and never checked in. */
+function bookingCountsAsNoShow(d: DocumentData, nowMs: number): boolean {
+  return countsAsNoShow(
+    {
+      status: typeof d.status === "string" ? d.status : "pending",
+      startAtMs: d.startAt instanceof Timestamp ? d.startAt.toMillis() : null,
+      checkedIn: d.checkedInAt instanceof Timestamp,
+      noShow: d.noShow,
+    },
+    nowMs,
+  );
+}
+
+/**
+ * Refresh only the patient's no-show count and total paid after the desk marks
+ * a no-show or records a payment. Visit / confirmed / cancelled counters are
+ * kept incrementally elsewhere and are left alone.
+ */
+export async function recomputePatientOutcomeStats(db: Firestore, patientId: string): Promise<void> {
+  const snap = await db.collection("bookings").where("patientId", "==", patientId).get();
+  const nowMs = Date.now();
+  let totalNoShow = 0;
+  let totalPaid = 0;
+  for (const doc of snap.docs) {
+    const d = doc.data();
+    if (bookingCountsAsNoShow(d, nowMs)) totalNoShow++;
+    const paidCents = typeof d.paidAmountCents === "number" ? d.paidAmountCents : 0;
+    if (paidCents > 0) totalPaid += paidCents / 100;
+  }
+  await db.collection(PATIENTS_COLLECTION).doc(patientId).update({
+    totalNoShow,
+    totalPaid,
     updatedAt: FieldValue.serverTimestamp(),
   });
 }

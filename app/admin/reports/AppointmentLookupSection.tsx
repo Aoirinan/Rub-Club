@@ -8,6 +8,7 @@ import { TIME_ZONE } from "@/lib/constants";
 import { bookingStatusLabel } from "@/lib/booking-status";
 import { ALL_STATUSES, type BookingRow, type ProviderRow } from "@/app/admin/_scheduler/types";
 import { filterByBusiness, paymentStatusShort } from "@/app/admin/_scheduler/helpers";
+import { bookingIsPaid, formatUsdCents, isSquareOnlinePayment } from "@/lib/booking-payment";
 import type { PatientApiRow } from "@/lib/patient-types";
 import { patientDisambiguatorLabel } from "@/lib/patient-business";
 import {
@@ -21,6 +22,21 @@ type Mode = "future" | "past";
 
 function ymdChicago(d: DateTime): string {
   return d.toFormat("yyyy-LL-dd");
+}
+
+/** "$65.00 · Sep 23, 3:42 PM" for a paid visit (either part may be missing). */
+function paidDetail(b: BookingRow): string {
+  if (!bookingIsPaid(b)) return "";
+  return [
+    typeof b.paidAmountCents === "number" && b.paidAmountCents > 0
+      ? formatUsdCents(b.paidAmountCents)
+      : "",
+    typeof b.paidAtMs === "number"
+      ? DateTime.fromMillis(b.paidAtMs).setZone(TIME_ZONE).toFormat("LLL d, h:mm a")
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 function previewText(s: string | undefined, max: number): string {
@@ -446,8 +462,20 @@ export function AppointmentLookupSection({
                     </td>
                     <td className="px-5 py-3 capitalize text-slate-700">{b.serviceLine ?? "—"}</td>
                     <td className="px-5 py-3 text-slate-700">{b.providerDisplayName ?? "—"}</td>
-                    <td className="px-5 py-3">{bookingStatusLabel(b.status ?? "pending")}</td>
-                    <td className="px-5 py-3 text-slate-700">{paymentStatusShort(b)}</td>
+                    <td className="px-5 py-3">
+                      {bookingStatusLabel(b.status ?? "pending")}
+                      {b.noShow ? (
+                        <span className="block text-xs font-semibold text-orange-800">No-show</span>
+                      ) : null}
+                    </td>
+                    <td className="px-5 py-3 text-slate-700">
+                      <span className={bookingIsPaid(b) ? "font-semibold text-emerald-800" : undefined}>
+                        {paymentStatusShort(b)}
+                      </span>
+                      {paidDetail(b) ? (
+                        <span className="block whitespace-nowrap text-xs text-slate-500">{paidDetail(b)}</span>
+                      ) : null}
+                    </td>
                     <td className="px-5 py-3 text-slate-700">{online}</td>
                     <td className="max-w-[200px] truncate px-5 py-3 text-slate-600" title={noteBits}>
                       {previewText(noteBits, 48)}
@@ -480,14 +508,14 @@ export function AppointmentLookupSection({
                               <span className="whitespace-pre-line">{b.notes}</span>
                             </div>
                           ) : null}
-                          {typeof b.paidAmountCents === "number" && b.paidAmountCents > 0 ? (
+                          {bookingIsPaid(b) ? (
                             <div className="rounded-lg border border-emerald-100 bg-emerald-50/60 px-3 py-2">
                               <p className="font-semibold text-emerald-950">Payment</p>
                               <p className="mt-0.5 text-slate-800">
-                                Paid{" "}
-                                <span className="font-semibold">
-                                  ${(b.paidAmountCents / 100).toFixed(2)}
-                                </span>
+                                {paymentStatusShort(b)}
+                                {typeof b.paidAmountCents === "number" && b.paidAmountCents > 0 ? (
+                                  <span className="font-semibold"> · {formatUsdCents(b.paidAmountCents)}</span>
+                                ) : null}
                                 {typeof b.paidAtMs === "number" ? (
                                   <span className="text-slate-600">
                                     {" "}
@@ -498,6 +526,12 @@ export function AppointmentLookupSection({
                                   </span>
                                 ) : null}
                               </p>
+                              {b.paymentRecordedByEmail && !isSquareOnlinePayment(b) ? (
+                                <p className="mt-0.5 text-slate-600">Recorded by {b.paymentRecordedByEmail}</p>
+                              ) : null}
+                              {b.paymentNote ? (
+                                <p className="mt-0.5 whitespace-pre-line text-slate-700">Note: {b.paymentNote}</p>
+                              ) : null}
                               {b.squarePaymentId ? (
                                 <p className="mt-1 font-mono text-[11px] text-slate-600" title={b.squarePaymentId}>
                                   Square:{" "}

@@ -21,6 +21,7 @@ type BookingRow = Record<string, unknown> & {
   internalNotes?: string;
   paidAmountCents?: number | null;
   checkedInAtMs?: number | null;
+  visitNoShow?: boolean;
 };
 
 type Props = {
@@ -317,6 +318,7 @@ export function PatientProfileBody({ patientId, getIdToken, isSuperadmin, compac
                         status: typeof b.status === "string" ? b.status : undefined,
                         startAtMs: ms,
                         checkedInAtMs: b.checkedInAtMs,
+                        visitNoShow: b.visitNoShow,
                       });
                       const paid =
                         typeof b.paidAmountCents === "number"

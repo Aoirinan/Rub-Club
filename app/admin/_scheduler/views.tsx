@@ -19,7 +19,9 @@ import {
   patientKeyFromBooking,
   paymentHintSuffix,
   sortedColumnRowsWithStackMeta,
+  visitMarkHintSuffix,
 } from "./helpers";
+import { bookingIsPaid, paidStatusLabel } from "@/lib/booking-payment";
 import type { SameDayStackMeta } from "./helpers";
 import type { BookingRow, FilterState, ProviderRow } from "./types";
 
@@ -127,9 +129,13 @@ function SchedulerListRow({
       >
         <BlockStatusIcon booking={b} />
         <div className="min-w-0 flex-1">
-          <div className="truncate font-semibold text-slate-900">{b.name ?? "Unknown"}</div>
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate font-semibold text-slate-900">{b.name ?? "Unknown"}</span>
+            <PaidBadge booking={b} />
+          </div>
           <div className="truncate text-xs text-slate-600">
             {b.serviceLine ?? "—"} · {timeLabel}
+            {b.noShow ? " · No-show" : ""}
           </div>
         </div>
       </button>
@@ -141,9 +147,13 @@ function SchedulerListRow({
       <button type="button" onClick={() => onSelect(b.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
         <BlockStatusIcon booking={b} />
         <div className="min-w-0 flex-1">
-          <div className="truncate font-semibold text-slate-900">{b.name ?? "Unknown"}</div>
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate font-semibold text-slate-900">{b.name ?? "Unknown"}</span>
+            <PaidBadge booking={b} />
+          </div>
           <div className="truncate text-xs text-slate-600">
             {b.serviceLine ?? "—"} · {timeLabel}
+            {b.noShow ? " · No-show" : ""}
           </div>
         </div>
       </button>
@@ -504,8 +514,11 @@ export function DayView({
                     <BlockStatusIcon booking={b} />
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="truncate font-semibold text-slate-900">
-                      {b.name ?? "Unknown"}
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <span className="truncate font-semibold text-slate-900">
+                        {b.name ?? "Unknown"}
+                      </span>
+                      <PaidBadge booking={b} />
                     </span>
                     <span
                       className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${bookingStatusPillClasses(b.status ?? "pending")}`}
@@ -527,9 +540,16 @@ export function DayView({
   );
 }
 
-/** Compact status glyph for calendar blocks: confirmed ✓, pending ○, no-show ✗. */
+/** Compact status glyph for calendar blocks: confirmed ✓, pending ○, declined / cancelled / no-show ✗. */
 function BlockStatusIcon({ booking }: { booking: BookingRow }) {
   const status = booking.status ?? "pending";
+  if (booking.noShow && status !== "cancelled" && status !== "declined") {
+    return (
+      <span className="shrink-0 font-bold opacity-90" title="No-show" aria-hidden>
+        ✗
+      </span>
+    );
+  }
   if (status === "confirmed") {
     return (
       <span className="shrink-0 font-bold opacity-90" title="Confirmed" aria-hidden>
@@ -547,6 +567,23 @@ function BlockStatusIcon({ booking }: { booking: BookingRow }) {
   return (
     <span className="shrink-0 font-bold opacity-90" title={bookingStatusLabel(status)} aria-hidden>
       ✗
+    </span>
+  );
+}
+
+/** Small green "$" pill for a paid visit; renders nothing when unpaid. */
+function PaidBadge({ booking, compact = false }: { booking: BookingRow; compact?: boolean }) {
+  if (!bookingIsPaid(booking)) return null;
+  const label = paidStatusLabel(booking);
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center rounded-full bg-emerald-600 font-bold text-white ${
+        compact ? "px-1 text-[9px] leading-[14px]" : "px-1.5 text-[10px] leading-4"
+      }`}
+      title={label}
+      aria-label={label}
+    >
+      {compact ? "$" : "Paid"}
     </span>
   );
 }
@@ -608,7 +645,7 @@ function CalendarBlock({
       onClick={() => onSelect(booking.id)}
       className={`group absolute left-1 right-1 overflow-hidden rounded-md border border-black/10 px-2 py-1 text-left text-xs shadow-sm transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-slate-700 ${ringClass} ${status === "declined" || status === "cancelled" ? "opacity-75 line-through" : ""}`}
       style={{ top: `${geom.topPx}px`, height: `${geom.heightPx}px`, ...blockStyle.style }}
-      title={`${booking.name ?? "Unknown"} · ${serviceLabel} · ${timeRange}${paymentHintSuffix(booking)}`}
+      title={`${booking.name ?? "Unknown"} · ${serviceLabel} · ${timeRange}${visitMarkHintSuffix(booking)}${paymentHintSuffix(booking)}`}
     >
       <div className="flex items-start gap-1 truncate font-semibold leading-tight">
         <BlockStatusIcon booking={booking} />
@@ -616,6 +653,7 @@ function CalendarBlock({
         {multi ? (
           <span className="shrink-0 font-normal opacity-80">({stackMeta!.sameDayCount}×)</span>
         ) : null}
+        <PaidBadge booking={booking} compact />
       </div>
       <div className="truncate text-[11px] font-medium opacity-95">{serviceLabel}</div>
       <div className="truncate text-[10px] font-medium opacity-90">{timeRange}</div>
@@ -792,7 +830,7 @@ function AllProvidersWeekSummary({
                         <button
                           type="button"
                           onClick={() => onSelect(b.id)}
-                          title={`${b.name ?? "Unknown"} · ${svc} · ${range}${paymentHintSuffix(b)}`}
+                          title={`${b.name ?? "Unknown"} · ${svc} · ${range}${visitMarkHintSuffix(b)}${paymentHintSuffix(b)}`}
                           className="relative w-full rounded-md border border-black/10 px-2 py-1.5 pr-7 text-left text-xs shadow-sm hover:brightness-95"
                           style={style.style}
                         >
@@ -800,7 +838,8 @@ function AllProvidersWeekSummary({
                             <BlockStatusIcon booking={b} />
                           </div>
                           <div className="flex items-center gap-1 truncate font-semibold">
-                            {b.name ?? "Unknown"}
+                            <span className="min-w-0 truncate">{b.name ?? "Unknown"}</span>
+                            <PaidBadge booking={b} compact />
                           </div>
                           <div className="truncate text-[11px] opacity-95">{svc}</div>
                           <div className="truncate text-[10px] opacity-90">{range}</div>

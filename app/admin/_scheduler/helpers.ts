@@ -8,6 +8,8 @@ import {
 import type { BookingRow, FilterState, ProviderRow, SchedulerView } from "./types";
 import { ALL_STATUSES, DEFAULT_STATUSES } from "./types";
 import { isBookingStatus, type BookingStatus } from "@/lib/booking-status";
+import { appointmentHasStarted } from "@/lib/appointment-started";
+import { bookingIsPaid, paidStatusLabel } from "@/lib/booking-payment";
 
 /** Chicago "today" in yyyy-MM-dd, used as the default scheduler date. */
 export function todayChicagoIsoDate(): string {
@@ -332,17 +334,38 @@ export function sortedColumnRowsWithStackMeta(rows: BookingRow[]): {
   return { sortedRows, stackMeta };
 }
 
-/** Tooltip or inline suffix: ` · Paid` or ` · Pay link`. */
+/** Tooltip or inline suffix: ` · Paid · Card` or ` · Pay link`. */
 export function paymentHintSuffix(b: BookingRow): string {
-  if (typeof b.paidAmountCents === "number" && b.paidAmountCents > 0) return " · Paid";
+  if (bookingIsPaid(b)) return ` · ${paidStatusLabel(b)}`;
   if (b.paymentLinkUrl) return " · Pay link";
   return "";
 }
 
-/** Compact label for tables (reports, etc.). */
+/** Compact label for tables (reports, etc.): "Paid · Cash", "Pay link", … */
 export function paymentStatusShort(b: BookingRow): string {
-  if (typeof b.paidAmountCents === "number" && b.paidAmountCents > 0) return "Paid";
+  if (bookingIsPaid(b)) return paidStatusLabel(b);
   if (b.paymentLinkUrl) return "Pay link";
   if (b.prepaidOnline) return "Prepay";
   return "—";
 }
+
+/** Tooltip suffix for visit marks: ` · No-show` / ` · Checked in`. */
+export function visitMarkHintSuffix(b: BookingRow): string {
+  if (b.noShow) return " · No-show";
+  if (typeof b.checkedInAtMs === "number") return " · Checked in";
+  return "";
+}
+
+/**
+ * The visit has started: it is checked in, or its start time has passed. Only
+ * a manager may move such a visit to another time (the reschedule route
+ * answers front desk with 403 `started_requires_manager`).
+ */
+export function visitHasStarted(b: BookingRow, nowMs: number = Date.now()): boolean {
+  if (typeof b.checkedInAtMs === "number") return true;
+  if (typeof b.startAtMs === "number") return nowMs >= b.startAtMs;
+  return appointmentHasStarted(b.startIso, DateTime.fromMillis(nowMs));
+}
+
+export const STARTED_REQUIRES_MANAGER_MESSAGE =
+  "Only a manager can move a visit that has already started.";

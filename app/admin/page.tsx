@@ -36,6 +36,7 @@ import {
   providerMatchesServiceScope,
   readFilters,
   todayChicagoIsoDate,
+  visitHasStarted,
   writeFilters,
 } from "./_scheduler/helpers";
 import { openChiroSchedulerWindow } from "./_scheduler/open-chiro-window";
@@ -116,6 +117,14 @@ function AdminDashboard() {
   const bookingsReqSeqRef = useRef(0);
   const holdsReqSeqRef = useRef(0);
   const [bookingsTruncated, setBookingsTruncated] = useState(false);
+  /** Square checkout is set up; the drawer hides "send payment link" otherwise. */
+  const [squareConfigured, setSquareConfigured] = useState(false);
+  /** Massage therapists: the date window the server limits their schedule to. */
+  const [therapistWindow, setTherapistWindow] = useState<{
+    fromIso: string;
+    toIso: string;
+    clamped: boolean;
+  } | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [reminderOpen, setReminderOpen] = useState(false);
   const [reminderPreview, setReminderPreview] = useState<{
@@ -243,7 +252,12 @@ function AdminDashboard() {
           if (!opts?.silent) setError("Could not load bookings.");
           return;
         }
-        const payload = (await res.json()) as { bookings: BookingRow[]; truncated?: boolean };
+        const payload = (await res.json()) as {
+          bookings: BookingRow[];
+          truncated?: boolean;
+          squareConfigured?: boolean;
+          therapistWindow?: { fromIso: string; toIso: string; clamped: boolean };
+        };
         if (seq !== bookingsReqSeqRef.current) return;
         const next = payload.bookings;
         if (opts?.silent && seenBookingIdsRef.current !== null) {
@@ -254,6 +268,8 @@ function AdminDashboard() {
         seenBookingIdsRef.current = new Set(next.map((b) => b.id));
         setBookings(next);
         setBookingsTruncated(payload.truncated === true);
+        setSquareConfigured(payload.squareConfigured === true);
+        setTherapistWindow(payload.therapistWindow ?? null);
         setError(null);
       } finally {
         if (!opts?.silent && seq === bookingsReqSeqRef.current) setLoading(false);
@@ -305,6 +321,15 @@ function AdminDashboard() {
 
   const handleRescheduleBooking = useCallback(
     async (bookingId: string, startIso: string) => {
+      // Drag-to-move is manager-only; still ask before moving a started visit.
+      const moving = bookings.find((b) => b.id === bookingId);
+      if (
+        moving &&
+        visitHasStarted(moving) &&
+        !window.confirm("This visit has already started. Move it anyway?")
+      ) {
+        return;
+      }
       const token = await getIdToken();
       if (!token) {
         setError("Sign in again to reschedule.");
@@ -323,7 +348,7 @@ function AdminDashboard() {
       setError(null);
       await refreshBookings();
     },
-    [getIdToken, refreshBookings],
+    [bookings, getIdToken, refreshBookings],
   );
 
   // Latest refreshers, read from the auth listener below so that changing a
@@ -655,6 +680,13 @@ function AdminDashboard() {
             ) : null}
           </div>
         ) : null}
+        {me?.role === "massage_therapist" && therapistWindow?.clamped ? (
+          <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-2 text-xs text-sky-950">
+            Your schedule shows your own appointments from{" "}
+            {DateTime.fromISO(therapistWindow.fromIso).setZone(TIME_ZONE).toFormat("LLL d")} through{" "}
+            {DateTime.fromISO(therapistWindow.toIso).setZone(TIME_ZONE).toFormat("LLL d")}.
+          </div>
+        ) : null}
         {bookingsTruncated ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-950">
             Showing the first 1,000 appointments in this range. Narrow the date range to see the rest.
@@ -678,7 +710,9 @@ function AdminDashboard() {
                 </summary>
                 <p className="mt-2 text-slate-500">
                   <span className="font-bold">✓</span> confirmed · <span className="font-bold">○</span>{" "}
-                  pending · <span className="font-bold">✗</span> declined/cancelled · Colors use the
+                  pending · <span className="font-bold">✗</span> declined/cancelled/no-show ·{" "}
+                  <span className="rounded-full bg-emerald-600 px-1 text-[9px] font-bold text-white">$</span>{" "}
+                  paid · Colors use the
                   service type when set, otherwise the provider (Super Admin → Service types /
                   Providers). Same patient, multiple visits:{" "}
                   <span className="font-semibold">(2×)</span>.
@@ -760,6 +794,8 @@ function AdminDashboard() {
         readOnly={!isDeskWrite}
         providers={providers}
         schedulerServices={schedulerServices}
+        staffRole={me?.role ?? null}
+        squareConfigured={squareConfigured}
         autoOpenEdit={Boolean(selectedId) && editRequestId === selectedId}
         onRescheduled={({ newStartIso }) => {
           // The edit is done; a later reload must not reopen it in edit mode.

@@ -22,6 +22,15 @@ export function surveyStartAtWindow(nowMs: number): { fromMs: number; beforeMs: 
   };
 }
 
+/**
+ * A visit the front desk marked as a no-show gets no "how was your visit"
+ * email. A visit merely lacking a check-in is still surveyed: the desk does
+ * not check everyone in.
+ */
+export function surveySkippedForNoShow(noShow: unknown): boolean {
+  return noShow === true;
+}
+
 export type SurveyTiming = "eligible" | "bad_duration" | "too_soon" | "too_old";
 
 export function surveyTiming(startMs: number, durationMin: unknown, nowMs: number): SurveyTiming {
