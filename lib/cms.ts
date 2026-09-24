@@ -98,12 +98,18 @@ export async function getContentUncached(id: string): Promise<string> {
 }
 export const CONTENT_CHANGE_LOG_COLLECTION = "content_change_log";
 
-/** Paths revalidated when site content is saved in superadmin. */
+/**
+ * Paths revalidated when site content is saved in superadmin (see
+ * lib/cms-revalidate.ts, which also refreshes the shared root layout).
+ */
 export const CMS_REVALIDATE_PATHS = [
   "/",
   "/about",
+  "/book",
   "/faq",
   "/contact",
+  "/massage-landing",
+  "/online-forms",
   "/services",
   "/services/chiropractic",
   "/services/chiropractic/stretch-and-flex-rehab",
@@ -111,13 +117,30 @@ export const CMS_REVALIDATE_PATHS = [
   "/services/massage",
   "/services/massage/prices",
   "/sulphur-springs",
+  "/sulphur-springs/contact",
   "/sulphur-springs/massage",
+  "/sulphur-springs/massage/prices",
   "/sulphur-springs/insurance",
   "/sulphur-springs/reviews",
   "/sulphur-springs/patient-forms",
+  "/sulphur-springs/patient-resources",
+  "/sulphur-springs/q-and-a",
+  "/sulphur-springs/staff",
+  "/sulphur-springs/wellness-care-plans",
   "/insurance",
   "/reviews",
   "/patient-forms",
   "/locations/paris",
   "/locations/paris/staff",
+  "/locations/sulphur-springs",
+] as const;
+
+/**
+ * Dynamic routes whose pages read site content; revalidated with type "page"
+ * so every generated slug refreshes.
+ */
+export const CMS_REVALIDATE_DYNAMIC_PAGES = [
+  "/services/chiropractic/[slug]",
+  "/services/massage/[slug]",
+  "/sulphur-springs/[slug]",
 ] as const;

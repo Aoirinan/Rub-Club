@@ -80,8 +80,19 @@ function LegacyPagesEditor() {
         });
         const data = (await res.json()) as { error?: string };
         if (!res.ok) throw new Error(data.error ?? "Save failed");
-        setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, _dirty: false } : r)));
-        setMessage({ kind: "ok", text: "Saved — live within about 60 seconds" });
+        // Every edit replaces the row object, so the row still being the one
+        // that was sent means nothing changed while the request ran. Otherwise
+        // leave it dirty: that newer typing has not been saved yet.
+        const unchanged = rowsRef.current.find((r) => r.id === row.id) === row;
+        setRows((prev) => prev.map((r) => (r === row ? { ...r, _dirty: false } : r)));
+        setMessage(
+          unchanged
+            ? { kind: "ok", text: "Saved — live within about 60 seconds" }
+            : {
+                kind: "err",
+                text: "Saved — you made more changes while saving; press Save again to publish those too.",
+              },
+        );
       } catch (e) {
         setMessage({ kind: "err", text: e instanceof Error ? e.message : "Save failed" });
       } finally {
@@ -142,7 +153,15 @@ function LegacyPagesEditor() {
         </select>
         <button
           type="button"
-          onClick={() => void load()}
+          onClick={() => {
+            if (
+              rowsRef.current.some((r) => r._dirty) &&
+              !window.confirm("Discard unsaved changes?")
+            ) {
+              return;
+            }
+            void load();
+          }}
           className="rounded-lg border border-slate-300 bg-white px-3 py-1 font-semibold hover:border-slate-400"
         >
           Refresh

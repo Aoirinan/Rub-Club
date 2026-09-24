@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { getFirestore } from "@/lib/firebase-admin";
 import {
-  CMS_REVALIDATE_PATHS,
   CONTENT_CHANGE_LOG_COLLECTION,
   DEFAULTS,
   SITE_CONTENT_COLLECTION,
@@ -11,6 +10,7 @@ import {
   getContentUncached,
   getContentFieldMeta,
 } from "@/lib/cms";
+import { revalidateSiteContentPaths } from "@/lib/cms-revalidate";
 import { requireStaff } from "@/lib/staff-auth";
 
 export const runtime = "nodejs";
@@ -63,9 +63,7 @@ export async function POST(
   });
 
   revalidateTag(SITE_CONTENT_TAG);
-  for (const p of CMS_REVALIDATE_PATHS) {
-    revalidatePath(p);
-  }
+  revalidateSiteContentPaths();
 
   return NextResponse.json({ ok: true, value: defaultValue });
 }

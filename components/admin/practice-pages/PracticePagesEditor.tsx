@@ -525,7 +525,7 @@ export function PracticePagesEditor({
                   }
                 />
               </Field>
-              <Field label="Google Maps link">
+              <Field label="Google Maps link (left as the office link, it follows Office info)">
                 <input
                   className={INPUT}
                   value={doc.utilityBar.mapsUrl}

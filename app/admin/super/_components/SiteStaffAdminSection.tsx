@@ -13,6 +13,11 @@ type Props = {
   /** When set, only people whose title matches this kind are listed. */
   roleFilter?: "massage";
   heading?: string;
+  /**
+   * Told whether the add or edit form holds typing that has not been saved,
+   * so the website editor can ask before switching page (which unmounts this).
+   */
+  onDirtyChange?: (dirty: boolean) => void;
 };
 
 type BrandFilter = "all" | SiteStaffBrand;
@@ -43,6 +48,7 @@ export function SiteStaffAdminSection({
   locationFocus,
   roleFilter,
   heading,
+  onDirtyChange,
 }: Props) {
   const [members, setMembers] = useState<SiteStaffMemberStored[]>([]);
   const [siteUsesCustomList, setSiteUsesCustomList] = useState(false);
@@ -76,6 +82,39 @@ export function SiteStaffAdminSection({
   const [editPhoto, setEditPhoto] = useState<File | null>(null);
   const [editVideo, setEditVideo] = useState<File | null>(null);
   const [editRemoveVideo, setEditRemoveVideo] = useState(false);
+
+  const initialNewTitle = roleFilter === "massage" ? "Massage Therapist" : "";
+  const addFormDirty =
+    newName.trim() !== "" ||
+    // The massage view pre-fills the title (and clears it after an add).
+    (newTitle.trim() !== "" && newTitle.trim() !== initialNewTitle) ||
+    newBio.trim() !== "" ||
+    newSpecialties.trim() !== "" ||
+    newFeatured ||
+    newPhoto !== null ||
+    newVideo !== null;
+  const editFormDirty =
+    editing !== null &&
+    (editName !== editing.name ||
+      editTitle !== editing.title ||
+      editBio !== editing.bio ||
+      editBrand !== editing.brand ||
+      editActive !== editing.active ||
+      editFeatured !== editing.featured ||
+      editSpecialties !== editing.specialties.join(", ") ||
+      editPhoto !== null ||
+      editVideo !== null ||
+      editRemoveVideo);
+  const formDirty = addFormDirty || editFormDirty;
+
+  useEffect(() => {
+    onDirtyChange?.(formDirty);
+  }, [formDirty, onDirtyChange]);
+
+  useEffect(() => {
+    if (!onDirtyChange) return;
+    return () => onDirtyChange(false);
+  }, [onDirtyChange]);
 
   const load = useCallback(async () => {
     const user = auth?.currentUser;

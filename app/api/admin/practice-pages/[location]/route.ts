@@ -10,6 +10,7 @@ import {
   getPracticePageForEditing,
   isPracticeLocationId,
   mergePracticePageDoc,
+  practicePageForStorage,
   practicePageVersion,
   type PracticePageDoc,
 } from "@/lib/practice-pages";
@@ -90,9 +91,15 @@ export async function PATCH(
       // partial or malformed payloads can never break the public route.
       const current = mergePracticePageDoc(data, defaults);
       const merged = mergePracticePageDoc(body.page, current);
+      // Boxes still equal to Office info are stored as "inherit" so a later
+      // Office info edit reaches this page; the editor gets the full page back.
       tx.set(
         ref,
-        { ...merged, updatedAt, updatedBy: staff.email ?? staff.uid },
+        {
+          ...practicePageForStorage(merged, defaults),
+          updatedAt,
+          updatedBy: staff.email ?? staff.uid,
+        },
         { merge: false },
       );
       return merged;
@@ -133,7 +140,7 @@ export async function DELETE(
     .doc(location)
     .set(
       {
-        ...defaults,
+        ...practicePageForStorage(defaults, defaults),
         updatedAt: FieldValue.serverTimestamp(),
         updatedBy: staff.email ?? staff.uid,
       },

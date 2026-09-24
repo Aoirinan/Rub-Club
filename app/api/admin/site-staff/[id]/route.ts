@@ -156,17 +156,18 @@ export async function PATCH(req: Request, ctx: Params) {
     const videoFile = form.get("video");
     let video: { buffer: Buffer; contentType: string } | null = null;
     if (videoFile instanceof File && videoFile.size > 0) {
-      const contentType = resolveSiteStaffVideoContentType(videoFile.type);
+      if (videoFile.size > SITE_STAFF_VIDEO_MAX_BYTES) {
+        return NextResponse.json({ error: "Video is too large (max 80 MB)." }, { status: 400 });
+      }
+      const buffer = Buffer.from(await videoFile.arrayBuffer());
+      const contentType = resolveSiteStaffVideoContentType(videoFile.type, buffer);
       if (!contentType) {
         return NextResponse.json(
           { error: "Unsupported video type. Use MP4, MOV, or WebM." },
           { status: 400 },
         );
       }
-      if (videoFile.size > SITE_STAFF_VIDEO_MAX_BYTES) {
-        return NextResponse.json({ error: "Video is too large (max 80 MB)." }, { status: 400 });
-      }
-      video = { buffer: Buffer.from(await videoFile.arrayBuffer()), contentType };
+      video = { buffer, contentType };
     }
 
     const removeVideo = !video && String(form.get("removeVideo") ?? "") === "true";

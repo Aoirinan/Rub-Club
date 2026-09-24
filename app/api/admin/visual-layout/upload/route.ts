@@ -5,6 +5,7 @@ import { getFirestore } from "@/lib/firebase-admin";
 import { uploadSiteContentMedia } from "@/lib/cms-upload";
 import { resolveMassageTeamImageContentType } from "@/lib/massage-team-upload";
 import { SITE_CONTENT_COLLECTION, SITE_CONTENT_TAG } from "@/lib/cms";
+import { revalidateSiteContentPaths } from "@/lib/cms-revalidate";
 import { isVisualScopeId } from "@/lib/visual-page-layout";
 import { requireStaff } from "@/lib/staff-auth";
 
@@ -70,6 +71,7 @@ export async function POST(req: Request) {
   );
 
   revalidateTag(SITE_CONTENT_TAG);
+  revalidateSiteContentPaths();
 
   return NextResponse.json({ url, fieldId });
 }

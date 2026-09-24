@@ -1,7 +1,7 @@
 import { Buffer } from "node:buffer";
 import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { getFirestore } from "@/lib/firebase-admin";
 import {
   CONTENT_CHANGE_LOG_COLLECTION,
@@ -11,8 +11,10 @@ import {
   getContentFieldMeta,
   type ContentFieldType,
 } from "@/lib/cms";
+import { revalidateSiteContentPaths } from "@/lib/cms-revalidate";
 import { uploadSiteContentMedia } from "@/lib/cms-upload";
 import { resolveMassageTeamImageContentType } from "@/lib/massage-team-upload";
+import { resolveVideoContentType } from "@/lib/video-sniff";
 import { requireStaff } from "@/lib/staff-auth";
 
 export const runtime = "nodejs";
@@ -52,11 +54,12 @@ export async function POST(
   }
 
   const buf = Buffer.from(await file.arrayBuffer());
-  // Some browsers send an empty File.type for valid JPEGs: sniff magic bytes for images.
+  // Some browsers send an empty File.type for valid JPEGs: sniff magic bytes for
+  // images. Videos are checked against their first bytes (MP4/MOV/WebM).
   const contentType =
     meta.type === "image"
       ? resolveMassageTeamImageContentType(file.type, buf) ?? file.type ?? ""
-      : file.type || "application/octet-stream";
+      : resolveVideoContentType(file.type, buf) ?? "";
   if (!allowedType(meta.type, contentType)) {
     return NextResponse.json({ error: "Unsupported file type" }, { status: 400 });
   }
@@ -104,26 +107,9 @@ export async function POST(
   });
 
   revalidateTag(SITE_CONTENT_TAG);
-  for (const p of [
-    "/",
-    "/about",
-    "/services/chiropractic",
-    "/locations/paris/staff",
-    "/locations/paris",
-    "/sulphur-springs/staff",
-  ]) {
-    revalidatePath(p);
-  }
-  if (id.startsWith("paris_staff_")) {
-    revalidatePath("/locations/paris/staff");
-  }
-  if (id.startsWith("ss_staff_")) {
-    revalidatePath("/sulphur-springs/staff");
-  }
-  if (id.startsWith("doctor_")) {
-    revalidatePath("/about");
-    revalidatePath("/services/chiropractic");
-  }
+  // Same refresh as a text save: the layout plus every page that reads site
+  // content (this used to cover only six pages).
+  revalidateSiteContentPaths();
 
   return NextResponse.json({ ok: true, value: url });
 }

@@ -68,10 +68,14 @@ export function FaqItemsPanel({ getIdToken, category }: Props) {
         Authorization: `Bearer ${token}`,
         "content-type": "application/json",
       };
+      // A locked panel has no category box. New FAQs get the panel's category;
+      // an edit leaves the stored category alone, so a FAQ listed on the Paris
+      // panel under another category (it still shows on /faq) keeps it.
+      const keepStoredCategory = lockedCategory !== null && faqForm.mode === "edit";
       const body = {
         question: faqForm.question,
         answer: faqForm.answer,
-        category: lockedCategory ?? faqForm.category,
+        ...(keepStoredCategory ? {} : { category: lockedCategory ?? faqForm.category }),
         active: faqForm.active,
       };
       const res =
@@ -137,10 +141,9 @@ export function FaqItemsPanel({ getIdToken, category }: Props) {
           Authorization: `Bearer ${token}`,
           "content-type": "application/json",
         },
-        body: JSON.stringify({
-          orderedIds: next.map((f) => f.id),
-          category: lockedCategory ?? undefined,
-        }),
+        // Exactly the FAQs this panel lists: the server reorders those among
+        // their own slots and leaves every other FAQ (and all categories) alone.
+        body: JSON.stringify({ orderedIds: next.map((f) => f.id) }),
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };

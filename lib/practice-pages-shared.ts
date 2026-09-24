@@ -242,6 +242,8 @@ function mergeUtilityBar(raw: unknown, d: PracticeUtilityBar): PracticeUtilityBa
           .filter((p) => p.number.trim().length > 0)
       : d.phones,
     address: str(raw.address, d.address),
+    // No stored key = follow Office info → "Google Maps directions link" (see
+    // practicePageForStorage). A stored "" still hides the directions button.
     mapsUrl: str(raw.mapsUrl, d.mapsUrl),
     socialLinks: Array.isArray(raw.socialLinks)
       ? raw.socialLinks
@@ -534,6 +536,39 @@ export function mergePracticePageDoc(raw: unknown, defaults: PracticePageDoc): P
     locationBlock: mergeLocationBlock(raw.locationBlock, defaults.locationBlock),
     extras: mergeExtras(raw.extras, defaults.extras),
     stickyCallBar: mergeStickyBar(raw.stickyCallBar, defaults.stickyCallBar),
+  };
+}
+
+/**
+ * The shape written to Firestore for a practice page.
+ *
+ * The editor always submits the full page, so boxes seeded from Office info
+ * (Maps directions link, hero call phone, sticky-bar phone) would otherwise be
+ * saved as frozen copies and ignore later Office info edits. A box whose value
+ * still equals the current Office info value is stored as "inherit" instead,
+ * which renders exactly the same today and follows Office info afterwards:
+ *  - Maps link: the key is left out (a stored "" keeps hiding the button).
+ *  - Phones: stored blank, which mergePracticePageDoc reads as the office phone.
+ * A value staff changed is stored as typed.
+ */
+export function practicePageForStorage(
+  page: PracticePageDoc,
+  officeDefaults: PracticePageDoc,
+): Record<string, unknown> {
+  const same = (value: string, office: string) =>
+    office.trim() !== "" && value.trim() === office.trim();
+  const { mapsUrl, ...utilityBarRest } = page.utilityBar;
+  return {
+    ...page,
+    utilityBar: same(mapsUrl, officeDefaults.utilityBar.mapsUrl)
+      ? utilityBarRest
+      : page.utilityBar,
+    hero: same(page.hero.callPhone, officeDefaults.hero.callPhone)
+      ? { ...page.hero, callPhone: "" }
+      : page.hero,
+    stickyCallBar: same(page.stickyCallBar.phone, officeDefaults.stickyCallBar.phone)
+      ? { ...page.stickyCallBar, phone: "" }
+      : page.stickyCallBar,
   };
 }
 

@@ -5,6 +5,7 @@ import {
   publicObjectUrl,
   resolveMassageTeamImageContentType,
 } from "@/lib/massage-team-upload";
+import { resolveVideoContentType } from "@/lib/video-sniff";
 
 export {
   MASSAGE_TEAM_PHOTO_MAX_BYTES as SITE_STAFF_PHOTO_MAX_BYTES,
@@ -58,9 +59,13 @@ const STAFF_VIDEO_ALLOWED_MIME: Record<string, string> = {
   "video/webm": "webm",
 };
 
-export function resolveSiteStaffVideoContentType(mime: string): string | null {
-  const normalized = mime.trim().toLowerCase();
-  return STAFF_VIDEO_ALLOWED_MIME[normalized] ? normalized : null;
+/**
+ * Content type for an uploaded intro video, checked against the file's first
+ * bytes (MP4 / MOV / WebM signatures) rather than the browser-reported type
+ * alone. Null = not a supported video.
+ */
+export function resolveSiteStaffVideoContentType(declaredType: string, buffer: Buffer): string | null {
+  return resolveVideoContentType(declaredType, buffer);
 }
 
 export async function uploadSiteStaffVideo(opts: {
@@ -90,7 +95,9 @@ export async function uploadSiteStaffVideo(opts: {
     resumable: false,
   });
   await file.makePublic().catch(() => {});
-  const videoUrl = publicObjectUrl(bucket.name, storagePath);
+  // Same deterministic key + 1h cache as photos: bust browser/CDN caches on
+  // replace, or visitors keep seeing the old video for up to an hour.
+  const videoUrl = `${publicObjectUrl(bucket.name, storagePath)}?v=${Date.now()}`;
   return { videoUrl, videoStoragePath: storagePath };
 }
 

@@ -4,13 +4,13 @@ import { z } from "zod";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getFirestore } from "@/lib/firebase-admin";
 import {
-  CMS_REVALIDATE_PATHS,
   CONTENT_CHANGE_LOG_COLLECTION,
   SITE_CONTENT_COLLECTION,
   SITE_CONTENT_TAG,
   getContentUncached,
   getContentFieldMeta,
 } from "@/lib/cms";
+import { revalidateSiteContentPaths } from "@/lib/cms-revalidate";
 import { requireStaff } from "@/lib/staff-auth";
 
 export const runtime = "nodejs";
@@ -23,9 +23,7 @@ function revalidatePublicPages(fieldId?: string): void {
   // Drop the cached site_content snapshot first, so the pages re-rendered
   // below read this manager's new value rather than the previous one.
   revalidateTag(SITE_CONTENT_TAG);
-  for (const p of CMS_REVALIDATE_PATHS) {
-    revalidatePath(p);
-  }
+  revalidateSiteContentPaths();
   if (fieldId?.startsWith("ss_page_")) {
     const slug = fieldId.replace(/^ss_page_/, "").replace(/_(body|meta)$/, "");
     if (slug) revalidatePath(`/sulphur-springs/${slug}`);

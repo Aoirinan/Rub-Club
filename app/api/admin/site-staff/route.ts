@@ -141,7 +141,8 @@ export async function POST(req: Request) {
     let videoStoragePath: string | undefined;
     const videoFile = form.get("video");
     if (videoFile instanceof File && videoFile.size > 0) {
-      const videoContentType = resolveSiteStaffVideoContentType(videoFile.type);
+      const videoBuffer = Buffer.from(await videoFile.arrayBuffer());
+      const videoContentType = resolveSiteStaffVideoContentType(videoFile.type, videoBuffer);
       if (!videoContentType) {
         // The doc is never created on this path: don't leave the portrait orphaned.
         await deleteSiteStaffStorageObject(photoStoragePath).catch(() => {});
@@ -153,7 +154,7 @@ export async function POST(req: Request) {
       try {
         const up = await uploadSiteStaffVideo({
           memberId: id,
-          buffer: Buffer.from(await videoFile.arrayBuffer()),
+          buffer: videoBuffer,
           contentType: videoContentType,
         });
         videoUrl = up.videoUrl;

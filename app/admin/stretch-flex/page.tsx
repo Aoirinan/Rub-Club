@@ -76,8 +76,19 @@ function StretchFlexEditor() {
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(data.error ?? "Save failed");
-      setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, _dirty: false } : r)));
-      setMessage({ kind: "ok", text: "Saved — live within about 60 seconds" });
+      // Every edit replaces the row object, so the row still being the one
+      // that was sent means nothing changed while the request ran. Otherwise
+      // leave it dirty: that newer typing (or photo) has not been saved yet.
+      const unchanged = rowsRef.current.find((r) => r.id === row.id) === row;
+      setRows((prev) => prev.map((r) => (r === row ? { ...r, _dirty: false } : r)));
+      setMessage(
+        unchanged
+          ? { kind: "ok", text: "Saved — live within about 60 seconds" }
+          : {
+              kind: "err",
+              text: "Saved — you made more changes while saving; press Save again to publish those too.",
+            },
+      );
     } catch (e) {
       setMessage({ kind: "err", text: e instanceof Error ? e.message : "Save failed" });
     } finally {

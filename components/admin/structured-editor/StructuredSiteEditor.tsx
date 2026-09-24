@@ -206,7 +206,8 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
   const livePath = scopeLivePath(scope);
 
   // Editors holding unsaved typing (the embedded practice page form, CMS field
-  // boxes). Switching page unmounts them, so the pickers ask first.
+  // boxes, the staff add/edit form). Switching page unmounts them, so the
+  // pickers ask first.
   const unsavedRef = useRef(new Set<string>());
   const trackUnsaved = useCallback((key: string, dirty: boolean) => {
     if (dirty) unsavedRef.current.add(key);
@@ -218,6 +219,10 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
   );
   const trackPracticeUnsaved = useCallback(
     (dirty: boolean) => trackUnsaved("practice-page", dirty),
+    [trackUnsaved],
+  );
+  const trackStaffUnsaved = useCallback(
+    (dirty: boolean) => trackUnsaved("site-staff", dirty),
     [trackUnsaved],
   );
   const confirmDiscard = useCallback(
@@ -405,6 +410,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
           roleFilter="massage"
           heading="Massage therapists — Sulphur Springs"
           onNotify={() => setPreviewKey((k) => k + 1)}
+          onDirtyChange={trackStaffUnsaved}
         />
       </div>
     );
@@ -445,6 +451,7 @@ export function StructuredSiteEditor({ getIdToken, initialScope, initialOffice }
           auth={auth}
           locationFocus={staffFocus}
           onNotify={() => setPreviewKey((k) => k + 1)}
+          onDirtyChange={trackStaffUnsaved}
         />
       </div>
     );
