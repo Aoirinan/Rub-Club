@@ -1,20 +1,14 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
 import {
   getNotificationTemplates,
+  parseNotificationTemplatesPatch,
   saveNotificationTemplates,
 } from "@/lib/notification-settings-db";
 import { DEFAULT_NOTIFICATION_TEMPLATES } from "@/lib/notification-templates";
 import { requireStaff } from "@/lib/staff-auth";
 
 export const runtime = "nodejs";
-
-const patchSchema = z.object({
-  rescheduleEmail: z.string().email().max(200).optional(),
-  sms: z.record(z.string(), z.unknown()).optional(),
-  email: z.record(z.string(), z.unknown()).optional(),
-});
 
 export async function GET(req: Request) {
   const staff = await requireStaff(req.headers.get("authorization"), "manager");
@@ -27,6 +21,7 @@ export async function GET(req: Request) {
     templates,
     defaults: DEFAULT_NOTIFICATION_TEMPLATES,
     envRescheduleEmail: process.env.RESCHEDULE_EMAIL?.trim() || null,
+    canEditRescheduleEmail: staff.role === "superadmin",
   });
 }
 
@@ -41,12 +36,25 @@ export async function PATCH(req: Request) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-  const parsed = patchSchema.safeParse(json);
-  if (!parsed.success) {
+  const patch = parseNotificationTemplatesPatch(json);
+  if (!patch) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
   const db = getFirestore();
-  await saveNotificationTemplates(db, parsed.data as Partial<import("@/lib/notification-templates").NotificationTemplatesConfig>, staff.uid);
+  if (patch.rescheduleEmail !== undefined && staff.role !== "superadmin") {
+    // Reschedule notices carry patient names and contact details, so only a
+    // superadmin may change where they go (as with contact-message routing).
+    // Re-saving the current address is harmless and allowed.
+    const current = await getNotificationTemplates(db);
+    if (patch.rescheduleEmail.toLowerCase() !== current.rescheduleEmail.trim().toLowerCase()) {
+      return NextResponse.json(
+        { error: "Only a superadmin can change where reschedule notices are sent." },
+        { status: 403 },
+      );
+    }
+    delete patch.rescheduleEmail;
+  }
+  await saveNotificationTemplates(db, patch, staff.uid);
   const templates = await getNotificationTemplates(db);
   return NextResponse.json({ templates });
 }

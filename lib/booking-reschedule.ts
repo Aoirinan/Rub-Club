@@ -4,6 +4,7 @@ import type { LocationId, ServiceLine } from "./constants";
 import { TIME_ZONE } from "./constants";
 import { appointmentHasStarted } from "./appointment-started";
 import { recordBookingEventInTx } from "./booking-events";
+import { isValidCatalogDurationMin } from "./booking-duration";
 import type { BookingStatus } from "./booking-status";
 import { providerAllowsAppointmentTime } from "./provider-scheduling";
 import type { ProviderRow } from "./provider-types";
@@ -14,6 +15,7 @@ import {
   bucketDocIdsForAppointment,
   holdBucketIdsForPublicBooking,
   isAlignedToSlotGrid,
+  otherOfficeBucketIdsForAppointment,
   parseStartIsoToDateTime,
 } from "./slots-luxon";
 
@@ -31,6 +33,7 @@ export type RescheduleFailureCode =
   | "service_line_mismatch"
   | "stale"
   | "already_started"
+  | "started_requires_manager"
   | "server_error";
 
 /** A moved start must be at least this far in the future… */
@@ -45,7 +48,15 @@ export const RESCHEDULE_HORIZON_DAYS = 90;
  * Start times stay on the 30-minute grid.
  */
 export function isValidAdminBookingDurationMin(n: number): boolean {
-  return Number.isInteger(n) && n >= 15 && n <= 480;
+  return isValidCatalogDurationMin(n);
+}
+
+/**
+ * True once a visit is under way: its current start time has arrived, or the
+ * front desk has checked the patient in (even if early).
+ */
+export function visitHasStarted(d: Record<string, unknown>, now?: DateTime): boolean {
+  return appointmentHasStarted(d.startIso, now) || (d.checkedInAt !== undefined && d.checkedInAt !== null);
 }
 
 export type RescheduleSuccess = {
@@ -99,6 +110,12 @@ export type UpdateBookingScheduleOptions = {
   expected?: ExpectedBookingSchedule;
   /** Patient portal: refuse once the current appointment time has arrived. */
   refuseIfStarted?: boolean;
+  /**
+   * Staff below manager: refuse to change the START TIME of a visit that has
+   * started or been checked in (`started_requires_manager`). Provider, service
+   * and length corrections without a time change are still allowed.
+   */
+  startedTimeChangeRequiresManager?: boolean;
 };
 
 function trimmedString(raw: unknown): string {
@@ -361,6 +378,10 @@ export async function updateBookingSchedule(
     };
   }
 
+  if (options.startedTimeChangeRequiresManager && timeChanged && visitHasStarted(d)) {
+    return { ok: false, code: "started_requires_manager", status: 403 };
+  }
+
   // Nothing that decides which slot buckets the visit holds is moving (only the
   // catalog label is), so don't re-check or rewrite them. A visit booked with
   // "allow double-booking", or later overlapped by a hold, can still be relabelled.
@@ -430,6 +451,10 @@ export async function updateBookingSchedule(
       if (options.refuseIfStarted && appointmentHasStarted(snap.get("startIso"))) {
         throw new Error("already_started");
       }
+      // Checked in (or reached its start) since the pre-read.
+      if (options.startedTimeChangeRequiresManager && timeChanged && visitHasStarted(snap.data() ?? {})) {
+        throw new Error("started_requires_manager");
+      }
 
       if (bucketsUnchanged) {
         tx.update(bookingRef, serviceFields);
@@ -456,9 +481,19 @@ export async function updateBookingSchedule(
         newStart,
         targetDurationMin,
       );
+      // A provider listed at both offices can't be in both at once: the same
+      // time at their other office counts too (read only, never written).
+      const otherOfficeIds = otherOfficeBucketIdsForAppointment(
+        locId,
+        provider!,
+        newStart,
+        targetDurationMin,
+        { bufferBeforeMinutes: targetBufferBefore, bufferAfterMinutes: targetBufferAfter },
+      );
       const bucketRefs = nb.map((id) => db.collection("slot_buckets").doc(id));
       const holdRefs = hids.map((id) => db.collection("slot_buckets").doc(id));
-      const combined = [...bucketRefs, ...holdRefs];
+      const otherOfficeRefs = otherOfficeIds.map((id) => db.collection("slot_buckets").doc(id));
+      const combined = [...bucketRefs, ...holdRefs, ...otherOfficeRefs];
       const oldBucketRefs = oldBucketIds.map((id) => db.collection("slot_buckets").doc(id));
       const [reads, oldReads] = await Promise.all([
         Promise.all(combined.map((r) => tx.get(r))),
@@ -551,6 +586,9 @@ export async function updateBookingSchedule(
       }
       if (e.message === "already_started") {
         return { ok: false, code: "already_started", status: 409 };
+      }
+      if (e.message === "started_requires_manager") {
+        return { ok: false, code: "started_requires_manager", status: 403 };
       }
       if (e.message === "bad_status" || e.message === "no_provider") {
         return { ok: false, code: "bad_status", status: 409 };

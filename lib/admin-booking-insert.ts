@@ -5,8 +5,10 @@ import type { LocationId, ServiceLine } from "@/lib/constants";
 import {
   bucketDocIdsForAppointment,
   holdBucketIdsForPublicBooking,
+  otherOfficeBucketIdsForAppointment,
 } from "@/lib/slots-luxon";
 import { recordBookingEventInTx } from "@/lib/booking-events";
+import { fetchProviderById } from "@/lib/providers-db";
 import { generatePatientPortalToken, hashPatientPortalToken } from "@/lib/patient-portal-token";
 
 export type StaffActorInsert = { uid: string; email: string | null };
@@ -34,6 +36,12 @@ export type InsertAdminBookingArgs = {
   /** Denormalized for calendar display */
   bufferBeforeMinutes?: number;
   bufferAfterMinutes?: number;
+  /**
+   * Offices the provider is listed at, so a visit at their other office at the
+   * same time counts as a conflict. Looked up from `providers/{id}` when
+   * omitted; callers inserting a series pass it to avoid one read per visit.
+   */
+  providerLocationIds?: readonly LocationId[];
 };
 
 export type InsertAdminBookingResult =
@@ -81,6 +89,20 @@ export async function insertAdminBookingInTransaction(
     bufferAfterMinutes,
   });
 
+  // The same provider at the same time at their other office (read, never written).
+  let otherOfficeIds: string[] = [];
+  if (!skipConflictCheck) {
+    const providerLocationIds =
+      args.providerLocationIds ?? (await fetchProviderById(db, providerId))?.locationIds ?? [];
+    otherOfficeIds = otherOfficeBucketIdsForAppointment(
+      locationId,
+      { id: providerId, locationIds: providerLocationIds },
+      thisStart,
+      durationMin,
+      { bufferBeforeMinutes, bufferAfterMinutes },
+    );
+  }
+
   try {
     await db.runTransaction(async (tx) => {
       if (!skipConflictCheck) {
@@ -88,7 +110,11 @@ export async function insertAdminBookingInTransaction(
         const holdIds = holdBucketIdsForPublicBooking(locationId, serviceLine, thisStart, durationMin);
         const holdRefs = holdIds.map((id) => db.collection("slot_buckets").doc(id));
 
-        const providerSnaps = await Promise.all(providerBucketRefs.map((r) => tx.get(r)));
+        const otherOfficeRefs = otherOfficeIds.map((id) => db.collection("slot_buckets").doc(id));
+
+        const providerSnaps = await Promise.all(
+          [...providerBucketRefs, ...otherOfficeRefs].map((r) => tx.get(r)),
+        );
         for (const s of providerSnaps) {
           if (s.exists) throw new Error("slot_taken");
         }

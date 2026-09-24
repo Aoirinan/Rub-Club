@@ -3,16 +3,18 @@ import type { Firestore } from "firebase-admin/firestore";
 import { DateTime } from "luxon";
 import { getFirestore } from "@/lib/firebase-admin";
 import type { LocationId, ServiceLine } from "@/lib/constants";
-import { isValidBookingDurationMin } from "@/lib/booking-duration";
+import { isValidCatalogDurationMin, isValidPublicBookingDurationMin } from "@/lib/booking-duration";
 import { formatChicagoSlotChoice } from "@/lib/chicago-datetime-format";
 import { fetchActiveProvidersForPublicBooking } from "@/lib/providers-db";
 import { providerAllowsAppointmentTime } from "@/lib/provider-scheduling";
 import { providerHoursContext } from "@/lib/provider-profile";
+import type { ProviderRow } from "@/lib/provider-types";
 import { fetchSchedulerServiceById } from "@/lib/scheduler-services-db";
 import { isCustomerVisibleService, schedulerServiceMatchesLine } from "@/lib/scheduler-service-lines";
 import {
   bucketDocIdsForAppointment,
   holdBucketIdsForPublicBooking,
+  otherOfficeBucketIdsForAppointment,
   unionCandidateStartsFromHoursContexts,
   enumerateCandidateStartsInWindows,
   effectiveDayWindowsFromHours,
@@ -30,15 +32,17 @@ type Buffers = { bufferBeforeMinutes: number; bufferAfterMinutes: number };
 async function bucketsFree(
   db: Firestore,
   locationId: LocationId,
-  providerId: string,
+  provider: ProviderRow,
   serviceLine: ServiceLine,
   start: DateTime,
   durationMin: number,
   buffers: Buffers,
 ): Promise<boolean> {
-  const providerIds = bucketDocIdsForAppointment(locationId, providerId, start, durationMin, buffers);
+  const providerIds = bucketDocIdsForAppointment(locationId, provider.id, start, durationMin, buffers);
   const holdIds = holdBucketIdsForPublicBooking(locationId, serviceLine, start, durationMin);
-  const allIds = [...providerIds, ...holdIds];
+  // The same provider already booked at their other office at this time.
+  const otherOfficeIds = otherOfficeBucketIdsForAppointment(locationId, provider, start, durationMin, buffers);
+  const allIds = [...providerIds, ...holdIds, ...otherOfficeIds];
   const refs = allIds.map((id) => db.collection("slot_buckets").doc(id));
   const snaps = await db.getAll(...refs);
   return !snaps.some((s) => s.exists);
@@ -77,7 +81,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Invalid date" }, { status: 400 });
     }
     const durationMin = Number(durationRaw);
-    if (!isValidBookingDurationMin(durationMin)) {
+    // Narrowed to the 30-minute steps below unless a catalog service sets it.
+    if (!isValidCatalogDurationMin(durationMin)) {
       return NextResponse.json({ error: "Invalid durationMin" }, { status: 400 });
     }
     if (serviceLine !== "massage" && serviceLine !== "chiropractic" && serviceLine !== "stretch") {
@@ -94,6 +99,7 @@ export async function GET(req: Request) {
     // Same service lookup as the booking POST, so a time offered here is not
     // refused there for the service's buffers.
     const buffers: Buffers = { bufferBeforeMinutes: 0, bufferAfterMinutes: 0 };
+    let catalogDurationMin: number | undefined;
     if (schedulerServiceId) {
       const svc = await fetchSchedulerServiceById(db, schedulerServiceId);
       if (!svc || !isCustomerVisibleService(svc) || !schedulerServiceMatchesLine(svc, serviceLine)) {
@@ -107,6 +113,12 @@ export async function GET(req: Request) {
       }
       buffers.bufferBeforeMinutes = svc.bufferBeforeMinutes;
       buffers.bufferAfterMinutes = svc.bufferAfterMinutes;
+      catalogDurationMin = svc.durationMinutes;
+    }
+    // Same length rule as the booking POST: a catalog service's own length
+    // (e.g. 45), otherwise 30-minute steps.
+    if (!isValidPublicBookingDurationMin(durationMin, catalogDurationMin)) {
+      return NextResponse.json({ error: "Invalid durationMin" }, { status: 400 });
     }
     // Specific-provider lookups (including existing patients rescheduling with
     // their current therapist) may target a provider who is no longer taking
@@ -140,7 +152,7 @@ export async function GET(req: Request) {
       for (const start of candidates) {
         if (start < earliest) continue;
         if (!providerAllowsAppointmentTime(provider, start, durationMin)) continue;
-        if (await bucketsFree(db, locationId, providerId, serviceLine, start, durationMin, buffers)) {
+        if (await bucketsFree(db, locationId, provider, serviceLine, start, durationMin, buffers)) {
           available.push({
             startIso: start.toUTC().toISO()!,
             label: formatChicagoSlotChoice(start),
@@ -155,7 +167,7 @@ export async function GET(req: Request) {
         const usable = eligible.filter((p) => providerAllowsAppointmentTime(p, start, durationMin));
         let open = false;
         for (const p of usable) {
-          if (await bucketsFree(db, locationId, p.id, serviceLine, start, durationMin, buffers)) {
+          if (await bucketsFree(db, locationId, p, serviceLine, start, durationMin, buffers)) {
             open = true;
             break;
           }

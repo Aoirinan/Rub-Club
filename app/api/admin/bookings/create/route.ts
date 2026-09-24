@@ -9,6 +9,7 @@ import { requireStaff } from "@/lib/staff-auth";
 import { isAlignedToSlotGrid, parseStartIsoToDateTime } from "@/lib/slots-luxon";
 import { insertAdminBookingInTransaction } from "@/lib/admin-booking-insert";
 import { fetchSchedulerServiceById } from "@/lib/scheduler-services-db";
+import { fetchProviderById } from "@/lib/providers-db";
 import { isPatientBusinessTag, mergePatientBusinessTag } from "@/lib/patient-business";
 import { linkBookingAfterCreate } from "@/lib/patients-db";
 import { sendAdminCreatedBookingEmail } from "@/lib/admin-booking-notify";
@@ -107,6 +108,12 @@ export async function POST(req: Request) {
   let firstPortalPlainToken: string | undefined;
 
   const staffActor = { uid: staff.uid, email: staff.email ?? null };
+  const skipConflictCheck = body.skipConflictCheck ?? false;
+  // Offices the provider works at, read once for the whole series: a visit at
+  // their other office at the same time is a conflict too.
+  const providerLocationIds = skipConflictCheck
+    ? undefined
+    : ((await fetchProviderById(db, body.providerId))?.locationIds ?? []);
 
   for (const thisStart of starts) {
     const bookingRef = db.collection("bookings").doc();
@@ -124,7 +131,8 @@ export async function POST(req: Request) {
         email: body.email?.trim().toLowerCase() || "",
         notes: body.notes?.trim() || "",
         status,
-        skipConflictCheck: body.skipConflictCheck ?? false,
+        skipConflictCheck,
+        providerLocationIds,
         staff: staffActor,
         createMetaVia: "admin_manual",
         schedulerServiceId,

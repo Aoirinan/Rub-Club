@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getFirestore } from "@/lib/firebase-admin";
 import type { ServiceLine } from "@/lib/constants";
+import { isValidCatalogDurationMin } from "@/lib/booking-duration";
 import {
   ensureSchedulerServicesSeeded,
   fetchAllSchedulerServices,
@@ -22,10 +23,11 @@ export async function GET(req: Request) {
 
   const db = getFirestore();
   await ensureSchedulerServicesSeeded(db);
-  // The public wizard books on a 30-minute slot grid; a service whose length is
-  // not a multiple of 30 cannot be offered online (the slot API rejects it).
+  // Starts stay on the 30-minute grid, but a catalog service may run any
+  // catalog length (e.g. 45 minutes): /api/slots and the booking POST accept a
+  // service's own length (lib/booking-duration.ts).
   let services = (await fetchAllSchedulerServices(db)).filter(
-    (s) => isCustomerVisibleService(s) && s.durationMinutes % 30 === 0,
+    (s) => isCustomerVisibleService(s) && isValidCatalogDurationMin(s.durationMinutes),
   );
   if (serviceLine) {
     services = services.filter((s) => schedulerServiceMatchesLine(s, serviceLine));

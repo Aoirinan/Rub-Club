@@ -6,8 +6,10 @@ export const runtime = "nodejs";
 
 /**
  * Whether outbound staff/notification email can be attempted (env present).
- * Does not expose keys or addresses.
- * Managers+ and authenticated users without staff access (bootstrap/setup) may read.
+ * Does not expose keys. Sender details (address, domain, display name) are for
+ * managers+ only. Any other signed-in user (the first-time owner on
+ * /admin/setup, before a staff record exists) gets just the yes/no checks that
+ * page shows — anyone can create a Firebase sign-in, so nothing more.
  */
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
@@ -20,13 +22,20 @@ export async function GET(req: Request) {
   }
 
   const diagnostics = getSendgridEnvDiagnostics();
-  const officeTo = process.env.OFFICE_NOTIFICATION_EMAIL?.trim() ?? "";
-
-  return NextResponse.json({
+  const setupChecks = {
     sendgridConfigured: diagnostics.sendgridConfigured,
     hasApiKey: diagnostics.hasApiKey,
     hasFromEmail: diagnostics.hasFromEmail,
     fromEnvInvalidFormat: diagnostics.fromEnvInvalidFormat,
+  };
+  if (!staff) {
+    return NextResponse.json(setupChecks);
+  }
+
+  const officeTo = process.env.OFFICE_NOTIFICATION_EMAIL?.trim() ?? "";
+
+  return NextResponse.json({
+    ...setupChecks,
     apiKeyLooksValid: diagnostics.apiKeyLooksValid,
     fromLooksValid: diagnostics.fromLooksValid,
     likelySwapped: diagnostics.likelySwapped,

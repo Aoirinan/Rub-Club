@@ -5,7 +5,15 @@ import { DateTime } from "luxon";
 import { z } from "zod";
 import { getFirestore } from "@/lib/firebase-admin";
 import type { LocationId, ServiceLine } from "@/lib/constants";
-import { isValidBookingDurationMin } from "@/lib/booking-duration";
+import { isValidCatalogDurationMin, isValidPublicBookingDurationMin } from "@/lib/booking-duration";
+import {
+  BOOKING_REQUESTS_COLLECTION,
+  bookingRequestFingerprint,
+  readBookingRequestInTx,
+  replayFromBookingRequest,
+  writeBookingRequestInTx,
+  isValidBookingRequestId,
+} from "@/lib/booking-request-idempotency";
 import { fetchSchedulerServiceById } from "@/lib/scheduler-services-db";
 import { isCustomerVisibleService, schedulerServiceMatchesLine } from "@/lib/scheduler-service-lines";
 import { TIME_ZONE, serviceLineEmailLabel } from "@/lib/constants";
@@ -16,12 +24,14 @@ import {
   orderProvidersForAnyBooking,
 } from "@/lib/providers-db";
 import { providerAllowsAppointmentTime } from "@/lib/provider-scheduling";
+import type { ProviderRow } from "@/lib/provider-types";
 import { createPaymentLink } from "@/lib/square";
 import { sendBookingNotification } from "@/lib/sendgrid";
 import {
   bucketDocIdsForAppointment,
   holdBucketIdsForPublicBooking,
   isAlignedToSlotGrid,
+  otherOfficeBucketIdsForAppointment,
   parseStartIsoToDateTime,
 } from "@/lib/slots-luxon";
 import {
@@ -46,7 +56,8 @@ const bodySchema = z
     serviceLine: z.enum(["massage", "chiropractic", "stretch"]),
     visitKind: z.enum(["massage", "stretch", "chiropractic"]).optional(),
     paymentType: z.enum(["cash", "insurance"]).optional(),
-    durationMin: z.number().int().refine(isValidBookingDurationMin, "Invalid duration"),
+    // Narrowed after the service lookup: a catalog service's own length, else 30-minute steps.
+    durationMin: z.number().int().refine(isValidCatalogDurationMin, "Invalid duration"),
     schedulerServiceId: z.string().max(200).optional(),
     startIso: z.string().min(8),
     name: z.string().min(2).max(120),
@@ -63,6 +74,8 @@ const bodySchema = z
         count: z.number().int().min(2).max(8),
       })
       .optional(),
+    /** Random id per submit attempt; a retry of the same form reuses it. */
+    requestId: z.string().refine(isValidBookingRequestId, "Invalid requestId").optional(),
   })
   .superRefine((val, ctx) => {
     if (val.providerMode === "specific" && !val.providerId?.trim()) {
@@ -102,6 +115,37 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
   const body = parsed.data;
+
+  const db = getFirestore();
+
+  // A resubmit of a request that already booked (the first response was lost)
+  // gets the original confirmation back instead of booking again. Checked
+  // before anything that may have changed since, like the booking switch or the
+  // start time now being too close.
+  const requestRef = body.requestId
+    ? db.collection(BOOKING_REQUESTS_COLLECTION).doc(body.requestId)
+    : null;
+  const requestFingerprint = bookingRequestFingerprint({
+    locationId: body.locationId,
+    serviceLine: body.serviceLine,
+    durationMin: body.durationMin,
+    schedulerServiceId: body.schedulerServiceId,
+    startIso: body.startIso,
+    email: body.email,
+    providerMode: body.providerMode,
+    providerId: body.providerId,
+    recurrence: body.recurrence,
+  });
+  // Tells this submit's own series visits apart from an earlier submit's.
+  const requestAttempt = randomBytes(12).toString("hex");
+  if (requestRef) {
+    const prior = await requestRef.get();
+    const replay = replayFromBookingRequest(prior.exists ? prior.data() : undefined, requestFingerprint);
+    if (replay.kind === "replay") return NextResponse.json(replay.body, { status: 201 });
+    if (replay.kind === "mismatch") {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    }
+  }
 
   const publicBooking = await getPublicBookingConfig();
   if (!isPublicBookingEnabled(publicBooking)) {
@@ -158,7 +202,6 @@ export async function POST(req: Request) {
         ? "chiropractic"
         : "massage";
 
-  const db = getFirestore();
   const durationMin = body.durationMin;
   let schedulerServiceId: string | undefined;
   let serviceTypeName: string | undefined;
@@ -183,6 +226,12 @@ export async function POST(req: Request) {
     serviceTypeName = svc.name;
     bufferBeforeMinutes = svc.bufferBeforeMinutes;
     bufferAfterMinutes = svc.bufferAfterMinutes;
+  }
+  // Same lengths as admin create for a catalog service (e.g. 45 minutes; it
+  // matched the service above); without one, 30-minute steps as before. Starts
+  // stay on the 30-minute grid either way.
+  if (!isValidPublicBookingDurationMin(durationMin, schedulerServiceId ? durationMin : undefined)) {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
   // Same buffer handling as admin inserts: block the service's buffers and
   // denormalize them on the booking so reschedules keep them.
@@ -209,6 +258,7 @@ export async function POST(req: Request) {
 
   let assignedProviderId: string;
   let assignedDisplayName: string;
+  let assignedProvider: ProviderRow | undefined;
 
   if (body.providerMode === "specific") {
     const providerId = body.providerId!.trim();
@@ -229,6 +279,7 @@ export async function POST(req: Request) {
     }
     assignedProviderId = provider.id;
     assignedDisplayName = provider.displayName;
+    assignedProvider = provider;
   } else {
     const canAny = eligible.some((p) =>
       providerAllowsAppointmentTime(p, start, durationMin),
@@ -259,10 +310,22 @@ export async function POST(req: Request) {
           buffers,
         );
         const holdIds = holdBucketIdsForPublicBooking(locationId, serviceLine, thisStart, durationMin);
+        // The provider already booked at their other office at this time.
+        const otherOfficeIds = otherOfficeBucketIdsForAppointment(
+          locationId,
+          assignedProvider!,
+          thisStart,
+          durationMin,
+          buffers,
+        );
         await db.runTransaction(async (tx) => {
+          const request = requestRef
+            ? await readBookingRequestInTx(tx, requestRef, requestAttempt)
+            : null;
           const bucketRefs = bucketIds.map((id) => db.collection("slot_buckets").doc(id));
           const holdRefs = holdIds.map((id) => db.collection("slot_buckets").doc(id));
-          const snaps = await Promise.all(bucketRefs.map((r) => tx.get(r)));
+          const otherOfficeRefs = otherOfficeIds.map((id) => db.collection("slot_buckets").doc(id));
+          const snaps = await Promise.all([...bucketRefs, ...otherOfficeRefs].map((r) => tx.get(r)));
           for (const s of snaps) {
             if (s.exists) throw new Error("slot_taken");
           }
@@ -327,25 +390,53 @@ export async function POST(req: Request) {
               ...(body.recurrence ? { recurrence: body.recurrence } : {}),
             },
           });
+          if (requestRef && request) {
+            writeBookingRequestInTx(tx, requestRef, {
+              exists: request.exists,
+              attempt: requestAttempt,
+              fingerprint: requestFingerprint,
+              bookingId: bookingRef.id,
+              providerId: assignedProviderId,
+              providerDisplayName: assignedDisplayName,
+              providerMode: "specific",
+            });
+          }
         });
       } else {
         const tryOrder = orderProvidersForAnyBooking(eligible, preferredProviderId);
         const holdIds = holdBucketIdsForPublicBooking(locationId, serviceLine, thisStart, durationMin);
         await db.runTransaction(async (tx) => {
+          const request = requestRef
+            ? await readBookingRequestInTx(tx, requestRef, requestAttempt)
+            : null;
           const holdRefs = holdIds.map((id) => db.collection("slot_buckets").doc(id));
           const holdSnaps = await Promise.all(holdRefs.map((r) => tx.get(r)));
           if (holdSnaps.some((s) => s.exists)) throw new Error("slot_taken");
 
-          const bucketRefsByProvider: { id: string; name: string; refs: DocumentReference[] }[] = [];
+          type Candidate = {
+            id: string;
+            name: string;
+            refs: DocumentReference[];
+            /** Same time at the provider's other office: must be free, never written. */
+            otherOfficeRefs: DocumentReference[];
+          };
+          const bucketRefsByProvider: Candidate[] = [];
           for (const p of tryOrder) {
             if (!providerAllowsAppointmentTime(p, thisStart, durationMin)) continue;
             const ids = bucketDocIdsForAppointment(locationId, p.id, thisStart, durationMin, buffers);
             const refs = ids.map((id) => db.collection("slot_buckets").doc(id));
-            bucketRefsByProvider.push({ id: p.id, name: p.displayName, refs });
+            const otherOfficeRefs = otherOfficeBucketIdsForAppointment(
+              locationId,
+              p,
+              thisStart,
+              durationMin,
+              buffers,
+            ).map((id) => db.collection("slot_buckets").doc(id));
+            bucketRefsByProvider.push({ id: p.id, name: p.displayName, refs, otherOfficeRefs });
           }
-          let picked: { id: string; name: string; refs: DocumentReference[] } | null = null;
+          let picked: Candidate | null = null;
           for (const row of bucketRefsByProvider) {
-            const snaps = await Promise.all(row.refs.map((r) => tx.get(r)));
+            const snaps = await Promise.all([...row.refs, ...row.otherOfficeRefs].map((r) => tx.get(r)));
             if (!snaps.some((s) => s.exists)) {
               picked = row;
               break;
@@ -414,6 +505,17 @@ export async function POST(req: Request) {
             byEmail: body.email.trim().toLowerCase(),
             meta: { via: "public_form", providerMode: "any" },
           });
+          if (requestRef && request) {
+            writeBookingRequestInTx(tx, requestRef, {
+              exists: request.exists,
+              attempt: requestAttempt,
+              fingerprint: requestFingerprint,
+              bookingId: bookingRef.id,
+              providerId: assignedProviderId,
+              providerDisplayName: assignedDisplayName,
+              providerMode: "any",
+            });
+          }
         });
       }
       createdIds.push(bookingRef.id);
@@ -422,6 +524,17 @@ export async function POST(req: Request) {
         console.error("[patients] link after public booking", err),
       );
     } catch (e) {
+      // Another submit with this request id booked first (a double submit
+      // racing this one): answer with what it booked.
+      if (e instanceof Error && e.message === "duplicate_request" && requestRef) {
+        const prior = await requestRef.get();
+        const replay = replayFromBookingRequest(prior.exists ? prior.data() : undefined, requestFingerprint);
+        if (replay.kind === "replay") return NextResponse.json(replay.body, { status: 201 });
+        return NextResponse.json(
+          { error: "That time was just taken. Pick another slot." },
+          { status: 409 },
+        );
+      }
       if (e instanceof Error && e.message === "slot_taken") {
         if (multiVisit) {
           conflicts.push(thisStart.setZone(TIME_ZONE).toFormat("LLL d"));
@@ -589,24 +702,29 @@ export async function POST(req: Request) {
     }).catch(() => {});
   }
 
-  return NextResponse.json(
-    {
-      ok: true,
-      bookingId: createdIds[0],
-      bookingIds: createdIds,
-      status: "pending",
-      providerId: assignedProviderId,
-      providerDisplayName: assignedDisplayName,
-      providerMode: body.providerMode,
-      ...(conflicts.length > 0
-        ? {
-            conflicts,
-            conflictsMessage: `Some dates were skipped (slot taken): ${conflicts.join(", ")}`,
-          }
-        : {}),
-      totalCreated: createdIds.length,
-      ...(paymentUrl ? { paymentUrl } : {}),
-    },
-    { status: 201 },
-  );
+  const responseBody = {
+    ok: true,
+    bookingId: createdIds[0],
+    bookingIds: createdIds,
+    status: "pending",
+    providerId: assignedProviderId,
+    providerDisplayName: assignedDisplayName,
+    providerMode: body.providerMode,
+    ...(conflicts.length > 0
+      ? {
+          conflicts,
+          conflictsMessage: `Some dates were skipped (slot taken): ${conflicts.join(", ")}`,
+        }
+      : {}),
+    totalCreated: createdIds.length,
+    ...(paymentUrl ? { paymentUrl } : {}),
+  };
+  // A retry with this request id now gets exactly this response.
+  if (requestRef) {
+    await requestRef
+      .set({ response: responseBody, completedAt: FieldValue.serverTimestamp() }, { merge: true })
+      .catch((err) => console.error("[booking] could not save request response", err));
+  }
+
+  return NextResponse.json(responseBody, { status: 201 });
 }

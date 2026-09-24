@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import { FieldValue } from "firebase-admin/firestore";
+import type { UserRecord } from "firebase-admin/auth";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getAuth, getFirestore } from "@/lib/firebase-admin";
 import { getPublicAppOriginForRequest } from "@/lib/app-origin";
 import { sendStaffAccessRevokedEmail } from "@/lib/sendgrid";
+import { secureUnclaimedAuthAccount } from "@/lib/staff-account-claim";
 import { requireStaff } from "@/lib/staff-auth";
 import {
   STAFF_ROLES,
@@ -68,8 +70,9 @@ export async function POST(req: Request) {
 
   const email = parsed.data.email.trim().toLowerCase();
   let uid: string;
+  let user: UserRecord;
   try {
-    const user = await getAuth().getUserByEmail(email);
+    user = await getAuth().getUserByEmail(email);
     uid = user.uid;
   } catch {
     return NextResponse.json(
@@ -101,6 +104,22 @@ export async function POST(req: Request) {
     parsed.data.role === "massage_therapist" ? parsed.data.linkedProviderId!.trim() : undefined;
   const locationScope = normalizeStaffLocationScope(parsed.data.locationScope);
 
+  // First role for an account that already existed: it may have been
+  // registered by someone who does not own the mailbox, so lock it to the
+  // password-reset email before granting access (as invite-staff does).
+  let signInValidAfterMs: number | null = null;
+  if (existingRole === null) {
+    try {
+      signInValidAfterMs = await secureUnclaimedAuthAccount(getAuth(), user);
+    } catch (e) {
+      console.error("[staff] could not secure existing account", e);
+      return NextResponse.json(
+        { error: "Could not secure the existing sign-in account for that email. Try again." },
+        { status: 500 },
+      );
+    }
+  }
+
   await db
     .collection("staff")
     .doc(uid)
@@ -111,6 +130,9 @@ export async function POST(req: Request) {
         locationScope,
         updatedAt: FieldValue.serverTimestamp(),
         updatedByUid: staff.uid,
+        ...(signInValidAfterMs !== null
+          ? { signInValidAfter: Timestamp.fromMillis(signInValidAfterMs) }
+          : {}),
         ...(linkedProviderId ? { linkedProviderId } : {}),
       },
       { merge: true },
@@ -120,7 +142,13 @@ export async function POST(req: Request) {
     await db.collection("staff").doc(uid).update({ linkedProviderId: FieldValue.delete() });
   }
 
-  return NextResponse.json({ ok: true, uid, role: parsed.data.role });
+  return NextResponse.json({
+    ok: true,
+    uid,
+    role: parsed.data.role,
+    // They get in by resetting their password from that mailbox.
+    ...(signInValidAfterMs !== null ? { securedExistingAccount: true, passwordResetRequired: true } : {}),
+  });
 }
 
 export async function GET(req: Request) {

@@ -1,12 +1,14 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import { FieldValue } from "firebase-admin/firestore";
+import type { UserRecord } from "firebase-admin/auth";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getAuth, getFirestore } from "@/lib/firebase-admin";
 import { getPublicAppOriginForRequest } from "@/lib/app-origin";
 import { fetchProviderById } from "@/lib/providers-db";
 import { requireStaff } from "@/lib/staff-auth";
 import { sendStaffInviteEmail } from "@/lib/sendgrid";
+import { secureUnclaimedAuthAccount } from "@/lib/staff-account-claim";
 import { siteShortName } from "@/lib/site-content";
 import {
   STAFF_ROLES,
@@ -99,10 +101,13 @@ export async function POST(req: Request) {
   let uid: string;
   let createdNewAuthUser = false;
   let temporaryPassword: string | null = null;
+  /** The sign-in account when it existed before this invite. */
+  let existingUser: UserRecord | null = null;
 
   try {
     const existing = await auth.getUserByEmail(email);
     uid = existing.uid;
+    existingUser = existing;
   } catch (lookupErr: unknown) {
     if (authErrorCode(lookupErr) !== "auth/user-not-found") {
       console.error(lookupErr);
@@ -123,6 +128,7 @@ export async function POST(req: Request) {
       if (authErrorCode(e) === "auth/email-already-exists") {
         const u = await auth.getUserByEmail(email);
         uid = u.uid;
+        existingUser = u;
       } else {
         console.error(e);
         return NextResponse.json({ error: "Could not create Firebase user." }, { status: 500 });
@@ -130,9 +136,10 @@ export async function POST(req: Request) {
     }
   }
 
+  let existingRole: StaffRole | null = null;
   if (!createdNewAuthUser) {
     const existingSnap = await db.collection("staff").doc(uid).get();
-    const existingRole = existingSnap.exists ? normalizeStaffRole(existingSnap.get("role")) : null;
+    existingRole = existingSnap.exists ? normalizeStaffRole(existingSnap.get("role")) : null;
     if (!canModifyStaffMember(actor.role, existingRole)) {
       return NextResponse.json(
         { error: "Only a superadmin can change another superadmin's access." },
@@ -150,6 +157,23 @@ export async function POST(req: Request) {
     }
   }
 
+  // The email already had a sign-in account but no staff record. Anyone can
+  // register an email through the public Firebase API, so lock the account to
+  // the invite link before it gets a role. Re-invites of staff are untouched.
+  let signInValidAfterMs: number | null = null;
+  if (existingUser && existingRole === null) {
+    try {
+      signInValidAfterMs = await secureUnclaimedAuthAccount(auth, existingUser);
+    } catch (e) {
+      console.error("[invite-staff] could not secure existing account", e);
+      return NextResponse.json(
+        { error: "Could not secure the existing sign-in account for that email. Try again." },
+        { status: 500 },
+      );
+    }
+  }
+  const securedExistingAccount = signInValidAfterMs !== null;
+
   await db
     .collection("staff")
     .doc(uid)
@@ -160,7 +184,12 @@ export async function POST(req: Request) {
         locationScope,
         updatedAt: FieldValue.serverTimestamp(),
         updatedByUid: actor.uid,
-        ...(createdNewAuthUser ? { invitedAt: FieldValue.serverTimestamp() } : {}),
+        ...(createdNewAuthUser || securedExistingAccount
+          ? { invitedAt: FieldValue.serverTimestamp() }
+          : {}),
+        ...(signInValidAfterMs !== null
+          ? { signInValidAfter: Timestamp.fromMillis(signInValidAfterMs) }
+          : {}),
         ...(linkedProviderId ? { linkedProviderId } : {}),
       },
       { merge: true },
@@ -190,6 +219,7 @@ export async function POST(req: Request) {
       uid,
       role,
       createdNewAuthUser,
+      ...(securedExistingAccount ? { securedExistingAccount } : {}),
       emailedReset: false,
       inviteEmailIssue,
       inviteEmailDetail,
@@ -205,7 +235,8 @@ export async function POST(req: Request) {
     });
   }
 
-  const isBrandNew = createdNewAuthUser && temporaryPassword;
+  // A locked-down existing account is new to the portal too: this link is its only way in.
+  const isBrandNew = (createdNewAuthUser && temporaryPassword) || securedExistingAccount;
   const emailResult = await sendStaffInviteEmail({
     to: email,
     resetLink,
@@ -228,6 +259,7 @@ export async function POST(req: Request) {
     uid,
     role,
     createdNewAuthUser,
+    ...(securedExistingAccount ? { securedExistingAccount } : {}),
     emailedReset,
     inviteEmailIssue,
     continueOrigin,

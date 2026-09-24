@@ -29,6 +29,8 @@ export function NotificationSettingsEditor({ getIdToken }: Props) {
   );
   const [rescheduleEmail, setRescheduleEmail] = useState("");
   const [envReschedule, setEnvReschedule] = useState<string | null>(null);
+  // Where reschedule notices go is a superadmin setting (like contact routing).
+  const [canEditRescheduleEmail, setCanEditRescheduleEmail] = useState(false);
   const [channel, setChannel] = useState<Channel>("sms");
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -44,12 +46,14 @@ export function NotificationSettingsEditor({ getIdToken }: Props) {
     const data = (await res.json()) as {
       templates?: NotificationTemplatesConfig;
       envRescheduleEmail?: string | null;
+      canEditRescheduleEmail?: boolean;
     };
     if (res.ok && data.templates) {
       setTemplates(data.templates);
       setRescheduleEmail(data.templates.rescheduleEmail);
     }
     setEnvReschedule(data.envRescheduleEmail ?? null);
+    setCanEditRescheduleEmail(data.canEditRescheduleEmail === true);
   }, [getIdToken]);
 
   useEffect(() => {
@@ -70,7 +74,8 @@ export function NotificationSettingsEditor({ getIdToken }: Props) {
       body: JSON.stringify(patch),
     });
     if (!res.ok) {
-      setMessage("Could not save.");
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      setMessage(data.error ?? "Could not save.");
     } else {
       setMessage("Saved.");
       await load();
@@ -142,11 +147,15 @@ export function NotificationSettingsEditor({ getIdToken }: Props) {
             className="mt-1 w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm"
             value={rescheduleEmail}
             onChange={(e) => setRescheduleEmail(e.target.value)}
+            disabled={!canEditRescheduleEmail}
           />
         </label>
+        {!canEditRescheduleEmail ? (
+          <p className="text-xs text-slate-600">Only a superadmin can change this address.</p>
+        ) : null}
         <button
           type="button"
-          disabled={saving}
+          disabled={saving || !canEditRescheduleEmail}
           onClick={() => void save({ rescheduleEmail })}
           className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white"
         >

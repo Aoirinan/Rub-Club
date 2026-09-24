@@ -6,6 +6,7 @@ import {
   bookingMatchesExpected,
   rescheduleBookingForStartChange,
   updateBookingSchedule,
+  visitHasStarted,
 } from "./booking-reschedule";
 import { listOpenStartsForExistingBooking } from "./booking-reschedule-slots";
 import type { ProviderRow } from "./provider-types";
@@ -611,6 +612,184 @@ describe("updateBookingSchedule — patient portal", () => {
     const newIso = futureStart(8).toUTC().toISO()!;
     const res = await rescheduleBookingForStartChange(db, "b1", newIso, PATIENT, PATIENT_OPTS);
     expect(res.ok).toBe(true);
+  });
+});
+
+describe("updateBookingSchedule — visits already under way (front desk)", () => {
+  const FRONT_DESK = { ...OPTS, startedTimeChangeRequiresManager: true };
+  const MANAGER = { ...OPTS, startedTimeChangeRequiresManager: false };
+  /** Yesterday 10:00 Chicago: passed, on the slot grid and inside default hours. */
+  const startedIso = () =>
+    DateTime.now()
+      .setZone(TIME_ZONE)
+      .minus({ days: 1 })
+      .set({ hour: 10, minute: 0, second: 0, millisecond: 0 })
+      .toUTC()
+      .toISO()!;
+
+  it("refuses to move the start of a visit whose time has passed", async () => {
+    const { docs } = seed({ startIso: startedIso() });
+    const db = makeDb(docs);
+    const res = await updateBookingSchedule(
+      db,
+      "b1",
+      { startIso: futureStart(8).toUTC().toISO()! },
+      ACTOR,
+      FRONT_DESK,
+    );
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.code).toBe("started_requires_manager");
+    expect(res.status).toBe(403);
+    expect(db.__writes.length).toBe(0);
+  });
+
+  it("refuses to move a checked-in visit even before its start time", async () => {
+    const { docs } = seed({ checkedInAt: { seconds: 1 } });
+    const db = makeDb(docs);
+    const res = await updateBookingSchedule(
+      db,
+      "b1",
+      { startIso: futureStart(8).toUTC().toISO()! },
+      ACTOR,
+      FRONT_DESK,
+    );
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.code).toBe("started_requires_manager");
+  });
+
+  it("still lets the front desk correct provider or length without moving the time", async () => {
+    const { docs } = seed({ startIso: startedIso(), checkedInAt: { seconds: 1 } });
+    const db = makeDb(docs);
+    const res = await updateBookingSchedule(
+      db,
+      "b1",
+      { providerId: "p2", durationMin: 90 },
+      ACTOR,
+      FRONT_DESK,
+    );
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.changed).toBe(false);
+    expect(res.providerChanged).toBe(true);
+  });
+
+  it("lets a manager move a visit that has started", async () => {
+    const { docs } = seed({ startIso: startedIso(), checkedInAt: { seconds: 1 } });
+    const db = makeDb(docs);
+    const res = await updateBookingSchedule(
+      db,
+      "b1",
+      { startIso: futureStart(8).toUTC().toISO()! },
+      ACTOR,
+      MANAGER,
+    );
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.changed).toBe(true);
+  });
+
+  it("refuses when the visit is checked in between the read and the save", async () => {
+    const { docs } = seed();
+    const db = makeDb(docs, {
+      beforeTx: () => {
+        docs.set("bookings/b1", { ...docs.get("bookings/b1")!, checkedInAt: { seconds: 1 } });
+      },
+    });
+    const res = await updateBookingSchedule(
+      db,
+      "b1",
+      { startIso: futureStart(8).toUTC().toISO()! },
+      ACTOR,
+      FRONT_DESK,
+    );
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.code).toBe("started_requires_manager");
+    expect(db.__writes.length).toBe(0);
+  });
+
+  it("visitHasStarted counts a passed start or a check-in", () => {
+    const now = DateTime.fromISO("2026-09-23T15:00:00Z");
+    expect(visitHasStarted({ startIso: "2026-09-23T16:00:00Z" }, now)).toBe(false);
+    expect(visitHasStarted({ startIso: "2026-09-23T14:30:00Z" }, now)).toBe(true);
+    expect(visitHasStarted({ startIso: "2026-09-23T16:00:00Z", checkedInAt: { seconds: 1 } }, now)).toBe(true);
+    expect(visitHasStarted({ startIso: "2026-09-23T16:00:00Z", checkedInAt: null }, now)).toBe(false);
+  });
+});
+
+describe("updateBookingSchedule — provider listed at both offices", () => {
+  /** Mirrors bucketDocId() for the other office. */
+  const ssKey = (slot: DateTime, providerId = "p1") =>
+    `sulphur_springs__${providerId}__${slot.toFormat("yyyy-LL-dd")}__${slot.toFormat("HHmm")}`;
+
+  function seedBothOffices() {
+    const s = seed();
+    s.docs.set("providers/p1", { ...s.docs.get("providers/p1")!, locationIds: ["paris", "sulphur_springs"] });
+    return s;
+  }
+
+  it("treats the same time at the other office as taken", async () => {
+    const { docs } = seedBothOffices();
+    const target = futureStart(10);
+    docs.set(`slot_buckets/${ssKey(target.plus({ minutes: 30 }))}`, { bookingId: "ss-visit" });
+    const db = makeDb(docs);
+    const res = await updateBookingSchedule(db, "b1", { startIso: target.toUTC().toISO()! }, ACTOR, OPTS);
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.code).toBe("slot_taken");
+    expect(db.__writes.length).toBe(0);
+  });
+
+  it("only writes its own office's buckets", async () => {
+    const { docs } = seedBothOffices();
+    const db = makeDb(docs);
+    const target = futureStart(10);
+    const res = await updateBookingSchedule(db, "b1", { startIso: target.toUTC().toISO()! }, ACTOR, OPTS);
+    expect(res.ok).toBe(true);
+    expect(slotWrites(db).map((w) => w.path)).toEqual([
+      `slot_buckets/${bucketKey(target)}`,
+      `slot_buckets/${bucketKey(target.plus({ minutes: 30 }))}`,
+    ]);
+  });
+
+  it("ignores the other office for a provider listed at one office", async () => {
+    const { docs } = seed();
+    const target = futureStart(10);
+    docs.set(`slot_buckets/${ssKey(target)}`, { bookingId: "ss-visit" });
+    const db = makeDb(docs);
+    const res = await updateBookingSchedule(db, "b1", { startIso: target.toUTC().toISO()! }, ACTOR, OPTS);
+    expect(res.ok).toBe(true);
+  });
+
+  it("open-time lists skip times booked at the other office", async () => {
+    const { docs } = seedBothOffices();
+    const day = futureStart(7);
+    docs.set(`slot_buckets/${ssKey(day.set({ hour: 11 }))}`, { bookingId: "ss-visit" });
+    const slots = await listOpenStartsForExistingBooking(makeDb(docs), {
+      bookingId: "b1",
+      locationId: "paris",
+      provider: {
+        id: "p1",
+        displayName: "Alex",
+        active: true,
+        locationIds: ["paris", "sulphur_springs"],
+        serviceLines: ["massage"],
+        sortOrder: 0,
+        acceptsNewClients: true,
+      },
+      serviceLine: "massage",
+      durationMin: 60,
+      bufferBeforeMinutes: 0,
+      bufferAfterMinutes: 0,
+      date: day.toFormat("yyyy-LL-dd"),
+    });
+    const times = slots.map((s) => DateTime.fromISO(s.startIso).setZone(TIME_ZONE).toFormat("HH:mm"));
+    expect(times).toContain("10:00");
+    expect(times).not.toContain("10:30");
+    expect(times).not.toContain("11:00");
+    expect(times).toContain("11:30");
   });
 });
 

@@ -6,7 +6,7 @@ import {
   sendRescheduleNotifications,
   type PatientRescheduleEmailResult,
 } from "@/lib/booking-reschedule-notify";
-import { requireStaff } from "@/lib/staff-auth";
+import { requireStaff, staffMeetsMin } from "@/lib/staff-auth";
 import { recomputeNextAppointmentForBooking } from "@/lib/patients-db";
 
 export const runtime = "nodejs";
@@ -57,6 +57,8 @@ function messageFor(code: string): string {
       return "That service type does not belong to the chosen service. Pick one that matches.";
     case "stale":
       return "This booking was just changed by someone else — reload and try again.";
+    case "started_requires_manager":
+      return "Only a manager can move a visit that has already started.";
     case "no_provider":
       return "That provider is not bookable for this location and service.";
     case "bad_status":
@@ -109,7 +111,13 @@ export async function POST(req: Request, ctx: Params) {
     id,
     changes,
     { uid: staff.uid, email: staff.email ?? null },
-    { allowPending: true, expected },
+    {
+      allowPending: true,
+      expected,
+      // Front desk may fix provider/service/length on a visit under way, but
+      // moving one that has started or been checked in is a manager's call.
+      startedTimeChangeRequiresManager: !staffMeetsMin(staff.role, "manager"),
+    },
   );
 
   if (!result.ok) {

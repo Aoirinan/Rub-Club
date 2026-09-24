@@ -1,5 +1,6 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { getAuth, getFirestore } from "./firebase-admin";
+import { signInPredatesClaim } from "./staff-account-claim";
 import {
   normalizeStaffRole,
   normalizeStaffLocationScope,
@@ -20,7 +21,21 @@ export type StaffProfile = {
   linkedProviderId?: string;
   /** Stored location access; superadmins always behave as "both". */
   locationScope: StaffLocationScope;
+  /**
+   * Set when a pre-existing sign-in account was locked down for its first
+   * invite: sign-ins from before this moment (ms) don't count.
+   */
+  signInValidAfterMs?: number;
 };
+
+function timestampMs(raw: unknown): number | undefined {
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+  if (raw && typeof (raw as { toMillis?: unknown }).toMillis === "function") {
+    const ms = (raw as { toMillis: () => number }).toMillis();
+    return Number.isFinite(ms) ? ms : undefined;
+  }
+  return undefined;
+}
 
 export async function verifyBearerUid(
   authorization: string | null,
@@ -42,6 +57,7 @@ export async function getStaffProfile(uid: string): Promise<StaffProfile | null>
   if (!role) return null;
   const email = snap.get("email");
   const linkedProviderId = snap.get("linkedProviderId");
+  const signInValidAfterMs = timestampMs(snap.get("signInValidAfter"));
   return {
     role,
     email: typeof email === "string" ? email : undefined,
@@ -50,6 +66,7 @@ export async function getStaffProfile(uid: string): Promise<StaffProfile | null>
         ? linkedProviderId.trim()
         : undefined,
     locationScope: normalizeStaffLocationScope(snap.get("locationScope")),
+    ...(signInValidAfterMs !== undefined ? { signInValidAfterMs } : {}),
   };
 }
 
@@ -74,6 +91,9 @@ export async function requireStaff(
   if (!decoded?.uid) return null;
   const profile = await getStaffProfile(decoded.uid);
   if (!profile) return null;
+  // A session from before the account was locked down for its invite (e.g.
+  // someone who registered the email first) is not this staff member's.
+  if (signInPredatesClaim(decoded.auth_time, profile.signInValidAfterMs)) return null;
   if (!staffMeetsMin(profile.role, minRole)) return null;
   return {
     uid: decoded.uid,

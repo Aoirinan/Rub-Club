@@ -11,6 +11,7 @@ import {
   effectiveDayWindowsFromHours,
   enumerateCandidateStartsInWindows,
   holdBucketIdsForPublicBooking,
+  otherOfficeBucketIdsForAppointment,
 } from "./slots-luxon";
 
 export type RescheduleSlot = { startIso: string; label: string };
@@ -18,8 +19,9 @@ export type RescheduleSlot = { startIso: string; label: string };
 /**
  * Open start times on `date` for moving an EXISTING booking, using the rules
  * the save (`updateBookingSchedule`) enforces: lead time and horizon, the
- * provider's hours, the visit's buffers, and admin holds. The booking's own
- * slot buckets count as free, so its current time is offered back.
+ * provider's hours, the visit's buffers, admin holds, and the provider's visits
+ * at their other office. The booking's own slot buckets count as free, so its
+ * current time is offered back.
  */
 export async function listOpenStartsForExistingBooking(
   db: Firestore,
@@ -57,6 +59,7 @@ export async function listOpenStartsForExistingBooking(
   const idsPerStart = candidates.map((start) => [
     ...bucketDocIdsForAppointment(locationId, provider.id, start, durationMin, buffers),
     ...holdBucketIdsForPublicBooking(locationId, serviceLine, start, durationMin),
+    ...otherOfficeBucketIdsForAppointment(locationId, provider, start, durationMin, buffers),
   ]);
   // One read for the whole day instead of one per candidate.
   const uniqueIds = [...new Set(idsPerStart.flat())];

@@ -36,6 +36,30 @@ export function bucketDocIdsForAppointment(
   return starts.map((s) => bucketDocId(locationId, providerId, s));
 }
 
+/**
+ * The same provider/time bucket ids at the provider's OTHER offices. A provider
+ * listed at both offices works one set of hours, so a visit at either office
+ * occupies them at both. Bucket ids stay per office (existing ones keep their
+ * names): callers READ these alongside their own buckets and treat an occupied
+ * one as taken, but only ever write their own office's ids. Empty for a
+ * provider listed at a single office.
+ */
+export function otherOfficeBucketIdsForAppointment(
+  locationId: LocationId,
+  provider: { id: string; locationIds?: readonly string[] | null },
+  start: DateTime,
+  durationMin: number,
+  buffers?: Pick<BufferSpec, "bufferBeforeMinutes" | "bufferAfterMinutes">,
+): string[] {
+  const others = new Set<LocationId>();
+  for (const loc of provider.locationIds ?? []) {
+    if ((loc === "paris" || loc === "sulphur_springs") && loc !== locationId) others.add(loc);
+  }
+  return [...others].flatMap((loc) =>
+    bucketDocIdsForAppointment(loc, provider.id, start, durationMin, buffers),
+  );
+}
+
 /* ---------------- Hold (block-all-providers) bucket ids ---------------- */
 
 /**

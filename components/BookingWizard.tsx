@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DateTime } from "luxon";
 import {
   LOCATIONS,
@@ -38,6 +38,20 @@ function todayIso(): string {
 
 function addDaysIso(days: number): string {
   return DateTime.now().setZone(TIME_ZONE).plus({ days }).toFormat("yyyy-LL-dd");
+}
+
+/**
+ * Random id for one booking submit. The server remembers it, so a retry after
+ * a dropped connection returns the original confirmation instead of booking
+ * again. Null where the browser has no crypto (the server accepts no id).
+ */
+function newBookingRequestId(): string | null {
+  const c = typeof globalThis !== "undefined" ? globalThis.crypto : undefined;
+  if (!c) return null;
+  if (typeof c.randomUUID === "function") return c.randomUUID();
+  if (typeof c.getRandomValues !== "function") return null;
+  const bytes = c.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 function formatPhone(input: string): string {
@@ -123,6 +137,8 @@ export function BookingWizard({
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [squarePayUrl, setSquarePayUrl] = useState<string | null>(null);
   const [repeatWeeklyCount, setRepeatWeeklyCount] = useState(1);
+  /** The last submit's request id and the exact form it was for. */
+  const submitRequestRef = useRef<{ formKey: string; id: string | null } | null>(null);
 
   const selectedProvider = useMemo(
     () => (providers && selectedProviderId ? providers.find((p) => p.id === selectedProviderId) ?? null : null),
@@ -308,6 +324,13 @@ export function BookingWizard({
       if (providerMode === "any" && preferredProviderId) {
         body.preferredProviderId = preferredProviderId;
       }
+      // Same form as the last attempt (a retry): same id. Anything changed: new id.
+      const formKey = JSON.stringify(body);
+      if (submitRequestRef.current?.formKey !== formKey) {
+        submitRequestRef.current = { formKey, id: newBookingRequestId() };
+      }
+      const requestId = submitRequestRef.current.id;
+      if (requestId) body.requestId = requestId;
 
       const res = await fetch("/api/bookings", {
         method: "POST",
@@ -354,6 +377,8 @@ export function BookingWizard({
         onlinePaymentsEnabled && data.paymentUrl
           ? " Use the secure Square link below to pay for this time. After checkout you will receive a receipt and a confirmed appointment email with a calendar attachment."
           : " You will receive a confirmation email shortly — check spam if you don't see it. The office will follow up to confirm.";
+      // Booked: the next submit is a new request.
+      submitRequestRef.current = null;
       setSubmitSuccess(true);
       setSubmitMessage(`Request received.${who}${repeat}${conflict} ${tail}`);
       track("booking_succeeded", {
