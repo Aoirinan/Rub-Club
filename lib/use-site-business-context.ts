@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import {
   businessContextFromPathname,
   isSharedPathname,
@@ -20,11 +20,24 @@ function clearLegacyStickyBusinessContext(): void {
   }
 }
 
+// The cookie has no change event; navigations re-render through `pathname`.
+const subscribeNoop = () => () => {};
+
 /** Resolve live business context from pathname + cookie (client navigation). */
 export function useSiteBusinessContext(
   initialContext: SiteBusinessContext = "default",
 ): SiteBusinessContext {
   const pathname = usePathname() ?? "/";
+  // Hydration must render exactly what the server did, so the first client
+  // render uses the server's context (getServerSnapshot) and the live cookie is
+  // read right after. Reading document.cookie during hydration made a shared
+  // page throw a hydration mismatch (React #418) whenever the cookie changed
+  // between the server render and hydration, e.g. another tab switching office.
+  const cookieContext = useSyncExternalStore(
+    subscribeNoop,
+    readBusinessContextCookie,
+    () => initialContext,
+  );
   return useMemo(() => {
     const fromPath = businessContextFromPathname(pathname);
     if (fromPath !== "default") {
@@ -37,7 +50,7 @@ export function useSiteBusinessContext(
       return "default";
     }
 
-    const resolved = resolveBusinessContext(pathname, readBusinessContextCookie());
+    const resolved = resolveBusinessContext(pathname, cookieContext);
     if (resolved !== "default") {
       clearLegacyStickyBusinessContext();
       return resolved;
@@ -45,9 +58,9 @@ export function useSiteBusinessContext(
 
     clearLegacyStickyBusinessContext();
 
-    // During SSR/hydration the cookie isn't readable; trust the server-provided
-    // context on shared pages only — must match getPageBrand() on the server.
+    // Shared page with no cookie: keep the server-provided context — must match
+    // getPageBrand() on the server.
     if (initialContext !== "default") return initialContext;
     return "default";
-  }, [pathname, initialContext]);
+  }, [pathname, cookieContext, initialContext]);
 }

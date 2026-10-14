@@ -90,7 +90,9 @@ export function LegacyPageBody({
   const heroUnoptimized = heroImage ? !isOptimizableImageSrc(heroImage) : false;
 
   return (
-    <div className="space-y-4">
+    // break-words: long unbroken strings in the verbatim copy (source URLs)
+    // wrap instead of widening the page on phones. Text is unchanged.
+    <div className="space-y-4 break-words">
       {heroImage ? (
         <div className="relative mb-6 aspect-[16/9] w-full overflow-hidden rounded">
           <Image
